@@ -15,8 +15,14 @@ atributo da bomba no desenho, escolhido por quem monta.
 """
 import re
 
-RX_TRES = re.compile(r"\b(\d{2,3})[-/](\d{2,3})[-/](\d{2,4})(?:\.\d)?\b")
-RX_DOIS = re.compile(r"\b(\d{2,3})[-/](\d{2,4})(?:\.\d)?\b")
+# So o hifen separa grupos. A barra e outra coisa: em "ETA 125-33/50" o /50 e
+# variante de rotor, nao um terceiro grupo.
+RX_TRES = re.compile(r"\b(\d{2,3})-(\d{2,3})-(\d{2,4})(?:\.\d)?\b")
+RX_DOIS = re.compile(r"\b(\d{2,3})-(\d{2,4})(?:\.\d)?\b")
+
+# Itens que carregam o codigo da bomba mas nao sao bomba
+RX_NAO_BOMBA = re.compile(r"\bJG\s?JUNTAS?\b|\bKIT\b|\bJUNTA\b|\bREPARO\b",
+                          re.I)
 
 # Bocal em milimetro -> polegada comercial
 MM_PARA_POLEGADA = {25: 1, 32: 1.25, 40: 1.5, 50: 2, 65: 2.5, 80: 3, 100: 4,
@@ -26,6 +32,28 @@ MM_PARA_POLEGADA = {25: 1, 32: 1.25, 40: 1.5, 50: 2, 65: 2.5, 80: 3, 100: 4,
 # Familias de bomba centrifuga que usam essa nomenclatura
 RX_FAMILIA = re.compile(
     r"\b(METB|METN|MCPK|ETB|ETN|ETA|INI|INIB|ITAP|BLOC|MEG|CPK|KWP)\b", re.I)
+
+
+# Medido nas 131 bombas de tres grupos do catalogo (KSB METB, METN e MCPK):
+# ate a saida de 80 mm a entrada fica DOIS degraus acima; de 100 mm em diante,
+# UM degrau. O numero e quantas vezes o par aparece.
+ENTRADA_PELA_SAIDA = {
+    25: (40, 1), 32: (50, 9), 40: (65, 8), 50: (80, 15), 65: (100, 11),
+    80: (125, 17), 100: (125, 16), 125: (150, 23), 150: (200, 19),
+    200: (250, 9),
+}
+
+
+def entrada_presumida(saida_mm):
+    """Entrada de uma bomba que so declara a saida.
+
+    Vem da tabela medida no catalogo, nao de regra geral - por isso devolve
+    tambem quantas bombas sustentam o par.
+    """
+    achado = ENTRADA_PELA_SAIDA.get(saida_mm)
+    if not achado:
+        return None, 0
+    return achado
 
 
 def orientacao_pelo_desenho(tipo_reducao_succao_no_desenho):
@@ -40,7 +68,7 @@ def orientacao_pelo_desenho(tipo_reducao_succao_no_desenho):
 def interpretar(descricao):
     """Descricao da bomba -> bocais e rotor. None se nao reconhecer."""
     texto = descricao.upper()
-    if not RX_FAMILIA.search(texto):
+    if not RX_FAMILIA.search(texto) or RX_NAO_BOMBA.search(texto):
         return None
     m = RX_TRES.search(texto)
     if m:
@@ -85,8 +113,9 @@ def reducoes(bomba, dn_succao_pol=None, dn_recalque_pol=None,
     saida = []
     entrada_pol = bomba.get("entrada_pol")
     if entrada_pol is None and bomba["grupos"] == 2:
-        # bomba de dois grupos nao declara a entrada; nao inventar
-        entrada_pol = None
+        # dois grupos nao declaram a entrada: usa a tabela medida no catalogo
+        presumida, _apoio = entrada_presumida(bomba["saida_mm"])
+        entrada_pol = MM_PARA_POLEGADA.get(presumida) if presumida else None
     if dn_succao_pol and entrada_pol and dn_succao_pol != entrada_pol:
         saida.append({"lado": "SUCCAO", "tipo": tipo_reducao_succao(orientacao),
                       "de": dn_succao_pol, "para": entrada_pol,

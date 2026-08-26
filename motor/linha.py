@@ -178,13 +178,16 @@ class Linha:
                     continue
                 somar(item["sap"], item["descricao"], qtd, "tirante")
                 if papel == "BARRA_ROSCADA" and ficha:
-                    por_barra = int(regras.BARRA_MM // ficha["comp_prisioneiro_mm"])
+                    _, por_barra = regras.barras_da_valvula(peca.familia, ficha)
+                    extra = (" (3 nao cobririam a furacao)"
+                             if qtd > regras.BARRAS_ROSCADAS_POR_PECA[peca.familia]
+                             else "")
                     avisos.append(
                         f"{peca.familia} {dn:g}: {qtd} barras de "
                         f"{esp['bitola_pol']}\" - tirante de "
                         f"{ficha['comp_prisioneiro_mm']:.0f} mm, "
                         f"{por_barra} por barra, {qtd * por_barra} tirantes "
-                        f"para {ficha['furos']} furos"
+                        f"para {ficha['furos']} furos{extra}"
                     )
 
         for junc in self.juncoes():

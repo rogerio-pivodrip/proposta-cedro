@@ -37,6 +37,25 @@ BARRAS_ROSCADAS_POR_PECA = {
 # 2 e o minimo por tirante (uma ponta e outra) - fica como suposicao avisada.
 PORCAS_POR_BARRA = 2
 SUPOSICAO_PORCAS = True
+
+
+def barras_da_valvula(familia, ficha):
+    """Quantas barras roscadas a valvula leva.
+
+    Base: 3 barras por valvula. De 10" para cima o tirante e longo demais e 3
+    barras nao rendem um tirante por furo, entao a quantidade sobe para cobrir
+    a furacao.
+    """
+    base = BARRAS_ROSCADAS_POR_PECA.get(familia)
+    if not base:
+        return 0, None
+    if not ficha:
+        return base, None
+    por_barra = int(BARRA_MM // ficha["comp_prisioneiro_mm"])
+    if not por_barra:
+        return base, None
+    necessario = -(-ficha["furos"] // por_barra)   # arredonda para cima
+    return max(base, necessario), por_barra
 # Figura padrao das valvulas de retencao wafer. 162 = portinhola unica, que e a
 # UNIFLAP do catalogo; 160 = dupla portinhola.
 FIGURA_PADRAO = "162"
@@ -215,11 +234,11 @@ def barra_roscada_da_peca(familia, dn, unidade="in", contexto="AZ_AZ",
     A bitola vem da ficha do fabricante; o comprimento do tirante tambem, mas
     so para o desenho e para o aproveitamento - a compra e por barra.
     """
-    qtd = BARRAS_ROSCADAS_POR_PECA.get(familia)
-    if not qtd:
+    if familia not in BARRAS_ROSCADAS_POR_PECA:
         return []
     dn_pol = dn_em_polegada(dn, unidade) or dn
     ficha = ficha_wafer(dn_pol, figura)
+    qtd, _por_barra = barras_da_valvula(familia, ficha)
     bit = (ficha["bitola_pol"] if ficha
            else especificacao_parafuso(dn_pol, contexto)["bitola_pol"])
     itens = [("BARRA_ROSCADA", {"bitola_pol": bit}, qtd)]

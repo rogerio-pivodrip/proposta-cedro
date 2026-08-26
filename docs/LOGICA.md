@@ -147,7 +147,8 @@ norma da ponta de jusante — e é aí que a tabela ANSI entra.
 
 Válvula wafer é presa por tirante. A regra de compra é **3 barras roscadas
 inteiras por válvula** de retenção ou borboleta — o corte acontece na montagem e
-não reduz a quantidade comprada.
+não reduz a quantidade comprada. De 10" para cima 3 barras não rendem um tirante
+por furo, e a quantidade sobe para cobrir a furação: **4 barras**.
 
 A bitola e o comprimento do tirante vêm da ficha do fabricante
 (`data/valvulas_wafer.csv`, fichas T.160 e T.162 da MP Válvulas):
@@ -171,13 +172,12 @@ quantos tirantes saem das 3 barras de 1 m, contra os furos da válvula:
 | 4" | 162 mm | 6 | 18 | 8 | sobra |
 | 6" | 181 mm | 5 | 15 | 8 | sobra |
 | 8" | 230 mm | 4 | 12 | 8 | sobra |
-| 10" | 260 mm | 3 | 9 | 12 | **falta 3** |
-| 12" | 296 mm | 3 | 9 | 12 | **falta 3** |
-| 14" | 311 mm | 3 | 9 | 12 | **falta 3** |
+| 10" | 260 mm | 3 | 9 | 12 | 3 não bastam → **4 barras** |
+| 12" | 296 mm | 3 | 9 | 12 | 3 não bastam → **4 barras** |
+| 14" | 311 mm | 3 | 9 | 12 | 3 não bastam → **4 barras** |
 
-De 10" para cima as 3 barras rendem 9 tirantes e a válvula tem 12 furos. Se a
-intenção é encher todos os furos com tirante, falta material; se os tirantes são
-só alguns e o resto é parafuso passante, sobra folga. Ver decisão 1 na seção 8.
+`barras_da_valvula()` calcula `max(3, teto(furos ÷ tirantes_por_barra))`: mantém
+as 3 barras como piso e só sobe quando a furação exige.
 
 A espessura do corpo também entra na geometria da vista lateral — é o face a
 face da válvula.
@@ -226,6 +226,27 @@ Os bocais estão no próprio código da bomba:
 |---|---|
 | `000-000` (dois grupos) | saída, rotor padrão |
 | `000-000-000` (três grupos) | entrada, saída, rotor padrão |
+
+**A bomba de dois grupos não declara a entrada** — e o catálogo permite deduzi-la.
+Medindo as 128 bombas de três grupos (KSB METB, METN e MCPK), o par saída→entrada
+é determinístico, sem uma única exceção:
+
+| saída | entrada | degraus | bombas |
+|---|---|---|---|
+| 32 mm | 50 mm | 2 | 9 |
+| 40 mm | 65 mm | 2 | 8 |
+| 50 mm | 80 mm | 2 | 15 |
+| 65 mm | 100 mm | 2 | 11 |
+| 80 mm | 125 mm | 2 | 17 |
+| **100 mm** | **125 mm** | **1** | 16 |
+| **125 mm** | **150 mm** | **1** | 23 |
+| **150 mm** | **200 mm** | **1** | 19 |
+| **200 mm** | **250 mm** | **1** | 9 |
+
+Ou seja: **uma bitola acima vale de 100 mm em diante; abaixo disso são duas.** A
+quebra é exatamente em 100 mm. Ressalva: as famílias de dois grupos do catálogo
+(IMBIL INI e INIB, KSB ETA e BLOC) nunca declaram a entrada, então a tabela
+aplicada a elas é inferência a partir das bombas de processo da KSB.
 
 Daí sai a regra: **a sucção termina na entrada e o recalque começa na saída**.
 Como a linha quase sempre é maior que os bocais, há uma redução de cada lado — e
@@ -333,16 +354,13 @@ Escolhe o DN → resolve inteiro contra o catálogo → sai a lista.
 
 ## 8. Decisões em aberto
 
-1. **Os tirantes enchem todos os furos da válvula, ou só alguns?** De 10" para
-   cima as 3 barras dão 9 tirantes contra 12 furos. E quantas porcas e arruelas
-   por barra — hoje o motor conta 2, como suposição avisada.
+1. **Quantas porcas e arruelas por barra roscada?** Hoje o motor conta 2, como
+   suposição avisada.
 2. **Furação da válvula × furação do flange.** A válvula wafer é ASME 150 (8
    furos em 8") e o flange da linha é NBR PN16 (12 furos em DN200). Como isso se
    resolve na montagem?
-3. **Bomba de dois grupos** — a nomenclatura não declara a entrada. Ela é sempre
-   uma bitola acima da saída, ou depende do modelo?
-4. **Plasson** — a bitola do parafuso e o critério entre 4" e 5" de comprimento.
-5. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
+3. **Plasson** — a bitola do parafuso e o critério entre 4" e 5" de comprimento.
+4. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
    ainda são norma escrita — e são justamente as do lado da bomba.
 
 ## 9. Estado do código
