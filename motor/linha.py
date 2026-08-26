@@ -162,13 +162,13 @@ class Linha:
                 regras.dn_em_polegada(dn, peca.unidade_dn) or dn)
                 if peca.familia in regras.BARRAS_ROSCADAS_POR_PECA else None)
             if ficha:
-                dn_nom = regras.dn_nominal(dn, peca.unidade_dn)
-                flange = regras.FUROS.get(("NBR PN16", dn_nom)) if dn_nom else None
-                if flange and flange["furos"] != ficha["furos"]:
+                furos = regras.furos_da_valvula(dn, peca.unidade_dn, "NBR PN16",
+                                                ficha)
+                if furos != ficha["furos"]:
                     avisos.append(
-                        f"{peca.familia} {dn:g}: a valvula e classe ASME 150 com "
-                        f"{ficha['furos']} furos e o flange NBR PN16 tem "
-                        f"{flange['furos']} - conferir o casamento de furacao"
+                        f"{peca.familia} {dn:g}: pedir a valvula em NBR PN16 "
+                        f"({furos} furos). A ficha do fabricante e da versao "
+                        f"ASME 150, com {ficha['furos']}"
                     )
             for papel, esp, qtd in regras.barra_roscada_da_peca(
                     peca.familia, dn, peca.unidade_dn, contexto):
@@ -178,7 +178,8 @@ class Linha:
                     continue
                 somar(item["sap"], item["descricao"], qtd, "tirante")
                 if papel == "BARRA_ROSCADA" and ficha:
-                    _, por_barra = regras.barras_da_valvula(peca.familia, ficha)
+                    _, por_barra = regras.barras_da_valvula(
+                        peca.familia, ficha, dn, peca.unidade_dn)
                     extra = (" (3 nao cobririam a furacao)"
                              if qtd > regras.BARRAS_ROSCADAS_POR_PECA[peca.familia]
                              else "")
@@ -187,7 +188,9 @@ class Linha:
                         f"{esp['bitola_pol']}\" - tirante de "
                         f"{ficha['comp_prisioneiro_mm']:.0f} mm, "
                         f"{por_barra} por barra, {qtd * por_barra} tirantes "
-                        f"para {ficha['furos']} furos{extra}"
+                        f"para {regras.furos_da_valvula(dn, peca.unidade_dn,
+                                                        'NBR PN16', ficha)} "
+                        f"furos{extra}"
                     )
 
         for junc in self.juncoes():

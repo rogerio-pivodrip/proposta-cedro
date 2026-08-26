@@ -163,18 +163,23 @@ A bitola e o comprimento do tirante vêm da ficha do fabricante
 | 12" | 181 mm | 12 | 7/8" | 283 mm | 296 mm |
 | 14" | 184 mm | 12 | 1" | 292 mm | 311 mm |
 
+**A furação da válvula depende da norma em que ela é pedida.** As colunas da
+ficha são da versão ASME 150 porque foi assim que o fabricante publicou; pedida
+em NBR PN16, a válvula sai com a furação da NBR e casa com o flange da linha. Por
+isso o número de furos vem da tabela de furação, não da ficha — e o alerta de
+"8 furos contra 12" virou um lembrete de especificação, não um conflito.
+
 O comprimento do prisioneiro não muda a compra, mas serve de conferência —
-quantos tirantes saem das 3 barras de 1 m, contra os furos da válvula:
+quantos tirantes saem das 3 barras de 1 m, contra os furos da válvula em
+NBR PN16:
 
 | DN | tirante | por barra | 3 barras dão | furos | |
 |---|---|---|---|---|---|
-| 3" | 162 mm | 6 | 18 | 4 | sobra |
-| 4" | 162 mm | 6 | 18 | 8 | sobra |
-| 6" | 181 mm | 5 | 15 | 8 | sobra |
-| 8" | 230 mm | 4 | 12 | 8 | sobra |
-| 10" | 260 mm | 3 | 9 | 12 | 3 não bastam → **4 barras** |
-| 12" | 296 mm | 3 | 9 | 12 | 3 não bastam → **4 barras** |
-| 14" | 311 mm | 3 | 9 | 12 | 3 não bastam → **4 barras** |
+| 3" e 4" | 162 mm | 6 | 18 | 8 | 3 barras |
+| 5" e 6" | 181 mm | 5 | 15 | 8 | 3 barras |
+| 8" | 230 mm | 4 | 12 | 12 | 3 barras, no limite |
+| 10" e 12" | 260 a 296 mm | 3 | 9 | 12 | **4 barras** |
+| 14" | 311 mm | 3 | 9 | **16** | **6 barras** |
 
 `barras_da_valvula()` calcula `max(3, teto(furos ÷ tirantes_por_barra))`: mantém
 as 3 barras como piso e só sobe quando a furação exige.
@@ -182,9 +187,8 @@ as 3 barras como piso e só sobe quando a furação exige.
 A espessura do corpo também entra na geometria da vista lateral — é o face a
 face da válvula.
 
-**Um alerta que a ficha revelou:** a válvula wafer é ASME classe 150 e tem
-**8 furos em 8"**, enquanto o flange NBR PN16 de DN200 tem **12**. O motor avisa
-sempre que os dois não batem.
+O 14" pesa porque a NBR PN16 dá **16 furos** em DN350 e o tirante de 311 mm só
+rende 3 por barra. O motor lembra, em cada válvula, de pedi-la na norma da linha.
 
 ### 4.3 Kits: peças que nunca vêm sozinhas
 
@@ -356,10 +360,10 @@ Escolhe o DN → resolve inteiro contra o catálogo → sai a lista.
 
 1. **Quantas porcas e arruelas por barra roscada?** Hoje o motor conta 2, como
    suposição avisada.
-2. **Furação da válvula × furação do flange.** A válvula wafer é ASME 150 (8
-   furos em 8") e o flange da linha é NBR PN16 (12 furos em DN200). Como isso se
-   resolve na montagem?
-3. **Plasson** — a bitola do parafuso e o critério entre 4" e 5" de comprimento.
+2. **Plasson** — a bitola do parafuso e o critério entre 4" e 5" de comprimento.
+3. **Comprimento do prisioneiro em NBR.** A ficha mede a versão ASME 150, cujo
+   flange é mais grosso que o NBR — o tirante em NBR sai um pouco mais curto.
+   Mantive o número da ficha, que erra para mais.
 4. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
    ainda são norma escrita — e são justamente as do lado da bomba.
 

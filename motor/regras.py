@@ -39,12 +39,25 @@ PORCAS_POR_BARRA = 2
 SUPOSICAO_PORCAS = True
 
 
-def barras_da_valvula(familia, ficha):
+def furos_da_valvula(dn, unidade="in", norma="NBR PN16", ficha=None):
+    """A valvula e fabricada na norma que se pedir, e a furacao segue a norma.
+
+    Entao o numero de furos sai da tabela de furacao da linha, nao da ficha -
+    a ficha traz a versao ASME 150 porque foi assim que ela foi publicada.
+    """
+    dn_nom = dn_nominal(dn, unidade)
+    reg = FUROS.get((norma, dn_nom)) if dn_nom else None
+    if reg:
+        return reg["furos"]
+    return ficha["furos"] if ficha else None
+
+
+def barras_da_valvula(familia, ficha, dn=None, unidade="in", norma="NBR PN16"):
     """Quantas barras roscadas a valvula leva.
 
-    Base: 3 barras por valvula. De 10" para cima o tirante e longo demais e 3
-    barras nao rendem um tirante por furo, entao a quantidade sobe para cobrir
-    a furacao.
+    Base: 3 barras por valvula. Quando o tirante e longo e nao rende um por
+    furo, a quantidade sobe para cobrir a furacao - o que acontece de 10" para
+    cima.
     """
     base = BARRAS_ROSCADAS_POR_PECA.get(familia)
     if not base:
@@ -52,9 +65,10 @@ def barras_da_valvula(familia, ficha):
     if not ficha:
         return base, None
     por_barra = int(BARRA_MM // ficha["comp_prisioneiro_mm"])
-    if not por_barra:
-        return base, None
-    necessario = -(-ficha["furos"] // por_barra)   # arredonda para cima
+    furos = furos_da_valvula(dn, unidade, norma, ficha) if dn else ficha["furos"]
+    if not por_barra or not furos:
+        return base, por_barra
+    necessario = -(-furos // por_barra)   # arredonda para cima
     return max(base, necessario), por_barra
 # Figura padrao das valvulas de retencao wafer. 162 = portinhola unica, que e a
 # UNIFLAP do catalogo; 160 = dupla portinhola.
@@ -238,7 +252,7 @@ def barra_roscada_da_peca(familia, dn, unidade="in", contexto="AZ_AZ",
         return []
     dn_pol = dn_em_polegada(dn, unidade) or dn
     ficha = ficha_wafer(dn_pol, figura)
-    qtd, _por_barra = barras_da_valvula(familia, ficha)
+    qtd, _por_barra = barras_da_valvula(familia, ficha, dn, unidade, norma)
     bit = (ficha["bitola_pol"] if ficha
            else especificacao_parafuso(dn_pol, contexto)["bitola_pol"])
     itens = [("BARRA_ROSCADA", {"bitola_pol": bit}, qtd)]
