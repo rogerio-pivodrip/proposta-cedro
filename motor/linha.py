@@ -7,7 +7,7 @@ ferragem derivada.
 """
 from collections import OrderedDict
 
-from . import ferragem, regras
+from . import corte, ferragem, regras
 
 
 class Peca:
@@ -141,7 +141,10 @@ class Linha:
         for peca in self.pecas:
             somar(peca.sap, peca.descricao, 1, "linha")
 
-        # valvula wafer: 3 tirantes de barra roscada, com porca e arruela
+        # valvula wafer: 3 tirantes de barra roscada, com porca e arruela.
+        # As barras sao cortadas, entao os tirantes viram metragem e so no fim
+        # se sabe quantas barras de 1 m comprar.
+        cortes = {}
         for peca in self.pecas:
             dn = peca.item["dn"][0] if peca.item["dn"] else None
             if dn is None:
@@ -153,11 +156,19 @@ class Linha:
                 if not item:
                     avisos.append(f"sem SAP para {papel} {esp}")
                     continue
-                somar(item["sap"], item["descricao"], qtd, "tirante")
-                if papel == "BARRA_ROSCADA" and esp.get("comprimento_mm") is None:
+                if papel != "BARRA_ROSCADA":
+                    somar(item["sap"], item["descricao"], qtd, "tirante")
+                    continue
+                if esp.get("comprimento_mm"):
+                    cortes.setdefault(item["sap"], {"item": item, "cortes": []})
+                    cortes[item["sap"]]["cortes"].extend(
+                        [esp["comprimento_mm"]] * qtd)
+                else:
+                    somar(item["sap"], item["descricao"], qtd, "tirante")
                     avisos.append(
-                        f"{peca.familia}: {qtd} tirantes de {esp['bitola_pol']}\" - "
-                        "comprimento do tirante nao definido, contado como barra inteira"
+                        f"{peca.familia} {peca.item['dn'][0]:g}: {qtd} tirantes de "
+                        f"{esp['bitola_pol']}\" - espessura do corpo da valvula nao "
+                        "cadastrada, contado como barra inteira"
                     )
 
         for junc in self.juncoes():
@@ -188,5 +199,14 @@ class Linha:
                     avisos.append(f"sem SAP para {papel} {esp}")
                     continue
                 somar(item["sap"], item["descricao"], qtd, "ferragem")
+
+        for sap, reg in cortes.items():
+            plano = corte.planejar(reg["cortes"], regras.BARRA_MM)
+            somar(sap, reg["item"]["descricao"], plano["barras"], "tirante")
+            avisos.append(
+                f"{len(reg['cortes'])} tirantes ({sum(reg['cortes'])/1000:.2f} m) "
+                f"-> {plano['barras']} barra(s) de {regras.BARRA_MM/1000:g} m, "
+                f"aproveitamento {plano['aproveitamento']:.0%}"
+            )
 
         return list(bom.values()), avisos

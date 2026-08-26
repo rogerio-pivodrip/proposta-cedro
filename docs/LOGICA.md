@@ -97,16 +97,50 @@ n × porca
 A bitola no Plasson e o critério entre 4" e 5" ainda não foram confirmados —
 as linhas estão marcadas `homologado=NAO`.
 
-**Furação** (`data/regras_furacao.csv`): 8" = 12 furos, confirmado. O resto é
-referência EN 1092-1 PN16, marcado `homologado=NAO`.
+**Furação** (`data/regras_furacao.csv`, gerada por `tools/gerar_furacao.py`):
+124 linhas cobrindo NBR e EN em PN10/16/25/40 e ANSI 150/300, de DN50 a DN600.
+Cada linha traz furos, parafuso da norma, bitola UNC equivalente, diâmetro do
+furo, círculo de furação e espessura de referência do flange.
 
-Milímetro e polegada usam a **mesma tabela**: a flange de 225 mm do Plasson é a
-`FL. AZ - 225 - ABNT 16 - 12 FUROS` (`01542-099000`) — 225 mm ↔ 8" ↔ 12 furos.
-A equivalência comercial está em `motor/traducao.py`.
+> Não consegui baixar o documento normativo nesta sessão — a política de rede da
+> organização bloqueia o acesso a esses sites. As tabelas foram escritas a partir
+> da EN 1092-1 e da ASME B16.5, e **todas nascem `homologado=NAO`**. A furação
+> ABNT/NBR de flange para irrigação segue o padrão DIN/ISO 2531, então as linhas
+> NBR são geradas a partir das EN — está explícito na coluna `fonte`.
 
-**Engate K não é usado.** Continua reconhecido no catálogo (204 conexões) só
-para o motor apontar quando uma peça escolhida tem ponta K, em vez de aceitar em
-silêncio. Junções por rosca e solda também não geram ferragem.
+Uma checagem forte: a tabela dá **NBR PN16 DN200 (8") = 12 furos**, exatamente o
+que você confirmou pelo hidrômetro de 8". E DN200 é também o 225 mm do Plasson,
+que é a `FL. AZ - 225 - ABNT 16 - 12 FUROS`.
+
+**A regra da casa bate com a norma de 2" a 8" — e diverge de 10" para cima:**
+
+| DN | furos | norma pede | casa usa | |
+|---|---|---|---|---|
+| 2" a 5" | 4 a 8 | 5/8" | 5/8" | ok |
+| 6" e 8" | 8 e 12 | 3/4" | 3/4" | ok |
+| 10" e 12" | 12 | 1" (M24) | 3/4" | furo de 26 mm |
+| 14" | 16 | 1" (M24) | 3/4" | furo de 26 mm |
+
+Nos três DN maiores o flange NBR PN16 tem furo de 26 mm e a norma pede M24; um
+parafuso de 3/4" (19 mm) fica com 7 mm de folga. Ver decisão 4 na seção 8.
+
+**Chave da tabela: DN nominal em mm.** É o denominador comum entre a série em
+polegada do aço e a série em milímetro do PVC — 8" e 225 mm caem os dois em
+DN200. `motor/regras.py::dn_nominal` faz a conversão.
+
+**Onde a norma muda na linha.** A linha é sempre NBR PN16; quem traz outra norma
+é o equipamento. O catálogo mostra onde a transição acontece:
+
+| peça | contra ANSI 150 | ANSI 300 | EN PN16 | EN PN10 |
+|---|---|---|---|---|
+| redução concêntrica (91) | 28 | 17 | 18 | 6 |
+| redução excêntrica (70) | 24 | 16 | 16 | 7 |
+| adaptador (34) | 5 | 4 | — | — |
+
+Ou seja: **a redução é a peça de transição para a bomba importada**, não só um
+degrau de diâmetro. Quando o motor insere uma redução ele já tem que decidir a
+norma da ponta de jusante — e é aí que a tabela ANSI entra.
+`tools/relatorio_furacao.py` imprime esse cruzamento.
 
 ### 4.2.1 Barra roscada
 
@@ -114,10 +148,18 @@ Válvula wafer é presa por tirante: **3 barras roscadas por válvula de retenç
 ou válvula borboleta**, na mesma bitola da regra acima, mais 2 porcas e 2
 arruelas por tirante.
 
-O catálogo vende a barra em 1 m (`BARRA ROSCA FG 5/8"` `01542-000191`,
-`3/4"` `01542-000190`). Enquanto o **comprimento do tirante** não for definido,
-a lista conta 3 barras inteiras por válvula e emite aviso; definido o
-comprimento, o planejador de corte converte para barras como faz com o tubo.
+As barras são cortadas, então o tirante é metragem e não peça — mesma lógica do
+tubo. O comprimento sai de:
+
+```
+tirante = 2 × esp_flange + esp_corpo_da_válvula + 2 × arruela + 2 × porca + folga
+```
+
+A espessura do flange vem da tabela de furação. Falta a **espessura do corpo da
+válvula wafer** — `data/valvulas_wafer.csv` está com as linhas prontas e a coluna
+vazia. Enquanto não for preenchida, a lista conta barra inteira e avisa; depois,
+o planejador de corte converte os tirantes em barras de 1 m como já faz com o
+tubo PVC.
 
 ### 4.3 Kits: peças que nunca vêm sozinhas
 
@@ -220,13 +262,16 @@ Escolhe o DN → resolve inteiro contra o catálogo → sai a lista.
 
 ## 8. Decisões em aberto
 
-1. **Comprimento do tirante** de barra roscada — sem ele a lista conta 3 barras
-   inteiras de 1 m por válvula, que deve estar sobrando.
+1. **Espessura do corpo das válvulas wafer** (`data/valvulas_wafer.csv`) — é o
+   que falta para o tirante virar corte e não barra inteira.
 2. **As 3 barras roscadas substituem 3 dos parafusos da junta, ou entram além
    deles?** Hoje o motor soma as duas coisas.
 3. **Plasson** — a bitola do parafuso (assumi a mesma regra de DN do aço) e o
    critério entre 4" e 5" de comprimento.
-4. **Furação** das demais bitolas — só 8" = 12 furos está confirmado.
+4. **Bitola de 10" a 14"** — a norma pede M24 (≈1") num furo de 26 mm e a regra
+   da casa diz 3/4". É intencional?
+5. **Homologar a tabela de furação** — 124 linhas geradas de norma, nenhuma
+   conferida contra o catálogo oficial de flanges de vocês.
 
 ## 9. Estado do código
 
@@ -235,6 +280,8 @@ tools/importar_catalogo.py    xlsx  -> data/catalogo_bruto.json   (5.157 itens)
 tools/normalizar.py           texto -> data/catalogo.json          (peças paramétricas)
 tools/extrair_lista_pdf.py    PDF do CAD -> lista de peças em CSV
 tools/casar_lista.py          nome de desenho -> código SAP
+tools/gerar_furacao.py        tabelas EN 1092-1 e ASME B16.5 -> regras_furacao.csv
+tools/relatorio_furacao.py    regra da casa x norma, e onde a norma muda na linha
 tools/demo_succao.py          demonstração ponta a ponta (sucção e recalque)
 motor/catalogo.py             índice por (família, DN, norma)
 motor/regras.py               compatibilidade + ferragem

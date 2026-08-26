@@ -37,6 +37,20 @@ BARRA_MM = 1000
 
 MM_PARA_POLEGADA = {mm: pol for pol, mm in POLEGADA_MM.items()}
 
+# DN nominal (mm) de cada medida. Duas series entram na mesma tabela de furacao:
+# o aco em polegada e o PVC pelo diametro externo.
+POLEGADA_PARA_DN = {2: 50, 2.5: 65, 3: 80, 4: 100, 5: 125, 6: 150, 8: 200,
+                    10: 250, 12: 300, 14: 350, 16: 400, 18: 450, 20: 500,
+                    24: 600}
+PVC_PARA_DN = {63: 50, 75: 65, 90: 80, 110: 100, 140: 125, 160: 150, 225: 200,
+               280: 250, 315: 300, 355: 350}
+
+# Aperto do tirante: arruela, porca e folga somadas as duas espessuras de flange
+ESP_ARRUELA_MM = 3.0
+ALTURA_PORCA_MM = {"5/8": 15.9, "3/4": 19.0, "7/8": 22.2, "1": 25.4,
+                   "1 1/8": 28.6, "1 1/4": 31.8}
+FOLGA_MM = 5.0
+
 
 class Incompatibilidade(Exception):
     pass
@@ -48,10 +62,19 @@ def _carregar(caminho):
 
 
 def _tabela_furacao():
+    """Chaveada por (norma, DN nominal em mm) - o denominador comum entre a
+    serie em polegada do aco e a serie em milimetro do PVC."""
     tabela = {}
     for reg in _carregar(FURACAO):
-        tabela[(reg["norma"], float(reg["dn_pol"]))] = {
+        def numero(campo):
+            return float(reg[campo]) if reg[campo] else None
+        tabela[(reg["norma"], int(reg["dn_mm"]))] = {
             "furos": int(reg["furos"]),
+            "parafuso_norma": reg["parafuso_norma"],
+            "bitola_unc_pol": reg["bitola_unc_pol"],
+            "furo_mm": numero("furo_mm"),
+            "circulo_mm": numero("circulo_mm"),
+            "esp_flange_mm": numero("esp_flange_mm"),
             "homologado": reg["homologado"].strip().upper() == "SIM",
         }
     return tabela
@@ -76,11 +99,21 @@ FERRAGENS = _tabela_ferragem()
 
 
 def dn_em_polegada(dn, unidade="in"):
-    """225 mm de Plasson usa a mesma flange de 8" - 12 furos. A conversao
-    comercial polegada/milimetro serve para as duas tabelas."""
+    """225 mm de Plasson usa a mesma flange de 8". A conversao comercial
+    polegada/milimetro serve para as duas tabelas."""
     if unidade == "mm":
         return MM_PARA_POLEGADA.get(dn)
     return dn
+
+
+def dn_nominal(dn, unidade="in"):
+    """Medida do desenho -> DN nominal em mm, que e a chave da furacao."""
+    if unidade == "mm":
+        if dn in PVC_PARA_DN:
+            return PVC_PARA_DN[dn]
+        pol = MM_PARA_POLEGADA.get(dn)
+        return POLEGADA_PARA_DN.get(pol) if pol else None
+    return POLEGADA_PARA_DN.get(dn)
 
 
 def contexto_da_junta(material_a, material_b):
@@ -128,10 +161,12 @@ def ferragem_da_junta(dn, norma, unidade="in", contexto="AZ_AZ"):
         raise Incompatibilidade(
             f"sem equivalencia em polegada para DN {dn} {unidade}"
         )
-    reg = FUROS.get((norma, float(dn_pol)))
+    dn_nom = dn_nominal(dn, unidade)
+    reg = FUROS.get((norma, dn_nom)) if dn_nom else None
     if not reg:
         raise Incompatibilidade(
-            f'sem furacao para {norma} DN {dn_pol}" - cadastrar em regras_furacao.csv'
+            f'sem furacao para {norma} DN {dn_nom or dn} - '
+            "rodar tools/gerar_furacao.py ou cadastrar a norma"
         )
     esp = especificacao_parafuso(dn_pol, contexto)
     n = reg["furos"]
@@ -145,15 +180,32 @@ def ferragem_da_junta(dn, norma, unidade="in", contexto="AZ_AZ"):
     ]
 
 
-def barra_roscada_da_peca(familia, dn, unidade="in", contexto="AZ_AZ"):
+def comprimento_tirante(dn, norma, unidade="in", esp_valvula_mm=None,
+                        bitola="3/4"):
+    """Tirante = 2 flanges + corpo da valvula + 2 arruelas + 2 porcas + folga.
+
+    Sem a espessura do corpo da valvula wafer nao da para fechar a conta -
+    devolve None e a lista avisa.
+    """
+    if esp_valvula_mm is None:
+        return None
+    dn_nom = dn_nominal(dn, unidade)
+    reg = FUROS.get((norma, dn_nom)) if dn_nom else None
+    esp_flange = reg["esp_flange_mm"] if reg and reg["esp_flange_mm"] else 24.0
+    return round(2 * esp_flange + esp_valvula_mm + 2 * ESP_ARRUELA_MM
+                 + 2 * ALTURA_PORCA_MM.get(bitola, 19.0) + FOLGA_MM)
+
+
+def barra_roscada_da_peca(familia, dn, unidade="in", contexto="AZ_AZ",
+                          norma="NBR PN16", esp_valvula_mm=None):
     """Valvula wafer (retencao, borboleta) leva 3 tirantes de barra roscada."""
     qtd = BARRA_ROSCADA_POR_PECA.get(familia)
     if not qtd:
         return []
     dn_pol = dn_em_polegada(dn, unidade) or dn
     bit = especificacao_parafuso(dn_pol, contexto)["bitola_pol"]
-    itens = [("BARRA_ROSCADA", {"bitola_pol": bit,
-                                "comprimento_mm": COMPRIMENTO_TIRANTE_MM}, qtd)]
+    comp = comprimento_tirante(dn, norma, unidade, esp_valvula_mm, bit)
+    itens = [("BARRA_ROSCADA", {"bitola_pol": bit, "comprimento_mm": comp}, qtd)]
     # cada tirante fecha com porca e arruela nas duas pontas
     itens.append(("PORCA", {"bitola_pol": bit}, 2 * qtd))
     itens.append(("ARRUELA", {"bitola_pol": bit}, 2 * qtd))

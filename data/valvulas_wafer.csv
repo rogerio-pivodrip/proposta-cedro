@@ -1,0 +1,18 @@
+# Espessura do corpo (face a face) das valvulas tipo wafer, presas por tirante.
+# Sem esse numero nao da para calcular o comprimento do tirante e a lista conta
+# barra inteira. Preencher com o catalogo do fabricante.
+familia,dn_pol,esp_corpo_mm,fonte
+VALVULA_RETENCAO,3,,
+VALVULA_RETENCAO,4,,
+VALVULA_RETENCAO,6,,
+VALVULA_RETENCAO,8,,
+VALVULA_RETENCAO,10,,
+VALVULA_RETENCAO,12,,
+VALVULA_RETENCAO,14,,
+VALVULA_BORBOLETA,3,,
+VALVULA_BORBOLETA,4,,
+VALVULA_BORBOLETA,6,,
+VALVULA_BORBOLETA,8,,
+VALVULA_BORBOLETA,10,,
+VALVULA_BORBOLETA,12,,
+VALVULA_BORBOLETA,14,,
