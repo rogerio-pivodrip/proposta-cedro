@@ -212,8 +212,8 @@ class Linha:
             if regras.contexto_sem_regra(contexto):
                 avisos.append(
                     f"juncao {junc['pos']} ({junc['de'].material} x "
-                    f"{junc['para'].material}): nao ha regra de parafuso para "
-                    "aco contra flange Plasson - conferir"
+                    f"{junc['para'].material}): combinacao sem regra de "
+                    "parafuso - conferir"
                 )
             try:
                 itens = regras.ferragem_da_junta(

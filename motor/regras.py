@@ -179,17 +179,21 @@ PLASSON = {"PVC", "PVC_PLASSON"}
 
 
 def contexto_da_junta(material_a, material_b):
-    if "BOMBA" in (material_a, material_b):
+    materiais = {material_a, material_b}
+    if "BOMBA" in materiais:
         return "BOMBA"
     if material_a in PLASSON and material_b in PLASSON:
         return "PLASSON_PLASSON"
     if material_a == material_b == "ACO_ZINCADO":
         return "AZ_AZ"
+    if "ACO_ZINCADO" in materiais and materiais & PLASSON:
+        return "ACO_PLASSON"
     return "MISTO"
 
 
 def contexto_sem_regra(contexto):
-    """MISTO nao tem regra fechada - o motor avisa em vez de escolher calado."""
+    """MISTO e o que sobra - nem aco com aco, nem Plasson, nem bomba, nem aco
+    com Plasson. Sem regra fechada, o motor avisa em vez de escolher calado."""
     return contexto == "MISTO"
 
 
