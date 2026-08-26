@@ -17,6 +17,7 @@ from .traducao import POLEGADA_MM
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FURACAO = os.path.join(RAIZ, "data", "regras_furacao.csv")
 FERRAGEM = os.path.join(RAIZ, "data", "regras_ferragem.csv")
+WAFER = os.path.join(RAIZ, "data", "valvulas_wafer.csv")
 
 TIPOS_FLANGE = {"FLANGE", "FLANGE_K"}
 
@@ -30,9 +31,9 @@ BARRA_ROSCADA_POR_PECA = {
     "VALVULA_RETENCAO": 3,
     "VALVULA_BORBOLETA": 3,
 }
-# Comprimento do tirante ainda nao definido. Enquanto for None a lista sai em
-# tirantes; definido, o planejador de corte converte para barras de 1000 mm.
-COMPRIMENTO_TIRANTE_MM = None
+# Figura padrao das valvulas de retencao wafer. 162 = portinhola unica, que e a
+# UNIFLAP do catalogo; 160 = dupla portinhola.
+FIGURA_PADRAO = "162"
 BARRA_MM = 1000
 
 MM_PARA_POLEGADA = {mm: pol for pol, mm in POLEGADA_MM.items()}
@@ -94,8 +95,25 @@ def _tabela_ferragem():
     return faixas
 
 
+def _tabela_wafer():
+    """Ficha do fabricante: espessura do corpo, furos, bitola e - o que importa
+    para o corte - o comprimento do prisioneiro, que e o tirante."""
+    tabela = {}
+    for reg in _carregar(WAFER):
+        tabela[(reg["figura"], float(reg["dn_pol"]))] = {
+            "tipo": reg["tipo"],
+            "esp_corpo_mm": float(reg["esp_corpo_mm"]),
+            "furos": int(reg["furos"]),
+            "bitola_pol": reg["bitola_pol"],
+            "comp_parafuso_mm": float(reg["comp_parafuso_mm"]),
+            "comp_prisioneiro_mm": float(reg["comp_prisioneiro_mm"]),
+        }
+    return tabela
+
+
 FUROS = _tabela_furacao()
 FERRAGENS = _tabela_ferragem()
+WAFERS = _tabela_wafer()
 
 
 def dn_em_polegada(dn, unidade="in"):
@@ -180,31 +198,28 @@ def ferragem_da_junta(dn, norma, unidade="in", contexto="AZ_AZ"):
     ]
 
 
-def comprimento_tirante(dn, norma, unidade="in", esp_valvula_mm=None,
-                        bitola="3/4"):
-    """Tirante = 2 flanges + corpo da valvula + 2 arruelas + 2 porcas + folga.
-
-    Sem a espessura do corpo da valvula wafer nao da para fechar a conta -
-    devolve None e a lista avisa.
-    """
-    if esp_valvula_mm is None:
-        return None
-    dn_nom = dn_nominal(dn, unidade)
-    reg = FUROS.get((norma, dn_nom)) if dn_nom else None
-    esp_flange = reg["esp_flange_mm"] if reg and reg["esp_flange_mm"] else 24.0
-    return round(2 * esp_flange + esp_valvula_mm + 2 * ESP_ARRUELA_MM
-                 + 2 * ALTURA_PORCA_MM.get(bitola, 19.0) + FOLGA_MM)
+def ficha_wafer(dn_pol, figura=None):
+    return WAFERS.get((figura or FIGURA_PADRAO, float(dn_pol)))
 
 
 def barra_roscada_da_peca(familia, dn, unidade="in", contexto="AZ_AZ",
-                          norma="NBR PN16", esp_valvula_mm=None):
-    """Valvula wafer (retencao, borboleta) leva 3 tirantes de barra roscada."""
+                          norma="NBR PN16", figura=None):
+    """Valvula wafer leva 3 tirantes de barra roscada.
+
+    Comprimento e bitola nao sao calculados: vem tabelados na ficha do
+    fabricante (coluna do prisioneiro).
+    """
     qtd = BARRA_ROSCADA_POR_PECA.get(familia)
     if not qtd:
         return []
     dn_pol = dn_em_polegada(dn, unidade) or dn
-    bit = especificacao_parafuso(dn_pol, contexto)["bitola_pol"]
-    comp = comprimento_tirante(dn, norma, unidade, esp_valvula_mm, bit)
+    ficha = ficha_wafer(dn_pol, figura)
+    if ficha:
+        bit = ficha["bitola_pol"]
+        comp = ficha["comp_prisioneiro_mm"]
+    else:
+        bit = especificacao_parafuso(dn_pol, contexto)["bitola_pol"]
+        comp = None
     itens = [("BARRA_ROSCADA", {"bitola_pol": bit, "comprimento_mm": comp}, qtd)]
     # cada tirante fecha com porca e arruela nas duas pontas
     itens.append(("PORCA", {"bitola_pol": bit}, 2 * qtd))

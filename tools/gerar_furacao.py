@@ -5,11 +5,11 @@ Por que gerado e nao digitado: a furacao ABNT/NBR de flange para irrigacao
 segue o padrao DIN/ISO 2531, igual a EN 1092. Escrever a regra uma vez e
 expandir evita divergencia entre as duas familias de norma.
 
-FONTE DAS TABELAS: valores das normas EN 1092-1 (metrico) e ASME/ANSI B16.5
-(polegada). Nao foi possivel baixar o documento normativo nesta sessao - a
-politica de rede bloqueia o acesso -, entao TUDO aqui nasce marcado
-homologado=NAO e precisa de conferencia contra o catalogo oficial de flanges
-antes de virar proposta.
+FONTES:
+ - NBR 7675: tabela dimensional real da ficha tecnica T.153FB da MP Valvulas
+   (data/fichas/FIG153_valvula_gaveta_flange_NBR7675.pdf). Homologada.
+ - EN 1092-1 e ASME B16.5: escritas de norma, sem documento a mao nesta sessao
+   (a politica de rede bloqueia o acesso), entao nascem homologado=NAO.
 """
 import csv
 
@@ -48,6 +48,36 @@ EN = {
 ESPESSURA = {50: 20, 65: 20, 80: 20, 100: 20, 125: 22, 150: 22, 200: 24,
              250: 26, 300: 28, 350: 30, 400: 32, 450: 40, 500: 38, 600: 42}
 
+# --- ABNT NBR 7675 - a furacao real, lida da ficha tecnica T.153FB -----------
+# dn_mm: (furos, furo_mm, circulo_mm, esp_flange_mm, diam_externo_mm)
+# Nota: ate DN200 a furacao coincide com PN16; de DN250 para cima ela segue o
+# padrao PN10 - o que casa com a queda de classe da propria valvula
+# (40-200 PN16, 250-300 PN10, 350-600 PN6).
+NBR_7675 = {
+    40:  (4, 18, 110, 19.5, 150),
+    50:  (4, 18, 125, 19.5, 165),
+    65:  (4, 18, 145, 21.0, 185),
+    75:  (8, 18, 160, 21.0, 200),
+    80:  (8, 18, 160, 21.0, 200),   # DIN chama de DN80 o que a NBR chama de DN75
+    100: (8, 18, 180, 21.0, 220),
+    125: (8, 18, 210, 22.0, 250),
+    150: (8, 22, 240, 22.0, 285),
+    200: (12, 22, 295, 23.0, 340),
+    250: (12, 22, 350, 26.0, 395),
+    300: (12, 22, 400, 28.0, 445),
+    350: (16, 22, 460, 28.0, 505),
+    400: (16, 26, 515, 28.0, 565),
+    450: (20, 26, 565, 26.5, 615),
+    500: (20, 26, 620, 26.5, 670),
+    600: (20, 31, 725, 32.0, 780),
+}
+
+# Diametro do furo -> parafuso, nos dois sistemas
+FURO_PARA_PARAFUSO = {18: ("M16", "5/8"), 22: ("M20", "3/4"),
+                      26: ("M24", "1"), 30: ("M27", "1 1/8"),
+                      31: ("M27", "1 1/8"), 33: ("M30", "1 1/4"),
+                      36: ("M33", "1 1/4")}
+
 # --- ASME/ANSI B16.5 - o que vem nas bombas e valvulas importadas ------------
 # dn_pol: {classe: (furos, parafuso_pol, furo_mm, circulo_mm)}
 ANSI = {
@@ -82,10 +112,27 @@ CABECALHO = ["norma", "dn_mm", "dn_pol", "furos", "parafuso_norma",
 
 
 def linhas():
+    # NBR 7675: uma furacao so, medida - nao existe "NBR PN10 x PN16" na pratica,
+    # a norma ja embute a queda de classe com o diametro.
+    for dn_mm, (furos, furo, circulo, esp, _ext) in sorted(NBR_7675.items()):
+        parafuso, unc = FURO_PARA_PARAFUSO[furo]
+        for norma in ("NBR PN10", "NBR PN16", "NBR PN25"):
+            yield {
+                "norma": norma,
+                "dn_mm": dn_mm,
+                "dn_pol": DN_PARA_POL.get(dn_mm, ""),
+                "furos": furos,
+                "parafuso_norma": parafuso,
+                "bitola_unc_pol": unc,
+                "furo_mm": furo,
+                "circulo_mm": circulo,
+                "esp_flange_mm": esp,
+                "fonte": "NBR 7675 (ficha T.153FB MP Valvulas)",
+                "homologado": "SIM",
+            }
     for dn_mm, por_pn in sorted(EN.items()):
         for pn, (furos, parafuso, furo, circulo) in sorted(por_pn.items()):
-            for familia, fonte in (("EN PN%d" % pn, "EN 1092-1"),
-                                   ("NBR PN%d" % pn, "EN 1092-1 (ABNT segue DIN/ISO 2531)")):
+            for familia, fonte in (("EN PN%d" % pn, "EN 1092-1"),):
                 yield {
                     "norma": familia,
                     "dn_mm": dn_mm,

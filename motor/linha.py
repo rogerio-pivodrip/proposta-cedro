@@ -21,9 +21,19 @@ class Peca:
         self.material = item["material"]
         self.unidade_dn = item["unidade_dn"] or "in"
         self.angulo = item["angulo"]
-        self.comprimento_mm = comprimento_mm or item.get("comprimento_mm") or 0
+        self.comprimento_mm = (comprimento_mm or item.get("comprimento_mm")
+                               or self._face_a_face() or 0)
         self.rotulo = rotulo
         self.portas = self._portas()
+
+    def _face_a_face(self):
+        """Valvula wafer tem espessura de corpo tabelada na ficha do fabricante -
+        e ela que entra na geometria da vista lateral."""
+        if not self.item["dn"] or self.item["familia"] not in \
+                regras.BARRA_ROSCADA_POR_PECA:
+            return None
+        ficha = regras.ficha_wafer(self.item["dn"][0])
+        return ficha["esp_corpo_mm"] if ficha else None
 
     def _portas(self):
         portas = []
@@ -150,6 +160,18 @@ class Linha:
             if dn is None:
                 continue
             contexto = regras.contexto_da_junta(peca.material, peca.material)
+            ficha = (regras.ficha_wafer(
+                regras.dn_em_polegada(dn, peca.unidade_dn) or dn)
+                if peca.familia in regras.BARRA_ROSCADA_POR_PECA else None)
+            if ficha:
+                dn_nom = regras.dn_nominal(dn, peca.unidade_dn)
+                flange = regras.FUROS.get(("NBR PN16", dn_nom)) if dn_nom else None
+                if flange and flange["furos"] != ficha["furos"]:
+                    avisos.append(
+                        f"{peca.familia} {dn:g}: a valvula e classe ASME 150 com "
+                        f"{ficha['furos']} furos e o flange NBR PN16 tem "
+                        f"{flange['furos']} - conferir o casamento de furacao"
+                    )
             for papel, esp, qtd in regras.barra_roscada_da_peca(
                     peca.familia, dn, peca.unidade_dn, contexto):
                 item = ferragem.resolver(self.catalogo, papel, esp)

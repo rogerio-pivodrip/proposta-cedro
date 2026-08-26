@@ -22,7 +22,10 @@ python3 tools/casar_lista.py data/projetos/*.csv   # nome de desenho -> código 
 | caminho | o que é |
 |---|---|
 | `data/LM_CANAL_REV1_JUL26.xlsx` | lista de materiais de origem (base jul/2026) |
-| `data/regras_flange.csv` | furação e ferragem por norma/DN — **falta homologar** |
+| `data/regras_furacao.csv` | furação por norma e DN — NBR 7675 medida, EN e ANSI a homologar |
+| `data/regras_ferragem.csv` | bitola e comprimento de parafuso por contexto de junta |
+| `data/valvulas_wafer.csv` | ficha das válvulas wafer: corpo, furos, parafuso, prisioneiro |
+| `data/fichas/` | fichas técnicas do fabricante que originaram as tabelas |
 | `data/depara_nomes.csv` | vocabulário do desenho → vocabulário do catálogo |
 | `data/projetos/` | listas de peças extraídas de projetos reais (casos de teste) |
 | `tools/` | importação, normalização, extração de PDF, casamento, demonstração |

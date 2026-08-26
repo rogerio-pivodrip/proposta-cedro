@@ -98,31 +98,32 @@ A bitola no Plasson e o critério entre 4" e 5" ainda não foram confirmados —
 as linhas estão marcadas `homologado=NAO`.
 
 **Furação** (`data/regras_furacao.csv`, gerada por `tools/gerar_furacao.py`):
-124 linhas cobrindo NBR e EN em PN10/16/25/40 e ANSI 150/300, de DN50 a DN600.
-Cada linha traz furos, parafuso da norma, bitola UNC equivalente, diâmetro do
-furo, círculo de furação e espessura de referência do flange.
+124 linhas cobrindo NBR 7675, EN 1092-1 em PN10/16/25/40 e ANSI 150/300, de
+DN40 a DN600, com furos, parafuso, bitola UNC equivalente, diâmetro do furo,
+círculo de furação e espessura do flange.
 
-> Não consegui baixar o documento normativo nesta sessão — a política de rede da
-> organização bloqueia o acesso a esses sites. As tabelas foram escritas a partir
-> da EN 1092-1 e da ASME B16.5, e **todas nascem `homologado=NAO`**. A furação
-> ABNT/NBR de flange para irrigação segue o padrão DIN/ISO 2531, então as linhas
-> NBR são geradas a partir das EN — está explícito na coluna `fonte`.
+As linhas **NBR 7675 são medidas, não estimadas** — vêm da ficha técnica T.153FB
+(`data/fichas/FIG153_valvula_gaveta_flange_NBR7675.pdf`) e estão
+`homologado=SIM`. EN e ANSI continuam escritas de norma, `homologado=NAO`.
 
-Uma checagem forte: a tabela dá **NBR PN16 DN200 (8") = 12 furos**, exatamente o
-que você confirmou pelo hidrômetro de 8". E DN200 é também o 225 mm do Plasson,
-que é a `FL. AZ - 225 - ABNT 16 - 12 FUROS`.
+A NBR 7675 tem um comportamento que a EN não tem: **até DN200 a furação coincide
+com PN16; de DN250 para cima ela segue o padrão PN10.** Isso acompanha a queda de
+classe da própria válvula na ficha (40–200 mm PN16, 250–300 PN10, 350–600 PN6).
 
-**A regra da casa bate com a norma de 2" a 8" — e diverge de 10" para cima:**
+**A regra da casa é a norma, em todos os DN:**
 
-| DN | furos | norma pede | casa usa | |
+| DN | furos | furo | NBR 7675 | casa usa |
 |---|---|---|---|---|
-| 2" a 5" | 4 a 8 | 5/8" | 5/8" | ok |
-| 6" e 8" | 8 e 12 | 3/4" | 3/4" | ok |
-| 10" e 12" | 12 | 1" (M24) | 3/4" | furo de 26 mm |
-| 14" | 16 | 1" (M24) | 3/4" | furo de 26 mm |
+| 2" a 5" | 4 a 8 | 18 mm | M16 → 5/8" | 5/8" |
+| 6" | 8 | 22 mm | M20 → 3/4" | 3/4" |
+| 8" | 12 | 22 mm | M20 → 3/4" | 3/4" |
+| 10" e 12" | 12 | 22 mm | M20 → 3/4" | 3/4" |
+| 14" | 16 | 22 mm | M20 → 3/4" | 3/4" |
 
-Nos três DN maiores o flange NBR PN16 tem furo de 26 mm e a norma pede M24; um
-parafuso de 3/4" (19 mm) fica com 7 mm de folga. Ver decisão 4 na seção 8.
+> **Correção.** A versão anterior deste documento apontava divergência de 10" a
+> 14", dizendo que a norma pediria M24. Estava errado: aquilo era a tabela
+> EN 1092-1 PN16, e a NBR 7675 segue PN10 nesses diâmetros — furo de 22 mm,
+> M20, 3/4". A regra da casa bate com a norma em todos os DN de 2" a 14".
 
 **Chave da tabela: DN nominal em mm.** É o denominador comum entre a série em
 polegada do aço e a série em milímetro do PVC — 8" e 225 mm caem os dois em
@@ -145,21 +146,30 @@ norma da ponta de jusante — e é aí que a tabela ANSI entra.
 ### 4.2.1 Barra roscada
 
 Válvula wafer é presa por tirante: **3 barras roscadas por válvula de retenção
-ou válvula borboleta**, na mesma bitola da regra acima, mais 2 porcas e 2
-arruelas por tirante.
+ou válvula borboleta**, mais 2 porcas e 2 arruelas por tirante.
 
-As barras são cortadas, então o tirante é metragem e não peça — mesma lógica do
-tubo. O comprimento sai de:
+Comprimento e bitola **não são calculados** — vêm tabelados na ficha do
+fabricante, na coluna do prisioneiro (`data/valvulas_wafer.csv`, das fichas
+T.160 e T.162 da MP Válvulas):
 
-```
-tirante = 2 × esp_flange + esp_corpo_da_válvula + 2 × arruela + 2 × porca + folga
-```
+| DN | corpo (C) | furos | bitola | parafuso | prisioneiro |
+|---|---|---|---|---|---|
+| 3" | 73 mm | 4 | 5/8" | 149 mm | 162 mm |
+| 4" | 73 mm | 8 | 5/8" | 149 mm | 162 mm |
+| 6" | 98 mm | 8 | 3/4" | 170 mm | 181 mm |
+| 8" | 127 mm | 8 | 3/4" | 216 mm | 230 mm |
+| 10" | 146 mm | 12 | 7/8" | 241 mm | 260 mm |
+| 12" | 181 mm | 12 | 7/8" | 283 mm | 296 mm |
+| 14" | 184 mm | 12 | 1" | 292 mm | 311 mm |
 
-A espessura do flange vem da tabela de furação. Falta a **espessura do corpo da
-válvula wafer** — `data/valvulas_wafer.csv` está com as linhas prontas e a coluna
-vazia. Enquanto não for preenchida, a lista conta barra inteira e avisa; depois,
-o planejador de corte converte os tirantes em barras de 1 m como já faz com o
-tubo PVC.
+Como as barras são cortadas, o tirante é metragem: no recalque de 8" as duas
+válvulas dão 6 tirantes de 230 mm = 1,38 m, que o planejador converte em
+**2 barras de 1 m** (antes eram 6). A espessura do corpo também entra na
+geometria da vista lateral — é o face a face da válvula.
+
+**Um alerta que a ficha revelou:** a válvula wafer é ASME classe 150 e tem
+**8 furos em 8"**, enquanto o flange NBR PN16 de DN200 tem **12**. O motor avisa
+sempre que os dois não batem. Ver decisão 2 na seção 8.
 
 ### 4.3 Kits: peças que nunca vêm sozinhas
 
@@ -262,16 +272,17 @@ Escolhe o DN → resolve inteiro contra o catálogo → sai a lista.
 
 ## 8. Decisões em aberto
 
-1. **Espessura do corpo das válvulas wafer** (`data/valvulas_wafer.csv`) — é o
-   que falta para o tirante virar corte e não barra inteira.
-2. **As 3 barras roscadas substituem 3 dos parafusos da junta, ou entram além
-   deles?** Hoje o motor soma as duas coisas.
+1. **As 3 barras roscadas substituem 3 dos parafusos da junta, ou entram além
+   deles?** Hoje o motor soma as duas coisas. A ficha da válvula lista parafuso
+   *e* prisioneiro, o que sugere que convivem — mas em que proporção?
+2. **Furação da válvula × furação do flange.** A válvula wafer é ASME 150 (8
+   furos em 8") e o flange da linha é NBR PN16 (12 furos em DN200). Como isso se
+   resolve na montagem?
 3. **Plasson** — a bitola do parafuso (assumi a mesma regra de DN do aço) e o
    critério entre 4" e 5" de comprimento.
-4. **Bitola de 10" a 14"** — a norma pede M24 (≈1") num furo de 26 mm e a regra
-   da casa diz 3/4". É intencional?
-5. **Homologar a tabela de furação** — 124 linhas geradas de norma, nenhuma
-   conferida contra o catálogo oficial de flanges de vocês.
+4. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
+   ainda são de norma escrita, `homologado=NAO`. Só entram em jogo na transição
+   para a bomba importada.
 
 ## 9. Estado do código
 
@@ -282,6 +293,7 @@ tools/extrair_lista_pdf.py    PDF do CAD -> lista de peças em CSV
 tools/casar_lista.py          nome de desenho -> código SAP
 tools/gerar_furacao.py        tabelas EN 1092-1 e ASME B16.5 -> regras_furacao.csv
 tools/relatorio_furacao.py    regra da casa x norma, e onde a norma muda na linha
+data/fichas/                  fichas técnicas do fabricante (fonte das tabelas)
 tools/demo_succao.py          demonstração ponta a ponta (sucção e recalque)
 motor/catalogo.py             índice por (família, DN, norma)
 motor/regras.py               compatibilidade + ferragem
