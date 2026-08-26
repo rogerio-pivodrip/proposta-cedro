@@ -203,6 +203,41 @@ barra 3: 2,5 + 1,5 + 1,5        sobra 0,1
 barra 4: 1,5 + 1,5 + 1,0        sobra 1,6
 ```
 
+### 4.5 A bomba decide as reduções (`motor/bomba.py`)
+
+Os bocais estão no próprio código da bomba:
+
+| formato | leitura |
+|---|---|
+| `000-000` (dois grupos) | saída, rotor padrão |
+| `000-000-000` (três grupos) | entrada, saída, rotor padrão |
+
+Daí sai a regra: **a sucção termina na entrada e o recalque começa na saída**.
+Como a linha quase sempre é maior que os bocais, há uma redução de cada lado — e
+é por isso que 161 reduções do catálogo têm uma ponta em norma de equipamento
+(ANSI, EN) e a outra em NBR PN16.
+
+**Conferido nos dois projetos que nomeiam a bomba** (``):
+
+| projeto | bomba | entrada | saída | redução no desenho |
+|---|---|---|---|---|
+| Marcelo Amorim | `METB 050-32-200` | 50 mm (2") | 32 mm (1¼") | `Red Exc AZ 4"x 2"` e `Red Con AZ 3" x 1.1/4"` |
+| Lincoln Junqueira | `METB 125-80-315` | 125 mm (5") | 80 mm (3") | `Red Con AZ 8" x 5"` e `Red Con AZ 6" x 3"` |
+
+**As quatro reduções batem com os bocais.** O motor, resolvendo sozinho a
+sucção de 8" da `METB 125-080-315`, escolhe
+`01523-282050 RED EXC AZ 8" FL NBRPN16X5" FL ANSI150` — a ponta ANSI 150 é
+exatamente a que encaixa na KSB importada.
+
+> **Correção.** Este documento tratava `Red Con AZ 3" x 1".1.4"` como erro de
+> digitação do desenho. Não é: é **1.1/4"**, o bocal de saída de 32 mm da bomba.
+> O interpretador passou a entender `1.1/4"` e `1".1.4"`.
+
+**Um ponto que os desenhos não fecham:** na sucção o Marcelo Amorim usa
+excêntrica e o Lincoln Junqueira usa concêntrica. A diferença aparente é a
+montagem — o primeiro tem bomba horizontal, o segundo vertical, onde não há
+bolsa de ar a evitar. Ver decisão 3 na seção 8.
+
 ## 5. Do desenho à geometria — sem CAD
 
 Vista lateral 2D. Cada peça tem comprimento face a face; curva tem ângulo. A
@@ -233,8 +268,8 @@ Medido nos três projetos — **110 peças**:
 Dos 10 sem correspondência, 5 são sub-conjuntos do CAD que não são item de
 compra (`Base`, `TopLevelAssembly`, `Casa de Máquinas Padrão`,
 `Retrolavagem` ×2), 2 são flange de aço avulso — que o catálogo realmente não
-tem — e 1 é erro de digitação no próprio desenho (`Red Con AZ 3" x 1".1.4"`). As duas
-flanges de aço deixaram de faltar: o catálogo as chama de `FL 6" (152MM) NBR
+tem — e 1 era o `Red Con AZ 3" x 1".1.4"`, que eu tinha lido como erro de digitação e
+é 1.1/4" — o bocal de saída da bomba. As duas flanges de aço deixaram de faltar: o catálogo as chama de `FL 6" (152MM) NBR
 PN16` e `FL 10" (261MM) NBR PN16` — entrou no de-para.
 
 **Conclusão que isso força:** casar por nome não é o mecanismo definitivo — 60%
@@ -278,11 +313,14 @@ Escolhe o DN → resolve inteiro contra o catálogo → sai a lista.
 2. **Furação da válvula × furação do flange.** A válvula wafer é ASME 150 (8
    furos em 8") e o flange da linha é NBR PN16 (12 furos em DN200). Como isso se
    resolve na montagem?
-3. **Plasson** — a bitola do parafuso (assumi a mesma regra de DN do aço) e o
-   critério entre 4" e 5" de comprimento.
-4. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
-   ainda são de norma escrita, `homologado=NAO`. Só entram em jogo na transição
-   para a bomba importada.
+3. **Excêntrica ou concêntrica na sucção?** Marcelo Amorim usa excêntrica (bomba
+   horizontal) e Lincoln Junqueira usa concêntrica (bomba vertical). O critério é
+   a posição do eixo, ou é outra coisa?
+4. **Bomba de dois grupos** — a nomenclatura não declara a entrada. Ela é sempre
+   uma bitola acima da saída, ou depende do modelo?
+5. **Plasson** — a bitola do parafuso e o critério entre 4" e 5" de comprimento.
+6. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
+   ainda são norma escrita — e são justamente as do lado da bomba.
 
 ## 9. Estado do código
 
@@ -294,7 +332,9 @@ tools/casar_lista.py          nome de desenho -> código SAP
 tools/gerar_furacao.py        tabelas EN 1092-1 e ASME B16.5 -> regras_furacao.csv
 tools/relatorio_furacao.py    regra da casa x norma, e onde a norma muda na linha
 data/fichas/                  fichas técnicas do fabricante (fonte das tabelas)
-tools/demo_succao.py          demonstração ponta a ponta (sucção e recalque)
+tools/conferir_bomba.py       reduções do desenho x bocais da bomba
+tools/demo_succao.py          demonstração ponta a ponta (sucção, bomba, recalque)
+motor/bomba.py                nomenclatura da bomba -> entrada, saída e rotor
 motor/catalogo.py             índice por (família, DN, norma)
 motor/regras.py               compatibilidade + ferragem
 motor/ferragem.py             ferragem -> código SAP

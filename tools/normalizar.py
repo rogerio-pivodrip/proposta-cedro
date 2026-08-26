@@ -179,6 +179,10 @@ def normalizar_item(item):
         item = {"sap": None, "descricao": item, "un": None, "grupo": None,
                 "procedencia": None}
     desc = sem_acento(item["descricao"]).upper().replace("\xa0", " ")
+    # O CAD escreve 1.1/4" e as vezes a barra vira ponto: 1".1.4". Normaliza as
+    # duas formas para "1 1/4" antes de qualquer leitura de diametro.
+    desc = re.sub(r'(\d)"?\.(\d)[./](\d)"', r'\1 \2/\3"', desc)
+    desc = re.sub(r'(\d)\.(\d)/(\d)', r'\1 \2/\3', desc)
     peca = dict(item)
     peca["familia"] = None
     peca["material"] = None

@@ -6,6 +6,7 @@ Uso: python3 tools/demo_succao.py [DN_POLEGADAS]
 import sys
 
 sys.path.insert(0, ".")
+from motor.bomba import interpretar, reducoes
 from motor.catalogo import Catalogo
 from motor.linha import Linha, Peca
 
@@ -54,6 +55,30 @@ def montar_recalque(cat, dn):
     return linha
 
 
+def conjunto_da_bomba(cat, modelo, dn_succao, dn_recalque):
+    """A bomba decide as reducoes: succao termina na entrada, recalque comeca
+    na saida. Resolve cada uma em codigo SAP."""
+    bomba = interpretar(modelo)
+    if not bomba:
+        print(f"  nao reconheci a nomenclatura de {modelo}")
+        return
+    print(f'\n== BOMBA {modelo} ==')
+    if bomba["grupos"] == 3:
+        print(f'  entrada {bomba["entrada_mm"]} mm  ·  '
+              f'saida {bomba["saida_mm"]} mm  ·  rotor {bomba["rotor_mm"]}')
+    else:
+        print(f'  saida {bomba["saida_mm"]} mm  ·  rotor {bomba["rotor_mm"]}  ·  '
+              "entrada nao declarada pela nomenclatura")
+    for red in reducoes(bomba, dn_succao, dn_recalque):
+        maior, menor = max(red["de"], red["para"]), min(red["de"], red["para"])
+        item = cat.melhor(red["tipo"], maior, norma=NORMA, dn_saida=menor) or \
+            cat.melhor(red["tipo"], maior, dn_saida=menor)
+        achado = f'{item["sap"]}  {item["descricao"]}' if item else \
+            "sem item no catalogo"
+        print(f'  {red["lado"]:9s} {red["tipo"][8:12].lower()}. '
+              f'{red["de"]:g}" -> {red["para"]:g}"   {achado}')
+
+
 def main():
     dn = float(sys.argv[1]) if len(sys.argv) > 1 else 8.0
     cat = Catalogo()
@@ -84,6 +109,8 @@ def main():
         print("\n== avisos ==")
         for a in avisos:
             print("  !", a)
+
+    conjunto_da_bomba(cat, "METB 125-080-315 40CV", dn, dn - 2)
 
     rec = montar_recalque(cat, dn)
     bom2, avisos2 = rec.lista_materiais()

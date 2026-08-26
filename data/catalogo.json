@@ -14046,7 +14046,7 @@
   "familia": "TUBO",
   "material": "PVC",
   "dn": [
-   2.0
+   1.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -14066,7 +14066,7 @@
   "familia": "CURVA",
   "material": "PVC",
   "dn": [
-   2.0
+   1.5
   ],
   "unidade_dn": "in",
   "angulo": 90.0,
@@ -28142,7 +28142,7 @@
   "material": "INOX",
   "dn": [
    2.0,
-   2.0
+   1.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -28245,7 +28245,7 @@
   "material": "INOX",
   "dn": [
    2.0,
-   4.0
+   1.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -42716,7 +42716,7 @@
   "material": null,
   "dn": [
    2.0,
-   2.0
+   2.5
   ],
   "unidade_dn": "in",
   "angulo": null,
