@@ -145,14 +145,14 @@ norma da ponta de jusante — e é aí que a tabela ANSI entra.
 
 ### 4.2.1 Barra roscada
 
-Válvula wafer é presa por tirante: **3 barras roscadas por válvula de retenção
-ou válvula borboleta**, mais 2 porcas e 2 arruelas por tirante.
+Válvula wafer é presa por tirante. A regra de compra é **3 barras roscadas
+inteiras por válvula** de retenção ou borboleta — o corte acontece na montagem e
+não reduz a quantidade comprada.
 
-Comprimento e bitola **não são calculados** — vêm tabelados na ficha do
-fabricante, na coluna do prisioneiro (`data/valvulas_wafer.csv`, das fichas
-T.160 e T.162 da MP Válvulas):
+A bitola e o comprimento do tirante vêm da ficha do fabricante
+(`data/valvulas_wafer.csv`, fichas T.160 e T.162 da MP Válvulas):
 
-| DN | corpo (C) | furos | bitola | parafuso | prisioneiro |
+| DN | corpo | furos | bitola | parafuso | prisioneiro |
 |---|---|---|---|---|---|
 | 3" | 73 mm | 4 | 5/8" | 149 mm | 162 mm |
 | 4" | 73 mm | 8 | 5/8" | 149 mm | 162 mm |
@@ -162,14 +162,29 @@ T.160 e T.162 da MP Válvulas):
 | 12" | 181 mm | 12 | 7/8" | 283 mm | 296 mm |
 | 14" | 184 mm | 12 | 1" | 292 mm | 311 mm |
 
-Como as barras são cortadas, o tirante é metragem: no recalque de 8" as duas
-válvulas dão 6 tirantes de 230 mm = 1,38 m, que o planejador converte em
-**2 barras de 1 m** (antes eram 6). A espessura do corpo também entra na
-geometria da vista lateral — é o face a face da válvula.
+O comprimento do prisioneiro não muda a compra, mas serve de conferência —
+quantos tirantes saem das 3 barras de 1 m, contra os furos da válvula:
+
+| DN | tirante | por barra | 3 barras dão | furos | |
+|---|---|---|---|---|---|
+| 3" | 162 mm | 6 | 18 | 4 | sobra |
+| 4" | 162 mm | 6 | 18 | 8 | sobra |
+| 6" | 181 mm | 5 | 15 | 8 | sobra |
+| 8" | 230 mm | 4 | 12 | 8 | sobra |
+| 10" | 260 mm | 3 | 9 | 12 | **falta 3** |
+| 12" | 296 mm | 3 | 9 | 12 | **falta 3** |
+| 14" | 311 mm | 3 | 9 | 12 | **falta 3** |
+
+De 10" para cima as 3 barras rendem 9 tirantes e a válvula tem 12 furos. Se a
+intenção é encher todos os furos com tirante, falta material; se os tirantes são
+só alguns e o resto é parafuso passante, sobra folga. Ver decisão 1 na seção 8.
+
+A espessura do corpo também entra na geometria da vista lateral — é o face a
+face da válvula.
 
 **Um alerta que a ficha revelou:** a válvula wafer é ASME classe 150 e tem
 **8 furos em 8"**, enquanto o flange NBR PN16 de DN200 tem **12**. O motor avisa
-sempre que os dois não batem. Ver decisão 2 na seção 8.
+sempre que os dois não batem.
 
 ### 4.3 Kits: peças que nunca vêm sozinhas
 
@@ -318,9 +333,9 @@ Escolhe o DN → resolve inteiro contra o catálogo → sai a lista.
 
 ## 8. Decisões em aberto
 
-1. **As 3 barras roscadas substituem 3 dos parafusos da junta, ou entram além
-   deles?** Hoje o motor soma as duas coisas. A ficha da válvula lista parafuso
-   *e* prisioneiro, o que sugere que convivem — mas em que proporção?
+1. **Os tirantes enchem todos os furos da válvula, ou só alguns?** De 10" para
+   cima as 3 barras dão 9 tirantes contra 12 furos. E quantas porcas e arruelas
+   por barra — hoje o motor conta 2, como suposição avisada.
 2. **Furação da válvula × furação do flange.** A válvula wafer é ASME 150 (8
    furos em 8") e o flange da linha é NBR PN16 (12 furos em DN200). Como isso se
    resolve na montagem?

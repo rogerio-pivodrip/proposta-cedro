@@ -30,7 +30,7 @@ class Peca:
         """Valvula wafer tem espessura de corpo tabelada na ficha do fabricante -
         e ela que entra na geometria da vista lateral."""
         if not self.item["dn"] or self.item["familia"] not in \
-                regras.BARRA_ROSCADA_POR_PECA:
+                regras.BARRAS_ROSCADAS_POR_PECA:
             return None
         ficha = regras.ficha_wafer(self.item["dn"][0])
         return ficha["esp_corpo_mm"] if ficha else None
@@ -151,10 +151,8 @@ class Linha:
         for peca in self.pecas:
             somar(peca.sap, peca.descricao, 1, "linha")
 
-        # valvula wafer: 3 tirantes de barra roscada, com porca e arruela.
-        # As barras sao cortadas, entao os tirantes viram metragem e so no fim
-        # se sabe quantas barras de 1 m comprar.
-        cortes = {}
+        # valvula wafer: 3 barras roscadas inteiras por valvula. O corte
+        # acontece na montagem e nao muda a quantidade comprada.
         for peca in self.pecas:
             dn = peca.item["dn"][0] if peca.item["dn"] else None
             if dn is None:
@@ -162,7 +160,7 @@ class Linha:
             contexto = regras.contexto_da_junta(peca.material, peca.material)
             ficha = (regras.ficha_wafer(
                 regras.dn_em_polegada(dn, peca.unidade_dn) or dn)
-                if peca.familia in regras.BARRA_ROSCADA_POR_PECA else None)
+                if peca.familia in regras.BARRAS_ROSCADAS_POR_PECA else None)
             if ficha:
                 dn_nom = regras.dn_nominal(dn, peca.unidade_dn)
                 flange = regras.FUROS.get(("NBR PN16", dn_nom)) if dn_nom else None
@@ -178,19 +176,15 @@ class Linha:
                 if not item:
                     avisos.append(f"sem SAP para {papel} {esp}")
                     continue
-                if papel != "BARRA_ROSCADA":
-                    somar(item["sap"], item["descricao"], qtd, "tirante")
-                    continue
-                if esp.get("comprimento_mm"):
-                    cortes.setdefault(item["sap"], {"item": item, "cortes": []})
-                    cortes[item["sap"]]["cortes"].extend(
-                        [esp["comprimento_mm"]] * qtd)
-                else:
-                    somar(item["sap"], item["descricao"], qtd, "tirante")
+                somar(item["sap"], item["descricao"], qtd, "tirante")
+                if papel == "BARRA_ROSCADA" and ficha:
+                    por_barra = int(regras.BARRA_MM // ficha["comp_prisioneiro_mm"])
                     avisos.append(
-                        f"{peca.familia} {peca.item['dn'][0]:g}: {qtd} tirantes de "
-                        f"{esp['bitola_pol']}\" - espessura do corpo da valvula nao "
-                        "cadastrada, contado como barra inteira"
+                        f"{peca.familia} {dn:g}: {qtd} barras de "
+                        f"{esp['bitola_pol']}\" - tirante de "
+                        f"{ficha['comp_prisioneiro_mm']:.0f} mm, "
+                        f"{por_barra} por barra, {qtd * por_barra} tirantes "
+                        f"para {ficha['furos']} furos"
                     )
 
         for junc in self.juncoes():
@@ -222,13 +216,10 @@ class Linha:
                     continue
                 somar(item["sap"], item["descricao"], qtd, "ferragem")
 
-        for sap, reg in cortes.items():
-            plano = corte.planejar(reg["cortes"], regras.BARRA_MM)
-            somar(sap, reg["item"]["descricao"], plano["barras"], "tirante")
+        if regras.SUPOSICAO_PORCAS:
             avisos.append(
-                f"{len(reg['cortes'])} tirantes ({sum(reg['cortes'])/1000:.2f} m) "
-                f"-> {plano['barras']} barra(s) de {regras.BARRA_MM/1000:g} m, "
-                f"aproveitamento {plano['aproveitamento']:.0%}"
+                f"porca e arruela do tirante contadas a "
+                f"{regras.PORCAS_POR_BARRA} por barra - regra a confirmar"
             )
 
         return list(bom.values()), avisos

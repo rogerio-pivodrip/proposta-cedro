@@ -26,11 +26,17 @@ TIPOS_FLANGE = {"FLANGE", "FLANGE_K"}
 # tem ponta K e avisar, em vez de aceitar em silencio.
 TIPOS_RECUSADOS = {"ENGATE_K"}
 
-# Valvulas do tipo wafer, presas por tirante em vez de parafuso passante.
-BARRA_ROSCADA_POR_PECA = {
+# Valvulas do tipo wafer, presas por tirante. A regra de compra e por BARRA
+# INTEIRA, nao por tirante: 3 barras de 1 m por valvula. O corte acontece na
+# montagem e nao reduz a quantidade comprada.
+BARRAS_ROSCADAS_POR_PECA = {
     "VALVULA_RETENCAO": 3,
     "VALVULA_BORBOLETA": 3,
 }
+# Porcas e arruelas do tirante: quantas por barra ainda nao foi definido.
+# 2 e o minimo por tirante (uma ponta e outra) - fica como suposicao avisada.
+PORCAS_POR_BARRA = 2
+SUPOSICAO_PORCAS = True
 # Figura padrao das valvulas de retencao wafer. 162 = portinhola unica, que e a
 # UNIFLAP do catalogo; 160 = dupla portinhola.
 FIGURA_PADRAO = "162"
@@ -204,24 +210,19 @@ def ficha_wafer(dn_pol, figura=None):
 
 def barra_roscada_da_peca(familia, dn, unidade="in", contexto="AZ_AZ",
                           norma="NBR PN16", figura=None):
-    """Valvula wafer leva 3 tirantes de barra roscada.
+    """Valvula wafer leva 3 barras roscadas inteiras.
 
-    Comprimento e bitola nao sao calculados: vem tabelados na ficha do
-    fabricante (coluna do prisioneiro).
+    A bitola vem da ficha do fabricante; o comprimento do tirante tambem, mas
+    so para o desenho e para o aproveitamento - a compra e por barra.
     """
-    qtd = BARRA_ROSCADA_POR_PECA.get(familia)
+    qtd = BARRAS_ROSCADAS_POR_PECA.get(familia)
     if not qtd:
         return []
     dn_pol = dn_em_polegada(dn, unidade) or dn
     ficha = ficha_wafer(dn_pol, figura)
-    if ficha:
-        bit = ficha["bitola_pol"]
-        comp = ficha["comp_prisioneiro_mm"]
-    else:
-        bit = especificacao_parafuso(dn_pol, contexto)["bitola_pol"]
-        comp = None
-    itens = [("BARRA_ROSCADA", {"bitola_pol": bit, "comprimento_mm": comp}, qtd)]
-    # cada tirante fecha com porca e arruela nas duas pontas
-    itens.append(("PORCA", {"bitola_pol": bit}, 2 * qtd))
-    itens.append(("ARRUELA", {"bitola_pol": bit}, 2 * qtd))
+    bit = (ficha["bitola_pol"] if ficha
+           else especificacao_parafuso(dn_pol, contexto)["bitola_pol"])
+    itens = [("BARRA_ROSCADA", {"bitola_pol": bit}, qtd)]
+    itens.append(("PORCA", {"bitola_pol": bit}, PORCAS_POR_BARRA * qtd))
+    itens.append(("ARRUELA", {"bitola_pol": bit}, PORCAS_POR_BARRA * qtd))
     return itens
