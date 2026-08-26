@@ -233,10 +233,21 @@ exatamente a que encaixa na KSB importada.
 > digitação do desenho. Não é: é **1.1/4"**, o bocal de saída de 32 mm da bomba.
 > O interpretador passou a entender `1.1/4"` e `1".1.4"`.
 
-**Um ponto que os desenhos não fecham:** na sucção o Marcelo Amorim usa
-excêntrica e o Lincoln Junqueira usa concêntrica. A diferença aparente é a
-montagem — o primeiro tem bomba horizontal, o segundo vertical, onde não há
-bolsa de ar a evitar. Ver decisão 3 na seção 8.
+**O tipo da redução depende da montagem, não do modelo** — os dois projetos usam
+METB, um deitado e outro em pé:
+
+| lado | bomba deitada | bomba em pé |
+|---|---|---|
+| sucção (entrada) | **excêntrica** — topo reto, não acumula ar antes do rotor | **concêntrica** — não há bolsa de ar a evitar |
+| recalque (saída) | **concêntrica** | **concêntrica** |
+
+Por isso a orientação é atributo da bomba no desenho, escolhido por quem monta,
+e não algo que se derive do código do modelo.
+
+O caminho inverso também vale: `orientacao_pelo_desenho()` lê um projeto pronto e
+diz como a bomba foi montada. Rodando nos dois projetos, ele acerta os dois —
+horizontal no Marcelo Amorim, vertical no Lincoln Junqueira, exatamente o que os
+isométricos mostram.
 
 ## 5. Do desenho à geometria — sem CAD
 
@@ -313,13 +324,10 @@ Escolhe o DN → resolve inteiro contra o catálogo → sai a lista.
 2. **Furação da válvula × furação do flange.** A válvula wafer é ASME 150 (8
    furos em 8") e o flange da linha é NBR PN16 (12 furos em DN200). Como isso se
    resolve na montagem?
-3. **Excêntrica ou concêntrica na sucção?** Marcelo Amorim usa excêntrica (bomba
-   horizontal) e Lincoln Junqueira usa concêntrica (bomba vertical). O critério é
-   a posição do eixo, ou é outra coisa?
-4. **Bomba de dois grupos** — a nomenclatura não declara a entrada. Ela é sempre
+3. **Bomba de dois grupos** — a nomenclatura não declara a entrada. Ela é sempre
    uma bitola acima da saída, ou depende do modelo?
-5. **Plasson** — a bitola do parafuso e o critério entre 4" e 5" de comprimento.
-6. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
+4. **Plasson** — a bitola do parafuso e o critério entre 4" e 5" de comprimento.
+5. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
    ainda são norma escrita — e são justamente as do lado da bomba.
 
 ## 9. Estado do código

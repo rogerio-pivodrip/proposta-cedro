@@ -8,6 +8,10 @@ E dai que saem as reducoes: a succao termina na ENTRADA e o recalque comeca na
 SAIDA. Como a linha quase sempre e maior que os bocais, ha uma reducao de cada
 lado - e por isso que 161 das reducoes do catalogo tem uma ponta em norma de
 equipamento e a outra em NBR PN16.
+
+O TIPO da reducao de succao depende de como a bomba esta montada, nao do modelo:
+os dois projetos usam METB, um deitado e outro em pe. Por isso a orientacao e
+atributo da bomba no desenho, escolhido por quem monta.
 """
 import re
 
@@ -22,6 +26,15 @@ MM_PARA_POLEGADA = {25: 1, 32: 1.25, 40: 1.5, 50: 2, 65: 2.5, 80: 3, 100: 4,
 # Familias de bomba centrifuga que usam essa nomenclatura
 RX_FAMILIA = re.compile(
     r"\b(METB|METN|MCPK|ETB|ETN|ETA|INI|INIB|ITAP|BLOC|MEG|CPK|KWP)\b", re.I)
+
+
+def orientacao_pelo_desenho(tipo_reducao_succao_no_desenho):
+    """Caminho inverso: le um projeto pronto e deduz como a bomba foi montada."""
+    if tipo_reducao_succao_no_desenho == "REDUCAO_EXCENTRICA":
+        return HORIZONTAL
+    if tipo_reducao_succao_no_desenho == "REDUCAO_CONCENTRICA":
+        return VERTICAL
+    return None
 
 
 def interpretar(descricao):
@@ -49,11 +62,25 @@ def interpretar(descricao):
     }
 
 
-def reducoes(bomba, dn_succao_pol=None, dn_recalque_pol=None):
+HORIZONTAL = "HORIZONTAL"
+VERTICAL = "VERTICAL"
+
+
+def tipo_reducao_succao(orientacao):
+    """Regra da casa:
+      bomba deitada  -> EXCENTRICA (topo reto, nao acumula ar antes do rotor)
+      bomba em pe    -> CONCENTRICA (nao ha bolsa de ar a evitar)
+    """
+    return ("REDUCAO_EXCENTRICA" if orientacao == HORIZONTAL
+            else "REDUCAO_CONCENTRICA")
+
+
+def reducoes(bomba, dn_succao_pol=None, dn_recalque_pol=None,
+             orientacao=HORIZONTAL):
     """Quais reducoes a bomba exige, dadas as bitolas da linha.
 
-    Succao: linha -> entrada, EXCENTRICA (topo reto, para nao formar bolsa de ar).
-    Recalque: saida -> linha, CONCENTRICA.
+    Succao: linha -> entrada, excentrica ou concentrica conforme a orientacao.
+    Recalque: saida -> linha, SEMPRE concentrica.
     """
     saida = []
     entrada_pol = bomba.get("entrada_pol")
@@ -61,9 +88,11 @@ def reducoes(bomba, dn_succao_pol=None, dn_recalque_pol=None):
         # bomba de dois grupos nao declara a entrada; nao inventar
         entrada_pol = None
     if dn_succao_pol and entrada_pol and dn_succao_pol != entrada_pol:
-        saida.append({"lado": "SUCCAO", "tipo": "REDUCAO_EXCENTRICA",
-                      "de": dn_succao_pol, "para": entrada_pol})
+        saida.append({"lado": "SUCCAO", "tipo": tipo_reducao_succao(orientacao),
+                      "de": dn_succao_pol, "para": entrada_pol,
+                      "motivo": f"bomba na {orientacao.lower()}"})
     if dn_recalque_pol and bomba["saida_pol"] and dn_recalque_pol != bomba["saida_pol"]:
         saida.append({"lado": "RECALQUE", "tipo": "REDUCAO_CONCENTRICA",
-                      "de": bomba["saida_pol"], "para": dn_recalque_pol})
+                      "de": bomba["saida_pol"], "para": dn_recalque_pol,
+                      "motivo": "saida e sempre concentrica"})
     return saida

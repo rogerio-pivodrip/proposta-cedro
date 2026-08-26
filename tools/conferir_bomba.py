@@ -11,7 +11,7 @@ import glob
 import sys
 
 sys.path.insert(0, ".")
-from motor.bomba import MM_PARA_POLEGADA, interpretar
+from motor.bomba import interpretar, orientacao_pelo_desenho
 from tools.normalizar import normalizar_item
 
 
@@ -44,6 +44,7 @@ def conferir(caminho):
               f'  ·  rotor {bomba["rotor_mm"]}  ·  entrada nao declarada')
 
     bocais = {bomba["entrada_pol"], bomba["saida_pol"]} - {None}
+    orientacao = problemas = None
     for reg in itens:
         peca = normalizar_item(reg["nome_peca"])
         if peca["familia"] not in ("REDUCAO_CONCENTRICA", "REDUCAO_EXCENTRICA"):
@@ -57,8 +58,17 @@ def conferir(caminho):
         elif bomba["saida_pol"] in dns:
             lado = " (saida)"
         tipo = "exc" if peca["familia"].endswith("EXCENTRICA") else "con"
+        if lado == " (entrada)":
+            orientacao = orientacao_pelo_desenho(peca["familia"])
+        elif lado == " (saida)" and peca["familia"].endswith("EXCENTRICA"):
+            problemas = "reducao de saida deveria ser concentrica"
         print(f'    {reg["nome_peca"][:38]:38s} {tipo}  '
               f'{sorted(dns)}  ->  {marca}{lado}')
+
+    if orientacao:
+        print(f'  a reducao de succao diz que a bomba esta na {orientacao.lower()}')
+    if problemas:
+        print(f'  ! {problemas}')
 
 
 def main():
