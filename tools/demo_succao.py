@@ -34,6 +34,26 @@ def montar_succao(cat, dn):
     return linha, faltando
 
 
+def montar_recalque(cat, dn):
+    """Template 'RECALQUE PADRAO' - inclui as valvulas wafer, que puxam tirante."""
+    linha = Linha(cat, tipo="RECALQUE")
+    receita = [
+        ("VALVULA_RETENCAO", {}),
+        ("TUBO", {"comprimento_mm": 1000}),
+        ("VALVULA_BORBOLETA", {}),
+        ("TUBO", {"comprimento_mm": 3000}),
+        ("CURVA", {"angulo": 90}),
+        ("TE", {}),
+    ]
+    for familia, extra in receita:
+        # valvulas nao sao de aco zincado: cai para busca sem filtro de material
+        item = cat.melhor(familia, dn, norma=NORMA, **extra) or \
+            cat.melhor(familia, dn, material=None, **extra)
+        if item:
+            linha.inserir(Peca(item, comprimento_mm=extra.get("comprimento_mm")))
+    return linha
+
+
 def main():
     dn = float(sys.argv[1]) if len(sys.argv) > 1 else 8.0
     cat = Catalogo()
@@ -64,6 +84,14 @@ def main():
         print("\n== avisos ==")
         for a in avisos:
             print("  !", a)
+
+    rec = montar_recalque(cat, dn)
+    bom2, avisos2 = rec.lista_materiais()
+    print(f'\n== RECALQUE {dn:g}" - LISTA DE MATERIAIS ==')
+    for reg in bom2:
+        print(f"{rec.area:5s} {reg['sap']:14s} {reg['qtd']:5g}  {reg['descricao']}")
+    for a in avisos2:
+        print("  !", a)
 
 
 if __name__ == "__main__":

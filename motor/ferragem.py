@@ -4,7 +4,9 @@ from fractions import Fraction
 
 
 def _pol_texto(valor):
-    """2.5 -> '2 1/2' ; 3 -> '3' ; 0.75 -> '3/4'."""
+    """2.5 -> '2 1/2' ; 3 -> '3' ; 0.75 -> '3/4'. Texto ja no formato passa direto."""
+    if isinstance(valor, str):
+        return valor.strip()
     fr = Fraction(valor).limit_denominator(16)
     inteiro, resto = divmod(fr, 1)
     if resto == 0:
@@ -33,6 +35,11 @@ def resolver(catalogo, papel, esp):
     if papel == "PORCA":
         bit = re.escape(esp["bitola_pol"]).replace(r"\ ", r"\s*")
         return _procurar(catalogo, rf'^PORCA SX AC UNC {bit}"')
+    if papel == "BARRA_ROSCADA":
+        bit = re.escape(esp["bitola_pol"]).replace(r"\ ", r"\s*")
+        # o catalogo escreve 1 1/4" como "11/4" nas barras
+        bit_junto = bit.replace(r"\s*", "")
+        return _procurar(catalogo, rf'^BARRA ROSCA FG\.? ({bit}|{bit_junto})"')
     if papel == "ARRUELA":
         bit = re.escape(esp["bitola_pol"]).replace(r"\ ", r"\s*")
         return _procurar(catalogo, rf'^ARRUELA LISA AC {bit}"')

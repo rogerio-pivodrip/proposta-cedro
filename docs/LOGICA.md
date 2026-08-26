@@ -74,7 +74,7 @@ que é calculada, não digitada.
 O motor nunca conserta em silêncio: insere a peça de transição e registra o
 motivo, ou levanta o problema.
 
-### 4.2 Ferragem derivada (`motor/regras.py::ferragem_da_junta`)
+### 4.2 Ferragem derivada (`motor/regras.py`)
 
 Nenhum parafuso é digitado — e hoje **nenhuma das três listas de peças tem
 ferragem**, o que é justamente o buraco a fechar. Cada junção flangeada gera:
@@ -86,15 +86,38 @@ n × porca
 2n × arruela
 ```
 
-Comprimento do parafuso:
-`L ≥ 2·esp_flange + esp_junta + 2·arruela + altura_porca + folga`,
-arredondado para cima até a medida de estoque (2", 2¼", 2½", 3"…7").
+**Bitola** (`data/regras_ferragem.csv`), regra da casa:
 
-Junções por engate K, rosca ou solda **não** geram ferragem.
+| contexto | até 5" | acima de 5" |
+|---|---|---|
+| aço zincado × aço zincado | 5/8" × 2½" | 3/4" × 2½" |
+| qualquer × flange da bomba | 5/8" × 3½" | 3/4" × 3½" |
+| Plasson × Plasson | 5/8" × 4" | 3/4" × 5" |
 
-> **Pendência:** `data/regras_flange.csv` (furos, bitola, espessura por
-> norma/DN) está com valores de referência EN 1092-1, marcados
-> `homologado=NAO`. Precisa da tabela oficial antes de virar proposta.
+A bitola no Plasson e o critério entre 4" e 5" ainda não foram confirmados —
+as linhas estão marcadas `homologado=NAO`.
+
+**Furação** (`data/regras_furacao.csv`): 8" = 12 furos, confirmado. O resto é
+referência EN 1092-1 PN16, marcado `homologado=NAO`.
+
+Milímetro e polegada usam a **mesma tabela**: a flange de 225 mm do Plasson é a
+`FL. AZ - 225 - ABNT 16 - 12 FUROS` (`01542-099000`) — 225 mm ↔ 8" ↔ 12 furos.
+A equivalência comercial está em `motor/traducao.py`.
+
+**Engate K não é usado.** Continua reconhecido no catálogo (204 conexões) só
+para o motor apontar quando uma peça escolhida tem ponta K, em vez de aceitar em
+silêncio. Junções por rosca e solda também não geram ferragem.
+
+### 4.2.1 Barra roscada
+
+Válvula wafer é presa por tirante: **3 barras roscadas por válvula de retenção
+ou válvula borboleta**, na mesma bitola da regra acima, mais 2 porcas e 2
+arruelas por tirante.
+
+O catálogo vende a barra em 1 m (`BARRA ROSCA FG 5/8"` `01542-000191`,
+`3/4"` `01542-000190`). Enquanto o **comprimento do tirante** não for definido,
+a lista conta 3 barras inteiras por válvula e emite aviso; definido o
+comprimento, o planejador de corte converte para barras como faz com o tubo.
 
 ### 4.3 Kits: peças que nunca vêm sozinhas
 
@@ -158,7 +181,9 @@ Medido nos três projetos — **110 peças**:
 Dos 10 sem correspondência, 5 são sub-conjuntos do CAD que não são item de
 compra (`Base`, `TopLevelAssembly`, `Casa de Máquinas Padrão`,
 `Retrolavagem` ×2), 2 são flange de aço avulso — que o catálogo realmente não
-tem — e 1 é erro de digitação no próprio desenho (`Red Con AZ 3" x 1".1.4"`).
+tem — e 1 é erro de digitação no próprio desenho (`Red Con AZ 3" x 1".1.4"`). As duas
+flanges de aço deixaram de faltar: o catálogo as chama de `FL 6" (152MM) NBR
+PN16` e `FL 10" (261MM) NBR PN16` — entrou no de-para.
 
 **Conclusão que isso força:** casar por nome não é o mecanismo definitivo — 60%
 de acerto único não serve para gerar proposta. O nome do desenho é
@@ -195,15 +220,13 @@ Escolhe o DN → resolve inteiro contra o catálogo → sai a lista.
 
 ## 8. Decisões em aberto
 
-1. **Tabela de furação oficial** (furos, bitola, espessura de flange por
-   norma/DN). Sem ela a ferragem é estimativa.
-2. **Barra roscada** — em que montagens entra e com que critério de quantidade.
-3. **Engate K** (204 conexões no catálogo) — dispensa ferragem por completo, ou
-   leva anel/trava com código próprio?
-4. **Flange de PVC** — qual bitola de parafuso vocês usam.
-5. **Flange de aço avulso** — o catálogo só tem um código (`01542-099000`,
-   225 mm). Os desenhos pedem `Flange AZ 6"` e `Flange AZ 10"`. Falta cadastro,
-   ou vocês usam a flange que vem soldada no tubo?
+1. **Comprimento do tirante** de barra roscada — sem ele a lista conta 3 barras
+   inteiras de 1 m por válvula, que deve estar sobrando.
+2. **As 3 barras roscadas substituem 3 dos parafusos da junta, ou entram além
+   deles?** Hoje o motor soma as duas coisas.
+3. **Plasson** — a bitola do parafuso (assumi a mesma regra de DN do aço) e o
+   critério entre 4" e 5" de comprimento.
+4. **Furação** das demais bitolas — só 8" = 12 furos está confirmado.
 
 ## 9. Estado do código
 
@@ -212,7 +235,7 @@ tools/importar_catalogo.py    xlsx  -> data/catalogo_bruto.json   (5.157 itens)
 tools/normalizar.py           texto -> data/catalogo.json          (peças paramétricas)
 tools/extrair_lista_pdf.py    PDF do CAD -> lista de peças em CSV
 tools/casar_lista.py          nome de desenho -> código SAP
-tools/demo_succao.py          demonstração ponta a ponta
+tools/demo_succao.py          demonstração ponta a ponta (sucção e recalque)
 motor/catalogo.py             índice por (família, DN, norma)
 motor/regras.py               compatibilidade + ferragem
 motor/ferragem.py             ferragem -> código SAP

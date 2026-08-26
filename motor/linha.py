@@ -18,6 +18,8 @@ class Peca:
         self.sap = item["sap"]
         self.descricao = item["descricao"]
         self.familia = item["familia"]
+        self.material = item["material"]
+        self.unidade_dn = item["unidade_dn"] or "in"
         self.angulo = item["angulo"]
         self.comprimento_mm = comprimento_mm or item.get("comprimento_mm") or 0
         self.rotulo = rotulo
@@ -97,7 +99,8 @@ class Linha:
         return out
 
     def problemas(self):
-        return [j for j in self.juncoes() if j["acao"] in ("reducao", "adaptador")]
+        return [j for j in self.juncoes()
+                if j["acao"] in ("reducao", "adaptador", "recusada")]
 
     def geometria(self):
         """Posicao acumulada de cada peca no eixo da linha (mm) e angulo corrente.
@@ -138,7 +141,31 @@ class Linha:
         for peca in self.pecas:
             somar(peca.sap, peca.descricao, 1, "linha")
 
+        # valvula wafer: 3 tirantes de barra roscada, com porca e arruela
+        for peca in self.pecas:
+            dn = peca.item["dn"][0] if peca.item["dn"] else None
+            if dn is None:
+                continue
+            contexto = regras.contexto_da_junta(peca.material, peca.material)
+            for papel, esp, qtd in regras.barra_roscada_da_peca(
+                    peca.familia, dn, peca.unidade_dn, contexto):
+                item = ferragem.resolver(self.catalogo, papel, esp)
+                if not item:
+                    avisos.append(f"sem SAP para {papel} {esp}")
+                    continue
+                somar(item["sap"], item["descricao"], qtd, "tirante")
+                if papel == "BARRA_ROSCADA" and esp.get("comprimento_mm") is None:
+                    avisos.append(
+                        f"{peca.familia}: {qtd} tirantes de {esp['bitola_pol']}\" - "
+                        "comprimento do tirante nao definido, contado como barra inteira"
+                    )
+
         for junc in self.juncoes():
+            if junc["acao"] == "recusada":
+                avisos.append(f"juncao {junc['pos']} "
+                              f"({junc['de'].familia} -> {junc['para'].familia}): "
+                              f"{junc['dados']['motivo']}")
+                continue
             if junc["acao"] != "direta":
                 avisos.append(
                     f"juncao {junc['pos']}: precisa de {junc['acao']} {junc['dados']}"
@@ -146,9 +173,12 @@ class Linha:
                 continue
             dados = junc["dados"]
             if dados["junta"] not in regras.TIPOS_FLANGE:
-                continue  # engate K, rosca, solda: sem ferragem
+                continue  # rosca, solda, ponta lisa: sem ferragem
+            contexto = regras.contexto_da_junta(junc["de"].material,
+                                                junc["para"].material)
             try:
-                itens = regras.ferragem_da_junta(dados["dn"], dados["norma"])
+                itens = regras.ferragem_da_junta(
+                    dados["dn"], dados["norma"], junc["de"].unidade_dn, contexto)
             except regras.Incompatibilidade as erro:
                 avisos.append(str(erro))
                 continue

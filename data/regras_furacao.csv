@@ -1,0 +1,31 @@
+# Numero de furos por norma e DN. Define quantos parafusos vao em cada junta.
+# 8" = 12 furos confirmado pelo Rogerio (hidrometro 8"). O resto e referencia
+# EN 1092-1 PN16 e precisa de conferencia antes de virar proposta.
+norma,dn_pol,furos,homologado
+NBR PN16,2,4,NAO
+NBR PN16,2.5,4,NAO
+NBR PN16,3,8,NAO
+NBR PN16,4,8,NAO
+NBR PN16,5,8,NAO
+NBR PN16,6,8,NAO
+NBR PN16,8,12,SIM
+NBR PN16,10,12,NAO
+NBR PN16,12,12,NAO
+NBR PN16,14,16,NAO
+NBR PN16,16,16,NAO
+NBR PN16,18,20,NAO
+NBR PN16,20,20,NAO
+NBR PN16,24,20,NAO
+NBR PN25,3,8,NAO
+NBR PN25,4,8,NAO
+NBR PN25,6,8,NAO
+NBR PN25,8,12,NAO
+NBR PN25,10,12,NAO
+NBR PN25,12,16,NAO
+ANSI 150,3,4,NAO
+ANSI 150,4,8,NAO
+ANSI 150,6,8,NAO
+ANSI 150,8,8,NAO
+ANSI 150,10,12,NAO
+ANSI 150,12,12,NAO
+ANSI 150,14,12,NAO

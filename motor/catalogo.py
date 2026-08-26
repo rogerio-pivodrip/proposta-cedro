@@ -45,12 +45,15 @@ class Catalogo:
         #  2. menos acessorios soldados (luvas, escapes);
         #  3. descricao mais curta = peca mais "limpa".
         def ranking(item):
+            # engate K nao e usado nas montagens: peca com ponta K so entra se
+            # nao houver outra
+            tem_k = any(c["tipo"] == "ENGATE_K" for c in item["conexoes"])
             conexoes = [c for c in item["conexoes"] if c["norma"]]
             if norma and conexoes:
                 fora = sum(1 for c in conexoes if c["norma"] != norma)
             else:
                 fora = 0
-            return (fora, len(item["derivacoes"]), len(item["descricao"]))
+            return (tem_k, fora, len(item["derivacoes"]), len(item["descricao"]))
 
         cand.sort(key=ranking)
         return cand

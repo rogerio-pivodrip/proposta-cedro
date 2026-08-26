@@ -1,0 +1,15 @@
+# Bitola e comprimento de parafuso por contexto de junta. Regra da casa,
+# informada pelo Rogerio - substitui o calculo por espessura.
+#   bitola:      tubo AZ ate 5" -> 5/8" ; acima de 5" -> 3/4"
+#   comprimento: AZ com AZ -> 2 1/2" ; junta com bomba -> 3 1/2" ;
+#                Plasson com Plasson -> 4" ou 5"
+# dn_max_pol e o limite superior da faixa, em polegada (Plasson convertido).
+contexto,dn_max_pol,bitola_pol,comprimento_pol,homologado,observacao
+AZ_AZ,5,5/8,2 1/2,SIM,aco zincado com aco zincado
+AZ_AZ,99,3/4,2 1/2,SIM,aco zincado com aco zincado
+BOMBA,5,5/8,3 1/2,SIM,qualquer junta contra o flange da bomba
+BOMBA,99,3/4,3 1/2,SIM,qualquer junta contra o flange da bomba
+PLASSON_PLASSON,5,5/8,4,NAO,CONFERIR bitola no PVC - comprimento 4" informado
+PLASSON_PLASSON,99,3/4,5,NAO,CONFERIR bitola no PVC - comprimento 5" informado
+MISTO,5,5/8,3 1/2,NAO,CONFERIR - aco contra PVC nao foi definido
+MISTO,99,3/4,3 1/2,NAO,CONFERIR - aco contra PVC nao foi definido

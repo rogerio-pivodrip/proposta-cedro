@@ -12,3 +12,4 @@ regex,destino,observacao
 "CRIVO\s*(\d+)""\s*P/\s*VALVULA\s+DE\s+PE","CRIVO AZ \1"" FL NBR PN16 P/ VALV PE",crivo de succao
 "VALVULA\s+VENTOSA\s*(\d+)""","NAVC VENTOSA \1"" BSP",ventosa
 "VALVULA\s+BORBOLETA\s*(\d+)""","VALVULA BORBOLETA \1""",borboleta
+"FLANGE\s+AZ\s*(\d+)""","FL \1"" NBR PN16",flange avulsa: o catalogo chama de FL
