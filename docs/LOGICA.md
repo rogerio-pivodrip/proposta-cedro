@@ -92,10 +92,17 @@ n × porca
 |---|---|---|
 | aço zincado × aço zincado | 5/8" × 2½" | 3/4" × 2½" |
 | qualquer × flange da bomba | 5/8" × 3½" | 3/4" × 3½" |
-| Plasson × Plasson | 5/8" × 4" | 3/4" × 5" |
 
-A bitola no Plasson e o critério entre 4" e 5" ainda não foram confirmados —
-as linhas estão marcadas `homologado=NAO`.
+No Plasson o comprimento é pelo diâmetro do tubo, com a quebra em 110 mm:
+
+| tubo | parafuso |
+|---|---|
+| 75, 90 e 110 mm | 5/8" × **4"** |
+| 140 mm | 5/8" × **5"** |
+| 160 e 225 mm | 3/4" × **5"** |
+
+O comprimento está confirmado; a bitola no PVC ainda segue a regra de DN do aço
+e está marcada `homologado=NAO`.
 
 **Furação** (`data/regras_furacao.csv`, gerada por `tools/gerar_furacao.py`):
 124 linhas cobrindo NBR 7675, EN 1092-1 em PN10/16/25/40 e ANSI 150/300, de
@@ -360,7 +367,8 @@ Escolhe o DN → resolve inteiro contra o catálogo → sai a lista.
 
 1. **Quantas porcas e arruelas por barra roscada?** Hoje o motor conta 2, como
    suposição avisada.
-2. **Plasson** — a bitola do parafuso e o critério entre 4" e 5" de comprimento.
+2. **Bitola do parafuso no Plasson.** O comprimento está definido (4" até 110 mm,
+   5" acima); a bitola ainda segue a regra de DN do aço.
 3. **Comprimento do prisioneiro em NBR.** A ficha mede a versão ASME 150, cujo
    flange é mais grosso que o NBR — o tirante em NBR sai um pouco mais curto.
    Mantive o número da ficha, que erra para mais.

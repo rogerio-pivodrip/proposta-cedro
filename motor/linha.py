@@ -180,6 +180,8 @@ class Linha:
                 if papel == "BARRA_ROSCADA" and ficha:
                     _, por_barra = regras.barras_da_valvula(
                         peca.familia, ficha, dn, peca.unidade_dn)
+                    furos = regras.furos_da_valvula(dn, peca.unidade_dn,
+                                                    "NBR PN16", ficha)
                     extra = (" (3 nao cobririam a furacao)"
                              if qtd > regras.BARRAS_ROSCADAS_POR_PECA[peca.familia]
                              else "")
@@ -188,9 +190,7 @@ class Linha:
                         f"{esp['bitola_pol']}\" - tirante de "
                         f"{ficha['comp_prisioneiro_mm']:.0f} mm, "
                         f"{por_barra} por barra, {qtd * por_barra} tirantes "
-                        f"para {regras.furos_da_valvula(dn, peca.unidade_dn,
-                                                        'NBR PN16', ficha)} "
-                        f"furos{extra}"
+                        f"para {furos} furos{extra}"
                     )
 
         for junc in self.juncoes():
