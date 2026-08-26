@@ -209,6 +209,12 @@ class Linha:
                 continue  # rosca, solda, ponta lisa: sem ferragem
             contexto = regras.contexto_da_junta(junc["de"].material,
                                                 junc["para"].material)
+            if regras.contexto_sem_regra(contexto):
+                avisos.append(
+                    f"juncao {junc['pos']} ({junc['de'].material} x "
+                    f"{junc['para'].material}): nao ha regra de parafuso para "
+                    "aco contra flange Plasson - conferir"
+                )
             try:
                 itens = regras.ferragem_da_junta(
                     dados["dn"], dados["norma"], junc["de"].unidade_dn, contexto)

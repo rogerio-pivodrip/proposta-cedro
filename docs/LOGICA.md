@@ -93,7 +93,8 @@ n × porca
 | aço zincado × aço zincado | 5/8" × 2½" | 3/4" × 2½" |
 | qualquer × flange da bomba | 5/8" × 3½" | 3/4" × 3½" |
 
-No Plasson o comprimento é pelo diâmetro do tubo, com a quebra em 110 mm:
+**Só quando flange Plasson encontra flange Plasson** o comprimento é pelo
+diâmetro do tubo, com a quebra em 110 mm:
 
 | tubo | parafuso |
 |---|---|
@@ -103,6 +104,10 @@ No Plasson o comprimento é pelo diâmetro do tubo, com a quebra em 110 mm:
 
 O comprimento está confirmado; a bitola no PVC ainda segue a regra de DN do aço
 e está marcada `homologado=NAO`.
+
+Aço contra flange Plasson é outro caso — **não tem regra fechada**. O motor não
+escolhe calado: cai na faixa `MISTO`, que é chute declarado, e avisa a junção.
+PEAD também cai aí, porque entra por colar de tomada e não por flange Plasson.
 
 **Furação** (`data/regras_furacao.csv`, gerada por `tools/gerar_furacao.py`):
 124 linhas cobrindo NBR 7675, EN 1092-1 em PN10/16/25/40 e ANSI 150/300, de
@@ -365,14 +370,16 @@ Escolhe o DN → resolve inteiro contra o catálogo → sai a lista.
 
 ## 8. Decisões em aberto
 
-1. **Quantas porcas e arruelas por barra roscada?** Hoje o motor conta 2, como
+1. **Parafuso em junta mista** — aço contra flange Plasson não tem regra. Hoje
+   o motor usa a faixa `MISTO`, que é chute, e avisa toda vez que cai nela.
+2. **Quantas porcas e arruelas por barra roscada?** Hoje o motor conta 2, como
    suposição avisada.
-2. **Bitola do parafuso no Plasson.** O comprimento está definido (4" até 110 mm,
-   5" acima); a bitola ainda segue a regra de DN do aço.
-3. **Comprimento do prisioneiro em NBR.** A ficha mede a versão ASME 150, cujo
-   flange é mais grosso que o NBR — o tirante em NBR sai um pouco mais curto.
-   Mantive o número da ficha, que erra para mais.
-4. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
+3. **Bitola do parafuso no Plasson.** O comprimento está definido; a bitola ainda
+   segue a regra de DN do aço.
+4. **Comprimento do prisioneiro em NBR.** A ficha mede a versão ASME 150, cujo
+   flange é mais grosso — o tirante em NBR sai um pouco mais curto. Mantive o
+   número da ficha, que erra para mais.
+5. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
    ainda são norma escrita — e são justamente as do lado da bomba.
 
 ## 9. Estado do código

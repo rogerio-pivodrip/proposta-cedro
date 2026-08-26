@@ -173,15 +173,24 @@ def dn_nominal(dn, unidade="in"):
     return POLEGADA_PARA_DN.get(dn)
 
 
+# A regra do Plasson vale so quando o flange Plasson encontra outro flange
+# Plasson. PEAD entra por colar de tomada, nao por flange Plasson.
+PLASSON = {"PVC", "PVC_PLASSON"}
+
+
 def contexto_da_junta(material_a, material_b):
-    plasticos = {"PVC", "PVC_PLASSON", "PEAD"}
     if "BOMBA" in (material_a, material_b):
         return "BOMBA"
-    if material_a in plasticos and material_b in plasticos:
+    if material_a in PLASSON and material_b in PLASSON:
         return "PLASSON_PLASSON"
     if material_a == material_b == "ACO_ZINCADO":
         return "AZ_AZ"
     return "MISTO"
+
+
+def contexto_sem_regra(contexto):
+    """MISTO nao tem regra fechada - o motor avisa em vez de escolher calado."""
+    return contexto == "MISTO"
 
 
 def resolver_juncao(porta_a, porta_b):
