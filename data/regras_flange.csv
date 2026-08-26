@@ -1,0 +1,32 @@
+# Tabela de furacao e ferragem por norma/DN.
+# ATENCAO: valores de referencia (base EN 1092-1 PN16, parafuso convertido para
+# bitola UNC disponivel no catalogo). NADA aqui esta homologado - substituir pela
+# tabela oficial Netafim antes de usar em proposta. Coluna homologado controla isso.
+norma,dn_pol,furos,bitola_pol,esp_flange_mm,esp_junta_mm,homologado
+NBR PN16,2,4,5/8,19,3,NAO
+NBR PN16,2.5,4,5/8,19,3,NAO
+NBR PN16,3,8,5/8,20,3,NAO
+NBR PN16,4,8,5/8,20,3,NAO
+NBR PN16,5,8,3/4,22,3,NAO
+NBR PN16,6,8,3/4,22,3,NAO
+NBR PN16,8,12,3/4,24,3,NAO
+NBR PN16,10,12,1,26,3,NAO
+NBR PN16,12,12,1,28,3,NAO
+NBR PN16,14,16,1,30,3,NAO
+NBR PN16,16,16,1 1/8,32,3,NAO
+NBR PN16,18,20,1 1/8,36,3,NAO
+NBR PN16,20,20,1 1/4,38,3,NAO
+NBR PN16,24,20,1 1/4,42,3,NAO
+NBR PN25,3,8,5/8,22,3,NAO
+NBR PN25,4,8,3/4,24,3,NAO
+NBR PN25,6,8,3/4,26,3,NAO
+NBR PN25,8,12,7/8,28,3,NAO
+NBR PN25,10,12,1,30,3,NAO
+NBR PN25,12,16,1,32,3,NAO
+ANSI 150,3,4,5/8,24,3,NAO
+ANSI 150,4,8,5/8,24,3,NAO
+ANSI 150,6,8,3/4,25,3,NAO
+ANSI 150,8,8,3/4,29,3,NAO
+ANSI 150,10,12,7/8,30,3,NAO
+ANSI 150,12,12,7/8,32,3,NAO
+ANSI 150,14,12,1,35,3,NAO
