@@ -1,0 +1,50 @@
+# Lista de pecas do exemplo CASA DE MAQUINAS - MARCELO AMORIM 1855NN.
+# E o formato que sai do CAD hoje: nome livre da peca no desenho, sem codigo SAP.
+# Serve de caso de teste para o casamento nome-de-desenho -> SAP.
+item,nome_peca,qtd
+1,METB 050-32-200 - 15cv - MONO,1
+2,"Red Exc AZ 4""x 2""",1
+3,"Red Con AZ 3"" x 1"".1.4""",1
+4,"Curva AZ 4"" - 90º",1
+5,"Tubo AZ 4"" -1.00m",1
+6,"Ari Valvula de Retenção de 4""",1
+7,"CRIVO FOFO 4"" FL P/ VALVULA PE",1
+8,"Curva AZ 3"" - 90º c/ saída de 2""",1
+9,"Tubo AZ 3"" -0.50m",1
+10,"Curva AZ 3"" - 45º",2
+11,"Tubo AZ 3"" -1m",2
+12,"Tubo PEAD 3""",4
+13,"Tubo AZ 3"" -0.50m",2
+14,FL PVC 90 MM,9
+15,ADAPTADOR P/ FL 90MM SOLDA,9
+16,TUBO PVC PBA 90 CL 10 - 1.00M,6
+17,CURVA 90. SOLDA 90MM PLASSON/FIP,7
+18,TUBO PVC PBA 90 CL 10 - 3m,1
+19,ADAPTADOR PVC PBS 100 X 90 MM,2
+20,LUVA PVC IRRI LF BS 100 MM,2
+21,CURVA 45. SOLDA PVC 90 PLASSON/FIP,2
+22,TUBO PVC PBA 90 CL 10 - 1.5m,2
+23,"Valvula Borboleta 3"" c/ Alavanca",1
+24,BUCHA RED.SOLD. 110MX90F PLASS/FIP,3
+25,ADAPTADOR P/FL 110MM SOLDA,4
+26,FL PVC 110 MM,4
+27,"Filtro 2 x 24"" Espelho",1
+28,Retrolavagem 90mm,1
+29,"Valvula Hidraulica - Dorot 47-3""",1
+30,"ARAD MEDIDOR AGUA 3"" IRT PUL 100 L",1
+31,TUBO PVC PBA 90 CL 10 - 2m,1
+32,"COLAR TOMADA POLIPROPILENO 90 X 2"" PN 10",3
+33,"Ari Valvula de Retenção de 3""",1
+34,TE PVC SOLDAVEL 110MM PLASSON/FIP,2
+35,CURVA 90. SOLDA 110MM PLASSON/FIP,1
+36,TUBO PVC PBA 110 CL 10 - 1.00m,2
+37,BUCHA RED.SOLD. 110MX75F PLASS/FIP,2
+38,"ADAPTADOR 75(63) 2""MACHO PLASS/FIP",1
+39,"ADAPTADOR 75(63) 2""FEMEA",1
+40,"BUCHA RED PVC 2"" X 1""",2
+41,"ANTIVACUO 1""",2
+42,"Valvula de Alivio 84-2""",1
+43,ADAPTADOR PVC PBS 110 X 100 MM,1
+44,LUVA PVC SOLDAVEL 110MM PLASSON/FIP,1
+45,Casa de Maquinas Padrão - 5.40 x 4.20,1
+46,Chave de Partida Netafim,1

@@ -1,0 +1,14 @@
+# Traducao do vocabulario do desenho para o vocabulario do catalogo SAP.
+# O CAD escreve 'Valvula Hidraulica - Dorot 47-6"'; o SAP diz
+# 'DOROT VALV MET 47-6" BASICA - ABNT'. Nao e falta de item, e nome diferente.
+# regex: casado sem acento e em maiuscula. destino: usa \1, \2... do regex.
+regex,destino,observacao
+"VALVULA HIDRAULICA\s*-\s*DOROT\s*47-(\d+)""","DOROT VALV MET 47-\1"" BASICA - ABNT",valvula hidraulica de controle
+"VALVULA\s+DE\s+ALIVIO\s*84-(\d+)""","DOROT VAL MET ALIVIO 84-\1"" BSP",valvula de alivio
+"HYDROMETRO\s*(\d+)""","ARAD MEDIDOR AGUA \1"" IRT",hidrometro
+"EXTREMIDADE\s+DEFOFO\s*(\d+)","EXTREMIDADE FOFO \1 BF",ponta para defofo
+"VALVULA\s+DE\s+RETENCAO\s*-\s*UNIFLAP\s*-\s*(\d+)""","VALVULA RETENCAO \1"" UNIFLAP",retencao uniflap
+"ARI\s+VALVULA\s+DE\s+RETENCAO\s+DE\s*(\d+)""","VALVULA RETENCAO \1"" UNIFLAP",retencao - CONFERIR se Ari e Uniflap
+"CRIVO\s*(\d+)""\s*P/\s*VALVULA\s+DE\s+PE","CRIVO AZ \1"" FL NBR PN16 P/ VALV PE",crivo de succao
+"VALVULA\s+VENTOSA\s*(\d+)""","NAVC VENTOSA \1"" BSP",ventosa
+"VALVULA\s+BORBOLETA\s*(\d+)""","VALVULA BORBOLETA \1""",borboleta

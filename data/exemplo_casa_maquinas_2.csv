@@ -1,0 +1,37 @@
+# Segundo exemplo: CASA DE MAQUINAS LINC...NQUEIRA - 2040-25NN (bomba 40cv, 8").
+# Mesmo vocabulario do primeiro projeto - serve para confirmar que os nomes de
+# desenho seguem convencao estavel entre projetos.
+item,nome_peca,qtd
+1,"Crivo 8"" p/ Valvula de Pé",1
+2,"Ari Valvula de Retenção de 8""",1
+3,"Tubo AZ 8"" -1m",1
+4,"Red Con AZ 8"" x 5""",1
+5,METB 125-80-315 - 40cv,1
+6,"Red Con AZ 6"" x 3""",1
+7,"Tubo AZ 6"" -1m",1
+8,"Flange AZ 6""",2
+9,"Tubo PEAD 6""",4
+10,FL PVC 160 MM,14
+11,"COLAR TOMADA POLIPROPILENO 160X2"" PN 10",3
+12,"VALVULA VENTOSA 2""",2
+13,CURVA 90. SOLDA 160 MM PLASSON/FIP,6
+14,"Valvula Borboleta 8"" c/ Alavanca",1
+15,FILTRO 3 x 36 - Espelhado,1
+16,"Valvula Hidraulica - Dorot 47-6""",1
+17,"Hydrometro 6""",1
+18,"Valvula de Alivio 84-3""",1
+19,TE PVC SOLDAVEL 160MM PLASSON/FIP,2
+20,Extremidade Defofo 150,1
+21,Retrolavagem 90mm,1
+22,BUCHA RED.SOLD. 110MX75F PLASS/FIP,1
+23,"ADAPTADOR 75(63) 2""FEMEA",1
+24,BUCHA RED.SOLD. 110MX90F PLASS/FIP,1
+25,"ADAPTADOR 110(90) 3""MACHO",1
+26,TUBO PVC PBA 160 CL 10 - 2.5M,3
+27,"Ari Valvula de Retenção de 6""",1
+28,TUBO PVC PBA 160 CL 10 - 1.0M,1
+29,ADAPTADOR P/FL 160MM SOLDA,14
+30,TUBO PVC PBA 160 CL 10 - 0.50M,1
+31,"TUBO PVC PBA 160 CL 10 - 5,6M",1
+32,BUCHA RED.SOLD. 160MX110F PLASS/FIP,2
+33,"TUBO PVC PBA 160 CL 10 - 1.5M",4

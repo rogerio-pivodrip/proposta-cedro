@@ -10,6 +10,7 @@ Uso: python3 tools/normalizar.py [entrada.json] [saida.json]
 import json
 import re
 import sys
+import unicodedata
 from collections import Counter
 
 PADRAO_ENTRADA = "data/catalogo_bruto.json"
@@ -20,18 +21,17 @@ PADRAO_SAIDA = "data/catalogo.json"
 # A ordem importa - o primeiro padrao que casar vence.
 # --------------------------------------------------------------------------
 FAMILIAS = [
-    (r"^TUBO\s?AZ\b|^TUBOAZ\b", "TUBO", None),
-    (r"^TUBO\s?INOX\b", "TUBO", None),
-    (r"^TUBO\b", "TUBO", None),
+    (r"^TUBO\s?AZ\b|^TUBOAZ\b|^TUBO\s?INOX\b|^TUBO\b", "TUBO", None),
     (r"^MNFD\s?AZ\s?D\s?\d+|^MNFDAZ\s?D\s?\d+|^MFD\s?AZ", "MANIFOLD", None),
     (r"^REDCON\b|^RED\s?CON\b|^RC\s+INOX", "REDUCAO_CONCENTRICA", None),
     (r"^REDEXC\b|^RED\s?EXC\b|^RE\s+INOX", "REDUCAO_EXCENTRICA", None),
-    (r"^ADAPT\b", "ADAPTADOR", None),
+    (r"^BUCHA\s?RED", "BUCHA_REDUCAO", None),
+    (r"^ADAPT", "ADAPTADOR", None),
     (r"^CURVA\s?90", "CURVA", 90),
     (r"^CURVA\s?45", "CURVA", 45),
     (r"^CURVA\s?30", "CURVA", 30),
     (r"^CURVA\s?22", "CURVA", 22.5),
-    (r"^CURVA\b", "CURVA", None),
+    (r"^CURVA\b|^COTOVELO\b|^JOELHO\b", "CURVA", None),
     (r"^Y\s?45", "Y", 45),
     (r"^TE\s?RED\b", "TE_REDUZIDO", None),
     (r"^TE\b", "TE", None),
@@ -42,17 +42,30 @@ FAMILIAS = [
     (r"^UNIAO\b", "UNIAO", None),
     (r"^LUVA\b", "LUVA", None),
     (r"^CAP\b|^TAMPAO\b", "CAP", None),
+    (r"^COLAR\s?TOMADA\b|^COLAR\b", "COLAR_TOMADA", None),
     (r"^JUNTA\s?PLANA\b", "JUNTA_PLANA", None),
     (r"^JUNTA\s?DE\s?EXPANSAO\b", "JUNTA_EXPANSAO", None),
     (r"^JUNTA\s?MEC\b", "JUNTA_MECANICA", None),
     (r"^PARAFUSO\b", "PARAFUSO", None),
     (r"^PORCA\b", "PORCA", None),
     (r"^ARRUELA\b", "ARRUELA", None),
-    (r"^NIPLE\b", "NIPLE", None),
-    (r"^VALV\.?\s?RETENCAO|^VALVULA\s?RETENCAO", "VALVULA_RETENCAO", None),
-    (r"^VALV\.?\s?GAVETA|^REGISTRO\s?GAVETA", "VALVULA_GAVETA", None),
-    (r"^VALVULA\s?ANTI-?VACUO|^DOROT\s?ANTIVACUO|^NAVC\s?VENTOSA|^VENTOSA", "VENTOSA", None),
+    (r"^BARRA\s?ROSC", "BARRA_ROSCADA", None),
+    (r"^NIPLE\b|^NIPEL\b", "NIPLE", None),
+    (r"VALV\w*\s*(?:DE\s*)?RETENCAO|VALV\.?\s*RETENCAO|\bUNIFLAP\b", "VALVULA_RETENCAO", None),
+    (r"VALV\w*\s*(?:DE\s*)?PE\b", "VALVULA_PE", None),
+    (r"VALV\w*\s*BORBOLETA|^BORBOLETA\b", "VALVULA_BORBOLETA", None),
+    (r"VALV\w*\s*GAVETA|^REGISTRO\s*GAVETA", "VALVULA_GAVETA", None),
+    (r"\bALIVIO\b", "VALVULA_ALIVIO", None),
+    (r"VALV\w*\s*HIDRAULICA|\bDOROT\b[^,]*\b47-|\bDOROT\s*\d", "VALVULA_HIDRAULICA", None),
+    (r"ANTI-?VACUO|\bVENTOSA\b", "VENTOSA", None),
     (r"^MANOVACUOMETRO|^MANOMETRO", "MANOMETRO", None),
+    (r"^FILTRO\b|\bESPELHO\b|^ALPHADISC|^ARKAL|^SANDSTORM", "FILTRO", None),
+    (r"^RETROLAVAGEM\b", "RETROLAVAGEM", None),
+    (r"MEDIDOR\s*(?:DE\s*)?AGUA|^HIDROMETRO|^HYDROMETRO", "MEDIDOR", None),
+    (r"^EXTREMIDADE\b", "EXTREMIDADE", None),
+    (r"^CASA\s?DE\s?MAQUINAS", "CASA_MAQUINAS", None),
+    (r"^CHAVE\s?DE\s?PARTIDA|^QUADRO\b|^SOFT\s?START|^INVERSOR\b", "QUADRO", None),
+    (r"^MOTOBOMBA\b|^BOMBA\b|^METB\b|^ETB\b|^KSB\b", "BOMBA", None),
 ]
 
 # Materiais, na ordem de especificidade
@@ -64,7 +77,7 @@ MATERIAIS = [
     (r"\bFOFO\b|FERRO FUNDIDO", "FOFO"),
     (r"\bFG\b", "FERRO_GALV"),
     (r"\bBRONZE\b", "BRONZE"),
-    (r"\bPEAD\b|\bPE\b", "PEAD"),
+    (r"\bPEAD\b|\bPE\s?100\b|^TUBO\s?PE\b", "PEAD"),
 ]
 
 # Tipos de conexao. tipo = como acopla; norma = furacao/padrao dimensional.
@@ -89,11 +102,24 @@ CONEXOES = [
 # Derivacoes auxiliares: LG 2" = luva galvanizada, LV = luva, L2 = luva 2"
 RX_DERIV = re.compile(r"\b(?:C/\s*)?(\d)?\s*(LG|LV|L)\s*(\d+(?:\s?\d/\d)?)\s*\"?", re.I)
 RX_DN = re.compile(r"(\d+\s?\d/\d|\d+(?:[.,]\d+)?)\s*\"")
-RX_DN_MM = re.compile(r"\b(\d{2,3})\s*MM\b|\((\d{2,3})\)|\b(\d{2,3})\s*(?:PLASSON|$)")
+RX_DN_MM = re.compile(
+    r"\b(\d{2,3})\s*MM(?:\b|(?=X))|\((\d{2,3})\)|\b(\d{2,3})\s*(?:PLASSON|$)"
+    r"|\b(\d{2,3})M(?=X)|X\s?(\d{2,3})F\b")
+# Serie comercial de PVC/PEAD/Plasson em mm. Um numero solto so vira DN se for
+# um desses - evita ler "CL 10" ou "PN 10" como diametro.
+SERIE_MM = {20, 25, 32, 40, 50, 63, 75, 90, 100, 110, 125, 140, 160, 180, 200,
+            225, 250, 280, 300, 315, 350, 355, 400, 450, 500, 600}
 RX_MNFD = re.compile(r"\bD\s?(\d{2})\b")
 RX_GEOM = re.compile(
     r"(\d+\s?\d/\d|\d+)\s*\"?\s*X\s*([\d,.]+)\s*(?:MM)?\s*X\s*([\d,.]+)\s*(MM|M)\b"
 )
+
+
+def sem_acento(txt):
+    """'Retenção' -> 'RETENCAO'. As descricoes do CAD vem acentuadas, as do SAP nao."""
+    # NFD, nao NFKD: NFKD transformaria o grau ordinal de "90º" em "90o"
+    normal = unicodedata.normalize("NFD", txt)
+    return "".join(c for c in normal if not unicodedata.combining(c))
 
 
 def para_float(txt):
@@ -148,7 +174,11 @@ def extrair_conexoes(texto, dns):
 
 
 def normalizar_item(item):
-    desc = item["descricao"].upper().replace("\xa0", " ")
+    """Aceita um registro do catalogo ou uma descricao solta (nome de peca do CAD)."""
+    if isinstance(item, str):
+        item = {"sap": None, "descricao": item, "un": None, "grupo": None,
+                "procedencia": None}
+    desc = sem_acento(item["descricao"]).upper().replace("\xa0", " ")
     peca = dict(item)
     peca["familia"] = None
     peca["material"] = None
@@ -187,6 +217,9 @@ def normalizar_item(item):
         peca["dn"] = [d for d, _ in dns_pos]
     else:
         mm = [int(g) for m in RX_DN_MM.finditer(desc) for g in m.groups() if g]
+        if not mm and peca["material"] in ("PVC", "PVC_PLASSON", "PEAD"):
+            mm = [int(t) for t in re.findall(r"\b(\d{2,3})\b", desc)
+                  if int(t) in SERIE_MM]
         if mm:
             peca["unidade_dn"] = "mm"
             peca["dn"] = mm
@@ -199,9 +232,10 @@ def normalizar_item(item):
         comp = para_float(g.group(3))
         peca["comprimento_mm"] = comp if g.group(4) == "MM" else comp * 1000
     elif peca["familia"] == "TUBO":
-        m = re.search(r"-(\d+)M\b", desc)
+        # '-6M', '-1.00m', '- 0,50 M' -> milimetros
+        m = re.search(r"[-\s](\d+(?:[.,]\d+)?)\s*M\b", desc)
         if m:
-            peca["comprimento_mm"] = int(m.group(1)) * 1000
+            peca["comprimento_mm"] = round(para_float(m.group(1)) * 1000)
 
     peca["conexoes"] = extrair_conexoes(desc, dns_pos)
 

@@ -1,171 +1,225 @@
 # Lógica do programa de sucção e recalque
 
-Documento de projeto. Descreve o modelo de dados, as regras de montagem e o
-mecanismo que mantém desenho e lista sempre iguais.
+Documento de projeto. Modelo de dados, regras de montagem e o mecanismo que
+mantém desenho e lista sempre iguais.
 
-## 1. O ponto central: não existe sincronização
+Baseado em três coisas reais: a lista de materiais Netafim (`LM_CANAL_REV1`,
+5.157 itens, base jul/2026) e três casas de máquinas já desenhadas
+(Marcelo Amorim 1855NN, Lincoln Junqueira 2040/25NN, Thiago Derks).
+
+## 1. O alvo
+
+O produto final é o que os projetos já entregam hoje: uma prancha com o desenho
+balonado e a **Lista de peças** (`Item | Número da peça | Qtd`) — só que
+**vista lateral 2D**, não conjunto 3D, e com a lista saindo pronta em código SAP.
+
+Dois formatos convivem hoje e o programa precisa dos dois:
+
+| formato | quem usa | chave |
+|---|---|---|
+| Lista de peças do desenho | projetista, montagem em campo | nome livre (`Red Exc AZ 4"x 2"`) |
+| Aba Orçamento da planilha | comercial | código SAP (`01523-281940`) |
+
+## 2. O ponto central: não existe sincronização
 
 A tentação é ter um desenho e uma planilha e sincronizar os dois. Isso sempre
-diverge. Aqui a regra é:
+diverge. Aqui:
 
 > **Existe um único documento — a Linha. Desenho e lista são duas projeções
 > dela.** Editar no desenho e editar na tabela são o mesmo comando atingindo o
 > mesmo objeto.
 
-```
-                       ┌──────────────────┐
-   arrastar peça ─────▶│                  │─────▶ desenho (SVG)
-                       │   Linha (modelo) │
-   editar linha  ─────▶│                  │─────▶ lista (aba Orçamento)
-   da tabela           └──────────────────┘
-```
-
 Comandos (única porta de escrita): `inserir`, `remover`, `substituir`,
 `alterar`, `mover`. Cada comando → valida → recalcula junções e ferragem →
-redesenha as duas views. Undo/redo é a pilha de comandos.
+redesenha as duas views. Undo/redo é a pilha de comandos. O balão do desenho e a
+linha da tabela são a mesma peça, com o mesmo id.
 
-## 2. Modelo de dados
+## 3. Modelo de dados
 
 ### Peça
-Toda peça do catálogo vira um registro paramétrico
-(`tools/normalizar.py` faz isso a partir da descrição de texto livre):
+Cada item do catálogo vira registro paramétrico (`tools/normalizar.py`, a partir
+da descrição em texto livre):
 
 | campo | exemplo |
 |---|---|
 | `sap` | `01523-134000` |
-| `familia` | `CURVA`, `TUBO`, `TE`, `REDUCAO_CONCENTRICA`, `MANIFOLD`, … |
-| `material` | `ACO_ZINCADO`, `PVC_PLASSON` |
+| `familia` | `CURVA`, `TUBO`, `TE`, `REDUCAO_CONCENTRICA`, `MANIFOLD`, `VALVULA_HIDRAULICA`, … |
+| `material` | `ACO_ZINCADO`, `PVC_PLASSON`, `PEAD`, `FOFO` |
 | `dn` / `unidade_dn` | `[8.0]` / `in` — ou `[160]` / `mm` |
-| `angulo` | `90` |
-| `espessura_mm`, `comprimento_mm` | `2.65`, `3000` |
+| `angulo`, `espessura_mm`, `comprimento_mm` | `90`, `2.65`, `3000` |
 | `conexoes` | `[{dn:8, tipo:FLANGE, norma:"NBR PN16"} × 2]` |
-| `derivacoes` | `[{qtd:2, dn:2, tipo:LUVA}]` (os `2 LG 2"` das descrições) |
+| `derivacoes` | `[{qtd:2, dn:2, tipo:LUVA}]` (os `2 LG 2"` e `C/ESC.2"`) |
 
 ### Porta
-Cada peça expõe **portas** (as pontas). Uma porta é `(dn, tipo, norma)`:
-
-- `tipo`: `FLANGE`, `ENGATE_K`, `ROSCA_MACHO`, `RANHURADA`, `SOLDA`, `PONTA_LISA`
-- `norma`: `NBR PN16`, `NBR PN25`, `ANSI 150`, `ANSI 300`, `EN PN10/16/40`,
-  `K6/K8/K10/K12`, `PVC SOLDÁVEL`
+Cada peça expõe **portas** — as pontas — como `(dn, tipo, norma)`:
+`FLANGE`, `ENGATE_K`, `ROSCA_MACHO`, `RANHURADA`, `SOLDA`, `PONTA_LISA`;
+normas `NBR PN10/16/25/40`, `EN PN10/16/40`, `ANSI 150/300`, `K6…K12`,
+`PVC SOLDÁVEL`.
 
 ### Linha
 Sequência ordenada de peças. Entre duas peças consecutivas há uma **junção**,
 que é calculada, não digitada.
 
-## 3. Regras de montagem
+## 4. Regras de montagem
 
-### 3.1 Compatibilidade (`motor/regras.py::resolver_juncao`)
+### 4.1 Compatibilidade (`motor/regras.py::resolver_juncao`)
 
 | situação | resultado |
 |---|---|
 | DN igual, tipo igual, norma igual | **junção direta** |
-| DN diferente | **inserir redução** (concêntrica por padrão; excêntrica na sucção, junto à bomba, para não formar bolsa de ar) |
-| DN igual, normas diferentes (`NBR PN16` × `ANSI 150`) | **inserir adaptador** — o catálogo tem 42 adaptadores exatamente para isso |
-| DN igual, tipos diferentes (`FLANGE` × `ENGATE_K`) | **inserir adaptador FL × K** |
+| DN diferente | **redução** (concêntrica por padrão; excêntrica na sucção junto à bomba, para não formar bolsa de ar) |
+| DN igual, normas diferentes (`NBR PN16` × `ANSI 150`) | **adaptador** — o catálogo tem 67 |
+| DN igual, tipos diferentes (`FLANGE` × `ENGATE_K`) | **adaptador FL × K** |
 
-O motor nunca "conserta" em silêncio: ele insere a peça de transição e
-registra o motivo, ou levanta o problema na tela.
+O motor nunca conserta em silêncio: insere a peça de transição e registra o
+motivo, ou levanta o problema.
 
-### 3.2 Ferragem derivada (`motor/regras.py::ferragem_da_junta`)
+### 4.2 Ferragem derivada (`motor/regras.py::ferragem_da_junta`)
 
-Nenhum parafuso é digitado. Cada **junção flangeada** gera automaticamente:
+Nenhum parafuso é digitado — e hoje **nenhuma das três listas de peças tem
+ferragem**, o que é justamente o buraco a fechar. Cada junção flangeada gera:
 
 ```
 1 × junta plana DN
-n × parafuso  (n = nº de furos da norma/DN)
+n × parafuso   (n = nº de furos da norma/DN)
 n × porca
 2n × arruela
 ```
 
 Comprimento do parafuso:
-
-```
-L ≥ 2 × esp_flange + esp_junta + 2 × arruela + altura_porca + folga
-```
-
-arredondado para cima até o comprimento de estoque
-(2", 2¼", 2½", 3", 3½", 4", 4½", 5", 6", 7").
+`L ≥ 2·esp_flange + esp_junta + 2·arruela + altura_porca + folga`,
+arredondado para cima até a medida de estoque (2", 2¼", 2½", 3"…7").
 
 Junções por engate K, rosca ou solda **não** geram ferragem.
 
-> **Pendência:** a tabela `data/regras_flange.csv` (furos, bitola, espessura de
-> flange por norma/DN) está preenchida com valores de referência EN 1092-1 e
-> marcada `homologado=NAO`. Precisa ser substituída pela tabela oficial antes de
-> gerar proposta. É um CSV justamente para vocês editarem sem mexer em código.
+> **Pendência:** `data/regras_flange.csv` (furos, bitola, espessura por
+> norma/DN) está com valores de referência EN 1092-1, marcados
+> `homologado=NAO`. Precisa da tabela oficial antes de virar proposta.
 
-### 3.3 Barra roscada
-Ainda não modelada — falta definir em que casos entra (tirante de junta de
-expansão? flange cega com derivação?). Ver seção 7.
+### 4.3 Kits: peças que nunca vêm sozinhas
 
-## 4. Do desenho à geometria
+Achado nos projetos: **flange de PVC é sempre par**.
 
-Não é CAD. Cada peça tem comprimento face-a-face; curvas têm ângulo. A linha é a
-soma vetorial ao longo do eixo:
+| projeto | `FL PVC` | `ADAPTADOR P/FL … SOLDA` |
+|---|---|---|
+| Marcelo Amorim | 90 mm × 9 | 90 mm × 9 |
+| Marcelo Amorim | 110 mm × 4 | 110 mm × 4 |
+| Lincoln Junqueira | 160 mm × 14 | 160 mm × 14 |
+
+Quantidades idênticas nos dois projetos. Logo: `FLANGE_PVC` é um kit
+(flange + adaptador de solda + junta + ferragem), lançado como uma peça só e
+explodido na lista. Vale o mesmo para conjuntos como `Retrolavagem 90mm`, que
+aparece na lista de peças como um item mas é uma montagem.
+
+### 4.4 Corte × barra (`motor/corte.py`)
+
+O desenho lista pedaços; a compra é por barra inteira. No projeto Lincoln
+Junqueira o tubo PVC PBA 160 aparece como 1,0 m / 1,5 m / 2,5 m / 5,6 m — mas o
+catálogo só tem a **barra de 5,6 m** (`75260-004200`). Sem essa conversão a
+lista pede um código que não existe.
+
+Os 10 cortes daquele projeto somam 20,6 m. Com plano de corte
+(first-fit decreasing): **4 barras**, 92% de aproveitamento.
 
 ```
-posição_n+1 = posição_n + comprimento_n · (cos θ, sen θ)
+barra 1: 5,6                    sobra 0,0
+barra 2: 2,5 + 2,5 + 0,5        sobra 0,1
+barra 3: 2,5 + 1,5 + 1,5        sobra 0,1
+barra 4: 1,5 + 1,5 + 1,0        sobra 1,6
+```
+
+## 5. Do desenho à geometria — sem CAD
+
+Vista lateral 2D. Cada peça tem comprimento face a face; curva tem ângulo. A
+linha é a soma vetorial ao longo do eixo:
+
+```
+posição(n+1) = posição(n) + comprimento(n) · (cos θ, sen θ)
 θ += ângulo da curva
 ```
 
-Isso já dá um esquema 2D em escala, com cotas, sem nenhuma engine de CAD.
-Traçado em SVG: peça = símbolo + balão com o item da lista.
+Isso já dá o esquema em escala com cotas. Traçado em SVG: peça = símbolo +
+balão numerado, que é o mesmo número da linha na tabela.
 
-## 5. Do desenho à lista
+## 6. A camada de nomes (o de-para)
 
-`Linha.lista_materiais()` agrega por SAP e devolve exatamente as colunas da aba
-**Orçamento** da planilha atual (`Área | Cód. SAP | Qtd`) — descrição, grupo e
-procedência continuam vindo do `VLOOKUP` na aba `Materiais`. Ou seja: a saída do
-programa entra na planilha que já existe, sem mudar o processo comercial.
+O CAD escreve `Red Exc AZ 4"x 2"`; a proposta precisa de `01523-281940`.
+`tools/casar_lista.py` faz a ponte: interpreta o nome do desenho com o mesmo
+interpretador do catálogo e procura o item de mesmos parâmetros.
 
-## 6. Desenhos padrão (templates)
+Medido nos três projetos — **110 peças**:
 
-Achado importante no catálogo: os **manifolds já são desenhos padrão** —
-`MNFD AZ D02 … D20`, 14 tipos, 148 itens. `D09` sozinho tem 43 variações de DN e
-comprimento. Então o conceito de "desenho básico padrão" já existe na Netafim;
-o programa só precisa formalizá-lo.
+| resultado | peças |
+|---|---|
+| resolvido direto (um único candidato) | 66 |
+| empate a decidir (2+ candidatos igualmente válidos) | 34 |
+| sem correspondência | 10 |
+
+Dos 10 sem correspondência, 5 são sub-conjuntos do CAD que não são item de
+compra (`Base`, `TopLevelAssembly`, `Casa de Máquinas Padrão`,
+`Retrolavagem` ×2), 2 são flange de aço avulso — que o catálogo realmente não
+tem — e 1 é erro de digitação no próprio desenho (`Red Con AZ 3" x 1".1.4"`).
+
+**Conclusão que isso força:** casar por nome não é o mecanismo definitivo — 60%
+de acerto único não serve para gerar proposta. O nome do desenho é
+*subespecificado*: não diz norma de flange nem espessura de parede, então dois
+SAPs diferentes servem igualmente. Por isso:
+
+> Cada peça da biblioteca de desenho carrega o **código SAP como atributo**.
+> A lista sai exata por construção. O casamento por nome serve para uma coisa
+> só: migrar o acervo de desenhos que já existe, uma vez, com conferência.
+
+O que reduz empate sem ambiguidade é vocabulário de marca/linha
+(`UNIFLAP`, `PLASSON`, `ARAD`, `DOROT`) — está em `data/depara_nomes.csv`,
+tabela editável. Foi ela que levou o acerto de 34 para 66.
+
+## 7. Desenhos padrão (templates)
+
+Os **manifolds já são desenhos padrão** no catálogo: `MNFD AZ D02 … D20`,
+14 tipos, 151 itens; só o `D09` tem 43 variações de DN e comprimento. O conceito
+já existe na Netafim — o programa formaliza.
 
 Um template é a mesma estrutura de `Linha`, com DN paramétrico:
 
 ```python
 SUCCAO_CANAL = [
-    ("CRIVO", {}),
-    ("TUBO", {"comprimento_mm": 1000}),
-    ("CURVA", {"angulo": 90}),
-    ("TUBO", {"comprimento_mm": 3000}),
-    ("CURVA", {"angulo": 45}),
-    ("TUBO", {"comprimento_mm": 1500}),
+    ("CRIVO", {}), ("TUBO", {"comprimento_mm": 1000}),
+    ("CURVA", {"angulo": 90}), ("TUBO", {"comprimento_mm": 3000}),
+    ("CURVA", {"angulo": 45}), ("TUBO", {"comprimento_mm": 1500}),
     ("REDUCAO_EXCENTRICA", {"dn_saida": dn - 2}),
 ]
 ```
 
-Escolhe o DN → o template se resolve inteiro contra o catálogo → sai a lista.
+Escolhe o DN → resolve inteiro contra o catálogo → sai a lista.
 `tools/demo_succao.py` já faz isso.
 
-## 7. Decisões em aberto
+## 8. Decisões em aberto
 
 1. **Tabela de furação oficial** (furos, bitola, espessura de flange por
    norma/DN). Sem ela a ferragem é estimativa.
-2. **Barra roscada**: em que montagens entra e com que critério de quantidade.
-3. **Curva K vs. flangeada**: o engate K (K8/K10) aparece em 204 conexões.
-   Ele dispensa ferragem? Leva anel/trava com código próprio?
-4. **Plasson**: junta soldável não leva ferragem, mas o flange PVC (`FL CEGA
-   3" (90)`, `FL CEGA 8" (225)`) leva. Confirmar bitola dos parafusos em PVC.
-5. **Plataforma**: web local (TypeScript + SVG, roda no navegador, offline) ou
-   desktop Python. Recomendação: web — o desenho é SVG puro e a exportação para
-   XLSX/PDF é trivial.
+2. **Barra roscada** — em que montagens entra e com que critério de quantidade.
+3. **Engate K** (204 conexões no catálogo) — dispensa ferragem por completo, ou
+   leva anel/trava com código próprio?
+4. **Flange de PVC** — qual bitola de parafuso vocês usam.
+5. **Flange de aço avulso** — o catálogo só tem um código (`01542-099000`,
+   225 mm). Os desenhos pedem `Flange AZ 6"` e `Flange AZ 10"`. Falta cadastro,
+   ou vocês usam a flange que vem soldada no tubo?
 
-## 8. Estado atual do código
+## 9. Estado do código
 
 ```
-tools/importar_catalogo.py   xlsx  -> data/catalogo_bruto.json   (5.157 itens)
-tools/normalizar.py          texto -> data/catalogo.json         (peças paramétricas)
-motor/catalogo.py            índice por (família, DN, norma)
-motor/regras.py              compatibilidade + ferragem
-motor/ferragem.py            resolve ferragem em código SAP
-motor/linha.py               documento, comandos, junções, geometria, BOM
-tools/demo_succao.py         demonstração ponta a ponta
+tools/importar_catalogo.py    xlsx  -> data/catalogo_bruto.json   (5.157 itens)
+tools/normalizar.py           texto -> data/catalogo.json          (peças paramétricas)
+tools/extrair_lista_pdf.py    PDF do CAD -> lista de peças em CSV
+tools/casar_lista.py          nome de desenho -> código SAP
+tools/demo_succao.py          demonstração ponta a ponta
+motor/catalogo.py             índice por (família, DN, norma)
+motor/regras.py               compatibilidade + ferragem
+motor/ferragem.py             ferragem -> código SAP
+motor/corte.py                cortes -> barras de estoque
+motor/traducao.py             vocabulário do desenho -> vocabulário do catálogo
+motor/linha.py                documento, comandos, junções, geometria, lista
 ```
 
-Cobertura do parser no escopo de sucção/recalque (aço ≥ 3" e Plasson ≥ 75 mm):
-**732 de 732 itens** com família identificada, 726 com conexões. Os 6 restantes
-são manifolds com notação irregular (`FLE1`, `FLK10`).
+Cobertura do interpretador no escopo de sucção/recalque (aço ≥ 3" e
+Plasson ≥ 75 mm): **732 de 732 itens** com família identificada.
