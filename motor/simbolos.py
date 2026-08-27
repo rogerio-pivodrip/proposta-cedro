@@ -177,6 +177,16 @@ def giro(x, perna, angulo, dn_pol, sentido=1, y=0.0, gomos=4):
             centro_linha, (fora, dentro))
 
 
+def _atravessa(polilinha, alvo):
+    """Onde a polilinha cruza a horizontal y=alvo, indo para frente."""
+    for i in range(len(polilinha) - 1):
+        (ax, ay), (bx, by) = polilinha[i], polilinha[i + 1]
+        if (ay - alvo) * (by - alvo) <= 0 and abs(by - ay) > 1e-9:
+            t = (alvo - ay) / (by - ay)
+            return ax + t * (bx - ax)
+    return None
+
+
 def _cruzamento(r1, r2):
     (x1, y1), (x2, y2) = r1
     (x3, y3), (x4, y4) = r2
@@ -596,19 +606,16 @@ def curva_saida(dn_pol, angulo=90, dn_saida=2, sentido=1, gomos=4):
     # ventosa sobe na mesma linha por onde a agua entrou. O bocal nasce onde
     # essa linha atravessa a parede externa do giro.
     parede_fora = paredes[0]
-    base = None
-    for i in range(len(parede_fora) - 1):
-        (ax, ay), (bx, by) = parede_fora[i], parede_fora[i + 1]
-        if ay * by <= 0 and abs(by - ay) > 1e-9:      # cruza o eixo de entrada
-            t = -ay / (by - ay)
-            base = (ax + t * (bx - ax), 0.0)
-            break
-    if base is None:
-        base = (eixo_linha[-2][0], 0.0)
+    base = (_atravessa(parede_fora, 0.0) or eixo_linha[-2][0], 0.0)
     haste = DE_TUBO.get(dn_saida, 60) * 2.2
     topo = (base[0] + haste, base[1])
-    el.append(_p(f"M{base[0]:.1f} {base[1] - rs:.1f} H{topo[0]:.1f}"))
-    el.append(_p(f"M{base[0]:.1f} {base[1] + rs:.1f} H{topo[0]:.1f}"))
+    # cada parede do bocal encosta na chapa do gomo no seu proprio ponto: os
+    # dois pes caem em alturas diferentes, que e o que acontece quando se
+    # solda um tubo redondo num flanco inclinado
+    for sinal in (-1, 1):
+        pe = _atravessa(parede_fora, sinal * rs)
+        el.append(_p(f"M{pe if pe is not None else base[0]:.1f} "
+                     f"{sinal * rs:.1f} H{topo[0]:.1f}"))
     bocal = placa(topo[0], dn_saida, topo[1], lado="saida")
     el += bocal
     el += placa(0, dn_pol)
