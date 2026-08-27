@@ -1,0 +1,217 @@
+familia,dn,dn_menor,unidade_dn,variante,significado,valor_mm,confiavel,nome_no_dxf,arquivo,fonte
+CURVA,150,,mm,45/BOLSA,envelope_x_mm,355.7,1,CURVA 45 PVC IRRI LF 150 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,150,,mm,45/BOLSA,envelope_y_mm,576.6,1,CURVA 45 PVC IRRI LF 150 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,125,,mm,45/BOLSA,envelope_x_mm,295.0,1,CURVA 45 PVC IRRI LF 125 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,125,,mm,45/BOLSA,envelope_y_mm,478.2,1,CURVA 45 PVC IRRI LF 125 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,100,,mm,45/BOLSA,envelope_x_mm,237.9,1,CURVA 45 PVC IRRI LF 100 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,100,,mm,45/BOLSA,envelope_y_mm,385.9,1,CURVA 45 PVC IRRI LF 100 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,75,,mm,45/BOLSA,envelope_x_mm,188.4,1,CURVA 45 PVC IRRI LF 75 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,75,,mm,45/BOLSA,envelope_y_mm,315.8,1,CURVA 45 PVC IRRI LF 75 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,50,,mm,45/BOLSA,envelope_x_mm,128.4,1,CURVA 45 PVC IRRI LF 50 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,50,,mm,45/BOLSA,envelope_y_mm,215.5,1,CURVA 45 PVC IRRI LF 50 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,35,,mm,45/BOLSA,envelope_x_mm,99.3,1,CURVA 45 PVC IRRI LF 35 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,35,,mm,45/BOLSA,envelope_y_mm,168.1,1,CURVA 45 PVC IRRI LF 35 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,150,,mm,90/BOLSA,envelope_x_mm,572.5,1,CURVA 90 PVC IRRI LF 150 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,150,,mm,90/BOLSA,envelope_y_mm,588.6,1,CURVA 90 PVC IRRI LF 150 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,125,,mm,90/BOLSA,envelope_x_mm,513.7,1,CURVA 90 PVC IRRI LF 125 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,125,,mm,90/BOLSA,envelope_y_mm,526.4,1,CURVA 90 PVC IRRI LF 125 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,100,,mm,90/BOLSA,envelope_x_mm,389.8,1,CURVA 90 PVC IRRI LF 100 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,100,,mm,90/BOLSA,envelope_y_mm,400.5,1,CURVA 90 PVC IRRI LF 100 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,75,,mm,90/BOLSA,envelope_x_mm,326.7,1,CURVA 90 PVC IRRI LF 75 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,75,,mm,90/BOLSA,envelope_y_mm,334.5,1,CURVA 90 PVC IRRI LF 75 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,50,,mm,90/BOLSA,envelope_x_mm,223.3,1,CURVA 90 PVC IRRI LF 50 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,50,,mm,90/BOLSA,envelope_y_mm,228.5,1,CURVA 90 PVC IRRI LF 50 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_REDUCAO,150,125,mm,BOLSA,comprimento_mm,988.0,1,LUVA RED PVC IRRI LF 150 X 125 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_REDUCAO,150,125,mm,BOLSA,d_externo_mm,173.7,1,LUVA RED PVC IRRI LF 150 X 125 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_REDUCAO,150,125,mm,BOLSA,comprimento_mm,167.9,1,LUVA RED PVC IRRI LF 150 X 125 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_REDUCAO,150,125,mm,BOLSA,d_externo_mm,170.0,1,LUVA RED PVC IRRI LF 150 X 125 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_REDUCAO,125,100,mm,BOLSA,comprimento_mm,141.0,1,LUVA RED PVC IRRI LF 125 X 100 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_REDUCAO,125,100,mm,BOLSA,d_externo_mm,143.0,1,LUVA RED PVC IRRI LF 125 X 100 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_REDUCAO,100,50,mm,BOLSA,comprimento_mm,116.0,1,LUVA RED PVC IRRI LF 100 X 50 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_REDUCAO,100,50,mm,BOLSA,d_externo_mm,120.0,1,LUVA RED PVC IRRI LF 100 X 50 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_REDUCAO,100,75,mm,BOLSA,comprimento_mm,116.0,1,LUVA RED PVC IRRI LF 100 X 75 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_REDUCAO,100,75,mm,BOLSA,d_externo_mm,120.0,1,LUVA RED PVC IRRI LF 100 X 75 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_REDUCAO,75,50,mm,BOLSA,comprimento_mm,95.8,1,LUVA RED PVC IRRI LF 75 X 50 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_REDUCAO,75,50,mm,BOLSA,d_externo_mm,93.0,1,LUVA RED PVC IRRI LF 75 X 50 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,35,,mm,90/BOLSA,envelope_x_mm,177.1,1,CURVA 90 PVC IRRI LF 35 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,35,,mm,90/BOLSA,envelope_y_mm,181.8,1,CURVA 90 PVC IRRI LF 35 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_REDUCAO,50,35,mm,BOLSA,comprimento_mm,60.0,1,LUVA RED PVC IRRI LF 50 X 35 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_REDUCAO,50,35,mm,BOLSA,d_externo_mm,64.6,1,LUVA RED PVC IRRI LF 50 X 35 MM,pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,100,90,mm,BOLSA,comprimento_mm,102.0,1,ADAP. PVC PBS 100X90,pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,100,90,mm,BOLSA,d_externo_mm,80.0,1,ADAP. PVC PBS 100X90,pecas_CAD2.dxf,DXF da casa
+LUVA,150,,mm,BOLSA,comprimento_mm,181.0,1,LUVA  PVC IRRI LF BS 150 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,150,,mm,BOLSA,d_externo_mm,167.9,1,LUVA  PVC IRRI LF BS 150 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,125,,mm,BOLSA,comprimento_mm,153.0,1,LUVA  PVC IRRI LF BS 125 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,125,,mm,BOLSA,d_externo_mm,142.9,1,LUVA  PVC IRRI LF BS 125 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,100,,mm,BOLSA,comprimento_mm,120.0,1,LUVA  PVC IRRI LF BS 100 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,100,,mm,BOLSA,d_externo_mm,118.0,1,LUVA  PVC IRRI LF BS 100 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,75,,mm,BOLSA,comprimento_mm,89.0,1,LUVA  PVC IRRI LF BS 75 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,75,,mm,BOLSA,d_externo_mm,90.0,1,LUVA  PVC IRRI LF BS 75 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,35,,mm,BOLSA,comprimento_mm,213.5,1,LUVA  PVC IRRI LF BS 35 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,35,,mm,BOLSA,d_externo_mm,74.6,1,LUVA  PVC IRRI LF BS 35 MM,pecas_CAD2.dxf,DXF da casa
+TE,150,,mm,BOLSA,face_a_face_mm,1538.4,1,TE  PVC IRRI LF BS 150 MM,pecas_CAD2.dxf,DXF da casa
+TE,150,,mm,BOLSA,altura_total_mm,277.1,1,TE  PVC IRRI LF BS 150 MM,pecas_CAD2.dxf,DXF da casa
+TE_REDUZIDO,100,75,mm,BOLSA,face_a_face_mm,1579.6,1,TE RED PVC IRRI LF BS 100 X 75 MM,pecas_CAD2.dxf,DXF da casa
+TE_REDUZIDO,100,75,mm,BOLSA,altura_total_mm,257.4,1,TE RED PVC IRRI LF BS 100 X 75 MM,pecas_CAD2.dxf,DXF da casa
+TE_REDUZIDO,150,125,mm,BOLSA,face_a_face_mm,340.0,1,TE RED PVC IRRI LF BS 150 X 125 MM,pecas_CAD2.dxf,DXF da casa
+TE_REDUZIDO,150,125,mm,BOLSA,altura_total_mm,257.4,1,TE RED PVC IRRI LF BS 150 X 125 MM,pecas_CAD2.dxf,DXF da casa
+TE,150,,mm,BOLSA,face_a_face_mm,372.1,1,TE  PVC IRRI LF BS 150 MM,pecas_CAD2.dxf,DXF da casa
+TE,150,,mm,BOLSA,altura_total_mm,277.1,1,TE  PVC IRRI LF BS 150 MM,pecas_CAD2.dxf,DXF da casa
+TE,125,,mm,BOLSA,face_a_face_mm,322.0,1,TE  PVC IRRI LF BS 125 MM,pecas_CAD2.dxf,DXF da casa
+TE,125,,mm,BOLSA,altura_total_mm,232.4,1,TE  PVC IRRI LF BS 125 MM,pecas_CAD2.dxf,DXF da casa
+TE_REDUZIDO,150,100,mm,BOLSA,face_a_face_mm,324.0,1,TE RED PVC IRRI LF BS 150 X 100 MM,pecas_CAD2.dxf,DXF da casa
+TE_REDUZIDO,150,100,mm,BOLSA,altura_total_mm,246.0,1,TE RED PVC IRRI LF BS 150 X 100 MM,pecas_CAD2.dxf,DXF da casa
+TE_REDUZIDO,100,75,mm,BOLSA,face_a_face_mm,229.5,1,TE RED PVC IRRI LF BS 100 X 75 MM,pecas_CAD2.dxf,DXF da casa
+TE_REDUZIDO,100,75,mm,BOLSA,altura_total_mm,163.5,1,TE RED PVC IRRI LF BS 100 X 75 MM,pecas_CAD2.dxf,DXF da casa
+TE,100,,mm,BOLSA,face_a_face_mm,229.5,1,TE  PVC IRRI LF BS 100 MM,pecas_CAD2.dxf,DXF da casa
+TE,100,,mm,BOLSA,altura_total_mm,173.8,1,TE  PVC IRRI LF BS 100 MM,pecas_CAD2.dxf,DXF da casa
+TE_REDUZIDO,100,50,mm,BOLSA,face_a_face_mm,229.5,1,TE RED PVC IRRI LF BS 100 X 50 MM,pecas_CAD2.dxf,DXF da casa
+TE_REDUZIDO,100,50,mm,BOLSA,altura_total_mm,147.8,1,TE RED PVC IRRI LF BS 100 X 50 MM,pecas_CAD2.dxf,DXF da casa
+TE_REDUZIDO,75,50,mm,BOLSA,face_a_face_mm,147.5,1,TE RED PVC IRRI LF BS 75 X 50 MM,pecas_CAD2.dxf,DXF da casa
+TE_REDUZIDO,75,50,mm,BOLSA,altura_total_mm,120.0,1,TE RED PVC IRRI LF BS 75 X 50 MM,pecas_CAD2.dxf,DXF da casa
+TE_REDUZIDO,75,50,mm,BOLSA,face_a_face_mm,117.0,1,TE RED PVC IRRI LF BS 75 X 50 MM,pecas_CAD2.dxf,DXF da casa
+TE_REDUZIDO,75,50,mm,BOLSA,altura_total_mm,88.6,1,TE RED PVC IRRI LF BS 75 X 50 MM,pecas_CAD2.dxf,DXF da casa
+TE,75,,mm,BOLSA,face_a_face_mm,174.0,1,TE  PVC IRRI LF BS 75 MM,pecas_CAD2.dxf,DXF da casa
+TE,75,,mm,BOLSA,altura_total_mm,132.0,1,TE  PVC IRRI LF BS 75 MM,pecas_CAD2.dxf,DXF da casa
+TE,50,,mm,BOLSA,face_a_face_mm,122.5,1,TE  PVC IRRI LF BS 50 MM,pecas_CAD2.dxf,DXF da casa
+TE,50,,mm,BOLSA,altura_total_mm,92.8,1,TE  PVC IRRI LF BS 50 MM,pecas_CAD2.dxf,DXF da casa
+TE,35,,mm,BOLSA,face_a_face_mm,96.5,1,TE  PVC IRRI LF BS 35 MM,pecas_CAD2.dxf,DXF da casa
+TE,35,,mm,BOLSA,altura_total_mm,72.2,1,TE  PVC IRRI LF BS 35 MM,pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,110,100,mm,BOLSA,comprimento_mm,110.0,1,ADAP. PVC PBS 110X100,pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,110,100,mm,BOLSA,d_externo_mm,80.0,1,ADAP. PVC PBS 110X100,pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,125,118,mm,BOLSA,comprimento_mm,125.0,1,ADAP. PVC PBS 125X118,pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,125,118,mm,BOLSA,d_externo_mm,90.0,1,ADAP. PVC PBS 125X118,pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,170,160,mm,BOLSA,comprimento_mm,170.0,1,ADAP. PVC PBS 170X160,pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,170,160,mm,BOLSA,d_externo_mm,125.0,1,ADAP. PVC PBS 170X160,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,150,,mm,,comprimento_mm,196.0,1,LUVA  CORRER PVC 150 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,150,,mm,,d_externo_mm,175.1,1,LUVA  CORRER PVC 150 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,125,,mm,,comprimento_mm,163.0,1,LUVA  CORRER PVC 125 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,125,,mm,,d_externo_mm,150.1,1,LUVA  CORRER PVC 125 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,100,,mm,,comprimento_mm,103.0,1,LUVA  CORRER PVC 100 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,100,,mm,,d_externo_mm,125.0,1,LUVA  CORRER PVC 100 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,75,,mm,,comprimento_mm,101.0,1,LUVA  CORRER PVC 75 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,75,,mm,,d_externo_mm,102.0,1,LUVA  CORRER PVC 75 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,50,,mm,,comprimento_mm,94.0,1,LUVA  CORRER PVC 50 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,50,,mm,,d_externo_mm,75.0,1,LUVA  CORRER PVC 50 MM,pecas_CAD2.dxf,DXF da casa
+CURVA,100,,mm,90/,envelope_x_mm,679.9,1,JOELHO AZUL 90 - 100mm,pecas_CAD2.dxf,DXF da casa
+CURVA,100,,mm,90/,envelope_y_mm,205.8,1,JOELHO AZUL 90 - 100mm,pecas_CAD2.dxf,DXF da casa
+LUVA,150,,mm,BOLSA,comprimento_mm,181.0,1,LUVA  PVC IRRI LF BS 150 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,150,,mm,BOLSA,d_externo_mm,167.9,1,LUVA  PVC IRRI LF BS 150 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,150,,mm,,comprimento_mm,196.0,1,LUVA  CORRER PVC 150 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,150,,mm,,d_externo_mm,175.1,1,LUVA  CORRER PVC 150 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,125,,mm,,comprimento_mm,163.0,1,LUVA  CORRER PVC 125 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,125,,mm,,d_externo_mm,150.1,1,LUVA  CORRER PVC 125 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,125,,mm,BOLSA,comprimento_mm,153.0,1,LUVA  PVC IRRI LF BS 125 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,125,,mm,BOLSA,d_externo_mm,142.9,1,LUVA  PVC IRRI LF BS 125 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,100,,mm,BOLSA,comprimento_mm,120.0,1,LUVA  PVC IRRI LF BS 100 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,100,,mm,BOLSA,d_externo_mm,118.0,1,LUVA  PVC IRRI LF BS 100 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,100,,mm,,comprimento_mm,103.0,1,LUVA  CORRER PVC 100 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,100,,mm,,d_externo_mm,125.0,1,LUVA  CORRER PVC 100 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,75,,mm,BOLSA,comprimento_mm,89.0,1,LUVA  PVC IRRI LF BS 75 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,75,,mm,BOLSA,d_externo_mm,90.0,1,LUVA  PVC IRRI LF BS 75 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,75,,mm,,comprimento_mm,101.0,1,LUVA  CORRER PVC 75 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,75,,mm,,d_externo_mm,102.0,1,LUVA  CORRER PVC 75 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,50,,mm,BOLSA,comprimento_mm,66.0,1,LUVA  PVC IRRI LF BS 50 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,50,,mm,BOLSA,d_externo_mm,60.0,1,LUVA  PVC IRRI LF BS 50 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,50,,mm,,comprimento_mm,94.0,1,LUVA  CORRER PVC 50 MM,pecas_CAD2.dxf,DXF da casa
+LUVA_CORRER,50,,mm,,d_externo_mm,75.0,1,LUVA  CORRER PVC 50 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,35,,mm,BOLSA,comprimento_mm,54.0,1,LUVA  PVC IRRI LF BS 35 MM,pecas_CAD2.dxf,DXF da casa
+LUVA,35,,mm,BOLSA,d_externo_mm,48.0,1,LUVA  PVC IRRI LF BS 35 MM,pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,100,4,mm,ROSCA,comprimento_mm,60.6,1,"ADAP. BS x RM 100 x 4""",pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,100,4,mm,ROSCA,d_externo_mm,119.0,1,"ADAP. BS x RM 100 x 4""",pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,75,3,mm,ROSCA,comprimento_mm,52.5,1,"ADAP. BS x RM 75 x 3""",pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,75,3,mm,ROSCA,d_externo_mm,85.3,1,"ADAP. BS x RM 75 x 3""",pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,50,2,mm,ROSCA,comprimento_mm,38.0,1,"ADAP. BS x RM 50 x 2""",pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,50,2,mm,ROSCA,d_externo_mm,67.0,1,"ADAP. BS x RM 50 x 2""",pecas_CAD2.dxf,DXF da casa
+CURVA,100,,mm,90/,envelope_x_mm,172.7,1,JOELHO AZUL 90 - 100mm,pecas_CAD2.dxf,DXF da casa
+CURVA,100,,mm,90/,envelope_y_mm,172.7,1,JOELHO AZUL 90 - 100mm,pecas_CAD2.dxf,DXF da casa
+CURVA,75,,mm,90/,envelope_x_mm,132.4,1,JOELHO AZUL 90 - 75mm,pecas_CAD2.dxf,DXF da casa
+CURVA,75,,mm,90/,envelope_y_mm,132.4,1,JOELHO AZUL 90 - 75mm,pecas_CAD2.dxf,DXF da casa
+CURVA,50,,mm,90/,envelope_x_mm,93.7,1,JOELHO AZUL 90 - 50mm,pecas_CAD2.dxf,DXF da casa
+CURVA,50,,mm,90/,envelope_y_mm,93.3,1,JOELHO AZUL 90 - 50mm,pecas_CAD2.dxf,DXF da casa
+CURVA,35,,mm,90/,envelope_x_mm,72.4,1,JOELHO AZUL 90 - 35mm,pecas_CAD2.dxf,DXF da casa
+CURVA,35,,mm,90/,envelope_y_mm,72.4,1,JOELHO AZUL 90 - 35mm,pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,50,2,mm,ROSCA,comprimento_mm,343.7,1,"ADAP. BS x RM 50 x 2""",pecas_CAD2.dxf,DXF da casa
+ADAPTADOR,50,2,mm,ROSCA,d_externo_mm,119.0,1,"ADAP. BS x RM 50 x 2""",pecas_CAD2.dxf,DXF da casa
+VENTOSA,2,,in,,largura_mm,483.6,1,"VALV. VENTOSA NAVC 2"" PN10-16 NETAFIM",pecas_CAD3.dxf,DXF da casa
+VENTOSA,2,,in,,altura_total_mm,518.0,1,"VALV. VENTOSA NAVC 2"" PN10-16 NETAFIM",pecas_CAD3.dxf,DXF da casa
+VENTOSA,1,,in,,largura_mm,76.4,1,"VALV. ANTI-VACUO 1"" NETAFIM",pecas_CAD3.dxf,DXF da casa
+VENTOSA,1,,in,,altura_total_mm,286.0,1,"VALV. ANTI-VACUO 1"" NETAFIM",pecas_CAD3.dxf,DXF da casa
+VENTOSA,1,,in,,largura_mm,58.6,1,"VALV. ANTI-VACUO 1"" EMEK",pecas_CAD3.dxf,DXF da casa
+VENTOSA,1,,in,,altura_total_mm,125.0,1,"VALV. ANTI-VACUO 1"" EMEK",pecas_CAD3.dxf,DXF da casa
+VENTOSA,2,,in,,largura_mm,73.3,1,"VALV. ANTI-VACUO 2"" EMEK",pecas_CAD3.dxf,DXF da casa
+VENTOSA,2,,in,,altura_total_mm,122.0,1,"VALV. ANTI-VACUO 2"" EMEK",pecas_CAD3.dxf,DXF da casa
+VALVULA_HIDRAULICA,75,,mm,,face_a_face_mm,198.0,1,"VALV. PLASTICA  DOROT 75X2""",pecas_CAD3.dxf,DXF da casa
+VALVULA_HIDRAULICA,75,,mm,,altura_total_mm,121.5,1,"VALV. PLASTICA  DOROT 75X2""",pecas_CAD3.dxf,DXF da casa
+VALVULA_HIDRAULICA,75,,mm,,face_a_face_mm,188.0,1,VALV. PLASTICA  DOROT 75X1,pecas_CAD3.dxf,DXF da casa
+VALVULA_HIDRAULICA,75,,mm,,altura_total_mm,121.5,1,VALV. PLASTICA  DOROT 75X1,pecas_CAD3.dxf,DXF da casa
+VALVULA_HIDRAULICA,75,,mm,,face_a_face_mm,235.0,1,"VALV. PLASTICA  DOROT 75X3""",pecas_CAD3.dxf,DXF da casa
+VALVULA_HIDRAULICA,75,,mm,,altura_total_mm,121.5,1,"VALV. PLASTICA  DOROT 75X3""",pecas_CAD3.dxf,DXF da casa
+TE,225,,mm,SOLDA,face_a_face_mm,465.0,1,TE PVC SOLDAVEL 225MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+TE,225,,mm,SOLDA,altura_total_mm,362.0,1,TE PVC SOLDAVEL 225MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+ADAPTADOR_FLANGE,225,,mm,,comprimento_mm,133.0,1,ADAPTADOR P/FL 225MM SOLDA,pecas_CAD3.dxf,DXF da casa
+ADAPTADOR_FLANGE,225,,mm,,d_externo_mm,272.0,1,ADAPTADOR P/FL 225MM SOLDA,pecas_CAD3.dxf,DXF da casa
+FLANGE,225,,mm,,espessura_mm,32.0,1,FL 225MM,pecas_CAD3.dxf,DXF da casa
+FLANGE,225,,mm,,d_externo_mm,353.0,1,FL 225MM,pecas_CAD3.dxf,DXF da casa
+CURVA,225,,mm,90/SOLDA,envelope_x_mm,362.0,1,CURVA 90. SOLDA 225MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+CURVA,225,,mm,90/SOLDA,envelope_y_mm,362.0,1,CURVA 90. SOLDA 225MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+CURVA,225,,mm,90/SOLDA,envelope_x_mm,363.0,1,CURVA 90. SOLDA 225MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+CURVA,225,,mm,90/SOLDA,envelope_y_mm,363.0,1,CURVA 90. SOLDA 225MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+VALVULA_HIDRAULICA,75,,mm,,face_a_face_mm,258.0,1,"VALV. PLASTICA  DOROT 75X3""S",pecas_CAD3.dxf,DXF da casa
+VALVULA_HIDRAULICA,75,,mm,,altura_total_mm,156.2,1,"VALV. PLASTICA  DOROT 75X3""S",pecas_CAD3.dxf,DXF da casa
+TE,160,,mm,SOLDA,face_a_face_mm,339.0,1,TE PVC SOLDAVEL 160MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+TE,160,,mm,SOLDA,altura_total_mm,262.0,1,TE PVC SOLDAVEL 160MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+TE,125,,mm,SOLDA,face_a_face_mm,339.0,1,TE PVC SOLDAVEL 125MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+TE,125,,mm,SOLDA,altura_total_mm,262.0,1,TE PVC SOLDAVEL 125MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+ADAPTADOR_FLANGE,160,,mm,,comprimento_mm,92.0,1,ADAPTADOR P/FL 160MM SOLDA,pecas_CAD3.dxf,DXF da casa
+ADAPTADOR_FLANGE,160,,mm,,d_externo_mm,213.0,1,ADAPTADOR P/FL 160MM SOLDA,pecas_CAD3.dxf,DXF da casa
+FLANGE,160,,mm,,espessura_mm,30.0,1,FL 160MM,pecas_CAD3.dxf,DXF da casa
+FLANGE,160,,mm,,d_externo_mm,289.0,1,FL 160MM,pecas_CAD3.dxf,DXF da casa
+CURVA,125,,mm,90/SOLDA,envelope_x_mm,219.0,1,CURVA 90. SOLDA 125MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+CURVA,125,,mm,90/SOLDA,envelope_y_mm,219.0,1,CURVA 90. SOLDA 125MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+CURVA,160,,mm,90/SOLDA,envelope_x_mm,278.0,1,CURVA 90. SOLDA 160MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+CURVA,160,,mm,90/SOLDA,envelope_y_mm,278.0,1,CURVA 90. SOLDA 160MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+TE,90,,mm,SOLDA,face_a_face_mm,199.0,1,TE PVC SOLDAVEL 90MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+TE,90,,mm,SOLDA,altura_total_mm,154.0,1,TE PVC SOLDAVEL 90MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+TE,110,,mm,SOLDA,face_a_face_mm,239.0,1,TE PVC SOLDAVEL 110MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+TE,110,,mm,SOLDA,altura_total_mm,184.5,1,TE PVC SOLDAVEL 110MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+ADAPTADOR_FLANGE,110,,mm,,comprimento_mm,72.0,1,ADAPTADOR P/FL 110MM SOLDA,pecas_CAD3.dxf,DXF da casa
+ADAPTADOR_FLANGE,110,,mm,,d_externo_mm,150.0,1,ADAPTADOR P/FL 110MM SOLDA,pecas_CAD3.dxf,DXF da casa
+ADAPTADOR_FLANGE,90,,mm,,comprimento_mm,56.0,1,ADAPTADOR P/FL 90MM SOLDA,pecas_CAD3.dxf,DXF da casa
+ADAPTADOR_FLANGE,90,,mm,,d_externo_mm,125.0,1,ADAPTADOR P/FL 90MM SOLDA,pecas_CAD3.dxf,DXF da casa
+CURVA,90,,mm,90/SOLDA,envelope_x_mm,164.0,1,CURVA 90. SOLDA 90MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+CURVA,90,,mm,90/SOLDA,envelope_y_mm,164.0,1,CURVA 90. SOLDA 90MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+CURVA,110,,mm,90/SOLDA,envelope_x_mm,203.0,1,CURVA 90. SOLDA 110MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+CURVA,110,,mm,90/SOLDA,envelope_y_mm,203.0,1,CURVA 90. SOLDA 110MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+CURVA,110,,mm,90/SOLDA,envelope_x_mm,186.0,1,CURVA 90. SOLDA 110MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+CURVA,110,,mm,90/SOLDA,envelope_y_mm,186.0,1,CURVA 90. SOLDA 110MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+BUCHA_REDUCAO,90,75,mm,,comprimento_mm,52.0,1,BUCHA RED. 90X75 PLASSON,pecas_CAD3.dxf,DXF da casa
+BUCHA_REDUCAO,90,75,mm,,d_externo_mm,90.0,1,BUCHA RED. 90X75 PLASSON,pecas_CAD3.dxf,DXF da casa
+ADAPTADOR,75,63,mm,,comprimento_mm,80.0,1,"PLASSON ADAP. PVC MACHO 75X63X2""",pecas_CAD3.dxf,DXF da casa
+ADAPTADOR,75,63,mm,,d_externo_mm,80.0,1,"PLASSON ADAP. PVC MACHO 75X63X2""",pecas_CAD3.dxf,DXF da casa
+BUCHA_REDUCAO,110,90,mm,,comprimento_mm,62.0,1,BUCHA RED. 110X90 PLASSON,pecas_CAD3.dxf,DXF da casa
+BUCHA_REDUCAO,110,90,mm,,d_externo_mm,110.0,1,BUCHA RED. 110X90 PLASSON,pecas_CAD3.dxf,DXF da casa
+ADAPTADOR,75,63,mm,,comprimento_mm,84.0,1,"ADAP. PVC FEMEA 75X63X2"" PLASSON",pecas_CAD3.dxf,DXF da casa
+ADAPTADOR,75,63,mm,,d_externo_mm,80.0,1,"ADAP. PVC FEMEA 75X63X2"" PLASSON",pecas_CAD3.dxf,DXF da casa
+BUCHA_REDUCAO,110,75,mm,,comprimento_mm,62.0,1,BUCHA RED. 110X75 PLASSON,pecas_CAD3.dxf,DXF da casa
+BUCHA_REDUCAO,110,75,mm,,d_externo_mm,110.0,1,BUCHA RED. 110X75 PLASSON,pecas_CAD3.dxf,DXF da casa
+ADAPTADOR,90,75,mm,,comprimento_mm,101.0,1,"PLASSON ADAP. PVC MACHO 90X75X3""",pecas_CAD3.dxf,DXF da casa
+ADAPTADOR,90,75,mm,,d_externo_mm,95.0,1,"PLASSON ADAP. PVC MACHO 90X75X3""",pecas_CAD3.dxf,DXF da casa
+TE,75,,mm,SOLDA,face_a_face_mm,169.0,1,TE PVC SOLDAVEL 75MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+TE,75,,mm,SOLDA,altura_total_mm,130.0,1,TE PVC SOLDAVEL 75MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+ADAPTADOR_FLANGE,75,,mm,,comprimento_mm,48.0,1,ADAPTADOR P/FL 75MM SOLDA,pecas_CAD3.dxf,DXF da casa
+ADAPTADOR_FLANGE,75,,mm,,d_externo_mm,106.0,1,ADAPTADOR P/FL 75MM SOLDA,pecas_CAD3.dxf,DXF da casa
+VALVULA_GAVETA,12,,in,,face_a_face_mm,388.4,0,"REG. GAVETA 12""",pecas_CAD3.dxf,DXF da casa
+VALVULA_GAVETA,12,,in,,altura_total_mm,984.1,0,"REG. GAVETA 12""",pecas_CAD3.dxf,DXF da casa
+CURVA,75,,mm,90/SOLDA,envelope_x_mm,140.0,1,CURVA 90. SOLDA 75MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+CURVA,75,,mm,90/SOLDA,envelope_y_mm,140.0,1,CURVA 90. SOLDA 75MM PLASSON/FIP,pecas_CAD3.dxf,DXF da casa
+VALVULA_GAVETA,14,,in,,face_a_face_mm,440.6,0,"REG. GAVETA 14""",pecas_CAD3.dxf,DXF da casa
+VALVULA_GAVETA,14,,in,,altura_total_mm,1116.5,0,"REG. GAVETA 14""",pecas_CAD3.dxf,DXF da casa
+VALVULA_GAVETA,4,,in,,face_a_face_mm,192.0,0,"REG. GAVETA 4""",pecas_CAD3.dxf,DXF da casa
+VALVULA_GAVETA,4,,in,,altura_total_mm,486.5,0,"REG. GAVETA 4""",pecas_CAD3.dxf,DXF da casa
+VALVULA_GAVETA,6,,in,,face_a_face_mm,248.6,0,"REG. GAVETA 6""",pecas_CAD3.dxf,DXF da casa
+VALVULA_GAVETA,6,,in,,altura_total_mm,630.0,0,"REG. GAVETA 6""",pecas_CAD3.dxf,DXF da casa
+VALVULA_GAVETA,8,,in,,face_a_face_mm,296.6,0,"REG. GAVETA 8""",pecas_CAD3.dxf,DXF da casa
+VALVULA_GAVETA,8,,in,,altura_total_mm,751.7,0,"REG. GAVETA 8""",pecas_CAD3.dxf,DXF da casa
+VALVULA_GAVETA,10,,in,,face_a_face_mm,345.4,0,"REG. GAVETA 10""",pecas_CAD3.dxf,DXF da casa
+VALVULA_GAVETA,10,,in,,altura_total_mm,875.3,0,"REG. GAVETA 10""",pecas_CAD3.dxf,DXF da casa

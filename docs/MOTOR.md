@@ -785,6 +785,50 @@ que alguma peça pode ter entrado fora de escala. Por isso **nada dele é
 importado**: o que sai é comparação. Onde diverge, a folha manda; o que a
 comparação faz é dizer onde olhar. Nesta rodada apontou certo.
 
+### A medida virou tabela — com um guarda na porta
+
+A casa confirmou que confia nas medidas do arquivo, **com uma exceção
+declarada: os registros de gaveta podem ter entrado fora de escala.** Isso
+transformou a medição em fonte de cota — a única que cobre PVC, Plasson e PEAD
+soldável, famílias que nenhuma folha de fabricante do motor alcança.
+
+`tools/cotas_da_casa.py` lê o nome medido e o transforma em chave:
+`CURVA 90. SOLDA 225MM PLASSON/FIP` vira `(CURVA, variante 90/SOLDA, DN225)`.
+`motor/cotas.cota_da_casa()` é a porta, separada da tabela em polegada porque
+a chave é outra: no PVC e no PEAD o DN **é** o diâmetro externo.
+
+Três guardas, e cada um veio de um erro que o conferidor pegou:
+
+**A junta faz parte da identidade.** A curva de 90° DN110 soldável mede 203 e a
+de bolsa mede 186 — são duas peças. Sem separar por junta, as duas caíam na
+mesma chave e a tabela recusava as duas. Separando, as cotas boas subiram de
+113 para **138**.
+
+**Cota medida duas vezes com duas respostas não é cota.** Acontece quando um
+rótulo grudou na peça errada. Escolher uma das duas leituras seria propagar o
+erro; a chave inteira sai. São 18 casos, listados.
+
+**Suspeita fica na tabela, mas não sai pela porta.** Os 12 valores de gaveta
+estão gravados com `confiavel=0` e só saem com `aceitar_suspeita=True`, o que
+obriga quem usa a saber o que está usando. Apagá-los seria pior: some a
+informação de que foram medidos.
+
+O teste que fecha a conta é a monotonia: `tools/conferir_cotas_casa.py`
+verifica se a cota **cresce com a bitola** em cada série. Cota que diminui
+quando a bitola aumenta é leitura errada, não peça estranha. Depois de separar
+por junta:
+
+> **todas as séries com três pontos ou mais crescem.**
+
+Antes disso havia três séries quebradas, e cada quebra era exatamente uma
+leitura ruim.
+
+O que a tabela abre: 138 cotas em 10 famílias — CURVA, TE, TE_REDUZIDO, LUVA,
+LUVA_CORRER, LUVA_REDUCAO, ADAPTADOR, ADAPTADOR_FLANGE, BUCHA_REDUCAO e
+FLANGE, em bolsa, solda, rosca e correr. São as famílias dos **207 códigos em
+milímetro** que hoje não desenham. Os símbolos ainda não existem; a cota deles,
+agora, sim.
+
 ### Tubo de rolo não é peça
 
 A casa apontou os tubos de 100 m — FXN layflat — que o desenho tratava como

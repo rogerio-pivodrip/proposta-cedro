@@ -46,11 +46,13 @@ def caixas(modelo):
             continue
         if tipo == "TEXT":
             p = entidade.dxf.insert
-            textos.append((p.x, p.y, entidade.dxf.text.strip()))
+            textos.append((p.x, p.y, entidade.dxf.text.strip(),
+                           entidade.dxf.height or 3.0))
             continue
         if tipo == "MTEXT":
             p = entidade.dxf.insert
-            textos.append((p.x, p.y, entidade.text.strip().replace("\\P", " ")))
+            textos.append((p.x, p.y, entidade.text.strip().replace("\\P", " "),
+                           entidade.dxf.char_height or 3.0))
             continue
         if tipo in FORA:
             continue
@@ -70,7 +72,7 @@ def caixas(modelo):
     return saida, textos
 
 
-def aglomerar(caixas_e_camadas):
+def aglomerar(caixas_e_camadas, celula=CELULA):
     """Une por vizinhanca na grade: o que se toca e a mesma peca."""
     pai = {}
 
@@ -88,8 +90,8 @@ def aglomerar(caixas_e_camadas):
     celulas = {}
     for i, ((x0, y0, x1, y1), _) in enumerate(caixas_e_camadas):
         pai.setdefault(i, i)
-        for cx in range(int(x0 // CELULA), int(x1 // CELULA) + 1):
-            for cy in range(int(y0 // CELULA), int(y1 // CELULA) + 1):
+        for cx in range(int(x0 // celula), int(x1 // celula) + 1):
+            for cy in range(int(y0 // celula), int(y1 // celula) + 1):
                 celulas.setdefault((cx, cy), []).append(i)
     for (cx, cy), donos in celulas.items():
         for outro in donos[1:]:
@@ -116,48 +118,58 @@ def nomear(pecas, textos):
     - entao os textos sao aglomerados primeiro e o bloco inteiro vira o nome.
     """
     unicos = {}
-    for tx, ty, texto in textos:
+    for tx, ty, texto, altura in textos:
         if texto:
-            unicos[(round(tx, 1), round(ty, 1), texto)] = (tx, ty, texto)
+            unicos[(round(tx, 1), round(ty, 1), texto)] = (tx, ty, texto, altura)
     lista = list(unicos.values())
 
-    # aglomera os textos em rotulos, pela mesma vizinhanca da geometria
-    caixas_texto = [((tx, ty, tx + len(t) * 12, ty + 20), "TEXTO")
-                    for tx, ty, t in lista]
+    # A largura do texto sai da ALTURA dele. O rotulo desses arquivos tem 2 a
+    # 4 mm de altura num desenho de metros; estimar a largura por um numero
+    # fixo dava 400 mm de rotulo e fundia a coluna inteira num bloco so.
+    def larg(parte):
+        return len(parte[2]) * parte[3] * 0.62
+
+    caixas_texto = [((p[0], p[1], p[0] + larg(p), p[1] + p[3]), "TEXTO")
+                    for p in lista]
+    celula_texto = max(3.0, sum(p[3] for p in lista) / max(len(lista), 1) * 2.5)
     rotulos = []
-    for indices in aglomerar(caixas_texto):
+    for indices in aglomerar(caixas_texto, celula_texto):
         partes = sorted((lista[i] for i in indices), key=lambda p: -p[1])
         rotulos.append({"x0": min(p[0] for p in partes),
-                        "x1": max(p[0] + len(p[2]) * 12 for p in partes),
+                        "x1": max(p[0] + larg(p) for p in partes),
                         "topo": max(p[1] for p in partes),
                         "texto": " ".join(p[2] for p in partes)})
 
     for peca in pecas:
         peca["nome"] = ""
         peca["distancia"] = None
-    for rotulo in rotulos:
+
+    # Emparelhar, nao pegar o vizinho mais proximo. Numa coluna de seis curvas
+    # com seis rotulos, "o mais proximo" faz duas curvas disputarem o mesmo
+    # rotulo e sobram quatro sem nome. Emparelhando por distancia crescente,
+    # com cada rotulo e cada peca usados uma vez, os seis fecham.
+    pares = []
+    for r, rotulo in enumerate(rotulos):
         meio = (rotulo["x0"] + rotulo["x1"]) / 2
-        # o rotulo pode estar acima ou abaixo da peca - a casa usa os dois
-        # nos tres arquivos, e as vezes no mesmo arquivo. Entao vale a mais
-        # PROXIMA na mesma coluna, para qualquer lado.
-        candidatos = []
-        for p in pecas:
-            if not (p["x0"] - CELULA <= meio <= p["x1"] + CELULA):
+        for p, peca in enumerate(pecas):
+            if not (peca["x0"] - CELULA <= meio <= peca["x1"] + CELULA):
                 continue
-            if p["y0"] <= rotulo["topo"] <= p["y1"]:
-                candidatos.append((0.0, p))
-            elif rotulo["topo"] < p["y0"]:
-                candidatos.append((p["y0"] - rotulo["topo"], p))
+            if peca["y0"] <= rotulo["topo"] <= peca["y1"]:
+                distancia = 0.0
+            elif rotulo["topo"] < peca["y0"]:
+                distancia = peca["y0"] - rotulo["topo"]
             else:
-                candidatos.append((rotulo["topo"] - p["y1"], p))
-        candidatos.sort(key=lambda t: t[0])
-        if not candidatos:
+                distancia = rotulo["topo"] - peca["y1"]
+            pares.append((distancia, r, p))
+    pares.sort()
+    usados_rotulo, usadas_peca = set(), set()
+    for distancia, r, p in pares:
+        if r in usados_rotulo or p in usadas_peca:
             continue
-        distancia, peca = candidatos[0]
-        if peca["nome"] and (peca["distancia"] or 0) <= distancia:
-            continue
-        peca["nome"] = rotulo["texto"]
-        peca["distancia"] = distancia
+        usados_rotulo.add(r)
+        usadas_peca.add(p)
+        pecas[p]["nome"] = rotulos[r]["texto"]
+        pecas[p]["distancia"] = round(distancia, 1)
 
 
 def medir(caminho):

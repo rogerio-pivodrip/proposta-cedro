@@ -26,8 +26,14 @@ PREFERIDA_POR_FAMILIA = {
     "MEDIDOR": "ARAD",
 }
 TABELA = os.path.join(os.path.dirname(__file__), "..", "data", "cotas.csv")
+# A cota do PVC, do Plasson e do PEAD soldavel nao esta em folha de fabricante
+# nenhuma - esta medida no DXF da casa. Fica numa tabela separada porque a
+# chave e outra: DN em milimetro, que no PVC e no PEAD E o diametro externo.
+TABELA_CASA = os.path.join(os.path.dirname(__file__), "..", "data",
+                           "cotas_casa.csv")
 
 _indice = None
+_casa = None
 
 
 def _carregar():
@@ -47,6 +53,67 @@ def _carregar():
 
 def fontes():
     return sorted({k[0] for k in _carregar()})
+
+
+def _carregar_casa():
+    global _casa
+    if _casa is not None:
+        return _casa
+    # A mesma peca aparece mais de uma vez nos arquivos, e as vezes com uma
+    # leitura fora da serie - o rotulo de uma vizinha que grudou na peca
+    # errada. A mediana descarta a leitura solitaria sem descartar a peca.
+    bruto = {}
+    for r in csv.DictReader(open(TABELA_CASA, encoding="utf-8")):
+        chave = (r["familia"], r["variante"], float(r["dn"]),
+                 float(r["dn_menor"]) if r["dn_menor"] else None,
+                 r["significado"])
+        bruto.setdefault(chave, []).append((float(r["valor_mm"]),
+                                            r["confiavel"] == "1"))
+    _casa = {}
+    for chave, leituras in bruto.items():
+        valores = sorted(v for v, _ in leituras)
+        meio = valores[(len(valores) - 1) // 2]
+        # Cota medida duas vezes com duas respostas nao e cota. Acontece quando
+        # um rotulo grudou na peca errada, e o jeito de nao propagar isso e
+        # recusar a chave inteira em vez de escolher uma das duas leituras.
+        concorda = not valores or (valores[-1] - valores[0]) <= 0.10 * meio
+        confiavel = any(c for _, c in leituras) and concorda
+        _casa[chave] = (meio, confiavel, len(valores), valores[0], valores[-1],
+                        concorda)
+    return _casa
+
+
+def cota_da_casa(familia, dn_mm, variante="", significado="comprimento_mm",
+                 dn_menor=None, aceitar_suspeita=False):
+    """A cota medida no DXF da casa, em milimetro. None se nao houver.
+
+    Medida em desenho de projeto, nao em folha - e a casa declarou uma excecao:
+    os registros de gaveta podem ter entrado fora de escala. Eles estao na
+    tabela com confiavel=0 e so saem daqui se alguem pedir explicitamente, o
+    que forca quem usa a saber o que esta usando.
+    """
+    indice = _carregar_casa()
+    for chave in ((familia, variante, float(dn_mm), dn_menor, significado),
+                  (familia, variante, float(dn_mm), None, significado),
+                  (familia, "", float(dn_mm), None, significado)):
+        achado = indice.get(chave)
+        if achado is None:
+            continue
+        valor, confiavel = achado[0], achado[1]
+        if confiavel or aceitar_suspeita:
+            return valor
+    return None
+
+
+def leituras_da_casa():
+    """Cada cota medida, com quantas leituras e a faixa entre elas.
+
+    Serve para achar a peca que foi medida duas vezes com resultado diferente
+    - sinal de rotulo grudado na peca errada, nao de peca com duas medidas.
+    """
+    return {chave: {"valor": v, "confiavel": c, "leituras": n,
+                    "minimo": lo, "maximo": hi, "concorda": ok}
+            for chave, (v, c, n, lo, hi, ok) in _carregar_casa().items()}
 
 
 def cota_com_fonte(familia, dn_pol, variante="", significado="face_a_face_mm",
