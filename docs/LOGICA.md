@@ -34,6 +34,38 @@ Comandos (única porta de escrita): `inserir`, `remover`, `substituir`,
 redesenha as duas views. Undo/redo é a pilha de comandos. O balão do desenho e a
 linha da tabela são a mesma peça, com o mesmo id.
 
+### Os cinco existem, e o teste é sobre as projeções
+
+`motor/linha.py` implementa os cinco, com `desfazer()` e `refazer()`. Cada
+comando guarda **como se desfazer**, não uma cópia do documento: numa linha de
+sessenta peças o que se guarda é a diferença.
+
+O teste (`tools/conferir_comandos.py`) não verifica que o comando roda —
+verifica que **desfazer devolve o documento ao estado exato de antes**, medido
+nas duas projeções, a lista de materiais e a geometria. Comparar `linha.pecas`
+compararia os mesmos objetos consigo mesmos e passaria com o recálculo
+quebrado; as projeções são derivadas, então só voltam iguais se tudo que
+depende delas voltou.
+
+Três regras que o teste fixa, e que são decisões de modelo:
+
+**A peça é endereçada por `id`, não por posição.** Índice muda quando alguém
+insere, remove ou move, e a tela que segurou um índice passa a apontar para
+outra peça. O `id` nasce com a peça e morre com ela.
+
+**`alterar` mantém o id; `substituir` troca.** É a diferença entre os dois, e
+ela aparece na lista: alterar o comprimento de um tubo não muda o código SAP
+que se compra, trocar a peça muda. Por isso `alterar` recusa `familia` e `sap`
+— mudar isso não é alterar, é substituir.
+
+**Trocar a `fonte` é alterar de verdade.** Não troca a peça, troca a folha de
+onde a cota dela sai — e a cota vem junto. A curva de 8" mede 335 mm de perna
+no Irrigafour e 297 na Netafim, e trocar a fonte move tudo que vem depois dela.
+
+E editar depois de desfazer **apaga o refazer**: depois de voltar três passos e
+editar, o que estava adiante deixou de existir; manter a pilha daria a
+impressão de um futuro que não volta mais.
+
 ## 3. Modelo de dados
 
 ### Peça

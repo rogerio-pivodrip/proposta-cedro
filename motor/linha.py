@@ -4,10 +4,23 @@ Nenhuma sincronizacao entre desenho e planilha - as duas views leem o mesmo
 objeto Linha e escrevem nele pelos mesmos comandos (inserir / remover /
 substituir / alterar / mover). Toda edicao dispara recalculo das juncoes e da
 ferragem derivada.
+
+Os cinco comandos sao a UNICA porta de escrita, e cada um sabe se desfazer.
+Isso nao e conforto de interface: e o que garante que desenho e lista nunca
+divirjam. Quem edita nao mexe em `pecas` - mexer ali contorna o historico e
+deixa o documento num estado que nao da para reverter.
+
+**A peca e enderecada por id, nao por posicao.** Indice muda quando alguem
+insere, remove ou move, e a tela que segurou um indice passa a apontar para
+outra peca. O id nasce com a peca e morre com ela, e e o mesmo no balao do
+desenho e na linha da tabela.
 """
+import itertools
 from collections import OrderedDict
 
 from . import corte, cotas, ferragem, regras
+
+_contador = itertools.count(1)
 
 
 class Peca:
@@ -15,6 +28,7 @@ class Peca:
 
     def __init__(self, item, comprimento_mm=None, rotulo=None, fonte=None,
                  sentido=1):
+        self.id = f"p{next(_contador)}"       # estavel: sobrevive a mover
         self.item = item                      # registro do catalogo
         self.sap = item["sap"]
         self.descricao = item["descricao"]
@@ -25,10 +39,24 @@ class Peca:
         self.fonte = fonte or cotas.PADRAO   # fabricante da peca comprada
         self.sentido = sentido               # +1 sobe, -1 desce: espelha a curva
         self.fonte_cota = None               # de quem veio a cota que entrou
+        self._comprimento_pedido = comprimento_mm
         self.comprimento_mm = (comprimento_mm or item.get("comprimento_mm")
                                or self._da_tabela() or self._face_a_face() or 0)
         self.rotulo = rotulo
         self.portas = self._portas()
+
+    def recalcular(self):
+        """Refaz o que depende da fonte e da cota, sem trocar a peca.
+
+        Existe por causa do comando `alterar`: trocar o fabricante nao troca a
+        peca, troca a TABELA de onde a cota dela sai - e a cota tem de vir
+        junto. Ver docs/MOTOR.md 4: a mesma peca mede diferente em cada folha.
+        """
+        self.comprimento_mm = (self._comprimento_pedido
+                               or self.item.get("comprimento_mm")
+                               or self._da_tabela() or self._face_a_face() or 0)
+        self.portas = self._portas()
+        return self
 
     def _chave_de_cota(self):
         """(familia, variante, significado) para procurar na tabela de cotas."""
@@ -103,42 +131,185 @@ class Peca:
         return f"<{self.familia} {self.sap}>"
 
 
+class Comando:
+    """Uma edicao e o bastante para desfaze-la e para refaze-la.
+
+    Guardar o comando em vez do estado inteiro e o que torna desfazer barato
+    numa linha de sessenta pecas: o que se guarda e a diferenca, nao a copia.
+    """
+
+    def __init__(self, nome, fazer, desfazer, alvo=None):
+        self.nome = nome
+        self.fazer = fazer
+        self.desfazer = desfazer
+        self.alvo = alvo          # id da peca que o comando atingiu
+
+    def __repr__(self):
+        return f"<{self.nome} {self.alvo or ''}>".replace(" >", ">")
+
+
 class Linha:
+    # o que `alterar` pode mudar sem trocar a peca. Fora desta lista o
+    # comando recusa: mudar familia ou SAP nao e alterar, e substituir
+    ALTERAVEIS = ("comprimento_mm", "sentido", "rotulo", "fonte")
+
     def __init__(self, catalogo, tipo="RECALQUE", area="P01"):
         self.catalogo = catalogo
         self.tipo = tipo          # SUCCAO | RECALQUE
         self.area = area
         self.pecas = []
-        self.historico = []       # pilha de comandos para undo
+        self.feitos = []          # pilha de comandos aplicados
+        self.desfeitos = []       # o que saiu do desfazer, esperando refazer
 
     # ---------------- comandos (unica porta de escrita do modelo) -----------
+    def _executar(self, comando):
+        """Aplica o comando e o empilha.
+
+        Editar apaga o refazer, e isso e proposital: depois de desfazer tres
+        passos e editar, o que estava adiante deixou de existir. Manter a
+        pilha daria a impressao de um futuro que nao volta mais.
+        """
+        comando.fazer()
+        self.feitos.append(comando)
+        self.desfeitos.clear()
+        return comando
+
+    def posicao(self, alvo):
+        """Aceita indice ou id, e devolve o indice de agora.
+
+        A tela segura o ID; o indice ela nao pode segurar, porque inserir,
+        remover e mover mudam o indice de todo mundo depois deles.
+        """
+        if isinstance(alvo, Peca):
+            alvo = alvo.id
+        if isinstance(alvo, str):
+            for i, peca in enumerate(self.pecas):
+                if peca.id == alvo:
+                    return i
+            raise KeyError(f"peca {alvo} nao esta na linha")
+        if alvo < 0:
+            alvo += len(self.pecas)
+        if not 0 <= alvo < len(self.pecas):
+            raise IndexError(f"posicao {alvo} fora da linha de "
+                             f"{len(self.pecas)} pecas")
+        return alvo
+
     def inserir(self, peca, pos=None):
-        pos = len(self.pecas) if pos is None else pos
-        self.pecas.insert(pos, peca)
-        self.historico.append(("inserir", pos, peca))
+        pos = len(self.pecas) if pos is None else (
+            pos if isinstance(pos, int) else self.posicao(pos))
+        pos = max(0, min(pos, len(self.pecas)))
+        self._executar(Comando(
+            "inserir",
+            lambda: self.pecas.insert(pos, peca),
+            lambda: self.pecas.pop(pos),
+            peca.id))
         return peca
 
-    def remover(self, pos):
-        peca = self.pecas.pop(pos)
-        self.historico.append(("remover", pos, peca))
+    def remover(self, alvo):
+        pos = self.posicao(alvo)
+        peca = self.pecas[pos]
+        self._executar(Comando(
+            "remover",
+            lambda: self.pecas.pop(pos),
+            lambda: self.pecas.insert(pos, peca),
+            peca.id))
         return peca
 
-    def substituir(self, pos, peca):
+    def substituir(self, alvo, peca):
+        pos = self.posicao(alvo)
         antiga = self.pecas[pos]
-        self.pecas[pos] = peca
-        self.historico.append(("substituir", pos, antiga))
+        self._executar(Comando(
+            "substituir",
+            lambda: self.pecas.__setitem__(pos, peca),
+            lambda: self.pecas.__setitem__(pos, antiga),
+            peca.id))
         return antiga
 
+    def alterar(self, alvo, **campos):
+        """Muda um parametro da peca SEM trocar a peca.
+
+        E a diferenca entre `alterar` e `substituir`, e ela importa na lista:
+        alterar o comprimento de um tubo nao muda o codigo SAP que se compra,
+        trocar a peca muda. Por isso o id sobrevive ao alterar.
+
+        Trocar a `fonte` e alterar de verdade: nao troca a peca, troca a folha
+        de onde a cota dela sai - e a cota vem junto, por `recalcular()`.
+        """
+        pos = self.posicao(alvo)
+        peca = self.pecas[pos]
+        fora = [c for c in campos if c not in self.ALTERAVEIS]
+        if fora:
+            raise ValueError(
+                f"{', '.join(fora)} nao e alteravel - so "
+                f"{', '.join(self.ALTERAVEIS)}. Mudar familia ou codigo nao e "
+                f"alterar, e substituir")
+        antes = {c: getattr(peca, c) for c in campos}
+        # o comprimento pedido a mao vira o novo pedido: sem isso o
+        # recalcular() da fonte apagaria o que a pessoa digitou
+        pedido_antes = peca._comprimento_pedido
+
+        def fazer():
+            for campo, valor in campos.items():
+                setattr(peca, campo, valor)
+            if "comprimento_mm" in campos:
+                peca._comprimento_pedido = campos["comprimento_mm"]
+            elif "fonte" in campos:
+                peca.recalcular()
+
+        def desfazer():
+            for campo, valor in antes.items():
+                setattr(peca, campo, valor)
+            peca._comprimento_pedido = pedido_antes
+            if "fonte" in campos and "comprimento_mm" not in campos:
+                peca.recalcular()
+
+        self._executar(Comando("alterar", fazer, desfazer, peca.id))
+        return peca
+
+    def mover(self, alvo, para):
+        """Tira a peca de onde ela esta e a poe em outra posicao da sequencia.
+
+        A posicao de uma peca e consequencia de quem veio antes - ver
+        geometria(). Entao mover uma peca move tudo o que vem depois dela, e e
+        por isso que mover e um comando do documento e nao um arrasto na tela.
+        """
+        de = self.posicao(alvo)
+        para = para if isinstance(para, int) else self.posicao(para)
+        para = max(0, min(para, len(self.pecas) - 1))
+        peca = self.pecas[de]
+
+        def fazer():
+            self.pecas.insert(para, self.pecas.pop(de))
+
+        def desfazer():
+            self.pecas.insert(de, self.pecas.pop(para))
+
+        self._executar(Comando("mover", fazer, desfazer, peca.id))
+        return peca
+
+    # ---------------- desfazer e refazer ------------------------------------
     def desfazer(self):
-        if not self.historico:
-            return
-        acao, pos, peca = self.historico.pop()
-        if acao == "inserir":
-            self.pecas.pop(pos)
-        elif acao == "remover":
-            self.pecas.insert(pos, peca)
-        elif acao == "substituir":
-            self.pecas[pos] = peca
+        """Volta um comando. Devolve o comando desfeito, ou None."""
+        if not self.feitos:
+            return None
+        comando = self.feitos.pop()
+        comando.desfazer()
+        self.desfeitos.append(comando)
+        return comando
+
+    def refazer(self):
+        """Reaplica o ultimo comando desfeito. Devolve ele, ou None."""
+        if not self.desfeitos:
+            return None
+        comando = self.desfeitos.pop()
+        comando.fazer()
+        self.feitos.append(comando)
+        return comando
+
+    @property
+    def historico(self):
+        """Os comandos aplicados, do primeiro ao ultimo."""
+        return list(self.feitos)
 
     # ---------------- derivacoes (recalculadas, nunca digitadas) -----------
     def juncoes(self):
