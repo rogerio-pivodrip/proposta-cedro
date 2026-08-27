@@ -14,7 +14,8 @@ import sys
 
 sys.path.insert(0, ".")
 from motor import simbolos as s  # noqa: E402
-from tools.desenhar_simbolos import desenhar, seta  # noqa: E402
+from tools.desenhar_simbolos import ESTILO, legenda  # noqa: E402
+from tools.desenhar_simbolos import desenhar  # noqa: E402
 
 MARGEM = 46
 
@@ -218,22 +219,64 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--dn", type=float, default=8)
+    p.add_argument("--fragmento", action="store_true",
+                   help="só as <figure>, sem a página em volta")
     args = p.parse_args()
     menor = {14: 12, 12: 10, 10: 8, 8: 6, 6: 4, 5: 4, 4: 3, 3: 2}.get(args.dn, 2)
-    linhas = [("sucção · bomba vertical", succao_vertical(args.dn), -90),
-              ("sucção · bomba horizontal", succao_horizontal(args.dn), -90),
-              ("recalque", recalque(args.dn, menor), 0),
-              ("sucção · bomba mancalizada", succao_mancalizada(args.dn), -90),
-              ("manifold c/ ventosas", manifold_ventosas(args.dn), 0),
-              ("trecho de PEAD", trecho_pead(args.dn), 0)]
-    for nome, pecas, giro in linhas:
+    linhas = [("sucção · bomba vertical",
+               "sobe reta e entra por baixo da bomba",
+               succao_vertical(args.dn), -90),
+              ("sucção · bomba horizontal",
+               "curva de 90° antes da bomba, redução excêntrica com o lado "
+               "plano em cima",
+               succao_horizontal(args.dn), -90),
+              ("sucção · bomba mancalizada",
+               "a mesma tubulação, com Meganorm sobre base",
+               succao_mancalizada(args.dn), -90),
+              ("recalque", "da bomba ao manifold", recalque(args.dn, menor), 0),
+              ("manifold c/ ventosas",
+               "as duas luvas de 2\" e a flange cega fechando",
+               manifold_ventosas(args.dn), 0),
+              ("trecho de PEAD", "quatro barras de 6 m e um colar em cada ponta",
+               trecho_pead(args.dn), 0)]
+
+    figuras = []
+    for nome, detalhe, pecas, giro in linhas:
         svg, postos, fim = desenhar_linha(pecas, giro=giro)
-        print(f'<figure class="linha"><figcaption>{nome} {args.dn:g}" — '
-              f'{len(postos)} peças, fecha em '
-              f'{abs(fim[0])/1000:.2f} × {abs(fim[1])/1000:.2f} m</figcaption>'
-              f'{svg}</figure>')
+        figuras.append(
+            f'<figure class="linha"><figcaption><b>{nome}</b>'
+            f'<em>{detalhe}</em><span>{len(postos)} peças · fecha em '
+            f'{abs(fim[0])/1000:.2f} × {abs(fim[1])/1000:.2f} m</span>'
+            f'</figcaption>{svg}</figure>')
         print(f"# {nome}: {len(postos)} pecas, fim em "
-              f"({fim[0]:.0f}, {fim[1]:.0f}) direcao {fim[2]:.0f}", file=sys.stderr)
+              f"({fim[0]:.0f}, {fim[1]:.0f}) direcao {fim[2]:.0f}",
+              file=sys.stderr)
+
+    if args.fragmento:
+        print("\n".join(figuras))
+        return
+    print(f'<!doctype html><meta charset="utf-8">'
+          f'<title>Linhas {args.dn:g}"</title>'
+          f'<style>{ESTILO}{ESTILO_LINHA}</style>'
+          f'<div class="papel"><header><h1>Linhas montadas</h1>'
+          f'<span class="dn">{args.dn:g}"</span>'
+          f'<span class="sub">{len(linhas)} montagens · a mesma peça, '
+          f'a direção acumulada pela corrente</span></header>'
+          f'{legenda()}' + "".join(figuras) + "</div>")
+
+
+ESTILO_LINHA = """
+.linha{border:1px solid var(--linha);margin:0 0 22px;padding:18px 20px 8px}
+.linha figcaption{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+  margin-bottom:10px}
+.linha figcaption b{font-size:13px;font-weight:600;letter-spacing:-.005em}
+.linha figcaption em{font-style:normal;color:var(--anota);font-size:11.5px}
+.linha figcaption span{margin-left:auto;color:var(--anota);
+  font:400 10.5px/1 ui-monospace,SFMono-Regular,monospace}
+.linha svg{width:100%;height:auto;display:block;margin:0 auto}
+.geo .juncao{fill:none}
+.geo .juncao.ruim{fill:var(--eixo);stroke:none}
+"""
 
 
 if __name__ == "__main__":

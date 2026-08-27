@@ -375,6 +375,28 @@ desenhar nada**. Se ela é de uma família conhecida, já tem símbolo; só prec
 de uma linha na tabela de cotas — e, na maior parte das bitolas, nem isso,
 porque a linha já existe.
 
+### A folha: duas regras que a fazem ler como caderno
+
+A geometria estava certa antes de a folha ficar boa. Duas decisões mudaram
+isso, e nenhuma é sobre a peça:
+
+**O eixo de todas as peças cai na mesma altura da célula.** Como cada peça tem
+a sua própria escala, isso não alinha as medidas — alinha os *eixos*. O
+resultado é que os traço-e-ponto vermelhos correm de ponta a ponta da linha e
+a folha vira um conjunto em vez de uma coleção de figuras soltas. A altura é
+por seção, não por peça: dentro de uma seção todas as células têm a mesma
+caixa, e é isso que segura o alinhamento.
+
+**O que é fato sai do desenho e vai para uma tarja embaixo dele.** Bitola,
+furação, norma, carcaça, peso, fonte — nada disso é cota, então nada disso
+tem por que disputar espaço com o traço. Dentro do desenho fica só o que é
+medida. Foi o que finalmente tirou o `⌀340` de cima da peça e o `12×⌀22` do
+canto.
+
+Uma terceira, menor: **peça comprida ocupa duas colunas**. Um manifold de
+1,5 m ou uma barra de PEAD de 6 m numa célula de bitola vira fio de cabelo.
+A bomba ganha duas colunas por regra, porque é a âncora do desenho.
+
 ## 4.1 As famílias que faltavam: PEAD, flange e manifold
 
 Três buracos fechados, todos com folha de fabricante atrás.
@@ -483,6 +505,22 @@ E errei duas vezes o significado de `a` antes de a Meganorm chegar. O que
 resolveu não foi raciocínio, foi a Fig. 04 do manual A2742, onde `h₂` e `h₁`
 saem do eixo para cima e para baixo. Os valores estavam certos desde o começo;
 a descrição é que estava errada.
+
+### O detalhe que a folha permitiu desenhar
+
+Depois que as tabelas entraram, o desenho da bomba passou a ter o que mostrar
+sem inventar nada:
+
+- **a ponta do eixo** com o diâmetro, o comprimento e o rasgo de chaveta reais
+  (`d1`, `l`, `u`, `t` da tabela 06) — é a única parte da bomba que o montador
+  mede com paquímetro;
+- **o pé do mancal** no lugar certo: a folha cota `w` do eixo da descarga até
+  ele e `m1` entre os furos, e **w + v = f em 43 dos 43 tamanhos**, o que
+  mostra que os dois partem o `f` a partir do eixo da descarga. Sem essa
+  identidade eu não teria como posicionar o pé sem chutar;
+- **a carcaça do motor** escrita no bloco, vinda da seção 15;
+- **o sentido do fluxo**, que entra pelo eixo e sai por cima — é a informação
+  que decide de que lado a redução excêntrica leva o lado plano.
 
 ### Vertical e horizontal são a mesma peça
 

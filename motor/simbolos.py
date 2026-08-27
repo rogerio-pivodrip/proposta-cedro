@@ -1216,7 +1216,43 @@ def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True):
         # o bujao de dreno, no ponto baixo do caracol
         el.append({"tipo": "rect", "x": c - largura * 0.10, "y": rv,
                    "w": largura * 0.20, "h": rv * 0.10, "classe": "corpo"})
+    # o sentido do fluxo: entra pelo eixo, sai por cima. E a informacao que
+    # decide de que lado a reducao excentrica leva o lado plano.
+    el.append(_seta(x0 * 0.45, 0, 0, r1 * 0.42))
+    el.append(_seta(c, -(rv + a) / 2, -90, r2 * 0.42))
     return el, x0, x1, rv, largura
+
+
+def _seta(x, y, direcao, tamanho):
+    """Ponta de seta cheia, para o sentido do fluxo."""
+    rad = math.radians(direcao)
+    dx, dy = math.cos(rad) * tamanho, math.sin(rad) * tamanho
+    nx, ny = -dy * 0.55, dx * 0.55
+    return _p(f"M{x+dx:.1f} {y+dy:.1f} L{x-dx+nx:.1f} {y-dy+ny:.1f} "
+              f"L{x-dx-nx:.1f} {y-dy-ny:.1f} Z", "fluxo")
+
+
+def _eixo_da_bomba(x_inicio, x_fim, d_eixo, y=0.0):
+    """O eixo da bomba, visto de lado: duas linhas ate a ponta."""
+    r = d_eixo / 2
+    return [_p(f"M{x_inicio:.1f} {-r:.1f} H{x_fim:.1f}", "malha"),
+            _p(f"M{x_inicio:.1f} {r:.1f} H{x_fim:.1f}", "malha")]
+
+
+def _ponta_de_eixo(x, comprimento, d1, u, t):
+    """A ponta do eixo com o rasgo de chaveta, cotada na folha (d1, l, u, t).
+
+    E o que a luva elastica aperta - a unica parte da bomba que o montador
+    mede com paquimetro.
+    """
+    r = d1 / 2
+    topo = t - d1                       # quanto a chaveta sobe acima do eixo
+    return [_p(f"M{x:.1f} {-r:.1f} H{x+comprimento:.1f}"),
+            _p(f"M{x:.1f} {r:.1f} H{x+comprimento:.1f}"),
+            _p(f"M{x+comprimento:.1f} {-r:.1f} V{r:.1f}"),
+            {"tipo": "rect", "x": x + comprimento * 0.18,
+             "y": -r - topo, "w": comprimento * 0.6, "h": topo + u * 0.3,
+             "classe": "corpo"}]
 
 
 def _motor(x, comp, carcaca, com_pes=False, base_y=None):
@@ -1270,10 +1306,12 @@ def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4, cv=None):
     lanterna = h * 0.55
     el.append({"tipo": "rect", "x": x1, "y": -h * 0.59, "w": lanterna,
                "h": 2 * h * 0.59, "classe": "corpo"})
-    el.append(_p(f"M{x1:.1f} {-h*0.09:.1f} H{x1+lanterna:.1f}", "malha"))
-    el.append(_p(f"M{x1:.1f} {h*0.09:.1f} H{x1+lanterna:.1f}", "malha"))
-    motor, fim = _motor(x1 + lanterna, comp - x1 - lanterna, h)
+    el += _eixo_da_bomba(x1, x1 + lanterna, h * 0.20)
+    x_motor = x1 + lanterna
+    motor, fim = _motor(x_motor, comp - x_motor, h)
     el += motor
+    el.append({"tipo": "nota", "x": (x_motor + fim) / 2, "y": -h * 1.18,
+               "texto": f'carcaça {ficha["carcaca_motor"]}'})
     # o pe da voluta e o do motor, descendo ate a base no nivel que b manda
     el.append({"tipo": "rect", "x": x0 + largura * 0.2, "y": rv,
                "w": largura * 0.6, "h": b - rv - 22, "classe": "corpo"})
@@ -1367,23 +1405,42 @@ def bomba_meganorm(nome, cv=None, montagem="HORIZONTAL"):
                "w": caixa_mancal * 0.26, "h": 2 * rv * 0.42, "classe": "corpo"})
     el.append({"tipo": "rect", "x": x1 + caixa_mancal * 0.26, "y": -rv * 0.32,
                "w": caixa_mancal * 0.74, "h": 2 * rv * 0.32, "classe": "corpo"})
-    # o pe do mancal, descendo ate a base
-    el.append({"tipo": "rect", "x": x1 + caixa_mancal * 0.30, "y": rv * 0.32,
-               "w": caixa_mancal * 0.34, "h": b - rv * 0.32 - 24,
-               "classe": "corpo"})
-    # a ponta do eixo e a luva elastica, dentro da protecao aberta
+    # o pe: a folha cota w do eixo da descarga ate ele, e m1 entre os furos.
+    # w + v = f em 43 dos 43 tamanhos, entao os dois partem o f a partir do
+    # eixo da descarga - e por isso da para posicionar o pe sem inventar.
+    w = float(ficha["w_mm"] or 0) or (f * 0.7)
+    m1 = float(ficha["m1_mm"] or 0) or (largura * 0.9)
+    g2 = float(ficha["g2_mm"] or 0) or 12.0
+    s1 = float(ficha["s1_mm"] or 0) or 14.0
+    x_pe = c + w
+    el.append({"tipo": "rect", "x": x_pe - m1 / 2 - s1, "y": b - 24 - g2,
+               "w": m1 + 2 * s1, "h": g2, "classe": "corpo"})
+    el.append({"tipo": "rect", "x": x_pe - m1 * 0.34, "y": rv * 0.32,
+               "w": m1 * 0.68, "h": b - 24 - g2 - rv * 0.32, "classe": "corpo"})
+    for sinal in (-1, 1):
+        xf = x_pe + sinal * m1 / 2
+        el.append(_p(f"M{xf:.1f} {b-24-g2:.1f} v{g2:.1f}", "furo"))
+    # a ponta do eixo, cotada na folha, e a luva elastica na protecao aberta
     x_luva = fim_mancal
-    folga = max(rotor * 0.28, carcaca * 0.40)
-    el += [_p(f"M{x_luva:.1f} {-rv*0.14:.1f} H{x_luva+folga:.1f}"),
-           _p(f"M{x_luva:.1f} {rv*0.14:.1f} H{x_luva+folga:.1f}"),
-           _p(f"M{x_luva:.1f} {-rv*0.44:.1f} H{x_luva+folga:.1f}", "malha"),
+    d1 = float(ficha["d1_mm"] or 0) or rv * 0.3
+    comp_ponta = float(ficha["l_mm"] or 0) or d1 * 2
+    el += _eixo_da_bomba(x1, x_luva, d1 * 1.35)
+    el += _ponta_de_eixo(x_luva, comp_ponta, d1,
+                         float(ficha["u_mm"] or 8), float(ficha["t_mm"] or d1 + 3))
+    folga = max(comp_ponta * 2.1, carcaca * 0.40)
+    el += [_p(f"M{x_luva:.1f} {-rv*0.44:.1f} H{x_luva+folga:.1f}", "malha"),
            _p(f"M{x_luva:.1f} {rv*0.44:.1f} H{x_luva+folga:.1f}", "malha"),
            _p(f"M{x_luva:.1f} {-rv*0.44:.1f} V{-rv*0.14:.1f}", "malha"),
            _p(f"M{x_luva+folga:.1f} {-rv*0.44:.1f} V{-rv*0.14:.1f}", "malha")]
     # o motor: a carcaca sai do folheto, o comprimento e proporcao dela
-    motor, fim = _motor(x_luva + folga, carcaca * 2.4, carcaca,
+    x_motor = x_luva + folga
+    motor, fim = _motor(x_motor, carcaca * 2.4, carcaca,
                         com_pes=True, base_y=b - 24)
     el += motor
+    if linha_conjunto:
+        el.append({"tipo": "nota", "x": (x_motor + fim) / 2,
+                   "y": -carcaca * 1.18,
+                   "texto": f'carcaça {linha_conjunto["carcaca_motor"]}'})
     el.append({"tipo": "rect", "x": x0 - 30, "y": b - 24,
                "w": fim - x0 + 70, "h": 24, "classe": "corpo"})
     el.append(_p(f"M-70 0 H{fim+60:.0f}", "centro"))
@@ -1400,7 +1457,9 @@ def bomba_meganorm(nome, cv=None, montagem="HORIZONTAL"):
     simbolo = _montar("BOMBA", rotulo, el, portas, fonte,
                       {"tamanho": tamanho, "montagem": montagem,
                        "eixo_mm": b, "mancalizada": True, "cv": cv,
-                       "carcaca_motor": carcaca, "iso_2858": ficha["iso_2858"] == "1",
+                       "carcaca_motor": (linha_conjunto or {}).get(
+                           "carcaca_motor") or f"{carcaca:g}",
+                       "iso_2858": ficha["iso_2858"] == "1",
                        "base": (linha_conjunto or {}).get("base"),
                        "fim_mancal_mm": fim_mancal})
     if montagem == "VERTICAL":
