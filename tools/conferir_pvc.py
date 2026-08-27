@@ -75,29 +75,37 @@ def cobertura():
     """
     from tools import desenhar_simbolos as ds
     print("\n== de onde vem a cota de cada peça da folha (seção PVC e Plasson)\n")
-    print(f'{"bitola":8}{"DN":>6}{"junta":>8}{"medida":>8}{"outra junta":>12}'
+    print(f'{"bitola":8}{"DN":>6}{"junta":>8}{"folha":>7}{"casa":>6}'
           f'{"estimada":>10}   as estimadas')
     total = collections.Counter()
+
+    def classe(peca):
+        fonte = peca.fonte or ""
+        if fonte.startswith("plasson") or fonte.startswith("da luva (plasson"):
+            return "folha"
+        if fonte.startswith("casa") or fonte.startswith("da luva (casa"):
+            return "casa"
+        if fonte in ("netafim", "irrigafour", "descricao"):
+            return "folha"
+        return "estimada"
+
     for dn in (3, 4, 5, 6, 8, 10, 12, 14):
         pecas = dict(ds.elenco(dn)).get("PVC e Plasson") or []
         if not pecas:
-            print(f'{dn:g}"{"":5}{"—":>6}{"—":>8}{"—":>8}{"—":>12}{"—":>10}   '
+            print(f'{dn:g}"{"":5}{"—":>6}{"—":>8}{"—":>7}{"—":>6}{"—":>10}   '
                   f"a linha Plasson acaba em DN225")
             continue
-        medidas = [p for p in pecas if p.fonte == "casa"]
-        outra = [p for p in pecas if p.fonte == "casa (outra junta)"]
-        estimadas = [p for p in pecas if p.fonte not in
-                     ("casa", "casa (outra junta)", "netafim", "irrigafour",
-                      "descricao")]
-        total["medidas"] += len(medidas)
-        total["outra"] += len(outra)
-        total["estimadas"] += len(estimadas)
+        grupo = collections.defaultdict(list)
+        for peca in pecas:
+            grupo[classe(peca)].append(peca)
+        for k in ("folha", "casa", "estimada"):
+            total[k] += len(grupo[k])
         print(f'{dn:g}"{"":5}{ds._plasson(dn):>6}{ds._junta_pvc(dn):>8}'
-              f'{len(medidas):>8}{len(outra):>12}{len(estimadas):>10}   '
-              + ", ".join(p.rotulo.split(" DN")[0] for p in estimadas))
-    print(f'\n{total["medidas"]} peças medidas · '
-          f'{total["outra"]} medidas na outra junta · '
-          f'{total["estimadas"]} estimadas')
+              f'{len(grupo["folha"]):>7}{len(grupo["casa"]):>6}'
+              f'{len(grupo["estimada"]):>10}   '
+              + ", ".join(p.rotulo.split(" DN")[0] for p in grupo["estimada"]))
+    print(f'\n{total["folha"]} peças de folha de fabricante · '
+          f'{total["casa"]} do DXF da casa · {total["estimada"]} estimadas')
 
 
 def main():
@@ -120,8 +128,9 @@ def main():
         pedidos[(familia, variante, dn, menor)][significado] = v["valor"]
 
     print(f"{'peça':38} {'motor (mm)':>17} {'casa (mm)':>17} "
-          f"{'Δ larg':>8} {'Δ alt':>8}")
+          f"{'Δ larg':>8} {'Δ alt':>8}  fonte")
     piores = []
+    folha = []                 # onde a folha do fabricante e que mandou
     falhas = []
     for chave in sorted(pedidos, key=lambda k: (k[0], str(k[1]), k[2])):
         familia, variante, dn, menor = chave
@@ -149,8 +158,12 @@ def main():
                 deltas.append(100 * (obtido[sig] - medido[sig]) / medido[sig])
             else:
                 deltas.append(None)
-        marca = "  <<" if any(d is not None and abs(d) > arg.limite
-                             for d in deltas) else ""
+        # onde a peca sai de FOLHA de fabricante, a comparacao contra o DXF
+        # da casa e informativa e nao reprovacao: a ordem de fonte deste
+        # projeto poe folha acima de desenho de projeto
+        da_folha = (peca.fonte or "").startswith("plasson")
+        marca = "" if da_folha else ("  <<" if any(
+            d is not None and abs(d) > arg.limite for d in deltas) else "")
         nome = f"{familia} {variante or '-'} DN{dn:g}"
         if menor:
             nome += f"×{menor:g}"
@@ -158,12 +171,26 @@ def main():
               f"{obtido[sig_l]:7.1f} × {obtido[sig_a]:7.1f} "
               f"{medido.get(sig_l, 0):7.1f} × {medido.get(sig_a, 0):7.1f} "
               + " ".join(f"{d:+7.1f}%" if d is not None else f"{'-':>8}"
-                         for d in deltas) + marca)
+                         for d in deltas)
+              + f"  {peca.fonte or '—'}" + marca)
         for d in deltas:
-            if d is not None:
+            if d is None:
+                continue
+            if da_folha:
+                if abs(d) > arg.limite:
+                    folha.append((nome, d))
+            else:
                 piores.append(abs(d))
 
-    print(f"\n{len(pedidos)} peças medidas · {len(piores)} cotas comparadas")
+    if folha:
+        print("\n== onde a folha da Plasson e o DXF da casa discordam\n")
+        print("A folha manda: ela e do fabricante e o DXF e desenho de "
+              "projeto.\nO que a divergência mostra é onde olhar o bloco da "
+              "casa.\n")
+        for nome, d in folha:
+            print(f"  {nome:38} {d:+7.1f}%")
+    print(f"\n{len(pedidos)} peças medidas · {len(piores)} cotas comparadas "
+          f"contra o DXF")
     if piores:
         print(f"|Δ| médio {sum(piores)/len(piores):5.2f}%  ·  "
               f"pior {max(piores):5.2f}%  ·  "

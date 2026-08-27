@@ -1658,6 +1658,62 @@ milímetro não é uma série só, e tratar bitola como número é o que faz o
 programa desenhar peça que não existe. É por isso que a `Bitola` da seção 2 é o
 item 1 da ordem de implementação.
 
+## 4.18 A folha da Plasson chegou, e ela resolve uma medida suspeita
+
+Perguntar de onde vinha a cota do Plasson fez a casa mandar o que faltava: dez
+desenhos do catálogo Plasson da linha soldável — 5010 luva, 5012 luva com
+rosca, 5022/5062/5212 adaptadores, 5040 tê, 5050 curva 90, 5090 bucha,
+5450 curva 45, 5510 colar, 5900 flange solta e 5910 flange cega.
+
+São **folha de fabricante**, então entram acima do DXF da casa na ordem de
+fonte, e a tarja passa a dizer `plasson`. Resultado na seção PVC da folha:
+
+| antes | depois |
+|---|---|
+| 11 de medida, 27 estimadas | **23 de folha de fabricante**, 3 do DXF, 19 estimadas |
+
+Nas bitolas soldáveis (6" e 8") são 7 de 9 peças com cota de fábrica.
+
+### As duas folhas se confirmam, e é isso que dá confiança nas duas
+
+| peça | DXF da casa | folha Plasson |
+|---|---|---|
+| tê soldável DN225 | 465 × 362 | H=465, Z+I+E/2 = **362** |
+| tê soldável DN160 | 339 × 262 | H=339, Z+I+E/2 = **262** |
+| colar 5510, E1 | 106 / 125 / 150 / 213 / 272 | **os mesmos cinco** |
+| flange solta | 8 furos ⌀18 em 160 (3") | Dp/S/N da NBR 7675 PN16 |
+
+A altura do tê não está na folha: ela sai de `Z + I + E/2`, e o fato de essa
+soma bater **exata** em duas bitolas independentes é o que valida a leitura das
+letras.
+
+### E resolvem uma medida que estava marcada como suspeita
+
+Ficou registrado há tempo que **o tê soldável DN125 tinha sido medido idêntico
+ao DN160** — 339 × 262 nos dois. Não era coincidência: era um rótulo grudado na
+peça errada no bloco da casa. A folha dá o DN125 em **269 × 209**, que é a
+progressão certa da série. Uma fonte nova resolveu uma dúvida velha sem precisar
+remedir nada.
+
+### Onde as duas discordam, fica dito
+
+A curva 90 soldável bate exato em DN110 e DN225 e diverge de 4,6 a 7,1% em 75,
+90, 125 e 160 — e sempre com a casa medindo **maior** (+10 mm em três delas,
++16 na de 160). A folha manda, porque é do fabricante; a divergência entra num
+bloco próprio do relatório, com o par, para alguém olhar o bloco da casa.
+
+`conferir_pvc.py` passou a separar as duas coisas: contra o DXF ele cobra
+(62 cotas, 0,00%); contra a folha ele **informa**, que é a mesma regra do
+`conferir_cad.py` — quem tem folha não é reprovado por desenho de projeto.
+
+### O que ainda é estimativa, e por quê
+
+- **luva de redução** — o catálogo mandado não tem a folha dela;
+- **curva 45** — a folha 5450 cota a **perna** (E), não o envelope, e inventar
+  o envelope a partir dela seria estimar com cara de folha;
+- **bolsa (PBA) em 3", 4" e 5"** — é outra norma e outra série de DN; a única
+  fonte continua sendo o DXF da casa.
+
 ## 5. O que a peça puxa: um mecanismo só
 
 Hoje as derivações estão em quatro lugares diferentes. São todas o mesmo padrão

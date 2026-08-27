@@ -31,6 +31,10 @@ TABELA = os.path.join(os.path.dirname(__file__), "..", "data", "cotas.csv")
 # chave e outra: DN em milimetro, que no PVC e no PEAD E o diametro externo.
 TABELA_CASA = os.path.join(os.path.dirname(__file__), "..", "data",
                            "cotas_casa.csv")
+# A folha da PLASSON, que a casa mandou: dez desenhos da linha soldavel. E
+# folha de fabricante, entao ela vem ANTES da medida do DXF na ordem de fonte.
+TABELA_PLASSON = os.path.join(os.path.dirname(__file__), "..", "data",
+                              "plasson_soldavel.csv")
 
 _indice = None
 _casa = None
@@ -135,6 +139,86 @@ def cota_da_casa(familia, dn_mm, variante="", significado="comprimento_mm",
         valor, confiavel = achado[0], achado[1]
         if confiavel or aceitar_suspeita:
             return valor
+    return None
+
+
+_plasson = None
+
+
+def _carregar_plasson():
+    """A folha da Plasson, indexada por (familia, d, d_menor)."""
+    global _plasson
+    if _plasson is None:
+        _plasson = {}
+        with open(TABELA_PLASSON, encoding="utf-8") as fh:
+            linhas = [ln for ln in fh if not ln.startswith("#")]
+        for r in csv.DictReader(linhas):
+            def num(campo):
+                return float(r[campo]) if r.get(campo) else None
+            chave = (r["familia"], num("d_mm"), num("d_menor_mm"))
+            _plasson.setdefault(chave, {k: num(k) for k in
+                                        ("E_mm", "E1_mm", "H_mm", "I_mm",
+                                         "Z_mm", "B_mm", "C_mm", "Lt_mm",
+                                         "L_mm", "Dp_mm", "S_mm", "furos",
+                                         "peso_g")})
+            _plasson[chave]["codigo"] = r["codigo"]
+    return _plasson
+
+
+def cota_plasson(familia, dn_mm, significado, dn_menor=None, variante=""):
+    """A cota da FOLHA da Plasson - a fonte mais forte que temos em milimetro.
+
+    A ordem de fonte deste projeto poe folha de fabricante acima de desenho de
+    projeto, e por isso ela vem antes da medida da casa. As duas se confirmam
+    onde existem juntas: o te soldavel de 160 e de 225 bate exato nas duas, e o
+    E1 do colar 5510 bate nas cinco bitolas que a casa mediu.
+
+    A folha nomeia as cotas com as letras dela, e a traducao para o que o
+    desenho pede e o que esta aqui:
+
+        luva          comprimento = H          externo = E
+        te            face a face = H          altura total = Z + I + E/2
+        curva 90      envelope    = H (nos dois eixos)
+        bucha         comprimento = H          externo = o proprio d
+        colar 5510    comprimento = H          externo = E1 (o ressalto)
+        flange        espessura   = H          externo = E1 (solta) ou E (cega)
+
+    A curva 45 fica de fora: a folha 5450 cota a PERNA (E) e nao o envelope, e
+    inventar o envelope a partir dela seria estimar com cara de folha.
+    """
+    tabela = _carregar_plasson()
+    fam = familia
+    if familia in ("TE_REDUZIDO",):
+        fam = "TE"
+    if familia == "CURVA":
+        angulo = (variante or "").split("/")[0]
+        if angulo != "90":
+            return None
+        fam = "CURVA_90"
+    linha = (tabela.get((fam, float(dn_mm), float(dn_menor) if dn_menor else None))
+             or tabela.get((fam, float(dn_mm), None)))
+    if not linha:
+        return None
+    E, H, I, Z, E1 = (linha["E_mm"], linha["H_mm"], linha["I_mm"],
+                      linha["Z_mm"], linha["E1_mm"])
+    if significado in ("comprimento_mm", "face_a_face_mm", "espessura_mm"):
+        return H
+    if significado == "altura_total_mm" and None not in (E, H, I, Z):
+        return Z + I + E / 2
+    if significado in ("envelope_x_mm", "envelope_y_mm"):
+        return H if fam == "CURVA_90" else None
+    if significado == "d_externo_mm":
+        if fam in ("ADAPTADOR_FLANGE", "FLANGE"):
+            return E1
+        if fam == "BUCHA_REDUCAO":
+            return float(dn_mm)
+        return E
+    if significado == "circulo_mm":
+        return linha["Dp_mm"]
+    if significado == "furo_mm":
+        return linha["S_mm"]
+    if significado == "furos":
+        return linha["furos"]
     return None
 
 
