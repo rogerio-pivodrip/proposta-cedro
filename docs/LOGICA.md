@@ -553,13 +553,30 @@ Ainda **a conferir**, porque existem e ninguém decidiu:
 A linha DOROT é uma família completa e paralela à ARAD. E **acima de 10" não há
 IRT**: em 12" só existe a WSTSB, e em 14" não há medidor nenhum.
 
-**Borboleta com alavanca.** A casa usa alavanca; o catálogo tem quase tudo com
-volante. A busca passa a preferir o acionamento pedido — alavanca primeiro, quem
-não declara depois, volante por último. Mas:
+**Borboleta.** Procurando por "gear" apareceram **35 borboletas que estavam
+invisíveis**: cadastradas como `VALV.BORB.` — com o ponto da abreviação — e com
+`CX.` no fim, que é a **caixa redutora**. De 12 itens a busca passou para **47**.
 
-> **A versão com alavanca só existe em 4"** (`71660-000951`). Os projetos pedem
-> `Valvula Borboleta 3" c/ Alavanca` e `8" c/ Alavanca`, e nenhum dos dois está
-> cadastrado — só as versões com volante.
+| linha | acionamento | bitolas |
+|---|---|---|
+| BRAY S30-169 150LB | caixa | 2" a 20" |
+| BRAY S30H-375 250LB | caixa | 2" a 20" |
+| BRAY S33-169 150LB | caixa | 24" |
+| FN/CF8 150 EPDM | caixa | 3" a 20" |
+| FN/CF8 PN16 (250) | caixa | 4" a 14" |
+| GAER com volante | volante | 3" a 16" |
+| **GAER com alavanca** | **alavanca** | **só 4"** |
+| PVC ABNT16 | — | 3" a 6" |
+
+A preferência de acionamento virou lista ordenada em
+`Catalogo.ACIONAMENTO_PREFERIDO`: **alavanca → caixa redutora → volante**, com
+quem não declara ficando no meio. Hoje isso escolhe alavanca em 4" e caixa
+redutora no resto.
+
+> **Falta decidir qual linha é a da casa.** Cinco linhas com caixa redutora
+> cobrem 3" a 14" inteiro, mas são de três fabricantes diferentes. E a alavanca
+> da GAER continua existindo só em 4" — os projetos pedem 3" e 8" com alavanca,
+> e nenhum dos dois está cadastrado.
 
 ### 7.4 Ventosa: colar de tomada ou saída na peça
 

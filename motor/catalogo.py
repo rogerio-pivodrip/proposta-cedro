@@ -23,8 +23,12 @@ class Catalogo:
             for dn in set(item["dn"]):
                 self._indice[(item["familia"], dn)].append(item)
 
-    # A casa usa borboleta com alavanca; volante entra so se nao houver.
-    ACIONAMENTO_PREFERIDO = {"VALVULA_BORBOLETA": "ALAVANCA"}
+    # Ordem de preferencia de acionamento, do melhor para o pior. A casa usa
+    # borboleta com alavanca; onde nao houver, caixa redutora ("gear"), e
+    # volante por ultimo. Quem nao declara acionamento fica no meio.
+    ACIONAMENTO_PREFERIDO = {
+        "VALVULA_BORBOLETA": ["ALAVANCA", "CAIXA", "VOLANTE"],
+    }
 
     def buscar(self, familia, dn, norma=None, angulo=None, material="ACO_ZINCADO",
                comprimento_mm=None, dn_saida=None, acionamento=None):
@@ -56,12 +60,11 @@ class Catalogo:
             # ultimo o outro acionamento
             if not preferido:
                 ordem_acionamento = 0
-            elif item.get("acionamento") == preferido:
-                ordem_acionamento = 0
-            elif not item.get("acionamento"):
-                ordem_acionamento = 1
+            elif item.get("acionamento") in preferido:
+                ordem_acionamento = preferido.index(item["acionamento"])
             else:
-                ordem_acionamento = 2
+                # nao declara acionamento: fica entre o preferido e o ultimo
+                ordem_acionamento = len(preferido) - 1
             # engate K nao e usado nas montagens: peca com ponta K so entra se
             # nao houver outra
             tem_k = any(c["tipo"] == "ENGATE_K" for c in item["conexoes"])

@@ -55,7 +55,10 @@ FAMILIAS = [
     (r"^NIPLE\b|^NIPEL\b", "NIPLE", None),
     (r"VALV\w*\s*(?:DE\s*)?RETENCAO|VALV\.?\s*RETENCAO|\bUNIFLAP\b", "VALVULA_RETENCAO", None),
     (r"VALV\w*\s*(?:DE\s*)?PE\b", "VALVULA_PE", None),
-    (r"VALV\w*\s*BORBOLETA|^BORBOLETA\b", "VALVULA_BORBOLETA", None),
+    # "VALV.BORB. ... CX.-DN 8"" e borboleta com caixa redutora - o ponto da
+    # abreviacao deixava 35 itens invisiveis.
+    (r"VALV\w*\.?\s*BORBOLETA|VALV\.?\s*BORB\.?|^BORBOLETA\b",
+     "VALVULA_BORBOLETA", None),
     # "REG. GAVETA" e "VALV. GAVETA" - o ponto da abreviacao ficava de fora, e
     # era por isso que a gaveta flangeada da GAER nao entrava.
     (r"VALV\w*\.?\s*GAVETA|REG(?:ISTRO|\.)?\s*GAVETA", "VALVULA_GAVETA", None),
@@ -285,7 +288,9 @@ def normalizar_item(item):
         peca["acionamento"] = "ALAVANCA"
     elif re.search(r"VOLANTE", desc):
         peca["acionamento"] = "VOLANTE"
-    elif re.search(r"CABECOTE|CABECOTE", desc):
+    elif re.search(r"\bCX\.?\b|CAIXA\s?RED|REDUTOR", desc):
+        peca["acionamento"] = "CAIXA"      # caixa redutora, o "gear"
+    elif re.search(r"CABECOTE", desc):
         peca["acionamento"] = "CABECOTE"
 
     peca["conexoes"] = extrair_conexoes(desc, dns_pos)

@@ -9681,7 +9681,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
+  "acionamento": "CAIXA",
   "confianca": 1.0
  },
  {
@@ -9734,7 +9734,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
+  "acionamento": "CAIXA",
   "confianca": 0.71
  },
  {
@@ -9856,7 +9856,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
+  "acionamento": "CAIXA",
   "confianca": 1.0
  },
  {
@@ -9884,7 +9884,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
+  "acionamento": "CAIXA",
   "confianca": 1.0
  },
  {
@@ -9917,7 +9917,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
+  "acionamento": "CAIXA",
   "confianca": 1.0
  },
  {
@@ -13866,7 +13866,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
+  "acionamento": "CAIXA",
   "confianca": 0.57
  },
  {
@@ -13894,7 +13894,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
+  "acionamento": "CAIXA",
   "confianca": 1.0
  },
  {
@@ -13922,7 +13922,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
+  "acionamento": "CAIXA",
   "confianca": 1.0
  },
  {
@@ -41119,7 +41119,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
+  "acionamento": "CAIXA",
   "confianca": 0.0
  },
  {
@@ -54126,7 +54126,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    3.0
@@ -54139,8 +54139,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000002",
@@ -54148,7 +54148,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    2.0
@@ -54161,8 +54161,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000003",
@@ -54170,7 +54170,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    3.0
@@ -54183,8 +54183,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000004",
@@ -54192,7 +54192,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    4.0
@@ -54205,8 +54205,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000005",
@@ -54214,7 +54214,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    6.0
@@ -54227,8 +54227,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000006",
@@ -54236,7 +54236,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    8.0
@@ -54249,8 +54249,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000007",
@@ -54258,7 +54258,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    10.0
@@ -54271,8 +54271,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000008",
@@ -54280,7 +54280,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    12.0
@@ -54293,8 +54293,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000009",
@@ -54302,7 +54302,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    14.0
@@ -54315,8 +54315,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000010",
@@ -54324,7 +54324,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    16.0
@@ -54337,8 +54337,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000011",
@@ -54346,7 +54346,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    20.0
@@ -54359,8 +54359,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000012",
@@ -54368,7 +54368,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    2.0
@@ -54381,8 +54381,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000013",
@@ -54390,7 +54390,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    3.0
@@ -54403,8 +54403,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000014",
@@ -54412,7 +54412,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    4.0
@@ -54425,8 +54425,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000015",
@@ -54434,7 +54434,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    6.0
@@ -54447,8 +54447,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000016",
@@ -54456,7 +54456,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    8.0
@@ -54469,8 +54469,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000017",
@@ -54478,7 +54478,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    10.0
@@ -54491,8 +54491,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000018",
@@ -54500,7 +54500,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    12.0
@@ -54513,8 +54513,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000019",
@@ -54522,7 +54522,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    14.0
@@ -54535,8 +54535,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000020",
@@ -54544,7 +54544,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    16.0
@@ -54557,8 +54557,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000021",
@@ -54566,7 +54566,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    20.0
@@ -54579,8 +54579,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000022",
@@ -54588,7 +54588,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    24.0
@@ -54601,8 +54601,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000023",
@@ -54610,7 +54610,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    4.0
@@ -54623,8 +54623,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000024",
@@ -54632,7 +54632,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    14.0
@@ -54645,8 +54645,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000025",
@@ -54654,7 +54654,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    12.0
@@ -54667,8 +54667,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000026",
@@ -54676,7 +54676,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    6.0
@@ -54689,8 +54689,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000027",
@@ -54698,7 +54698,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    8.0
@@ -54711,8 +54711,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-000028",
@@ -54720,7 +54720,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    10.0
@@ -54733,8 +54733,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-021020",
@@ -54742,7 +54742,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    4.0
@@ -54755,8 +54755,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-021060",
@@ -54764,7 +54764,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    6.0
@@ -54777,8 +54777,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-021080",
@@ -54786,7 +54786,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    8.0
@@ -54799,8 +54799,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-021100",
@@ -54808,7 +54808,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    10.0
@@ -54821,8 +54821,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-021120",
@@ -54830,7 +54830,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    12.0
@@ -54843,8 +54843,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-024500",
@@ -54852,7 +54852,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    14.0
@@ -54865,8 +54865,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01564-024800",
@@ -54874,7 +54874,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_BORBOLETA",
   "material": null,
   "dn": [
    20.0
@@ -54887,8 +54887,8 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
-  "confianca": 0.29
+  "acionamento": "CAIXA",
+  "confianca": 0.57
  },
  {
   "sap": "01566-000001",
@@ -112841,7 +112841,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "acionamento": null,
+  "acionamento": "CAIXA",
   "confianca": 0.0
  },
  {
