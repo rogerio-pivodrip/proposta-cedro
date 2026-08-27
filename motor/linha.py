@@ -40,6 +40,9 @@ class Peca:
                 "comprimento_mm"
         if self.familia in ("MANIFOLD", "ARTICULADOR"):
             return self.familia, "", "comprimento_mm"
+        if self.familia == "VALVULA_BORBOLETA":
+            # a ficha separa alavanca de caixa redutora: o corpo tambem muda
+            return self.familia, self.item.get("acionamento") or "", "face_a_face_mm"
         return self.familia, "", "face_a_face_mm"
 
     def _da_tabela(self):

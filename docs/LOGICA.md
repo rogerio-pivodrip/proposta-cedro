@@ -374,6 +374,21 @@ O mecanismo é genérico: `regras.TRECHO_RETO` é um dicionário família → (a
 depois) em múltiplos do DN. Outros equipamentos com exigência parecida entram
 adicionando uma linha.
 
+**A regra da casa é mais folgada que a do fabricante.** A ficha do ARAD WSTsb
+pede `U5/D3` — cinco bitolas antes e três depois. A casa usa 10 e 5, quase o
+dobro. Fica como está: a regra mais conservadora é a que vale, e agora se sabe
+qual é o mínimo homologado se algum dia faltar espaço.
+
+Duas outras exigências da mesma ficha, ainda **não implementadas** porque
+mudam o layout e precisam de confirmação:
+
+- **o medidor vem antes da válvula**, não depois — "in case of an existing
+  valve in the pipe line, it is recommended to install the meter before the
+  valve". A sequência da casa hoje é filtro → válvula → medidor (seção 7.4);
+  o fabricante pede o inverso.
+- **o medidor é horizontal, com o mostrador para cima.** Isso é restrição de
+  orientação: num trecho vertical o medidor não pode entrar.
+
 ## 5. Do desenho à geometria — sem CAD
 
 Vista lateral 2D. Cada peça tem comprimento face a face; curva tem ângulo. A

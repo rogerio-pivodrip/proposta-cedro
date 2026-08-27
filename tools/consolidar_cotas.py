@@ -15,6 +15,7 @@ import csv
 import sys
 
 IRRIGAFOUR = "data/cotas_irrigafour.csv"
+EQUIPAMENTO = "data/cotas_equipamento.csv"
 NETAFIM = "data/cotas_por_familia.csv"
 
 # familia Irrigafour -> [(letra da cota, familia do motor, variante, significado)]
@@ -97,6 +98,13 @@ def main():
             linhas.append(["NETAFIM", familia, var, f"{float(r['dn_pol']):g}", "",
                            significado, f"{float(r['cota_mm']):g}",
                            r["amostras"], r["divergentes"]])
+
+    # ---- equipamento: cada familia tem um fabricante so, entao a fonte e ele
+    for r in csv.DictReader(open(EQUIPAMENTO, encoding="utf-8")):
+        if r["significado"].endswith("_kg"):
+            continue
+        linhas.append([r["fabricante"], r["familia"], r["variante"], r["dn_pol"],
+                       "", r["significado"], r["valor_mm"], 1, 0])
 
     escritor = csv.writer(sys.stdout)
     escritor.writerow(["fonte", "familia", "variante", "dn_pol", "dn_menor_pol",
