@@ -61,8 +61,22 @@
     </div>
     <p id="recado" class="recado" hidden></p>
     <p id="previsao" class="previsao" hidden></p>
-    <p class="dica">roda do mouse amplia · arrastar o fundo move a folha ·
-      arrastar uma peça a reposiciona na sequência</p>
+
+    <!-- a barra de comando, como no CAD: o verbo, os argumentos atrás, e o
+         prefixo basta. O vocabulário vem do motor - a tela não tem lista
+         própria de comandos, pelo mesmo motivo que não tem cópia do
+         documento -->
+    <div class="console" id="console">
+      <ul id="historico" class="historico"></ul>
+      <ul id="sugestoes" class="sugestoes" hidden></ul>
+      <div class="entrada">
+        <span class="marca">›</span>
+        <input id="comando" type="text" autocomplete="off" spellcheck="false"
+               placeholder="comando ou nome de peça — ? lista tudo">
+      </div>
+    </div>
+    <p class="dica">qualquer letra cai na barra · roda do mouse amplia ·
+      arrastar o fundo move a folha · arrastar uma peça a reposiciona</p>
   </section>
 
   <aside>

@@ -33,7 +33,11 @@ button:disabled{opacity:.4; cursor:default}
 button.perigo:hover{border-color:var(--perigo); color:var(--perigo)}
 
 main{display:grid; grid-template-columns:1fr 330px; gap:0; align-items:start}
-.desenho{padding:18px 20px; min-width:0}
+/* coluna do desenho: o palco estica e o console fica preso no pé. Assim a
+   barra de comando não empurra o desenho para fora da tela, e `avisarTamanho`
+   mede a caixa de verdade - é dela que o motor tira a escala */
+.desenho{padding:18px 20px; min-width:0; display:flex; flex-direction:column;
+  height:calc(100vh - 52px)}
 
 /* ---------------------------------------------------------------- o palco
 
@@ -49,7 +53,7 @@ main{display:grid; grid-template-columns:1fr 330px; gap:0; align-items:start}
   --anota:#7c828c; --linha:#e6e8ec; --chapa:#f2f3f6; --eixo:#c0392b;
   position:relative; background:#fff; border:1px solid var(--linha);
   border-radius:8px; overflow:hidden; touch-action:none;
-  height:calc(100vh - 210px); min-height:340px; cursor:grab;
+  flex:1; min-height:220px; cursor:grab;
 }
 .vista.arrastando_folha{cursor:grabbing}
 .palco{position:absolute; inset:0; transform-origin:0 0;
@@ -75,6 +79,48 @@ main{display:grid; grid-template-columns:1fr 330px; gap:0; align-items:start}
   min-width:46px}
 
 .dica{margin:8px 0 0; font-size:11px; color:var(--anota)}
+
+/* ------------------------------------------------------ a barra de comando
+
+   Do jeito do CAD: o histórico por cima, a linha embaixo, e as sugestões
+   entre os dois - subindo a partir da linha, e não descendo, porque a linha
+   fica no pé da tela e um menu para baixo sairia dela. */
+.console{margin-top:10px; border:1px solid var(--linha); border-radius:8px;
+  background:var(--papel); position:relative; flex:none}
+.historico{list-style:none; margin:0; padding:6px 10px 0; max-height:96px;
+  overflow:auto; font:400 11.5px/1.55 "IBM Plex Mono",ui-monospace,monospace}
+.historico:empty{display:none}
+.historico li{color:var(--anota); white-space:pre-wrap}
+.historico li.dito{color:var(--titulo)}
+.historico li.dito::before{content:"› "; color:var(--marca)}
+.historico li.ruim{color:var(--perigo)}
+.entrada{display:flex; align-items:center; gap:8px; padding:7px 10px}
+.entrada .marca{color:var(--marca); font:600 13px/1 ui-monospace,monospace}
+.entrada input{flex:1; border:none; background:none; padding:2px 0;
+  font:400 13px/1.4 "IBM Plex Mono",ui-monospace,monospace}
+.entrada input:focus{outline:none}
+.console:focus-within{border-color:var(--marca)}
+
+/* as sugestões SOBEM a partir da linha, e por fora do fluxo: a linha vive no
+   pé da tela, um menu para baixo sairia dela, e crescendo no fluxo ele
+   empurraria o desenho a cada tecla */
+.sugestoes{list-style:none; margin:0; padding:4px; overflow:auto;
+  position:absolute; left:-1px; right:-1px; bottom:100%; max-height:44vh;
+  background:var(--papel); border:1px solid var(--linha);
+  border-radius:8px 8px 0 0; box-shadow:0 -6px 18px rgba(0,0,0,.07)}
+.sugestoes li{padding:5px 8px; border-radius:5px; cursor:pointer;
+  display:flex; gap:10px; align-items:baseline; font-size:12px}
+.sugestoes li.marcada{background:var(--realce)}
+.sugestoes li .verbo{font:500 12px/1.4 "IBM Plex Mono",ui-monospace,monospace;
+  color:var(--marca); min-width:96px}
+.sugestoes li .codigo{font:400 11px/1.4 "IBM Plex Mono",ui-monospace,monospace;
+  color:var(--anota); min-width:96px}
+.sugestoes li .texto{color:var(--titulo); flex:1; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap}
+.sugestoes li .nota{color:var(--anota); font-size:11px}
+.sugestoes .cabeca{padding:5px 8px 2px; color:var(--anota); font-size:10px;
+  letter-spacing:.08em; text-transform:uppercase; cursor:default}
+.sugestoes .cabeca:hover{background:none}
 aside{padding:18px 20px 60px; border-left:1px solid var(--linha);
   background:var(--papel); min-height:calc(100vh - 52px)}
 

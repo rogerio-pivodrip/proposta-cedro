@@ -5,6 +5,8 @@ do tipo "qual SAP de curva 90 de 8" flange NBR PN16" em tempo constante.
 """
 import json
 import os
+import re
+import unicodedata
 from collections import defaultdict
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,6 +31,69 @@ class Catalogo:
     ACIONAMENTO_PREFERIDO = {
         "VALVULA_BORBOLETA": ["ALAVANCA", "CAIXA", "VOLANTE"],
     }
+
+    # ------------------------------------------------------------ procurar
+    def procurar(self, texto, limite=12):
+        """Busca por texto livre: codigo, descricao, familia, bitola.
+
+        E a busca de quem esta com a peca na cabeca e nao no indice - "curva
+        90 8", "01523-134", "borboleta caixa 8". `buscar` exige familia e DN
+        porque serve ao motor; esta serve a pessoa, que digita o que lembra.
+
+        **Numero solto e BITOLA, e nao pedaco de texto.** Procurar "curva 8"
+        por substring devolve 18" e 20", e o codigo 01523-000048 na frente das
+        duas - porque o "8" esta dentro deles. Aqui o numero e conferido
+        contra a lista de DN do item, e so cai no texto (como palavra inteira)
+        se nao casar com nenhuma bitola.
+
+        Toda palavra tem de aparecer em algum lugar. Isso e mais util que
+        "qualquer palavra": digitar mais SEMPRE estreita, que e o que se
+        espera de uma caixa de busca. Nao ha correcao de digitacao - errar
+        devolve nada, e isso e melhor que devolver a peca errada com cara de
+        certa.
+        """
+        termos = _sem_acento(texto).split()
+        if not termos:
+            return []
+        numeros, palavras = [], []
+        for t in termos:
+            valor = _numero(t)
+            (numeros if valor is not None else palavras).append(
+                valor if valor is not None else t)
+        achados = []
+        for item in self.itens:
+            campos = self._texto_de(item)
+            if not all(p in campos for p in palavras):
+                continue
+            bitolas = {float(d) for d in (item["dn"] or [])
+                       if isinstance(d, (int, float))}
+            na_bitola = 0
+            falhou = False
+            for n in numeros:
+                if n in bitolas:
+                    na_bitola += 1
+                elif not re.search(rf"(?<![\d,.]){n:g}(?![\d,.])", campos):
+                    falhou = True
+                    break
+            if falhou:
+                continue
+            # a ordem: quem casou o numero na BITOLA na frente de quem casou
+            # so no texto; depois codigo, depois quem casa cedo na descricao,
+            # e por fim a descricao mais curta - a peca mais "limpa"
+            por_codigo = any(p in _sem_acento(item["sap"] or "")
+                             for p in palavras)
+            achados.append((-na_bitola, not por_codigo,
+                            campos.find(palavras[0]) if palavras else 0,
+                            len(item["descricao"]), item["sap"], item))
+        achados.sort(key=lambda t: t[:5])
+        return [item for *_ordem, item in achados[:limite]]
+
+    def _texto_de(self, item):
+        """Tudo o que se pode digitar para achar a peca, num campo so."""
+        return _sem_acento(" ".join(str(v) for v in (
+            item["sap"], item["descricao"], item["familia"] or "",
+            item.get("acionamento") or "", item.get("material") or "",
+            " ".join(c.get("norma") or "" for c in (item["conexoes"] or [])))))
 
     def buscar(self, familia, dn, norma=None, angulo=None, material="ACO_ZINCADO",
                comprimento_mm=None, dn_saida=None, acionamento=None):
@@ -91,3 +156,27 @@ class Catalogo:
             if i["comprimento_mm"]
         }
         return sorted(comps)
+
+
+def _numero(termo):
+    """O termo e um numero solto? Devolve o valor, ou None.
+
+    Codigo SAP tem traco e nao entra aqui - `01523-134` continua sendo
+    palavra, e e assim que procurar por pedaco de codigo funciona.
+    """
+    try:
+        return float(termo.replace(",", "."))
+    except ValueError:
+        return None
+
+
+def _sem_acento(texto):
+    """Minusculo e sem acento, para comparar o que a pessoa digitou.
+
+    A descricao da lista vem em maiuscula e sem acento; o que se digita vem em
+    minuscula e as vezes com acento. Normalizar os dois lados e o que faz
+    "sucção" achar "SUCCAO".
+    """
+    normal = unicodedata.normalize("NFD", str(texto).lower())
+    return re.sub(r"\s+", " ",
+                  "".join(c for c in normal if not unicodedata.combining(c)))

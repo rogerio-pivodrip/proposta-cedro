@@ -409,8 +409,14 @@ async function soltarArrasto() {
 
 /* -------------------------------------------------------------- exportar */
 async function exportar(formato) {
-  const resposta = await mandar({nome: "exportar", formato});
-  if (!resposta.ok) return;
+  baixar(await mandar({nome: "exportar", formato}));
+}
+
+/* Salva o que veio na resposta, se veio arquivo. Não pergunta QUAL comando
+   foi: o botão de DXF e o `exportar dxf` digitado na barra chegam aqui pelo
+   mesmo caminho, porque os dois devolvem a mesma resposta. */
+function baixar(resposta) {
+  if (!resposta.ok || !resposta.arquivo) return false;
   const dados = resposta.texto !== undefined
     ? new Blob([resposta.texto], {type: resposta.mime})
     : new Blob([Uint8Array.from(atob(resposta.base64), (c) => c.charCodeAt(0))],
@@ -422,6 +428,209 @@ async function exportar(formato) {
   a.click();
   URL.revokeObjectURL(url);
   recado("");
+  return true;
+}
+
+/* ------------------------------------------------------- barra de comando
+
+   Como no CAD: digita-se o verbo, os argumentos vêm atrás, e o prefixo basta
+   quando identifica um verbo só. `des` desfaz; `gir 90` gira.
+
+   O VOCABULÁRIO VEM DO MOTOR, uma vez, no arranque. A tela completa o que se
+   digita com essa lista - ela não tem lista própria, pelo mesmo motivo que
+   não tem cópia do documento: um verbo novo no motor apareceria na barra
+   sozinho, e um verbo removido deixaria de ser oferecido.
+
+   A busca de peça é do motor também (`procurar`), e vai a cada tecla com
+   freio. Não há índice no navegador: seriam mil e setecentas peças copiadas
+   para divergir da lista na primeira atualização. */
+let verbos = [];
+let sugestoes = [];
+let marcada = 0;
+let dito = [];              // o que já foi digitado, para a seta para cima
+let ondeNoDito = -1;
+let buscaPendente = null;
+
+function anotar(texto, classe) {
+  const ul = $("historico");
+  const li = document.createElement("li");
+  li.className = classe || "";
+  li.textContent = texto;
+  ul.appendChild(li);
+  while (ul.children.length > 40) ul.removeChild(ul.firstChild);
+  ul.scrollTop = ul.scrollHeight;
+}
+
+async function dizer(texto) {
+  if (!texto.trim()) return;
+  anotar(texto, "dito");
+  dito.push(texto);
+  ondeNoDito = dito.length;
+  if (texto.trim() === "?") { listarVerbos(); return; }
+  const resposta = await mandar({nome: "dizer", texto, alvo: escolhida});
+  if (!resposta.ok) { anotar(resposta.erro, "ruim"); return; }
+  if (baixar(resposta)) { anotar(`salvo ${resposta.arquivo}`); return; }
+  anotar(contar(resposta));
+}
+
+/* O que dizer de volta. O motor devolve o documento inteiro a cada comando,
+   então a barra não precisa saber o que cada verbo faz - ela lê o resultado. */
+function contar(resposta) {
+  const verbo = (resposta.entendido || {}).verbo || resposta.comando;
+  if (resposta.itens) {
+    return resposta.itens.length
+      ? `${resposta.itens.length} peças — veja abaixo`
+      : "a lista não tem nada com isso";
+  }
+  const pecas = (documento.pecas || []).length;
+  const alvo = resposta.peca ? ` ${nomeDaPeca(resposta.peca)}` : "";
+  return `${verbo}${alvo} · ${pecas} peça${pecas === 1 ? "" : "s"} na linha`;
+}
+
+function nomeDaPeca(id) {
+  const peca = (documento.pecas || []).find((p) => p.id === id);
+  return peca ? peca.descricao : id;
+}
+
+function listarVerbos() {
+  verbos.forEach((v) => anotar(
+    `${v.nome.padEnd(13)}${v.resumo}${v.precisa_alvo ? "  (peça escolhida)" : ""}`));
+}
+
+/* ---------------------------------------------------------- as sugestões */
+async function sugerir() {
+  const texto = $("comando").value;
+  const primeira = texto.trim().split(/\s+/)[0].toLowerCase();
+  const espaco = /\s/.test(texto.trim() === "" ? "" : texto);
+  const achados = [];
+  if (primeira && !espaco) {
+    verbos.filter((v) => v.nome.startsWith(primeira))
+      .forEach((v) => achados.push({tipo: "verbo", ...v}));
+  }
+  pintarSugestoes(achados, texto);
+  // a peça vem do motor, com freio: uma ida por pausa de digitação, e não
+  // uma por tecla
+  clearTimeout(buscaPendente);
+  const alvoBusca = alvoDaBusca(texto);
+  if (alvoBusca.length < 2) return;
+  buscaPendente = setTimeout(async () => {
+    const r = await mandar({nome: "procurar", texto: alvoBusca, limite: 8});
+    if ($("comando").value !== texto) return;      // já digitou outra coisa
+    pintarSugestoes(
+      achados.concat((r.itens || []).map((i) => ({tipo: "peca", ...i}))),
+      texto);
+  }, 140);
+}
+
+/* O que procurar no catálogo: o verbo sai da frente, porque `inserir curva 8`
+   procura por "curva 8" e não por "inserir curva 8". */
+function alvoDaBusca(texto) {
+  const partes = texto.trim().split(/\s+/);
+  if (partes.length > 1 && verbos.some((v) => v.nome.startsWith(partes[0].toLowerCase()))) {
+    return partes.slice(1).join(" ");
+  }
+  return texto.trim();
+}
+
+function pintarSugestoes(lista, texto) {
+  sugestoes = lista;
+  const ul = $("sugestoes");
+  ul.innerHTML = "";
+  ul.hidden = !lista.length;
+  if (!lista.length) return;
+  marcada = Math.min(marcada, lista.length - 1);
+  let secao = null;
+  lista.forEach((item, i) => {
+    if (item.tipo !== secao) {
+      secao = item.tipo;
+      const cabeca = document.createElement("li");
+      cabeca.className = "cabeca";
+      cabeca.textContent = item.tipo === "verbo" ? "comandos" : "peças da lista";
+      ul.appendChild(cabeca);
+    }
+    const li = document.createElement("li");
+    if (i === marcada) li.className = "marcada";
+    li.innerHTML = item.tipo === "verbo"
+      ? `<span class="verbo">${item.nome}</span>` +
+        `<span class="texto">${item.resumo}</span>` +
+        `<span class="nota">${item.exemplo}</span>`
+      : `<span class="codigo">${item.sap}</span>` +
+        `<span class="texto">${item.descricao}</span>`;
+    li.addEventListener("mousedown", (ev) => { ev.preventDefault(); aceitar(i); });
+    ul.appendChild(li);
+  });
+}
+
+function aceitar(i) {
+  const item = sugestoes[i];
+  if (!item) return;
+  const campo = $("comando");
+  if (item.tipo === "verbo") {
+    // verbo sem argumento roda na hora; com argumento, fica esperando ele
+    if (!item.argumentos.length) { campo.value = ""; dizer(item.nome); }
+    else { campo.value = item.nome + " "; sugerir(); }
+    campo.focus();
+    return;
+  }
+  campo.value = "";
+  esconderSugestoes();
+  dizer(`inserir ${item.sap}`);
+  campo.focus();
+}
+
+function esconderSugestoes() {
+  sugestoes = [];
+  marcada = 0;
+  $("sugestoes").hidden = true;
+}
+
+function ligarBarra() {
+  const campo = $("comando");
+  campo.addEventListener("input", sugerir);
+  campo.addEventListener("blur", () => setTimeout(esconderSugestoes, 120));
+  campo.addEventListener("keydown", (ev) => {
+    if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+      if (sugestoes.length) {
+        ev.preventDefault();
+        marcada = (marcada + (ev.key === "ArrowDown" ? 1 : -1) +
+                   sugestoes.length) % sugestoes.length;
+        pintarSugestoes(sugestoes, campo.value);
+        return;
+      }
+      // sem sugestão aberta, a seta anda no que já foi digitado - como no CAD
+      if (!dito.length) return;
+      ev.preventDefault();
+      ondeNoDito = Math.max(0, Math.min(dito.length - 1,
+        ondeNoDito + (ev.key === "ArrowDown" ? 1 : -1)));
+      campo.value = dito[ondeNoDito];
+      return;
+    }
+    if (ev.key === "Tab" && sugestoes.length) {
+      ev.preventDefault(); aceitar(marcada); return;
+    }
+    if (ev.key === "Enter") {
+      ev.preventDefault();
+      if (sugestoes.length && sugestoes[marcada] &&
+          sugestoes[marcada].tipo === "peca") { aceitar(marcada); return; }
+      const texto = campo.value;
+      campo.value = "";
+      esconderSugestoes();
+      dizer(texto);
+      return;
+    }
+    if (ev.key === "Escape") {
+      ev.preventDefault();
+      if (sugestoes.length) esconderSugestoes(); else campo.blur();
+    }
+  });
+  // qualquer LETRA cai na barra, como no CAD. Só letra: dígito, + - e 0
+  // continuam sendo o zoom, e todo comando começa por letra
+  addEventListener("keydown", (ev) => {
+    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    if (/^(INPUT|SELECT|TEXTAREA)$/.test(ev.target.tagName)) return;
+    if (!/^[a-zA-Z?]$/.test(ev.key)) return;
+    campo.focus();
+  });
 }
 
 function ligar() {
@@ -531,9 +740,12 @@ function avisarTamanho() {
 async function comecar() {
   const estilo = await mandar({nome: "estilo"});
   if (estilo.css) $("desenho").textContent = estilo.css;
+  verbos = (await mandar({nome: "vocabulario"})).verbos || [];
   FAMILIAS.forEach((f) => $("familia").add(new Option(f.toLowerCase().replace(/_/g, " "), f)));
   ligar();
+  ligarBarra();
   ajustar();
+  anotar("digite ? para ver os comandos, ou o nome de uma peça");
   avisarTamanho();
 }
 

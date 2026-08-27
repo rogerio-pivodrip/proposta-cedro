@@ -13,6 +13,8 @@ O erro tambem e resposta, e nao excecao: `{"ok": false, "erro": ...}`. A tela
 precisa mostrar o motivo, e nao um traceback.
 """
 from motor import exportar as exportacao, templates, vista
+
+from . import linguagem
 from motor.catalogo import Catalogo
 from motor.linha import Linha, Peca
 
@@ -231,6 +233,26 @@ def _template(sessao, comando):
                          for f, d, e in faltando]}
 
 
+def _vocabulario(sessao, comando):
+    """Os verbos da barra de comando. A tela pede uma vez e completa sozinha.
+
+    Se a tela tivesse a propria lista, um verbo novo no motor nao apareceria
+    na barra e um verbo removido continuaria sendo oferecido - a mesma
+    divergencia que ela evita nao guardando documento.
+    """
+    return {"verbos": linguagem.vocabulario()}
+
+
+def _procurar(sessao, comando):
+    """Busca por texto livre no catalogo - codigo, nome, familia, bitola."""
+    texto = comando.get("texto") or ""
+    achados = sessao.catalogo.procurar(texto, comando.get("limite", 12))
+    return {"texto": texto,
+            "itens": [{"sap": i["sap"], "descricao": i["descricao"],
+                       "familia": i["familia"], "material": i["material"],
+                       "dn": list(i["dn"] or [])} for i in achados]}
+
+
 def _catalogo(sessao, comando):
     """O que a lista tem para essa familia e bitola - para a tela oferecer."""
     familia, dn = comando.get("familia"), comando.get("dn")
@@ -369,6 +391,7 @@ COMANDOS = {
     "template": _template, "catalogo": _catalogo, "janela": _janela,
     "modo": _modo,
     "estilo": _estilo, "simular": _simular, "exportar": _exportar,
+    "vocabulario": _vocabulario, "procurar": _procurar,
     # ler nao muda nada, e por isso nao entra no historico
     "documento": lambda sessao, comando: {},
 }
@@ -381,6 +404,19 @@ def executar(sessao, comando):
     invalido precisa continuar mostrando o que existe, e nao ficar em branco.
     """
     nome = (comando or {}).get("nome")
+    if nome == "dizer":
+        # a barra de comando: uma linha digitada vira um comando de verdade e
+        # segue o MESMO caminho de todos os outros. Nao ha atalho aqui - o que
+        # a barra faz, o botao tambem faz, e os dois desfazem igual
+        try:
+            interno, entendido = linguagem.interpretar(
+                comando.get("texto"), comando.get("alvo"), sessao)
+        except linguagem.Erro as erro:
+            return {"ok": False, "erro": str(erro), "entendido": None,
+                    "documento": sessao.documento()}
+        resposta = executar(sessao, interno)
+        resposta["entendido"] = entendido
+        return resposta
     funcao = COMANDOS.get(nome)
     if funcao is None:
         return {"ok": False, "erro": f"comando desconhecido: {nome!r}",

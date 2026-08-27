@@ -15,6 +15,7 @@ python3 tools/conferir_bitola.py   # os três bugs de bitola, e o catálogo inte
 python3 tools/conferir_pvc.py      # o desenho contra a folha da Plasson
 python3 tools/conferir_motor.py    # o motor contra o DXF da W22
 python3 tools/conferir_flanges.py  # a chapa da flange contra a folha Netafim
+python3 tools/conferir_barra.py    # a barra digitada e o botão dão no mesmo
 ```
 
 ```bash
@@ -53,6 +54,7 @@ fundo do poço — e daí em diante clique numa peça, no desenho ou na lista.
 | girar o conjunto | **⟲ ⟳** na barra de cima |
 | apagar | tecla `Delete`, o **×** na linha da lista, ou **remover** no painel |
 | desfazer / refazer | `Ctrl+Z` e `Ctrl+Y` |
+| tudo isso digitando | a **barra de comando**, no pé do desenho |
 | trocar a leitura | **traço · P&B · metal** na barra de cima |
 
 Girar é do conjunto e espelhar é da peça, e a diferença não é de interface: a
@@ -63,6 +65,42 @@ documento, entra no desfazer e sai junto no DXF.
 
 O zoom é da tela, e não do motor: o desenho continua saindo em milímetro real,
 e ampliar mostra mais peça em vez de traço mais gordo.
+
+### A barra de comando
+
+Como no CAD: digita-se o verbo, os argumentos vêm atrás, e **o prefixo basta**
+quando identifica um verbo só — `des` desfaz, `gir 90` gira. Qualquer letra
+digitada na página cai na barra; `?` lista tudo.
+
+```
+montar succao 8          monta a sucção de pé
+inserir curva 90 8       procura na lista e insere a que achou
+comprimento 1500         muda a peça escolhida
+modo metal · girar 90 · espelhar · exportar dxf
+borboleta caixa 8        sem verbo: procura peça e oferece
+```
+
+Duas decisões que valem dizer:
+
+**O vocabulário vem do motor**, uma vez, no arranque. A tela completa o que
+você digita com essa lista — ela não tem lista própria, pelo mesmo motivo que
+não tem cópia do documento: um verbo novo no motor aparece na barra sozinho, e
+um verbo removido deixa de ser oferecido.
+
+**A barra e o botão seguem o mesmo caminho.** `girar 90` digitado e o botão de
+girar deixam o documento idêntico, histórico incluído — então um desfazer volta
+igual dos dois lados. Uma segunda porta para os mesmos comandos é onde nascem
+duas verdades, e `conferir_barra.py` cobra que não nasçam: ele compara os dois
+caminhos e confere que **o exemplo de cada verbo funciona** — o exemplo é o que
+a pessoa vai copiar, e um exemplo que não roda é pior que exemplo nenhum.
+
+**O argumento vai pelo tipo, e não pela posição.** `montar succao 8` e
+`montar 8 succao` são a mesma coisa, e `montar 8` também: o número é a bitola,
+a palavra é o template, e o que falta cai no padrão.
+
+Na busca, **número solto é bitola** e não pedaço de texto — procurar `curva 8`
+por substring devolveria 18" e 20", e o código `01523-000048` na frente das
+duas.
 
 ### Os três modos
 
