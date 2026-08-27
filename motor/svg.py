@@ -64,6 +64,72 @@ def texto_no_eixo(x, y, texto, classe="cota", tamanho=8.0, gira=""):
             f'dominant-baseline="central">{texto}</text></g>')
 
 
+# Os degrades do modo metalizado. Ficam num <defs> dentro do SVG porque
+# gradiente e conteudo, nao estilo - CSS nao inventa `url(#aco)`, ele so
+# aponta para ele.
+#
+# O degrade e VERTICAL na caixa da peca, e a caixa da peca vive dentro do
+# grupo que gira: numa linha de pe o brilho gira junto e continua correndo ao
+# longo do tubo, que e o que faz o cilindro parecer cilindro. Claro em cima,
+# estouro logo abaixo do topo, escuro embaixo - e o desenho de luz de um
+# tubo redondo iluminado de cima.
+DEFS = """<defs>
+<linearGradient id="aco" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#8d949c"/><stop offset=".16" stop-color="#ced3d9"/>
+<stop offset=".36" stop-color="#f3f5f7"/><stop offset=".60" stop-color="#dee2e7"/>
+<stop offset=".84" stop-color="#a5acb4"/><stop offset="1" stop-color="#7c838b"/>
+</linearGradient>
+<linearGradient id="azul" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#15406f"/><stop offset=".16" stop-color="#3f7ec2"/>
+<stop offset=".36" stop-color="#6fa7e0"/><stop offset=".60" stop-color="#3b76b6"/>
+<stop offset=".84" stop-color="#1d4d84"/><stop offset="1" stop-color="#123a63"/>
+</linearGradient>
+<linearGradient id="azul_medio" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#2a5f92"/><stop offset=".16" stop-color="#5b95cf"/>
+<stop offset=".36" stop-color="#8fbde8"/><stop offset=".60" stop-color="#5589bd"/>
+<stop offset=".84" stop-color="#33689b"/><stop offset="1" stop-color="#265679"/>
+</linearGradient>
+<linearGradient id="escuro" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#2b3037"/><stop offset=".16" stop-color="#565d66"/>
+<stop offset=".36" stop-color="#767e88"/><stop offset=".60" stop-color="#4d545c"/>
+<stop offset=".84" stop-color="#333940"/><stop offset="1" stop-color="#24282e"/>
+</linearGradient>
+<linearGradient id="claro" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#a8b0b8"/><stop offset=".16" stop-color="#dde2e7"/>
+<stop offset=".36" stop-color="#f6f8fa"/><stop offset=".60" stop-color="#e2e6eb"/>
+<stop offset=".84" stop-color="#bcc3cb"/><stop offset="1" stop-color="#9aa2ab"/>
+</linearGradient>
+<linearGradient id="chapa" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#99a0a8"/><stop offset=".3" stop-color="#e4e8eb"/>
+<stop offset=".7" stop-color="#c7cdd3"/><stop offset="1" stop-color="#8a9198"/>
+</linearGradient>
+<linearGradient id="ferragem" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#757c84"/><stop offset=".35" stop-color="#c3c9cf"/>
+<stop offset="1" stop-color="#6b7279"/>
+</linearGradient>
+</defs>"""
+
+
+# A librea do equipamento: de que cor cada fabricante pinta a peca dele.
+#
+# E conhecimento de campo, do mesmo tipo que uma cota - por isso mora numa
+# tabela e nao espalhado no CSS. A tubulacao continua aco; so o EQUIPAMENTO
+# tem cor, que e como se ve numa casa de bomba de verdade.
+LIVREA_MARCA = {"KSB": "azul_medio", "EBARA": "claro"}
+LIVREA_FAMILIA = {"VALVULA_RETENCAO": "azul", "VALVULA_BORBOLETA": "azul",
+                  "VALVULA_HIDRAULICA": "azul", "VALVULA_GAVETA": "escuro"}
+
+
+def cor_de(simbolo):
+    """A cor da peca no modo metalizado, ou None - e ai ela sai em aco.
+
+    A marca manda na familia: uma bomba e uma bomba, mas a KSB pinta de azul e
+    a EBARA deixa em cinza claro.
+    """
+    marca = (simbolo.params or {}).get("marca")
+    return LIVREA_MARCA.get(marca) or LIVREA_FAMILIA.get(simbolo.familia)
+
+
 ESTILO = """
 :root{--tinta:#16181d;--eixo:#c0392b;--anota:#8c9099;--linha:#e6e8ec;
   --chapa:#f4f5f7;--fundo:#fff;--papel:#fff;--titulo:#3d424d}
@@ -124,6 +190,74 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
    desenho, e a cota de cada peca cai bem no meio dela - entao sem isto a
    propria cota come o clique da peca que ela cota */
 .anota{pointer-events:none}
+
+/* ------------------------------------------------------------ os tres modos
+
+   O mesmo desenho, tres leituras. O que muda e SO a folha de estilo: a
+   geometria e uma so, em milimetro real, e nenhum dos tres redesenha nada.
+
+   traco  o desenho de projeto: linha preta, eixo vermelho traco-ponto.
+   pb     tudo preto, para plotar e para fotocopia - o vermelho do eixo sai
+          cinza numa impressora monocromatica, e ai ele some no meio do resto.
+   metal  o corpo ganha o cilindro: claro em cima, escuro embaixo. E o
+          `tubulo` que recebe a cor - a regiao entre as duas paredes, que a
+          primitiva desenha e que fica invisivel nos outros dois modos.
+
+   O tubulo NUNCA tem traco: a parede ja esta desenhada por cima dele, e um
+   contorno a mais engrossaria a linha do desenho. */
+.geo .tubulo{fill:none;stroke:none}
+
+.modo-metal .geo .tubulo{fill:url(#aco);stroke:none}
+.modo-metal .geo rect.corpo{fill:url(#aco)}
+.modo-metal .geo .flange,.modo-metal .geo .chapa_lisa{fill:url(#chapa)}
+.modo-metal .geo .parafuso,.modo-metal .geo .porca{fill:url(#ferragem)}
+/* traco mais escuro e mais fino: com o corpo pintado, a linha nao precisa
+   mais carregar sozinha a forma da peca */
+/* `:not(.alvo)` porque o alvo e a area de clique, e nao geometria: sem isto
+   o modo pinta o retangulo invisivel de cada peca e ele aparece na folha */
+.modo-metal .geo *:not(.alvo){stroke:#3c424a}
+.modo-metal .geo .malha,.modo-metal .geo .furo,.modo-metal .geo .solda{
+  stroke:#6f757d}
+/* o furo e um vazio na chapa: pintado de branco ele volta a ser buraco, e
+   nao um circulo desenhado por cima do metal. So o CIRCULO - a classe malha
+   tambem carrega a parede interna do cesto, que e traco e nao furo */
+.modo-metal .geo circle.malha,.modo-metal .geo circle.furo{fill:#fff}
+.modo-metal .geo .centro{stroke:var(--eixo)}
+.modo-metal .geo .junta{stroke:var(--eixo)}
+.modo-metal .geo .fluxo{fill:#6f757d;stroke:none}
+
+/* o equipamento pintado. A tubulacao fica aco; a valvula e a bomba saem na
+   cor do fabricante, que e como se ve numa casa de bomba de verdade. A
+   ferragem da juncao nao entra: ela e desenhada FORA do grupo da peca, e
+   parafuso zincado nao vai junto na pintura */
+.modo-metal .peca[data-cor="azul"] .tubulo,
+.modo-metal .peca[data-cor="azul"] rect.corpo,
+.modo-metal .peca[data-cor="azul"] .flange,
+.modo-metal .peca[data-cor="azul"] .chapa_lisa{fill:url(#azul)}
+.modo-metal .peca[data-cor="azul_medio"] .tubulo,
+.modo-metal .peca[data-cor="azul_medio"] rect.corpo,
+.modo-metal .peca[data-cor="azul_medio"] .flange,
+.modo-metal .peca[data-cor="azul_medio"] .chapa_lisa{fill:url(#azul_medio)}
+.modo-metal .peca[data-cor="escuro"] .tubulo,
+.modo-metal .peca[data-cor="escuro"] rect.corpo,
+.modo-metal .peca[data-cor="escuro"] .flange,
+.modo-metal .peca[data-cor="escuro"] .chapa_lisa{fill:url(#escuro)}
+.modo-metal .peca[data-cor="claro"] .tubulo,
+.modo-metal .peca[data-cor="claro"] rect.corpo,
+.modo-metal .peca[data-cor="claro"] .flange,
+.modo-metal .peca[data-cor="claro"] .chapa_lisa{fill:url(#claro)}
+/* peca escura pede traco claro, senao o contorno some dentro dela */
+.modo-metal .peca[data-cor="escuro"] *:not(.alvo):not(.centro){stroke:#9aa1a9}
+.modo-metal .peca[data-cor="azul"] *:not(.alvo):not(.centro){stroke:#0f2c4c}
+
+.modo-pb .geo *:not(.alvo){stroke:#000}
+.modo-pb .geo .malha,.modo-pb .geo .furo,.modo-pb .geo .solda{stroke-width:.45}
+.modo-pb .geo .flange,.modo-pb .geo .chapa_lisa,
+.modo-pb .geo .parafuso,.modo-pb .geo .porca{fill:#fff}
+.modo-pb .geo .tubulo{fill:none;stroke:none}
+.modo-pb .geo .fluxo{fill:#000;stroke:none}
+.modo-pb text{fill:#000}
+.modo-pb .trim{fill:#fff}
 .lista{display:flex;gap:8px;align-items:baseline;margin:1px 0 3px;
   font:400 10.5px/1.4 "IBM Plex Mono",ui-monospace,monospace;
   color:var(--anota,#8a8f98)}

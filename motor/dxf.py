@@ -103,6 +103,10 @@ def _nome_de_bloco(rotulo):
 
 
 def _desenhar(alvo, elemento):
+    # o tubulo e a regiao entre as paredes, e existe so para receber cor na
+    # tela. Aqui ele seria um contorno em cima da parede - geometria duplicada
+    if elemento.get("classe") == "tubulo":
+        return
     camada = CLASSE_CAMADA.get(elemento.get("classe", "corpo"), "CORPO")
     atributos = {"layer": camada}
     if elemento["tipo"] == "path":

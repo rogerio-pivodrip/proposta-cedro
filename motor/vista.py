@@ -11,7 +11,10 @@ motor/desenho.de_item, e o id da peca vai junto para o grupo do SVG.
 import math
 
 from . import desenho, simbolos as s
-from .svg import ESTILO, ESTILO_LINHA, desenhar, texto_no_eixo  # noqa: F401
+from .svg import (DEFS, ESTILO, ESTILO_LINHA, cor_de,  # noqa: F401
+                  desenhar, texto_no_eixo)
+
+MODOS = ("traco", "pb", "metal")
 
 MARGEM = 46
 
@@ -101,19 +104,19 @@ def _girar_postos(postos, giro):
             for p in postos]
 
 
-def vista(linha, largura=940, altura_max=620, giro=None):
+def vista(linha, largura=940, altura_max=620, giro=None, modo="traco"):
     """O SVG da linha, com cada peca marcada pelo id dela."""
     prontos, recusadas = simbolos_da_linha(linha)
     if not prontos:
-        return {"svg": "", "pecas": 0, "recusadas": recusadas}
+        return {"svg": "", "pecas": 0, "recusadas": recusadas, "modo": modo}
     if giro is None:
         giro = getattr(linha, "giro", 0.0)
     ids = [peca.id for peca, _ in prontos]
     svg, postos, fim = desenhar_linha([sim for _, sim in prontos],
                                       largura=largura, giro=giro,
-                                      altura_max=altura_max, ids=ids)
+                                      altura_max=altura_max, ids=ids, modo=modo)
     return {"svg": svg, "pecas": len(prontos), "recusadas": recusadas,
-            "fim": list(fim)}
+            "fim": list(fim), "modo": modo}
 
 
 def _os_dois_pead(a, b):
@@ -126,7 +129,8 @@ def _os_dois_pead(a, b):
     return all(p.params.get("material") == "PEAD" for p in (a, b))
 
 
-def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None):
+def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
+                   modo="traco"):
     """A linha inteira em SVG, encadeando os simbolos pelas portas.
 
     Cada peca e desenhada uma vez, na origem, olhando para +x. Encaixar e uma
@@ -167,9 +171,13 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None):
     largura = (maxx - minx) * escala + 2 * MARGEM
     altura = (maxy - miny) * escala + 2 * MARGEM
 
-    partes = [f'<svg viewBox="0 0 {largura:.0f} {altura:.0f}" '
-              f'style="max-width:{largura:.0f}px" role="img" '
-              f'aria-label="linha montada">',
+    # o modo e uma CLASSE, e nao um desenho diferente: a geometria e uma so, em
+    # milimetro real, e as tres leituras saem da mesma folha de estilo
+    if modo not in MODOS:
+        modo = "traco"
+    partes = [f'<svg class="modo-{modo}" viewBox="0 0 {largura:.0f} '
+              f'{altura:.0f}" style="max-width:{largura:.0f}px" role="img" '
+              f'aria-label="linha montada">', DEFS,
               f'<g class="geo" transform="translate({MARGEM - minx*escala:.2f} '
               f'{MARGEM - miny*escala:.2f}) scale({escala:.5f})">']
     for i, p in enumerate(postos):
@@ -185,7 +193,13 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None):
             corpo = (f'<rect class="alvo" x="{cx:.1f}" y="{cy:.1f}" '
                      f'width="{max(cw, 1):.1f}" height="{max(ch, 1):.1f}"/>'
                      + corpo)
-        partes.append(f'<g class="peca"{marca} '
+        # a librea vai no GRUPO da peca, e nao no traco: quem decide a cor e
+        # o motor (svg.cor_de), e a folha so aplica. Assim a valvula azul e
+        # azul no programa, no SVG exportado e em qualquer lugar que abra
+        cor = cor_de(p.simbolo)
+        pintura = f' data-cor="{cor}"' if cor else ""
+        partes.append(f'<g class="peca"{marca}{pintura}'
+                      f' data-familia="{p.simbolo.familia}" '
                       f'transform="translate({p.dx:.1f} {p.dy:.1f}) '
                       f'rotate({p.giro:g})">{corpo}</g>')
     # cada ligacao tem duas flanges encostadas e os parafusos que as fecham -

@@ -139,6 +139,14 @@ tr.derivada td{color:var(--anota)}
 
 .separa{width:1px; height:20px; background:var(--linha)}
 
+/* os três modos de leitura do desenho */
+.modos{display:flex}
+.modos button{border-radius:0; margin-left:-1px; font-size:12px; padding:5px 10px}
+.modos button:first-child{border-radius:5px 0 0 5px; margin-left:0}
+.modos button:last-child{border-radius:0 5px 5px 0}
+.modos button.ligado{border-color:var(--marca); color:var(--marca);
+  background:var(--realce); z-index:1}
+
 /* arrastar: a peca que sai fica esmaecida, a que recebe acende, e o
    veredicto vem do motor - a tela nao decide se encaixa. Aqui tambem a marca
    e o traco da peca, e nao um retangulo por cima dela */

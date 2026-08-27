@@ -102,11 +102,32 @@ def _p(d, classe="corpo"):
     return {"tipo": "path", "d": d, "classe": classe}
 
 
+def tubulo(pontos):
+    """A REGIAO entre as duas paredes, fechada, so para receber preenchimento.
+
+    O desenho de tubulacao e feito de linhas: a parede de cima e a de baixo sao
+    dois tracos soltos, e entre eles nao ha figura nenhuma - nao da para pintar
+    o que nao existe. Este elemento e essa figura, e ele nasce na PRIMITIVA:
+    quem desenha tubo, cone ou curva ganha a regiao de graca, sem que nenhuma
+    das cinquenta pecas precise saber que ela existe.
+
+    Nao tem traco (`stroke:none` na folha) e no modo tracado nem se pinta: ele
+    e invisivel ate alguem pedir o modo metalizado. E fica FORA do DXF, que e
+    desenho de linha - um contorno a mais ali viraria geometria duplicada em
+    cima da parede.
+    """
+    return {"tipo": "path", "classe": "tubulo",
+            "d": "M" + " L".join(f"{p[0]:.1f} {p[1]:.1f}" for p in pontos)
+                 + " Z"}
+
+
 def eixo(x, comprimento, dn_pol, y=0.0):
     """Corpo cilindrico visto de lado: duas paredes e a linha de centro."""
     r = DE_TUBO.get(dn_pol, 100) / 2
-    return [_p(f"M{x:.1f} {y-r:.1f} H{x+comprimento:.1f}"),
-            _p(f"M{x:.1f} {y+r:.1f} H{x+comprimento:.1f}")]
+    x2 = x + comprimento
+    return [tubulo([(x, y - r), (x2, y - r), (x2, y + r), (x, y + r)]),
+            _p(f"M{x:.1f} {y-r:.1f} H{x2:.1f}"),
+            _p(f"M{x:.1f} {y+r:.1f} H{x2:.1f}")]
 
 
 def cone(x, comprimento, dn_maior, dn_menor, alinhamento="centro", y=0.0):
@@ -120,8 +141,10 @@ def cone(x, comprimento, dn_maior, dn_menor, alinhamento="centro", y=0.0):
         topo_b, base_b = y + ra - 2 * rb, y + ra
     else:                                     # plano em cima: succao
         topo_b, base_b = y - ra, y - ra + 2 * rb
-    return [_p(f"M{x:.1f} {y-ra:.1f} L{x+comprimento:.1f} {topo_b:.1f}"),
-            _p(f"M{x:.1f} {y+ra:.1f} L{x+comprimento:.1f} {base_b:.1f}")]
+    x2 = x + comprimento
+    return [tubulo([(x, y - ra), (x2, topo_b), (x2, base_b), (x, y + ra)]),
+            _p(f"M{x:.1f} {y-ra:.1f} L{x2:.1f} {topo_b:.1f}"),
+            _p(f"M{x:.1f} {y+ra:.1f} L{x2:.1f} {base_b:.1f}")]
 
 
 def placa(x, dn_pol, y=0.0, direcao=0.0, norma="NBR PN16", lado="entrada"):
@@ -209,7 +232,8 @@ def giro(x, perna, angulo, dn_pol, sentido=1, y=0.0, gomos=4):
 
     fora, dentro = parede(1 * sentido), parede(-1 * sentido)
     caminho = lambda pts: "M" + " L".join(f"{p[0]:.1f} {p[1]:.1f}" for p in pts)
-    elementos = [_p(caminho(fora)), _p(caminho(dentro))]
+    elementos = [tubulo(list(fora) + list(reversed(dentro))),
+                 _p(caminho(fora)), _p(caminho(dentro))]
     for i in range(1, len(fora) - 1):
         elementos.append(_p(f"M{fora[i][0]:.1f} {fora[i][1]:.1f} "
                             f"L{dentro[i][0]:.1f} {dentro[i][1]:.1f}", "solda"))
@@ -237,11 +261,16 @@ def _cruzamento(r1, r2):
     return (x1 + t * (x2 - x1), y1 + t * (y2 - y1))
 
 
-def eixo_de(pontos, sobra=60.0):
-    """Traco-ponto seguindo a linha de centro, com sobra nas duas pontas.
+def eixo_de(pontos, sobra=0.0):
+    """Traco-ponto seguindo a linha de centro, sem sair da peca.
 
     Numa curva de gomos o eixo nao e uma reta que quebra no vertice: ele
     acompanha os gomos, quebrando junto com eles em cada solda.
+
+    A sobra e zero: o eixo morre na face da peca. Numa folha de simbolos, com
+    uma peca por celula, sobrar 60 mm de cada lado era enquadramento. Numa
+    LINHA montada, em que a face de uma e a face da outra, a sobra de uma peca
+    invade a vizinha e o desenho fica com eixo em cima de eixo.
     """
     def estica(a, b, quanto):
         dx, dy = b[0] - a[0], b[1] - a[1]
@@ -456,7 +485,112 @@ def limites(elementos):
     return (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
 
 
+RX_EIXO_RETO = re.compile(
+    r"^M\s*(-?[\d.]+)\s+(-?[\d.]+)\s*([HV])\s*(-?[\d.]+)\s*$")
+
+
+def _aparar_eixo(elementos):
+    """Encurta a linha de centro ate a propria peca acabar.
+
+    Cada peca escrevia a sobra do eixo na mao - 40 aqui, 60 ali, 20% do
+    comprimento acola. Numa folha de simbolos isso e enquadramento; numa linha
+    montada e sujeira, porque a face de uma peca e a face da outra e a sobra de
+    uma entra dentro da vizinha.
+
+    So APARA, nunca estica: se a peca ja desenha o eixo curto - a bomba, que o
+    mostra so no bocal - ele fica como esta. E so mexe no eixo reto, escrito
+    em H ou V; o da curva e polilinha e ja nasce sem sobra, por eixo_de().
+    """
+    corpo = [e for e in elementos if e.get("classe") != "centro"]
+    if not corpo:
+        return elementos
+    x0, y0, larg, alt = limites(corpo)
+    x1, y1 = x0 + larg, y0 + alt
+    saida = []
+    for e in elementos:
+        achado = (RX_EIXO_RETO.match(e["d"])
+                  if e.get("classe") == "centro" and e["tipo"] == "path"
+                  and not (e.get("girar") or e.get("girar_fora")) else None)
+        if not achado:
+            saida.append(e)
+            continue
+        px, py, comando, ate = (float(achado.group(1)), float(achado.group(2)),
+                                achado.group(3), float(achado.group(4)))
+        de, para = (px, ate) if comando == "H" else (py, ate)
+        menor, maior = (x0, x1) if comando == "H" else (y0, y1)
+        # aparar nos dois extremos, respeitando o sentido em que foi escrito
+        baixo = max(min(de, para), menor)
+        cima = min(max(de, para), maior)
+        if cima <= baixo:
+            saida.append(e)
+            continue
+        de, para = (baixo, cima) if de <= para else (cima, baixo)
+        if comando == "H":
+            saida.append(dict(e, d=f"M{de:.1f} {py:.1f} H{para:.1f}"))
+        else:
+            saida.append(dict(e, d=f"M{px:.1f} {de:.1f} V{para:.1f}"))
+    return saida
+
+
+def _corpo_tubular(elementos):
+    """Descobre o par de paredes de cada peca e fecha a regiao entre elas.
+
+    Quase toda peca desenha o corpo do mesmo jeito: duas paredes que percorrem
+    o MESMO trecho, uma de cada lado do eixo. Duas retas num tubo, duas
+    inclinadas num cone, duas quebradas numa curva de bolsa. Isso e um corpo
+    visto de lado - e onde ha duas dessas, ha uma regiao para pintar.
+
+    Reconhecer o par aqui, uma vez, evita ensinar `tubulo` a vinte e cinco
+    familias. As primitivas que ja sabem - eixo(), cone(), giro() - entregam a
+    regiao pronta e esta funcao sai de fininho.
+
+    Corpo que e RETANGULO (a valvula, a caixa do motor) nao passa por aqui: ele
+    ja e uma figura fechada, e a folha o pinta direto.
+
+    Duas paralelas que nao sao corpo acabam pintadas tambem - e no modo
+    metalizado e o que se quer, porque aquilo tambem e peca de metal.
+    """
+    if any(e.get("classe") == "tubulo" for e in elementos):
+        return elementos
+    grupos = {}
+    for e in elementos:
+        if (e["tipo"] != "path" or e.get("classe", "corpo") != "corpo"
+                or e.get("girar") or e.get("girar_fora")):
+            continue
+        linhas = pontos_do_path(e["d"])
+        if len(linhas) != 1 or len(linhas[0]) < 2:
+            continue
+        pontos = linhas[0]
+        if math.dist(pontos[0], pontos[-1]) < 0.5:      # ja e figura fechada
+            continue
+        # ao longo de que direcao esta parede corre?
+        corre = 0 if (abs(pontos[-1][0] - pontos[0][0])
+                      >= abs(pontos[-1][1] - pontos[0][1])) else 1
+        comeco, fim = pontos[0][corre], pontos[-1][corre]
+        if abs(fim - comeco) < 1:
+            continue
+        if fim < comeco:            # as duas na mesma mao, para poder casar
+            pontos = list(reversed(pontos))
+            comeco, fim = fim, comeco
+        grupos.setdefault((corre, round(comeco, 1), round(fim, 1)),
+                          []).append(pontos)
+    novos = []
+    for (corre, _a, _b), paredes in grupos.items():
+        if len(paredes) != 2:
+            continue
+        um, outro = paredes
+        lado = 1 - corre           # a coordenada que separa uma parede da outra
+        meio = lambda pts: sum(p[lado] for p in pts) / len(pts)
+        if abs(meio(um) - meio(outro)) < 0.5:
+            continue               # coincidentes: nao ha corpo entre elas
+        novos.append(tubulo(um + list(reversed(outro))))
+    # na frente da lista: o preenchimento vai ATRAS do traco, e ordem de
+    # elemento e ordem de desenho
+    return novos + list(elementos)
+
+
 def _montar(familia, rotulo, elementos, portas, fonte=None, params=None):
+    elementos = _corpo_tubular(_aparar_eixo(elementos))
     return Simbolo(familia, rotulo, elementos, portas, limites(elementos),
                    fonte, params or {})
 
@@ -522,8 +656,9 @@ def reducao(dn_maior, dn_menor, tipo="CONCENTRICA", lado_plano="topo",
     # o eixo liga o centro de uma flange ao centro da outra: na excentrica ele
     # sai inclinado, e e essa inclinacao que mostra o desalinhamento das bocas
     inclina = desloca / comp if comp else 0
-    el.append(_p(f"M-60 {-60 * inclina:.1f} L{comp + 60:.1f} "
-                 f"{desloca + 60 * inclina:.1f}", "centro"))
+    # o eixo inclinado nao passa por _aparar_eixo, que so entende H e V -
+    # entao ele ja nasce do tamanho da peca, de face a face
+    el.append(_p(f"M0 0 L{comp:.1f} {desloca:.1f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, a),
               Porta("saida", comp, desloca, 0, b)]
     curto = "conc" if tipo == "CONCENTRICA" else "exc"
@@ -2983,7 +3118,8 @@ def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4, cv=None):
     nome = ficha["tamanho_folheto"]
     simbolo = _montar("BOMBA", f'KSB Megabloc {nome} {dn1:g}"×{dn2:g}"',
                       el, portas, "KSB",
-                      {"tamanho": nome, "montagem": montagem, "polos": polos,
+                      {"marca": "KSB",
+                       "tamanho": nome, "montagem": montagem, "polos": polos,
                        "eixo_mm": b, "norma_flange": ficha["norma_flange"],
                        "carcaca_motor": ficha["carcaca_motor"],
                        "cv": float(ficha["cv"]), "peso_kg": ficha["peso_kg"]})
@@ -3208,7 +3344,8 @@ def bomba_gsd(modelo, cv=None, montagem="HORIZONTAL"):
               Porta("saida", xd, -a, -90, dn2)]
     peca = _montar("BOMBA", f'EBARA GSD {modelo} {dn1:g}"×{dn2:g}"', el, portas,
                    "EBARA",
-                   {"linha": "GSD", "modelo": modelo, "cv": cv,
+                   {"marca": "EBARA",
+                    "linha": "GSD", "modelo": modelo, "cv": cv,
                     "carcaca_motor": carcaca, "grupo_suporte":
                     ficha.get("grupo_suporte"),
                     "pescoco_mm": pescoco or None,
@@ -3351,7 +3488,8 @@ def bomba_meganorm(nome, cv=None, montagem="HORIZONTAL"):
     fonte = "KSB" if not proporcao else "KSB (motor proporcao)"
     rotulo = f'KSB Meganorm {tamanho} {dn1:g}"×{dn2:g}"'
     simbolo = _montar("BOMBA", rotulo, el, portas, fonte,
-                      {"tamanho": tamanho, "montagem": montagem,
+                      {"marca": "KSB",
+                       "tamanho": tamanho, "montagem": montagem,
                        "eixo_mm": b, "mancalizada": True, "cv": cv,
                        "carcaca_motor": (linha_conjunto or {}).get(
                            "carcaca_motor") or f"{carcaca:g}",

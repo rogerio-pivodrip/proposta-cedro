@@ -31,9 +31,15 @@ def para_dxf(linha, rotulo=None):
     return dxf.texto_do_dxf(doc), recusadas
 
 
-def para_svg(linha, largura=1600, altura_max=1000):
-    """A vista lateral em SVG, com o estilo dentro - abre em qualquer lugar."""
-    desenhada = vista.vista(linha, largura=largura, altura_max=altura_max)
+def para_svg(linha, largura=1600, altura_max=1000, modo="traco"):
+    """A vista lateral em SVG, com o estilo dentro - abre em qualquer lugar.
+
+    Sai no MODO em que a pessoa esta vendo: quem escolheu metalizado na tela
+    espera o metalizado no arquivo. O DXF nao tem modo - la a cor e da camada,
+    e quem abre no CAD escolhe a pena.
+    """
+    desenhada = vista.vista(linha, largura=largura, altura_max=altura_max,
+                            modo=modo)
     if not desenhada["svg"]:
         return "", desenhada["recusadas"]
     corpo = desenhada["svg"].replace(

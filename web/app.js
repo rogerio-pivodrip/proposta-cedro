@@ -42,6 +42,9 @@ function pintar() {
   pintarPainel();
   $("desfazer").disabled = !documento.pode_desfazer;
   $("refazer").disabled = !documento.pode_refazer;
+  const modoDesenho = (documento.vista && documento.vista.modo) || "traco";
+  document.querySelectorAll("[data-modo-desenho]").forEach((b) =>
+    b.classList.toggle("ligado", b.dataset.modoDesenho === modoDesenho));
 }
 
 function pintarVista() {
@@ -499,6 +502,10 @@ function ligar() {
       ev.preventDefault(); mandar({nome: "refazer"});
     }
   });
+  document.querySelectorAll("[data-modo-desenho]").forEach((b) =>
+    b.addEventListener("click", () => mandar({
+      nome: "modo", modo: b.dataset.modoDesenho,
+    })));
   document.querySelectorAll("[data-exportar]").forEach((b) =>
     b.addEventListener("click", () => exportar(b.dataset.exportar)));
   addEventListener("resize", avisarTamanho);

@@ -31,6 +31,9 @@ class Sessao:
         # sai pronto do motor, ja escalado - a tela nao redesenha nada, so
         # avisa de quanto espaco dispoe
         self.janela = {"largura": 940, "altura_max": 620}
+        # como o desenho e lido: tracado de projeto, preto e branco, ou
+        # metalizado. E folha de estilo, nao geometria - a linha e a mesma
+        self.modo = "traco"
 
     # ------------------------------------------------------------------ ler
     def documento(self):
@@ -48,7 +51,7 @@ class Sessao:
             "trechos_retos": [_trecho(t) for t in linha.trechos_retos()],
             "lista": [dict(r) for r in lista],
             "avisos": list(avisos),
-            "vista": vista.vista(linha, **self.janela),
+            "vista": vista.vista(linha, modo=self.modo, **self.janela),
             "pontas": vista.pontas_erradas(linha),
             "pode_desfazer": bool(linha.feitos),
             "pode_refazer": bool(linha.desfeitos),
@@ -305,7 +308,8 @@ def _exportar(sessao, comando):
         if formato == "dxf":
             conteudo, recusadas = exportacao.para_dxf(sessao.linha, rotulo)
         elif formato == "svg":
-            conteudo, recusadas = exportacao.para_svg(sessao.linha)
+            conteudo, recusadas = exportacao.para_svg(sessao.linha,
+                                                      modo=sessao.modo)
         elif formato == "csv":
             conteudo, _ = exportacao.para_csv(sessao.linha)
         else:
@@ -335,6 +339,20 @@ def _estilo(sessao, comando):
     return {"css": vista.ESTILO}
 
 
+def _modo(sessao, comando):
+    """Troca a leitura do desenho. Nao mexe em peca nenhuma.
+
+    Por isso nao entra no historico: desfazer e para edicao, e trocar de modo
+    nao edita o documento - e o mesmo desenho visto de outro jeito.
+    """
+    pedido = (comando.get("modo") or "").lower()
+    if pedido not in vista.MODOS:
+        raise Erro(f"nao conheco o modo {pedido!r} - so "
+                   f'{", ".join(vista.MODOS)}')
+    sessao.modo = pedido
+    return {"modo": sessao.modo}
+
+
 def _janela(sessao, comando):
     """Diz ao motor de quanto espaco a tela dispoe, em pixel."""
     for campo in ("largura", "altura_max"):
@@ -349,6 +367,7 @@ COMANDOS = {
     "girar": _girar, "espelhar": _espelhar,
     "desfazer": _desfazer, "refazer": _refazer,
     "template": _template, "catalogo": _catalogo, "janela": _janela,
+    "modo": _modo,
     "estilo": _estilo, "simular": _simular, "exportar": _exportar,
     # ler nao muda nada, e por isso nao entra no historico
     "documento": lambda sessao, comando: {},

@@ -52,6 +52,7 @@ fundo do poço — e daí em diante clique numa peça, no desenho ou na lista.
 | girar o conjunto | **⟲ ⟳** na barra de cima |
 | apagar | tecla `Delete`, o **×** na linha da lista, ou **remover** no painel |
 | desfazer / refazer | `Ctrl+Z` e `Ctrl+Y` |
+| trocar a leitura | **traço · P&B · metal** na barra de cima |
 
 Girar é do conjunto e espelhar é da peça, e a diferença não é de interface: a
 peça de uma linha **não tem posição própria** — ela cai onde a anterior deixou,
@@ -61,6 +62,31 @@ documento, entra no desfazer e sai junto no DXF.
 
 O zoom é da tela, e não do motor: o desenho continua saindo em milímetro real,
 e ampliar mostra mais peça em vez de traço mais gordo.
+
+### Os três modos
+
+O mesmo desenho, três leituras — e o que muda é **só a folha de estilo**: a
+geometria é uma só, em milímetro real, e nenhum dos três redesenha nada.
+
+- **traço** — o desenho de projeto: linha preta, eixo vermelho traço-ponto.
+- **P&B** — tudo preto, para plotar e para fotocópia. O vermelho do eixo sai
+  cinza numa impressora monocromática e some no meio do resto.
+- **metal** — o corpo ganha o cilindro (claro em cima, escuro embaixo) e o
+  equipamento sai na cor do fabricante: válvula de retenção, borboleta e
+  hidráulica em azul, gaveta em cinza escuro, bomba KSB em azul médio, EBARA
+  em cinza claro. A tubulação continua aço, e a ferragem da junção também —
+  parafuso zincado não vai junto na pintura.
+
+Quem pinta é a região entre as duas paredes da peça, e ela não estava
+desenhada em lugar nenhum: um desenho de tubulação é feito de linhas, e entre
+a parede de cima e a de baixo não havia figura para receber cor. O motor
+reconhece o par de paredes de cada peça e fecha a região — uma vez, para as
+1.636 peças, em vez de ensinar isso a vinte e cinco famílias. Ela não tem
+traço e some nos outros dois modos; e fica fora do DXF, que é desenho de
+linha.
+
+O SVG exportado sai no modo em que você está vendo. O DXF não tem modo: lá a
+cor é da camada, e quem abre no CAD escolhe a pena.
 
 A **única marca no desenho é a peça selecionada**, e ela é o traço da própria
 peça em azul — nenhum retângulo, nenhum contorno, nenhuma tarja por cima. O
