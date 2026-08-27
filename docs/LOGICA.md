@@ -454,6 +454,63 @@ Os **manifolds já são desenhos padrão** no catálogo: `MNFD AZ D02 … D20`,
 14 tipos, 151 itens; só o `D09` tem 43 variações de DN e comprimento. O conceito
 já existe na Netafim — o programa formaliza.
 
+### 7.3 Cobertura de 3" a 14"
+
+Antes de montar qualquer linha, `tools/matriz_bitolas.py` responde onde o
+catálogo tem buraco. `#` serve na linha (é NBR PN16, ou a peça não declara norma
+— válvula, junta e medidor têm a norma definida no pedido); `o` só existe em
+outra norma; `-` não existe.
+
+```
+                         3"   4"   5"   6"   8"  10"  12"  14"
+crivo                     #    #    -    #    #    #    #    #
+valvula de retencao       #    #    -    #    #    #    #    #
+valvula borboleta         #    #    -    #    #    #    #    #
+valvula gaveta            #    #    -    -    -    -    -    -
+tubo 1 / 3 / 6 m          #    #    -    #    #    #    #    #
+curva 90 / 45             #    #    o    #    #    #    #    #
+te                        #    #    -    #    #    #    #    #
+flange / flange cega      #    #    o    #    #    #    #    #
+junta plana               #    #    #    #    #    #    #    #
+manifold                  #    #    -    #    #    #    #    #
+medidor                   #    #    -    #    #    #    #    -
+articulador               -    #    -    #    #    #    #    #
+```
+
+**5" não é bitola de linha, é bocal de bomba.** Não existe crivo, válvula, tubo,
+tê nem manifold em 5" — só curva, flange e junta. E 125 mm aparece 104 vezes
+como bocal de bomba. O programa deve tratar 5" como diâmetro de transição, nunca
+como diâmetro de trecho.
+
+Fora isso, os buracos são pontuais: **válvula gaveta** só até 4", **articulador**
+não existe em 3", **medidor** não existe em 14".
+
+**Reduções de degrau** — de uma bitola para a anterior, que é o caso da linha:
+
+```
+                         4"   5"   6"   8"  10"  12"  14"
+concentrica               #    #    #    #    #    #    #
+excentrica                #    -    #    #    #    #    #
+```
+
+Uma única falha: **não existe redução excêntrica de 5" para 4"**. Como a
+excêntrica é a da sucção com bomba deitada, uma bomba de entrada 4" numa linha
+de 5" não fecha — mas 5" também não é bitola de linha, então o caso é teórico.
+
+**O template monta em todas as bitolas.** Testado com uma bomba real do catálogo
+cujo bocal de entrada é a bitola anterior, nas duas orientações:
+
+| linha → entrada | bomba | horizontal | vertical |
+|---|---|---|---|
+| 4" → 3" | `KSB METN 080-050-160` | ok, 5 peças | ok, 4 peças |
+| 6" → 5" | `KSB METB 125-080-315` | ok, 5 peças | ok, 4 peças |
+| 8" → 6" | `KSB METB 150-125-200` | ok, 5 peças | ok, 4 peças |
+| 10" → 8" | `KSB METN 200-150-315` | ok, 5 peças | ok, 4 peças |
+| 12" → 10" | `KSB METN 250-200-400` | ok, 5 peças | ok, 4 peças |
+
+Em 14" o catálogo não tem bomba com entrada de 12", então o caso não se testa
+por aí — as peças de 14" existem, o que falta é a bomba.
+
 ## 8. Decisões em aberto
 
 1. **Norma do flange de cada família de bomba** (`data/bombas_norma.csv`). É o
@@ -478,6 +535,7 @@ tools/conferir_bomba.py       reduções do desenho x bocais da bomba
 tools/compatibilizar_bomba.py norma da redução em cada bocal da bomba
 tools/demo_succao.py          demonstração ponta a ponta (sucção, bomba, recalque)
 tools/demo_template.py        template de sucção conferido contra os dois projetos
+tools/matriz_bitolas.py       cobertura de peças e reduções de 3" a 14"
 motor/templates.py            receitas padrão resolvidas contra o catálogo
 motor/bomba.py                nomenclatura da bomba -> entrada, saída e rotor
 motor/catalogo.py             índice por (família, DN, norma)
