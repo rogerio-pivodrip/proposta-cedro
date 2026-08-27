@@ -6,8 +6,12 @@
 # reducao: ANSI 150, ANSI 300, EN PN10, EN PN16, EN PN40, NBR PN16, NBR PN25,
 # NBR PN40, BSP. Deixe em branco o que nao souber - o motor pergunta em vez de
 # escolher errado. dn_mm em branco vale para todos os bocais da familia.
+# METB = Megabloc. O folheto tecnico A2744.12P/2 diz: flange ANSI B16.1 125# FF
+# em todos os tamanhos, exceto os marcados (1) no catalogo, que sao ANSI 250# FF
+# - a norma por tamanho esta em data/bombas_ksb_megabloc.csv, que e quem manda
+# quando o tamanho for conhecido. A linha abaixo e o padrao da familia.
 familia,dn_mm,norma_entrada,norma_saida,fonte
-METB,,,,
+METB,,ANSI 125,ANSI 125,KSB Megabloc manual tecnico A2744.12P/2
 METN,,,,
 MCPK,,,,
 ETA,,,,

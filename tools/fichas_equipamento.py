@@ -11,6 +11,9 @@ Fontes (data/fichas/):
   ARAD              ING23008 WSTsb Bayonet, set/24 rev3 - medidor Woltmann
   DOROT             secao A, valvulas metalicas basicas - series 47/77/87, 67,
                     82/91, 84 e 94; L = face a face, H = altura do corpo
+  RAN               Fig. 37 gaveta cunha emborrachada corpo curto (ISO 5752
+                    serie 14, flange NBR 7675) e Fig. 39 retencao de
+                    fechamento rapido wafer
 
 Uso: python3 tools/fichas_equipamento.py > data/cotas_equipamento.csv
 """
@@ -19,7 +22,7 @@ import sys
 
 POLEGADA = {50: 2, 65: 2.5, 80: 3, 100: 4, 125: 5, 150: 6,
             200: 8, 250: 10, 300: 12, 350: 14, 400: 16, 500: 20, 600: 24,
-            32: 1, 40: 1.5}
+            32: 1, 40: 1.5, 75: 3}
 
 # ---- borboleta Saint-Gobain PAM, disco em ferro fundido -------------------
 # A = face a face | H1 = altura acima do eixo | H2 = abaixo
@@ -76,6 +79,40 @@ DOROT = {
     ("84",): [(80, 145, 239)],
     ("94",): [(50, 251, 121)],
 }
+# ---- gaveta RAN Fig. 37, corpo curto ISO 5752 serie 14 --------------------
+# L = face a face | H = altura total com volante | V = diametro do volante.
+# O face a face bate com data/valvulas_gaveta.csv em todos os DN - e norma,
+# nao escolha do fabricante.
+GAVETA = [
+    # dn_mm,  L,   H,   V,  peso
+    (50,  150, 220, 200,  11),
+    (75,  180, 270, 250,  18),
+    (80,  180, 270, 250,  18),
+    (100, 190, 320, 300,  26),
+    (125, 200, 410, 300,  40),
+    (150, 210, 410, 300,  47),
+    (200, 230, 510, 500,  90),
+    (250, 250, 610, 500, 110),
+    (300, 270, 735, 500, 171),
+    (350, 290, 867, 585, 233),
+    (400, 310, 850, 585, 233),
+]
+# ---- retencao de fechamento rapido RAN Fig. 39 ---------------------------
+# Valvula diferente da portinhola das fichas MP Valvulas: tem by-pass e mola.
+# H e L estao na tabela do catalogo mas o desenho nao deixa claro qual e o face
+# a face - por isso saem marcados para conferencia e NAO entram na geometria.
+RETENCAO_RAN = [
+    # dn_mm, og, og_linha, H,  by_pass, L,  peso
+    (100, 156, 140, 100, '1/2"', 130,   6.0),
+    (125, 180, 160, 138, '1/2"', 145,   8.5),
+    (150, 211, 194, 150, '3/4"', 180,  15.0),
+    (200, 266, 258, 128, '3/4"', 180,  20.0),
+    (250, 319, 311, 146, '1"',   257,  35.0),
+    (300, 370, 360, 181, '1"',   260,  45.0),
+    (350, 429, 413, 223, '1"',   286,  75.0),
+    (400, 485, 475, 235, '1"',   215, 104.0),
+]
+FONTE_RAN = "RAN Valvulas Fig. 37 (gaveta) e Fig. 39 (retencao)"
 FONTE_DOROT = "DOROT secao A - valvulas metalicas basicas"
 FONTE_BORB = "SAINT-GOBAIN PAM FTSG 0406 rev01"
 FONTE_MED = "ARAD ING23008 WSTsb Bayonet set/24 rev3"
@@ -114,6 +151,23 @@ def main():
                                        f"{POLEGADA[dn_mm]:g}", dn_mm,
                                        significado, f"{valor:g}", FONTE_DOROT])
                     n += 1
+    for dn_mm, comp, altura, volante, peso in GAVETA:
+        for significado, valor in (("face_a_face_mm", comp),
+                                   ("altura_total_mm", altura),
+                                   ("volante_mm", volante),
+                                   ("peso_kg", peso)):
+            escritor.writerow(["RAN", "VALVULA_GAVETA", "", f"{POLEGADA[dn_mm]:g}",
+                               dn_mm, significado, f"{valor:g}", FONTE_RAN])
+            n += 1
+    for dn_mm, og, og2, h, by_pass, comp, peso in RETENCAO_RAN:
+        for significado, valor in (("diametro_corpo_mm", og),
+                                   ("H_conferir_mm", h),
+                                   ("L_conferir_mm", comp),
+                                   ("peso_kg", peso)):
+            escritor.writerow(["RAN", "VALVULA_RETENCAO", "FECHAMENTO_RAPIDO",
+                               f"{POLEGADA[dn_mm]:g}", dn_mm, significado,
+                               f"{valor:g}", FONTE_RAN])
+            n += 1
     bitolas = sum(len(t) for t in DOROT.values())
     print(f"# {n} cotas de equipamento: borboleta {len(BORBOLETA)} bitolas, "
           f"medidor {len(MEDIDOR)}, dorot {bitolas} em "

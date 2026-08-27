@@ -539,6 +539,27 @@ existem de 4" para cima. O motor aponta os dois.
 
 Duas peças em que buscar pela família traz a coisa errada.
 
+**PN10 e PN16 não aparafusam entre si de 10" para cima.** A tabela de flanges
+do catálogo RAN publica as duas classes lado a lado, com **círculo de
+furação** — que nem a ficha MP Válvulas nem o Irrigafour davam. E o círculo é
+o que decide se duas flanges casam:
+
+| DN | PN10 | PN16 |
+|---|---|---|
+| 250 (10") | círculo 350, furo 23 | círculo **355**, furo **28** |
+| 300 (12") | círculo 400, furo 23 | círculo **410**, furo **28** |
+| 350 (14") | círculo 460, furo 23 | círculo **470**, furo **28** |
+
+De 2" a 6" as duas classes são idênticas. Em 8" mudam só os furos (8 contra
+12) com o mesmo círculo. De 10" para cima **mudam o círculo e o furo**: uma
+flange PN16 de verdade não entra numa PN10 da mesma bitola.
+
+E a nossa tabela, rotulada `NBR PN16`, tem o círculo do **PN10** em 10", 12"
+e 14". Não é erro: é a terceira confirmação de que a NBR 7675 segue as
+dimensões PN10 acima de DN200 — e é o que sustenta a regra de parafuso da casa
+(3/4" em tudo acima de 5"), porque um furo de 28 mm pediria 1".
+`tools/conferir_furacao_ran.py` mostra a comparação linha a linha.
+
 **Válvula hidráulica: a cota sai da série, não do código.** A tabela da seção A
 do catálogo Dorot mede o corpo por série e bitola — L de face a face, H de
 altura — e as séries 47, 77 e 87 partilham a mesma tabela. Por isso
