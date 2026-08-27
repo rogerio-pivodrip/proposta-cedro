@@ -187,7 +187,24 @@ def giro(x, perna, angulo, dn_pol, sentido=1, y=0.0, gomos=4):
     for i in range(2, len(fora) - 2):
         elementos.append(_p(f"M{fora[i][0]:.1f} {fora[i][1]:.1f} "
                             f"L{dentro[i][0]:.1f} {dentro[i][1]:.1f}", "solda"))
-    return elementos, (fim[0], fim[1], -angulo * sentido), (centro, raio)
+    return (elementos, (fim[0], fim[1], -angulo * sentido), (centro, raio),
+            centro_linha)
+
+
+def eixo_de(pontos, sobra=60.0):
+    """Traco-ponto seguindo a linha de centro, com sobra nas duas pontas.
+
+    Numa curva de gomos o eixo nao e uma reta que quebra no vertice: ele
+    acompanha os gomos, quebrando junto com eles em cada solda.
+    """
+    def estica(a, b, quanto):
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        n = math.hypot(dx, dy) or 1
+        return (b[0] + dx / n * quanto, b[1] + dy / n * quanto)
+
+    caminho = [estica(pontos[1], pontos[0], sobra)] + list(pontos[1:-1]) + \
+        [estica(pontos[-2], pontos[-1], sobra)]
+    return "M" + " L".join(f"{p[0]:.1f} {p[1]:.1f}" for p in caminho)
 
 
 def caixa(x, largura, altura_acima, altura_abaixo, y=0.0, classe="corpo"):
@@ -263,15 +280,14 @@ def curva(dn_pol, angulo=90, sentido=1, gomos=None):
     perna, fonte = _cota("CURVA", dn_pol, str(angulo), "perna_mm")
     perna = perna or DE_TUBO.get(dn_pol, 100) * 1.5
     gomos = gomos or (4 if angulo >= 90 else 3 if angulo >= 45 else 2)
-    el, (sx, sy, direcao), _ = giro(0, perna, angulo, dn_pol, sentido, gomos=gomos)
+    el, (sx, sy, direcao), _, eixo_linha = giro(0, perna, angulo, dn_pol,
+                                                sentido, gomos=gomos)
     el += placa(0, dn_pol)
     bocal = placa(sx, dn_pol, sy, lado="saida")
     for e in bocal:
         e["girar"] = (direcao, sx, sy)
     el += bocal
-    rad = math.radians(direcao)
-    el.append(_p(f"M-60 0 H{perna:.0f} L{sx + 60*math.cos(rad):.0f} "
-                 f"{sy + 60*math.sin(rad):.0f}", "centro"))
+    el.append(_p(eixo_de(eixo_linha), "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol),
               Porta("saida", sx, sy, direcao, dn_pol)]
     return _montar("CURVA", f'curva {angulo}° {dn_pol:g}" {gomos} gomos',
@@ -573,8 +589,8 @@ def curva_saida(dn_pol, angulo=90, dn_saida=2, sentido=1, gomos=4):
     if perna is None:
         perna, fonte = _cota("CURVA", dn_pol, str(angulo), "perna_mm")
     perna = perna or DE_TUBO.get(dn_pol, 100) * 1.5
-    el, (sx, sy, direcao), (centro, raio) = giro(0, perna, angulo, dn_pol,
-                                                 sentido, gomos=gomos)
+    el, (sx, sy, direcao), (centro, raio), eixo_linha = giro(
+        0, perna, angulo, dn_pol, sentido, gomos=gomos)
     r = DE_TUBO.get(dn_pol, 100) / 2
     rs = DE_TUBO.get(dn_saida, 60) / 2
     # dorso: do centro do arco para o meio da curva
@@ -598,9 +614,7 @@ def curva_saida(dn_pol, angulo=90, dn_saida=2, sentido=1, gomos=4):
     for e in saida_fl:
         e["girar"] = (direcao, sx, sy)
     el += saida_fl
-    rad = math.radians(direcao)
-    el.append(_p(f"M-60 0 H{perna:.0f} L{sx + 60*math.cos(rad):.0f} "
-                 f"{sy + 60*math.sin(rad):.0f}", "centro"))
+    el.append(_p(eixo_de(eixo_linha), "centro"))
     el.append(_p(f"M{base[0] - ux*20:.1f} {base[1] - uy*20:.1f} "
                  f"L{topo[0] + ux*30:.1f} {topo[1] + uy*30:.1f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol),
