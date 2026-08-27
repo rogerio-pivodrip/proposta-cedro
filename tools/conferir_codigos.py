@@ -27,7 +27,12 @@ def main():
     fontes = (glob.glob("data/*.csv") + glob.glob("docs/*.md")
               + glob.glob("*.md"))
     for caminho in sorted(fontes):
-        if os.path.basename(caminho).startswith("exemplo"):
+        nome = os.path.basename(caminho)
+        if nome.startswith("exemplo"):
+            continue
+        # O caderno de desenhos cita codigos que a LM ainda nao tem - e o
+        # achado, nao um erro. Quem cuida disso e tools/conferir_desenhos.py.
+        if nome == "desenhos_netafim.csv":
             continue
         with open(caminho, encoding="utf-8") as fh:
             texto = fh.read()
