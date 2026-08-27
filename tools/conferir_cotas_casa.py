@@ -51,10 +51,15 @@ def main():
                   f"{chave[4]:18} {v['valor']:8.1f}")
 
     print("\n== a serie cresce com a bitola?")
-    series = collections.defaultdict(list)
+    # uma cota por bitola: a reducao aparece varias vezes na mesma bitola,
+    # uma por par, e sem juntar isso toda serie de reducao parece empatada
+    por_dn = collections.defaultdict(dict)
     for (familia, variante, dn, menor, significado), v in boas.items():
-        series[(familia, variante, significado)].append((dn, v["valor"]))
+        por_dn[(familia, variante, significado)][dn] = v["valor"]
+    series = {chave: sorted(valores.items())
+              for chave, valores in por_dn.items()}
     quebras = 0
+    empates = []
     for chave, pontos in sorted(series.items()):
         pontos.sort()
         if len(pontos) < 3:
@@ -65,8 +70,17 @@ def main():
             quebras += 1
             print(f"  {chave[0]:18} {chave[1] or '-':>4} {chave[2]:18} "
                   f"{[f'{dn:g}:{v:.0f}' for dn, v in pontos]}")
+        # serie que EMPATA tambem e leitura errada, so nao inverte: duas
+        # bitolas seguidas com a mesma cota e o mesmo rotulo lido duas vezes
+        if any(a == b for (_, a), (_, b) in zip(pontos, pontos[1:])):
+            empates.append((chave, pontos))
     if not quebras:
         print("  todas as series com tres pontos ou mais crescem.")
+    if empates:
+        print("\n== empates: duas bitolas seguidas com a mesma cota")
+        for chave, pontos in empates:
+            print(f"  {chave[0]:18} {chave[1] or '-':>4} {chave[2]:18} "
+                  f"{[f'{dn:g}:{v:.0f}' for dn, v in pontos]}")
     return 0
 
 

@@ -37,6 +37,9 @@ SECOES = {
     "Fecho e flange": ("o que termina a linha e o que a aperta", 150, 1),
     "Válvula e medição": ("o que controla e o que mede", 250, 1),
     "Sucção": ("o que fica dentro d'água", 170, 1),
+    # o PVC injetado desenha em arco liso, sem gomo: o gomo e chapa de aco
+    # soldada, e essa peca sai de molde
+    "PVC e Plasson": ("o traço de molde, não de chapa", 220, 1),
     "PEAD": ("depois da primeira bomba", 160, 1),
     # a bomba e a ancora do desenho: numa coluna ela virava fio de cabelo
     "Bomba": ("a âncora do desenho", 300, 2),
@@ -79,6 +82,20 @@ def elenco(dn):
         ]),
         ("Sucção", [s.crivo(dn), s.valvula_pe(dn)]),
         # o PEAD entra pela equivalencia da casa: 8" de aco vira DN225
+        # o mm entra pela mesma equivalencia do PEAD: 8" de aco vira DN225.
+        # A junta vem da bitola porque e assim que a casa compra: a bolsa da
+        # linha de irrigacao para em DN150, acima dela a peca e soldavel
+        ("PVC e Plasson", [
+            s.tubo_pvc(_pead(dn), 6000, _ponta_pvc(dn)),
+            s.luva_pvc(_pead(dn), _junta_pvc(dn)),
+            s.luva_reducao(_pead(dn), _pead(menor), _junta_pvc(dn)),
+            s.girado(s.curva_pvc(_pead(dn), 90, _junta_pvc(dn), -1), -90),
+            s.girado(s.curva_pvc(_pead(dn), 45, _junta_pvc(dn), -1), -90),
+            s.te_pvc(_pead(dn), junta=_junta_pvc(dn)),
+            s.te_pvc(_pead(dn), _pead(menor), _junta_pvc(dn)),
+            s.adaptador_flange(_pead(dn)),
+            s.bucha_reducao(_pead(dn), _pead(menor)),
+        ]),
         ("PEAD", [s.tubo_pead(_pead(dn), 6000), s.colar_pead(_pead(dn))]),
         ("Bomba", [
             # a mesma bomba na menor e na maior potencia do folheto: o que
@@ -111,6 +128,16 @@ def _maior_cv(tamanho):
     s.ficha_bomba(tamanho)
     linhas = s._bombas.get((tamanho, 4)) or []
     return max((float(r["cv"]) for r in linhas), default=None)
+
+
+def _ponta_pvc(dn_pol):
+    """A barra da linha de irrigação vem com bolsa; a soldável, lisa."""
+    return "BOLSA" if _junta_pvc(dn_pol) == "BOLSA" else "LISA"
+
+
+def _junta_pvc(dn_pol):
+    """A bolsa da linha de irrigação para em DN150; acima dela, soldável."""
+    return "BOLSA" if _pead(dn_pol) <= 150 else "SOLDA"
 
 
 def _pead(dn_pol):
@@ -240,9 +267,11 @@ def celula(simbolo, altura=DESENHO, minimo=1):
         partes.append(f'<text class="cota" x="{xm:.1f}" '
                       f'y="{ym - max(min(raio * 0.62, 13), 7):.1f}">{medida}</text>')
     for n in notas:
-        # elemento repetido, letra de folheto: o desenho mostra e a nota diz
-        partes.append(f'<text class="cota" x="{dx + n["x"] * escala:.1f}" '
-                      f'y="{dy + n["y"] * escala + 3:.1f}">{n["texto"]}</text>')
+        # elemento repetido, letra de folheto: o desenho mostra e a nota diz.
+        # A posicao vem girada: a nota nao passa pelo transform da geometria
+        nx, ny = s.posicao_da_nota(n)
+        partes.append(f'<text class="cota" x="{dx + nx * escala:.1f}" '
+                      f'y="{dy + ny * escala + 3:.1f}">{n["texto"]}</text>')
     partes.append("</g></svg>")
     return "".join(partes)
 

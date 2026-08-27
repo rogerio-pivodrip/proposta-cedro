@@ -93,8 +93,12 @@ def cota_da_casa(familia, dn_mm, variante="", significado="comprimento_mm",
     que forca quem usa a saber o que esta usando.
     """
     indice = _carregar_casa()
+    # do mais especifico ao mais geral. A variante e o par de bitolas soltam
+    # em ordens diferentes: a bucha foi medida com o par mas SEM junta no
+    # nome, e sem a terceira chave dessa lista ela caia na estimativa
     for chave in ((familia, variante, float(dn_mm), dn_menor, significado),
                   (familia, variante, float(dn_mm), None, significado),
+                  (familia, "", float(dn_mm), dn_menor, significado),
                   (familia, "", float(dn_mm), None, significado)):
         achado = indice.get(chave)
         if achado is None:

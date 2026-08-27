@@ -73,15 +73,70 @@ def _tubo(item, dn_pol):
     return s.tubo(dn_pol, comprimento)
 
 
+# Como a peca de milimetro se encaixa: bolsa, solda por encaixe, rosca ou
+# luva de correr. O nome da lista diz, e a cota medida no DXF da casa esta
+# guardada por junta - a curva de 90 de DN110 soldavel mede 203 e a de bolsa
+# 186, entao errar a junta erra a cota.
+RX_SOLDA = re.compile(r"SOLD|\bSOLDA\b", re.I)
+RX_CORRER = re.compile(r"\bCORRER\b", re.I)
+RX_ROSCA = re.compile(r"\bR(?:M|F)\b|ROSCA|\bBSP\b", re.I)
+# a ponta da barra de PVC: PP e ponta e ponta (os dois lados lisos), JEI e
+# junta elastica integrada e PB e ponta e bolsa - as duas com bolsa num lado
+RX_PONTA_LISA = re.compile(r"\bPP\b|\bSOLD\w*\b|\bJS\b", re.I)
+
+
+def junta_de(descricao):
+    if RX_CORRER.search(descricao):
+        return "CORRER"
+    if RX_SOLDA.search(descricao):
+        return "SOLDA"
+    if RX_ROSCA.search(descricao):
+        return "ROSCA"
+    return "BOLSA"
+
+
 def _pead(item, familia, maior):
-    if item["material"] == "PEAD" or familia == "COLAR_PEAD":
-        if familia == "COLAR_PEAD":
-            return s.colar_pead(maior)
-        if familia == "TUBO":
-            if RX_ROLO.search(item["descricao"]):
-                raise SemSimbolo("tubo de rolo - material por metro")
+    """As familias em milimetro: PVC, Plasson e PEAD.
+
+    A cota dessas nao esta em folha de fabricante nenhuma - esta medida no DXF
+    da casa, e entra por cotas.cota_da_casa. Ver docs/MOTOR.md 4.6.
+    """
+    descricao = item["descricao"]
+    bitolas = sorted((d for d in (item["dn"] or [])
+                      if isinstance(d, (int, float))), reverse=True)
+    menor = bitolas[1] if len(bitolas) > 1 else None
+    junta = junta_de(descricao)
+
+    if familia == "COLAR_PEAD":
+        return s.colar_pead(maior)
+    if familia == "TUBO":
+        if RX_ROLO.search(descricao):
+            raise SemSimbolo("tubo de rolo - material por metro")
+        if item["material"] == "PEAD":
             return s.tubo_pead(maior, min(item.get("comprimento_mm") or 6000,
                                           BARRA_MAXIMA_MM))
+        ponta = "LISA" if RX_PONTA_LISA.search(descricao) else "BOLSA"
+        return s.tubo_pvc(maior, min(item.get("comprimento_mm") or 6000,
+                                     BARRA_MAXIMA_MM), ponta)
+    if familia == "CURVA":
+        angulo = int(item["angulo"] or 90)
+        return s.curva_pvc(maior, angulo, junta)
+    if familia in ("LUVA", "LUVA_CORRER"):
+        if menor and menor != maior:
+            return s.luva_reducao(maior, menor, junta)
+        return s.luva_pvc(maior, "CORRER" if familia == "LUVA_CORRER" else junta)
+    if familia in ("TE", "TE_REDUZIDO"):
+        return s.te_pvc(maior, menor, junta)
+    if familia == "BUCHA_REDUCAO":
+        if not menor:
+            raise SemSimbolo("bucha sem a bitola menor na descricao")
+        return s.bucha_reducao(maior, menor)
+    if familia == "ADAPTADOR":
+        if "FL" in descricao.upper() and "P/" in descricao.upper():
+            return s.adaptador_flange(maior)
+        if menor and menor != maior:
+            return s.luva_reducao(maior, menor, junta)
+        return s.luva_pvc(maior, junta)
     raise SemSimbolo(f"{familia} em mm sem simbolo")
 
 

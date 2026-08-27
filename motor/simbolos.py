@@ -327,6 +327,33 @@ def pontos_do_path(d):
     return linhas
 
 
+def _rodar(x, y, angulo, cx=0.0, cy=0.0):
+    """Gira um ponto como o rotate() do SVG - horario, porque o y cresce para
+    baixo."""
+    a = math.radians(angulo)
+    dx, dy = x - cx, y - cy
+    return (cx + dx * math.cos(a) - dy * math.sin(a),
+            cy + dx * math.sin(a) + dy * math.cos(a))
+
+
+def posicao_da_nota(nota):
+    """Onde a nota cai DEPOIS do giro da peca.
+
+    A nota e anotacao: sai em pixel fixo, fora da escala, e por isso nao passa
+    pelo transform que gira a geometria. Quem desenha tem de girar o ponto na
+    mao - sem isso, a nota de uma peca posada de pe vai para outro lugar da
+    celula, e foi assim que o DN da curva apareceu fora da peca.
+    """
+    x, y = nota["x"], nota["y"]
+    girar = nota.get("girar")
+    if girar:
+        x, y = _rodar(x, y, girar[0], girar[1], girar[2])
+    fora = nota.get("girar_fora")
+    if fora:
+        x, y = _rodar(x, y, fora)
+    return x, y
+
+
 def limites(elementos):
     """Retangulo que contem tudo, em mm - ja com o que esta girado no lugar."""
     xs, ys = [], []
@@ -634,6 +661,485 @@ def flange_avulsa(dn_pol, tipo="SOLDAR"):
                    {"tipo": tipo})
 
 
+# ------------------------------------------------- PVC, Plasson e PEAD
+# No PVC e no PEAD o DN E o diametro externo. A cota dessas familias nao esta
+# em folha de fabricante nenhuma: esta medida no DXF da casa, e entra por
+# cotas.cota_da_casa - ver tools/cotas_da_casa.py.
+#
+# O traco segue o bloco da casa, e ele ensina tres coisas que eu nao teria
+# inventado:
+#
+#   curva de PVC e ARCO LISO, nao gomos. Gomo e de chapa soldada; peca
+#   injetada e lisa, com o canto de dentro arredondado.
+#
+#   bolsa e uma CINTA na ponta - uma faixa curta um pouco mais gorda que o
+#   corpo. E a assinatura visual da peca de bolsa, do mesmo jeito que a
+#   flange e a da peca de aco.
+#
+#   cada ponta leva o SEU DN escrito. Na luva de reducao a casa escreve 100
+#   embaixo e 50 em cima, e e isso que diz de que lado a peca entra.
+
+
+def _pvc_em_polegada(dn_mm):
+    """A equivalencia que a casa pratica, para a porta poder conversar com a
+    linha de aco. Fora da tabela, devolve None e a porta so casa por mm."""
+    from .bomba import MM_PARA_POLEGADA
+    if dn_mm in PEAD_POL:
+        return PEAD_POL[dn_mm]
+    return MM_PARA_POLEGADA.get(dn_mm)
+
+
+def _cota_casa(familia, dn_mm, variante, significado, dn_menor=None):
+    return cotas.cota_da_casa(familia, dn_mm, variante, significado, dn_menor)
+
+
+def arco(cx, cy, raio, a0, a1, passos=14):
+    """Pontos de um arco, em grau. O desenho nao usa o A do SVG: o parser de
+    path do motor le reta, e reta amostrada e o que o DXF da casa tambem tem."""
+    return [(cx + raio * math.cos(math.radians(a0 + (a1 - a0) * k / passos)),
+             cy + raio * math.sin(math.radians(a0 + (a1 - a0) * k / passos)))
+            for k in range(passos + 1)]
+
+
+def _polilinha(pontos, classe="corpo"):
+    d = f"M{pontos[0][0]:.1f} {pontos[0][1]:.1f} " + " ".join(
+        f"L{x:.1f} {y:.1f}" for x, y in pontos[1:])
+    return _p(d, classe)
+
+
+CINTA = 1.05      # a bolsa e ~5% mais gorda que o corpo da peca
+
+
+def bolsa(x, dn_mm, externo, lado="entrada", classe="corpo"):
+    """A cinta da bolsa na ponta da peca - a assinatura da peca de encaixe.
+
+    externo e o diametro da CINTA, nao do corpo: a cinta e o ponto mais gordo
+    da peca, e e nela que a trena da casa encosta. Quem chama desenha o corpo
+    em externo/CINTA.
+    """
+    largura = max(externo * 0.09, 6.0)
+    lip = externo / 2
+    x0 = x if lado == "entrada" else x - largura
+    return [{"tipo": "rect", "x": x0, "y": -lip, "w": largura, "h": 2 * lip,
+             "classe": classe},
+            # o encosto interno da bolsa: onde o tubo para
+            _p(f"M{x0 + largura if lado == 'entrada' else x0:.1f} "
+               f"{-dn_mm/2:.1f} V{dn_mm/2:.1f}", "malha")]
+
+
+def _cantos_de_cinta(x, y, direcao_rad, externo, largura):
+    """Os quatro cantos da cinta. Sai separado do desenho porque a curva
+    precisa deles antes de desenhar: e a cinta que fecha o envelope que a casa
+    mede, e a perna e resolvida contra essa medida."""
+    lip = externo / 2
+    ux, uy = math.cos(direcao_rad), math.sin(direcao_rad)
+    nx, ny = -uy, ux
+    a = (x + nx * lip, y + ny * lip)
+    b = (x - nx * lip, y - ny * lip)
+    return [a, b, (b[0] + ux * largura, b[1] + uy * largura),
+            (a[0] + ux * largura, a[1] + uy * largura)]
+
+
+def _cinta(x, y, direcao_rad, dn_mm, externo, classe="corpo"):
+    """A mesma banda da bolsa(), em poligono para poder girar.
+
+    A bolsa() desenha um rect e so serve para a ponta horizontal; a saida da
+    curva aponta para qualquer angulo, e ai a cinta tem de girar com ela.
+    direcao_rad aponta para DENTRO da peca.
+    """
+    largura = max(externo * 0.09, 6.0)
+    cantos = _cantos_de_cinta(x, y, direcao_rad, externo, largura)
+    ux, uy = math.cos(direcao_rad), math.sin(direcao_rad)
+    nx, ny = -uy, ux
+    fx, fy = x + ux * largura, y + uy * largura
+    return [_polilinha(cantos + [cantos[0]], classe),
+            # o encosto interno: onde o tubo para dentro da bolsa
+            _polilinha([(fx + nx * dn_mm / 2, fy + ny * dn_mm / 2),
+                        (fx - nx * dn_mm / 2, fy - ny * dn_mm / 2)], "malha")]
+
+
+def _dn_nas_pontas(portas, dn_por_porta, recuo, desvio):
+    """Uma nota com o DN em cada ponta - a casa escreve os dois.
+
+    A nota anda para DENTRO da peca na direcao da porta, nao em x: na curva a
+    ponta de saida aponta para cima, e um recuo em x cairia fora da peca.
+
+    recuo e desvio vem de quem chama e em milimetro da peca, nao fixos: a
+    anotacao e desenhada em pixel constante, entao numa peca pequena um
+    desvio fixo joga o texto sobre a linha, e numa grande o abandona longe.
+    """
+    notas = []
+    for porta, dn in zip(portas, dn_por_porta):
+        dentro = math.radians((porta.direcao or 0) + 180)
+        # o desvio sai sempre para CIMA do eixo: a casa escreve os dois DN na
+        # mesma linha, e uma nota de cada lado faria a peca parecer cotada em
+        # dois lugares diferentes. Na ponta vertical, cima nao existe: ai vai
+        # para a direita
+        px, py = math.sin(dentro), -math.cos(dentro)
+        if py > 1e-9 or (abs(py) <= 1e-9 and px < 0):
+            px, py = -px, -py
+        notas.append({"tipo": "nota",
+                      "x": porta.x + math.cos(dentro) * recuo + px * desvio,
+                      "y": porta.y + math.sin(dentro) * recuo + py * desvio,
+                      "texto": f"{dn:g}"})
+    return notas
+
+
+def luva_pvc(dn_mm, junta="BOLSA"):
+    """Luva: corpo curto com uma bolsa em cada ponta.
+
+    A casa escreve o DN nas duas pontas mesmo sendo o mesmo numero - e o que
+    diz que a peca nao e reducao.
+    """
+    comp = _cota_casa("LUVA", dn_mm, junta, "comprimento_mm") or dn_mm * 1.2
+    externo = _cota_casa("LUVA", dn_mm, junta, "d_externo_mm") or dn_mm * 1.18
+    r = externo / 2 / CINTA
+    el = [_p(f"M0 {-r:.1f} H{comp:.1f}"), _p(f"M0 {r:.1f} H{comp:.1f}"),
+          _p(f"M0 {-r:.1f} V{r:.1f}"), _p(f"M{comp:.1f} {-r:.1f} V{r:.1f}")]
+    if junta == "BOLSA":
+        el += bolsa(0, dn_mm, externo, "entrada")
+        el += bolsa(comp, dn_mm, externo, "saida")
+    else:
+        # sem cinta por fora, a bolsa tem de aparecer por dentro: o furo e o
+        # diametro do TUBO, e a crista no meio e onde as duas pontas param.
+        # Sem isso a luva grande sai um quadrado e nao se le como peca
+        el += [_p(f"M0 {-dn_mm/2:.1f} H{comp:.1f}", "malha"),
+               _p(f"M0 {dn_mm/2:.1f} H{comp:.1f}", "malha"),
+               _p(f"M{comp/2:.1f} {-dn_mm/2:.1f} V{dn_mm/2:.1f}", "malha")]
+    el.append(_p(f"M{-comp*0.2:.1f} 0 H{comp*1.2:.1f}", "centro"))
+    dn_pol = _pvc_em_polegada(dn_mm)
+    portas = [Porta("entrada", 0, 0, 180, dn_pol),
+              Porta("saida", comp, 0, 0, dn_pol)]
+    el += _dn_nas_pontas(portas, (dn_mm, dn_mm), comp * 0.30, r * 0.5)
+    return _montar("LUVA", f'luva {junta.lower()} DN{dn_mm:g}', el, portas,
+                   "casa", {"dn_mm": dn_mm, "junta": junta})
+
+
+def luva_reducao(dn_maior, dn_menor, junta="BOLSA"):
+    """Luva de reducao: duas bolsas de bitola diferente e o cone entre elas.
+
+    A casa desenha as duas bolsas empilhadas com a transicao conica no meio, e
+    escreve a bitola de cada lado - 100 embaixo, 50 em cima. E isso que evita
+    ligar do lado errado.
+    """
+    comp = (_cota_casa("LUVA_REDUCAO", dn_maior, junta, "comprimento_mm",
+                       dn_menor)
+            or _cota_casa("LUVA_REDUCAO", dn_maior, junta, "comprimento_mm")
+            or dn_maior * 1.2)
+    externo = (_cota_casa("LUVA_REDUCAO", dn_maior, junta, "d_externo_mm",
+                          dn_menor)
+               or _cota_casa("LUVA_REDUCAO", dn_maior, junta, "d_externo_mm")
+               or dn_maior * 1.18)
+    ra = externo / 2 / CINTA
+    rb = ra * dn_menor / dn_maior
+    a, meio, b = comp * 0.42, comp * 0.20, comp * 0.38
+    el = [_polilinha([(0, -ra), (a, -ra), (a + meio, -rb), (comp, -rb)]),
+          _polilinha([(0, ra), (a, ra), (a + meio, rb), (comp, rb)]),
+          _p(f"M0 {-ra:.1f} V{ra:.1f}"), _p(f"M{comp:.1f} {-rb:.1f} V{rb:.1f}")]
+    if junta == "BOLSA":
+        el += bolsa(0, dn_maior, externo, "entrada")
+        el += bolsa(comp, dn_menor, rb * 2 * CINTA, "saida")
+    else:
+        # como na luva reta: sem cinta por fora, a bolsa aparece por dentro,
+        # e aqui sao duas - uma por bitola, com o cone entre elas
+        el += [_polilinha([(0, -dn_maior / 2), (a, -dn_maior / 2),
+                           (a + meio, -dn_menor / 2), (comp, -dn_menor / 2)],
+                          "malha"),
+               _polilinha([(0, dn_maior / 2), (a, dn_maior / 2),
+                           (a + meio, dn_menor / 2), (comp, dn_menor / 2)],
+                          "malha")]
+    el.append(_p(f"M{-comp*0.2:.1f} 0 H{comp*1.2:.1f}", "centro"))
+    portas = [Porta("maior", 0, 0, 180, _pvc_em_polegada(dn_maior)),
+              Porta("menor", comp, 0, 0, _pvc_em_polegada(dn_menor))]
+    el += _dn_nas_pontas(portas, (dn_maior, dn_menor), comp * 0.26, rb * 0.5)
+    return _montar("LUVA_REDUCAO",
+                   f'luva red DN{dn_maior:g}×{dn_menor:g}', el, portas, "casa",
+                   {"dn_mm": dn_maior, "dn_menor_mm": dn_menor, "junta": junta})
+
+
+# Raio do arco em raios de tubo. A curva injetada e apertada, e o limite quem
+# da e a peca soldavel grande: a de DN225 mede 362 mm de envelope, e com raio
+# acima de 2,1 r a peca nao caberia dentro da propria medida.
+RAIO_CURVA = 1.8
+
+
+def _paredes_de_curva(entrada, reta, angulo, r, lado, raio):
+    """As duas paredes e o eixo de uma curva lisa de duas pernas dadas.
+
+    entrada e a reta antes do arco, reta a de depois dele. Sao duas e nao uma
+    porque a casa mede DOIS envelopes, e no bloco dela as pernas nao sao
+    iguais - a de 45 grau tem a de entrada bem maior.
+    """
+    cx, cy = entrada, raio * lado
+    a0 = -90 * lado
+    a1 = a0 + angulo * lado
+    direcao = math.radians(angulo * lado)
+
+    def caminho(desvio):
+        pontos = [(0, -desvio * lado), (cx, -desvio * lado)]
+        pontos += arco(cx, cy, raio + desvio, a0, a1)
+        pontos.append((pontos[-1][0] + math.cos(direcao) * reta,
+                       pontos[-1][1] + math.sin(direcao) * reta))
+        return pontos
+
+    return caminho(r), caminho(-r), caminho(0.0), direcao
+
+
+def _resolver_pernas(medir, alvo_largura, alvo_altura, minimo):
+    """As duas pernas que produzem a caixa medida - Newton com jacobiano por
+    diferenca finita.
+
+    Sao duas incognitas e duas medidas, entao da para fechar exato em vez de
+    escolher uma perna e aceitar o erro na outra. Devolve tambem o residuo,
+    porque quem chama testa as duas trocas de eixo e fica com a melhor.
+    """
+    e = s = max(alvo_largura, alvo_altura) * 0.4
+    for _ in range(24):
+        largura, altura = medir(e, s)
+        dl, da = alvo_largura - largura, alvo_altura - altura
+        if abs(dl) < 0.2 and abs(da) < 0.2:
+            break
+        l1, a1 = medir(e + 1.0, s)
+        l2, a2 = medir(e, s + 1.0)
+        j11, j21, j12, j22 = l1 - largura, a1 - altura, l2 - largura, a2 - altura
+        det = j11 * j22 - j12 * j21
+        if abs(det) < 1e-9:
+            break
+        e = max(e + (dl * j22 - j12 * da) / det, minimo)
+        s = max(s + (j11 * da - dl * j21) / det, minimo)
+    largura, altura = medir(e, s)
+    return e, s, abs(alvo_largura - largura) + abs(alvo_altura - altura)
+
+
+def curva_pvc(dn_mm, angulo=90, junta="BOLSA", sentido=1):
+    """Curva injetada: arco liso tangente as duas pernas.
+
+    Nao tem gomo. Gomo e de chapa soldada; essa peca e injetada, e o bloco da
+    casa desenha o arco liso - e essa a diferenca de traco entre a linha de
+    aco e a de PVC.
+
+    O que a casa mede sao os dois ENVELOPES da peca, nao as pernas. Duas
+    medidas e duas pernas, entao da para fechar exato: as pernas sao resolvidas
+    contra as duas medidas de uma vez.
+
+    Qual envelope caiu no x e qual no y depende so de como o bloco foi posado -
+    a curva de 45 da casa esta de pe, com o lado maior no y. Por isso as duas
+    trocas de eixo sao tentadas e fica a que fecha melhor.
+    """
+    variantes = (f"{angulo}/{junta}", f"{angulo}/SOLDA", f"{angulo}/BOLSA")
+
+    def medida(significado):
+        for variante in variantes:
+            valor = _cota_casa("CURVA", dn_mm, variante, significado)
+            if valor:
+                return valor
+        return None
+
+    env_x, env_y = medida("envelope_x_mm"), medida("envelope_y_mm")
+    r = dn_mm / 2
+    externo = dn_mm * 1.16
+    raio = r * RAIO_CURVA
+    minimo = r * 0.15
+    lado = -1 if sentido > 0 else 1          # -1 = vira para cima na tela
+
+    def cintas(centro, direcao):
+        """As duas cintas da peca, entrada e saida - vazio na soldavel."""
+        if junta != "BOLSA":
+            return []
+        fim = centro[-1]
+        return [(0.0, 0.0, 0.0), (fim[0], fim[1], direcao + math.pi)]
+
+    def montar(entrada, reta):
+        fora, dentro, centro, direcao = _paredes_de_curva(
+            entrada, reta, angulo, r, lado, raio)
+        pontos = fora + dentro
+        # a casa mede a caixa da peca INTEIRA, cinta incluida: sem ela a perna
+        # sai resolvida contra outra medida que a do bloco
+        for x, y, para_dentro in cintas(centro, direcao):
+            pontos += _cantos_de_cinta(x, y, para_dentro, externo,
+                                       max(externo * 0.09, 6.0))
+        return (fora, dentro, centro, direcao,
+                max(p[0] for p in pontos) - min(p[0] for p in pontos),
+                max(p[1] for p in pontos) - min(p[1] for p in pontos))
+
+    def medir(entrada, reta):
+        return montar(entrada, reta)[4:]
+
+    if env_x and env_y:
+        pernas = min((_resolver_pernas(medir, a, b, minimo)
+                      for a, b in ((env_x, env_y), (env_y, env_x))),
+                     key=lambda t: t[2])
+        entrada, reta = pernas[0], pernas[1]
+        envelope = max(env_x, env_y)
+    else:
+        # com um envelope so as duas pernas ficam iguais e o que se casa e o
+        # lado maior da caixa - e o que da para afirmar com uma medida
+        envelope = env_x or env_y or dn_mm * 2.4
+        entrada = reta = max(envelope - r, minimo)
+        for _ in range(8):
+            largura, altura = medir(entrada, reta)
+            obtido = max(largura, altura)
+            if abs(obtido - envelope) < 0.3:
+                break
+            entrada = reta = max(entrada * envelope / obtido, minimo)
+
+    fora, dentro, centro, direcao, _, _ = montar(entrada, reta)
+    el = [_polilinha(fora), _polilinha(dentro)]
+    fim = centro[-1]
+    # a sobra do eixo sai do TAMANHO da peca, nao da perna: numa curva de
+    # raio curto a perna e curta, e uma sobra proporcional a ela desaparecia
+    folga = max(envelope * 0.07, r * 0.5)
+    el.append(_polilinha([(-folga, 0)] + centro
+                         + [(fim[0] + math.cos(direcao) * folga,
+                             fim[1] + math.sin(direcao) * folga)],
+                        "centro"))
+    for x, y, para_dentro in cintas(centro, direcao):
+        el += _cinta(x, y, para_dentro, dn_mm, externo)
+    if junta != "BOLSA":
+        # na soldavel a ponta e o proprio corte do tubo: fecha com uma reta
+        el += [_polilinha([fora[0], dentro[0]]),
+               _polilinha([fora[-1], dentro[-1]])]
+    portas = [Porta("entrada", 0, 0, 180, _pvc_em_polegada(dn_mm)),
+              Porta("saida", fim[0], fim[1], angulo * lado,
+                    _pvc_em_polegada(dn_mm))]
+    el += _dn_nas_pontas(portas, (dn_mm, dn_mm),
+                         max(entrada * 0.5, r * 1.3), r * 0.5)
+    return _montar("CURVA", f'curva {angulo}° {junta.lower()} DN{dn_mm:g}',
+                   el, portas, "casa",
+                   {"dn_mm": dn_mm, "junta": junta, "angulo": angulo,
+                    "envelope_mm": envelope})
+
+
+def te_pvc(dn_mm, dn_derivacao=None, junta="BOLSA"):
+    """Te: corrido com bolsa nas duas pontas e derivacao com a sua.
+
+    O V que desce da derivacao ate o eixo e do bloco da casa: e a transicao
+    interna, onde o ramo encontra o corrido. Sem ele o te de lado fica igual a
+    um tubo com um toco em cima.
+    """
+    familia = "TE_REDUZIDO" if dn_derivacao and dn_derivacao != dn_mm else "TE"
+    menor = dn_derivacao if familia == "TE_REDUZIDO" else None
+    comp = (_cota_casa(familia, dn_mm, junta, "face_a_face_mm", menor)
+            or _cota_casa("TE", dn_mm, junta, "face_a_face_mm")
+            or dn_mm * 2.3)
+    alto = (_cota_casa(familia, dn_mm, junta, "altura_total_mm", menor)
+            or _cota_casa("TE", dn_mm, junta, "altura_total_mm")
+            or dn_mm * 1.7)
+    dn_der = dn_derivacao or dn_mm
+    r, rd = dn_mm / 2, dn_der / 2
+    externo = dn_mm * 1.18       # o diametro da cinta
+    rc = externo / 2 / CINTA     # o corpo, mais fino que ela
+    meio = comp / 2
+    # o corrido, com a bolsa em cada ponta
+    el = [_p(f"M0 {-rc:.1f} H{comp:.1f}"), _p(f"M0 {rc:.1f} H{comp:.1f}"),
+          _p(f"M0 {-rc:.1f} V{rc:.1f}"), _p(f"M{comp:.1f} {-rc:.1f} V{rc:.1f}")]
+    if junta == "BOLSA":
+        el += bolsa(0, dn_mm, externo, "entrada")
+        el += bolsa(comp, dn_mm, externo, "saida")
+    # a derivacao: sobe do corrido ate a altura total, com a bolsa dela
+    # a altura total que a casa mede vai do topo da cinta da derivacao ao
+    # fundo da cinta do corrido - e da cinta, nao do corpo
+    # na soldavel nao tem cinta: o fundo da peca e o proprio corpo
+    fundo = externo / 2 if junta == "BOLSA" else rc
+    topo = -(alto - fundo)
+    rde = dn_der * 1.18 / 2 / CINTA
+    el += [_p(f"M{meio - rde:.1f} {-rc:.1f} V{topo:.1f}"),
+           _p(f"M{meio + rde:.1f} {-rc:.1f} V{topo:.1f}"),
+           _p(f"M{meio - rde:.1f} {topo:.1f} H{meio + rde:.1f}")]
+    if junta == "BOLSA":
+        el += [{"tipo": "rect", "x": meio - rde * CINTA,
+                "y": topo, "w": rde * 2 * CINTA,
+                "h": max(rde * 0.18, 6.0), "classe": "corpo"}]
+    if junta != "BOLSA":
+        # como na luva: sem cinta por fora, a bolsa aparece por dentro
+        el += [_p(f"M0 {-r:.1f} H{comp:.1f}", "malha"),
+               _p(f"M0 {r:.1f} H{comp:.1f}", "malha"),
+               _p(f"M{meio - rd:.1f} {-r:.1f} V{topo:.1f}", "malha"),
+               _p(f"M{meio + rd:.1f} {-r:.1f} V{topo:.1f}", "malha")]
+    # o V da transicao interna
+    el.append(_p(f"M{meio - rde:.1f} {-rc:.1f} L{meio:.1f} {rc*0.55:.1f} "
+                 f"L{meio + rde:.1f} {-rc:.1f}", "malha"))
+    el.append(_p(f"M{-comp*0.16:.1f} 0 H{comp*1.16:.1f}", "centro"))
+    el.append(_p(f"M{meio:.1f} {topo - alto*0.14:.1f} V{rc*1.3:.1f}", "centro"))
+    portas = [Porta("entrada", 0, 0, 180, _pvc_em_polegada(dn_mm)),
+              Porta("saida", comp, 0, 0, _pvc_em_polegada(dn_mm)),
+              Porta("derivacao", meio, topo, -90, _pvc_em_polegada(dn_der))]
+    el += _dn_nas_pontas(portas[:2], (dn_mm, dn_mm), comp * 0.20, rc * 0.5)
+    el.append({"tipo": "nota", "x": meio, "y": topo + alto * 0.16,
+               "texto": f"{dn_der:g}"})
+    rot = (f'tê DN{dn_mm:g}' if dn_der == dn_mm
+           else f'tê red DN{dn_mm:g}×{dn_der:g}')
+    return _montar(familia, f'{rot} {junta.lower()}', el, portas, "casa",
+                   {"dn_mm": dn_mm, "dn_derivacao_mm": dn_der, "junta": junta})
+
+
+def adaptador_flange(dn_mm):
+    """Colar soldavel de Plasson: pescoco e o ressalto que segura a flange.
+
+    E o mesmo papel do colar de PEAD termofundido, com outra ponta: aqui o
+    pescoco solda por encaixe em vez de topo a topo. O ressalto continua sendo
+    o que prende a flange solta.
+    """
+    comp = _cota_casa("ADAPTADOR_FLANGE", dn_mm, "", "comprimento_mm") or dn_mm
+    externo = (_cota_casa("ADAPTADOR_FLANGE", dn_mm, "", "d_externo_mm")
+               or dn_mm * 1.35)
+    r, rr = dn_mm / 2, externo / 2
+    esp = max(comp * 0.22, 10.0)
+    el = [_p(f"M0 {-r:.1f} H{comp - esp:.1f}"),
+          _p(f"M0 {r:.1f} H{comp - esp:.1f}"),
+          _p(f"M0 {-r:.1f} V{r:.1f}"),
+          {"tipo": "rect", "x": comp - esp, "y": -rr, "w": esp, "h": externo,
+           "classe": "corpo"},
+          _p(f"M0 {-r*0.72:.1f} H{comp:.1f}", "malha"),
+          _p(f"M0 {r*0.72:.1f} H{comp:.1f}", "malha")]
+    el.append(_p(f"M{-comp*0.25:.1f} 0 H{comp*1.25:.1f}", "centro"))
+    portas = [Porta("entrada", 0, 0, 180, _pvc_em_polegada(dn_mm)),
+              Porta("saida", comp, 0, 0, _pvc_em_polegada(dn_mm))]
+    # o DN uma vez so: a peca e curta, e as duas notas cairiam uma sobre a
+    # outra. Do lado da flange quem manda e a furacao, nao o DN do tubo
+    el += _dn_nas_pontas(portas[:1], (dn_mm,), comp * 0.45, r * 0.45)
+    return _montar("ADAPTADOR_FLANGE", f'adaptador p/ flange DN{dn_mm:g}',
+                   el, portas, "casa", {"dn_mm": dn_mm})
+
+
+def bucha_reducao(dn_maior, dn_menor):
+    """Bucha de reducao: entra na bolsa da maior e recebe a menor.
+
+    O bloco da casa desenha um corpo curto escalonado, sem cinta - bucha nao
+    tem bolsa para fora, ela E a bolsa.
+    """
+    comp = (_cota_casa("BUCHA_REDUCAO", dn_maior, "SOLDA", "comprimento_mm",
+                       dn_menor)
+            or _cota_casa("BUCHA_REDUCAO", dn_maior, "", "comprimento_mm")
+            or dn_maior * 0.6)
+    externo = (_cota_casa("BUCHA_REDUCAO", dn_maior, "SOLDA", "d_externo_mm",
+                          dn_menor)
+               or _cota_casa("BUCHA_REDUCAO", dn_maior, "", "d_externo_mm")
+               or dn_maior)
+    ra = externo / 2
+    rb = dn_menor / 2
+    # O bloco da casa desenha a bucha como um retangulo simples: ela nao tem
+    # bolsa para fora, ela E a bolsa. O que aparece dentro e o furo da menor.
+    el = [{"tipo": "rect", "x": 0, "y": -ra, "w": comp, "h": externo,
+           "classe": "corpo"},
+          _p(f"M0 {-rb:.1f} H{comp:.1f}", "malha"),
+          _p(f"M0 {rb:.1f} H{comp:.1f}", "malha")]
+    el.append(_p(f"M{-comp*0.3:.1f} 0 H{comp*1.3:.1f}", "centro"))
+    portas = [Porta("maior", 0, 0, 180, _pvc_em_polegada(dn_maior)),
+              Porta("menor", comp, 0, 0, _pvc_em_polegada(dn_menor))]
+    # aqui as duas bitolas vao EMPILHADAS, nao uma em cada ponta: a bucha e
+    # curta, a anotacao e em pixel fixo, e os dois numeros lado a lado
+    # encostam. Empilhado tambem le melhor - a bucha e a peca em que uma
+    # bitola esta por dentro da outra
+    el += [{"tipo": "nota", "x": comp / 2, "y": -ra * 0.42,
+            "texto": f"{dn_maior:g}"},
+           {"tipo": "nota", "x": comp / 2, "y": rb * 0.62,
+            "texto": f"{dn_menor:g}"}]
+    return _montar("BUCHA_REDUCAO", f'bucha red DN{dn_maior:g}×{dn_menor:g}',
+                   el, portas, "casa",
+                   {"dn_mm": dn_maior, "dn_menor_mm": dn_menor})
+
+
 # ------------------------------------------------------------------ PEAD
 # No PEAD o DN E o diametro externo: o tubo DN225 mede 225 mm por fora. Nao ha
 # tabela de DE a consultar como no aco - o numero do codigo ja e o do desenho.
@@ -672,6 +1178,40 @@ def tubo_pead(dn_mm, comprimento_mm=6000, pn=10):
     return _montar("TUBO", f'tubo PEAD DN{dn_mm:g} {comprimento_mm/1000:g} m',
                    el, portas, "descricao",
                    {"material": "PEAD", "dn_mm": dn_mm, "pn": pn})
+
+
+def tubo_pvc(dn_mm, comprimento_mm=6000, ponta="BOLSA"):
+    """A barra de PVC, 6 metros - a ponta e que diz como ela emenda.
+
+    Tres pontas na lista, e as tres estao na descricao:
+
+      JEI  junta elastica integrada: a bolsa ja vem moldada num lado, e o anel
+           de borracha mora dentro dela. Desenha bolsa de um lado so
+      PB   ponta e bolsa: a mesma coisa dita do jeito antigo
+      PP   ponta e ponta: os dois lados lisos, emenda com luva separada
+
+    Nao tem cota medida: a barra e a barra, e o que vale e o comprimento da
+    descricao. A parede sai do PN quando a descricao trouxer.
+    """
+    r = dn_mm / 2
+    externo = dn_mm * 1.16
+    el = [_p(f"M0 {-r:.1f} H{comprimento_mm:.1f}"),
+          _p(f"M0 {r:.1f} H{comprimento_mm:.1f}"),
+          _p(f"M0 {-r:.1f} V{r:.1f}"),
+          _p(f"M{comprimento_mm:.1f} {-r:.1f} V{r:.1f}")]
+    if ponta == "BOLSA":
+        el += bolsa(0, dn_mm, externo, "entrada")
+    folga = max(comprimento_mm * 0.015, dn_mm)
+    el.append(_p(f"M{-folga:.0f} 0 H{comprimento_mm + folga:.0f}", "centro"))
+    dn_pol = _pvc_em_polegada(dn_mm)
+    portas = [Porta("entrada", 0, 0, 180, dn_pol),
+              Porta("saida", comprimento_mm, 0, 0, dn_pol)]
+    el += _dn_nas_pontas(portas[:1], (dn_mm,), comprimento_mm * 0.10, r * 0.5)
+    ficha = "bolsa" if ponta == "BOLSA" else "ponta lisa"
+    return _montar("TUBO",
+                   f'tubo PVC DN{dn_mm:g} {comprimento_mm/1000:g} m {ficha}',
+                   el, portas, "descricao",
+                   {"material": "PVC", "dn_mm": dn_mm, "ponta": ponta})
 
 
 def colar_pead(dn_mm, pn=10, norma="NBR PN16"):

@@ -622,15 +622,16 @@ Ficam de fora em vez de estimados — houve uma versão deste motor que estimava
 a/b/c por ajuste sobre a tabela da Megabloc, e ela foi apagada no dia em que o
 manual da Meganorm chegou. Estimativa não sobrevive à folha.
 
-### Onde isso chegou### Onde isso chegou
+### Onde isso chegou
 
 `tools/conferir_cobertura.py` tenta desenhar cada código do catálogo:
 
-> **1.237 de 5.157 códigos saem desenhados** — eram 919 antes destas famílias.
+> **1.487 de 5.157 códigos saem desenhados** — eram 919 antes destas
+> famílias, e 1.237 antes das de milímetro (4.7).
 
-O que ainda não sai não é falha de símbolo: 1.764 códigos não têm DN na
-descrição, 611 não têm família, e o resto é PVC, filtro e quadro elétrico —
-fora do escopo de sucção e recalque.
+O que ainda não sai quase nunca é falha de símbolo: **2.265** códigos não têm
+DN na descrição e **1.040** não têm família — e o resto é filtro e quadro
+elétrico, fora do escopo de sucção e recalque.
 
 ## 4.4 DXF: o motor produz a biblioteca de bloco, não concorre com ela
 
@@ -688,7 +689,7 @@ Isso obrigou a fechar uma ponte que estava só na ferramenta de conferência:
 código e a descrição nos `params`. É a mesma ponte que o contador de cobertura
 usa, agora numa casa só.
 
-`--catalogo` exporta a biblioteca inteira: **1.237 blocos, um por código**.
+`--catalogo` exporta a biblioteca inteira: **1.487 blocos, um por código**.
 `--dn 8` exporta os 175 códigos de 8". Peça que só existe no desenho — um tubo
 de 500 mm cortado na obra — não tem código, e cai no rótulo.
 
@@ -826,8 +827,8 @@ leitura ruim.
 O que a tabela abre: 138 cotas em 10 famílias — CURVA, TE, TE_REDUZIDO, LUVA,
 LUVA_CORRER, LUVA_REDUCAO, ADAPTADOR, ADAPTADOR_FLANGE, BUCHA_REDUCAO e
 FLANGE, em bolsa, solda, rosca e correr. São as famílias dos **207 códigos em
-milímetro** que hoje não desenham. Os símbolos ainda não existem; a cota deles,
-agora, sim.
+milímetro** que hoje não desenham. A cota deles saiu aqui; os símbolos, na
+4.7.
 
 ### Tubo de rolo não é peça
 
@@ -840,6 +841,92 @@ A regra agora está em `motor/desenho.py`: tubo de rolo não desenha, e
 comprimento acima da barra máxima que a casa compra (12 m) não desenha e diz
 para conferir o cadastro. Custou 25 códigos na cobertura — **1.237** — e os 25
 não eram peça.
+
+## 4.7 Os símbolos em milímetro, montados contra a medida
+
+Com a tabela medida na mão, as nove peças de PVC/Plasson foram desenhadas:
+tubo, luva, luva de redução, curva, tê, tê reduzido, adaptador para flange e
+bucha de redução. Três convenções de traço saíram dos blocos da casa e não da
+minha cabeça:
+
+**Curva de PVC é arco liso, não gomo.** O gomo é chapa de aço soldada — a
+peça é cortada em fatias e as fatias são soldadas, e por isso o gomo aparece.
+A peça injetada sai de molde: o traço é um arco tangente às duas pernas, com
+o canto interno arredondado. Desenhar gomo numa curva de PVC é desenhar um
+processo de fabricação que não existe.
+
+**Bolsa é uma cinta curta na ponta da peça.** É a assinatura da peça de
+encaixe, como a flange é a da peça de aço. Quem olha de lado reconhece a peça
+pela cinta antes de ler o nome.
+
+**Cada ponta carrega o seu DN escrito por dentro.** A casa escreve os dois
+mesmo quando são iguais — é o que diz que a peça *não* é redução.
+
+### A inversão: aqui a medida manda
+
+Na linha de aço a folha do fabricante manda e a medição do DXF é informativa
+— é o que a 4.6 diz e continua valendo. Em milímetro é o contrário: **não
+existe folha**, a medida da casa *é* a cota, e então o desenho tem obrigação
+de voltar nela. Isso é uma afirmação conferível, e `tools/conferir_pvc.py`
+confere: monta cada peça na bitola medida e compara a caixa do corpo com a
+medida.
+
+    52 peças medidas · 102 cotas comparadas
+    |Δ| médio  0.00%  ·  pior  0.07%  ·  102 dentro de 1%
+
+### A curva: duas medidas, duas pernas
+
+A casa mede dois envelopes da curva, não a perna. Antes eu resolvia uma perna
+só contra o envelope maior e aceitava o erro no outro lado — dava 0% na de 90°
+e −53% na de 45°, porque a de 45° da casa tem a perna de entrada bem maior que
+a de saída. Duas medidas e duas incógnitas fecham exato: as pernas saem de um
+Newton com jacobiano por diferença finita, e o arco fica com raio fixo em
+1,8 raio de tubo.
+
+O limite do raio veio da própria medida: a curva **soldável de DN225** mede
+362 mm de envelope, e com raio acima de 2,1 r a peça não caberia dentro da
+própria medida. Uma medida amarrando uma constante de forma é melhor que um
+chute.
+
+E uma percepção de pose: **a curva não tem pose canônica.** A de 45° da casa
+está de pé, a minha entra pela horizontal, e o mesmo envelope cai num eixo
+diferente em cada uma. Então o que se compara é o *par* de envelopes, não o
+eixo em que cada um caiu — e as duas trocas de eixo são tentadas, ficando a
+que fecha melhor.
+
+### O que a conferência encontrou
+
+Cinco erros, e nenhum deles apareceria olhando o desenho:
+
+| onde | o erro |
+|---|---|
+| `conferir_pvc.py` | li `limites()` como par de cantos, e ela devolve `x, y, w, h`. Toda altura saía 50–80% maior — e por sorte toda largura batia, porque as peças começam em x=0 |
+| a cinta | o `d_externo` medido é o da **bolsa**, não do corpo: a bolsa é o ponto mais gordo da peça e é nela que a trena encosta. O corpo agora sai 5% mais fino, e a altura fecha exata |
+| `cotas.cota_da_casa` | a corrente de chaves não tinha `(família, "", dn, dn_menor)`. A bucha foi medida **com o par mas sem junta no nome** e caía na estimativa — 62 mm virava 66 |
+| a nota | a anotação sai em pixel fixo, fora do `transform`, e ninguém girava a posição dela. Numa peça posada de pé o DN ia para outro canto da célula — foi assim que o DN da curva de 45° apareceu fora da peça |
+| a peça soldável | sem cinta por fora, a luva de DN225 saía um quadrado limpo. A bolsa dela tem de aparecer **por dentro**: o furo do tubo e a crista onde as duas pontas param |
+
+### Empate também é leitura errada
+
+A conferência da tabela medida já recusava série que *diminui* com a bitola.
+Faltava a que **empata**: duas bitolas seguidas com a mesma cota é o mesmo
+rótulo lido duas vezes, não peça estranha. Com a série agrupada por bitola —
+senão toda redução parece empatada, porque a mesma bitola aparece uma vez por
+par — sobra uma de verdade para a casa olhar:
+
+| família | cotas |
+|---|---|
+| TE SOLDA | 75:169 · 90:199 · 110:239 · **125:339 · 160:339** · 225:465 |
+
+Um tê de DN160 não mede o mesmo que um de DN125. Fica registrado, não
+corrigido: quem mede é a casa.
+
+### Onde isso chegou
+
+As nove peças entraram na folha de símbolos como seção própria, e a barra de
+PVC entrou junto: `JEI` e `PB` têm bolsa num lado, `PP` é lisa dos dois — está
+na descrição, não precisa de tabela. São 37 símbolos por bitola, todos com
+bloco de DXF conferido, e a cobertura foi de **1.237 para 1.487** códigos.
 
 ## 5. O que a peça puxa: um mecanismo só
 
