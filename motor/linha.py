@@ -7,13 +7,14 @@ ferragem derivada.
 """
 from collections import OrderedDict
 
-from . import corte, ferragem, regras
+from . import corte, cotas, ferragem, regras
 
 
 class Peca:
     """Uma peca instanciada na linha, com suas portas."""
 
-    def __init__(self, item, comprimento_mm=None, rotulo=None):
+    def __init__(self, item, comprimento_mm=None, rotulo=None, fonte=None,
+                 sentido=1):
         self.item = item                      # registro do catalogo
         self.sap = item["sap"]
         self.descricao = item["descricao"]
@@ -21,10 +22,50 @@ class Peca:
         self.material = item["material"]
         self.unidade_dn = item["unidade_dn"] or "in"
         self.angulo = item["angulo"]
+        self.fonte = fonte or cotas.PADRAO   # fabricante da peca comprada
+        self.sentido = sentido               # +1 sobe, -1 desce: espelha a curva
+        self.fonte_cota = None               # de quem veio a cota que entrou
         self.comprimento_mm = (comprimento_mm or item.get("comprimento_mm")
-                               or self._face_a_face() or 0)
+                               or self._da_tabela() or self._face_a_face() or 0)
         self.rotulo = rotulo
         self.portas = self._portas()
+
+    def _chave_de_cota(self):
+        """(familia, variante, significado) para procurar na tabela de cotas."""
+        if self.familia == "CURVA" and self.angulo:
+            return "CURVA", str(self.angulo), "perna_mm"
+        if self.familia == "CRIVO":
+            # a Netafim so faz o conico, o Irrigafour so o cesto
+            return "CRIVO", ("cesto" if self.fonte == "IRRIGAFOUR" else "cone"), \
+                "comprimento_mm"
+        if self.familia in ("MANIFOLD", "ARTICULADOR"):
+            return self.familia, "", "comprimento_mm"
+        return self.familia, "", "face_a_face_mm"
+
+    def _da_tabela(self):
+        """A cota do fabricante. E aqui que o padrao da casa entra no desenho."""
+        if self.unidade_dn != "in":
+            return None
+        bitolas = [d for d in (self.item["dn"] or []) if isinstance(d, (int, float))]
+        if not bitolas:
+            return None
+        familia, variante, significado = self._chave_de_cota()
+        menor = min(bitolas) if len(bitolas) > 1 else None
+        valor, fonte = cotas.cota_com_fonte(familia, max(bitolas), variante,
+                                            significado, self.fonte, menor)
+        self.fonte_cota = fonte
+        return valor
+
+    def avancos(self):
+        """Quanto a peca avanca antes e depois de girar a direcao.
+
+        So a curva tem duas pernas - entra por uma e sai pela outra, e o giro
+        acontece no meio. O resto avanca tudo antes e nao gira nada.
+        """
+        comp = self.comprimento_mm or 0
+        if self.familia == "CURVA" and self.angulo:
+            return comp, comp
+        return comp, 0.0
 
     def _face_a_face(self):
         """Valvula wafer tem espessura de corpo tabelada na ficha do fabricante -
@@ -150,23 +191,36 @@ class Linha:
     def geometria(self):
         """Posicao acumulada de cada peca no eixo da linha (mm) e angulo corrente.
 
-        E o que o desenho consome: nao e CAD, e a soma dos comprimentos
-        face-a-face com as curvas girando a direcao.
+        Nao e CAD: e a soma vetorial das cotas, com a curva girando a direcao
+        entre as suas duas pernas. Nenhuma peca tem posicao propria - a posicao
+        e consequencia de quem veio antes, e e isso que faz arrastar uma peca
+        no desenho virar "alongar o tubo vizinho" na lista.
         """
+        import math
+
         x = y = 0.0
         direcao = 0.0
         pontos = []
-        import math
 
         for peca in self.pecas:
-            comp = peca.comprimento_mm or 300  # peca curta padrao p/ conexao
-            nx = x + comp * math.cos(math.radians(direcao))
-            ny = y + comp * math.sin(math.radians(direcao))
-            pontos.append({"peca": peca, "de": (x, y), "para": (nx, ny),
-                           "direcao": direcao})
+            antes, depois = peca.avancos()
+            nx = x + antes * math.cos(math.radians(direcao))
+            ny = y + antes * math.sin(math.radians(direcao))
+            ponto = {"peca": peca, "de": (x, y), "para": (nx, ny),
+                     "direcao": direcao, "direcao_saida": direcao,
+                     "canto": None, "fonte_cota": peca.fonte_cota}
             x, y = nx, ny
+
             if peca.familia == "CURVA" and peca.angulo:
-                direcao += peca.angulo
+                direcao += peca.angulo * peca.sentido
+                ponto["direcao_saida"] = direcao
+                if depois:
+                    ponto["canto"] = (x, y)
+                    x += depois * math.cos(math.radians(direcao))
+                    y += depois * math.sin(math.radians(direcao))
+                    ponto["para"] = (x, y)
+
+            pontos.append(ponto)
         return pontos
 
     # ---------------- saidas ------------------------------------------------

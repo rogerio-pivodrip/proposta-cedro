@@ -302,6 +302,37 @@ PN16 tem 8; 8" PN10 tem 8 furos e PN16 tem 12. Nas outras bitolas da casa, PN10
 e PN16 furam igual. Como o parafuso e a porca saem da furação, especificar PN10
 onde a casa usa PN16 erra a ferragem de 8" em um terço.
 
+### Decidido: o padrão da casa é Irrigafour
+
+A cota que entra no desenho passa a sair do Irrigafour. A Netafim fica como
+alternativa declarada, para quando a peça comprada for dela — a tabela
+`data/cotas.csv` guarda as duas com a coluna `fonte`, e o motor pergunta por
+uma porta só:
+
+```python
+cotas.cota("REDUCAO_CONCENTRICA", 8)                    # 150 mm, Irrigafour
+cotas.cota("REDUCAO_CONCENTRICA", 8, fonte="NETAFIM")   # 300 mm
+cotas.cota("CURVA", 8, "90", "perna_mm")                # 335 mm
+```
+
+A peça carrega o fabricante (`Peca(item, fonte=...)`) e guarda de quem a cota
+veio (`fonte_cota`), porque o padrão cai para o outro fornecedor quando o
+primeiro não tem a peça — e o desenho precisa poder avisar quando isso
+aconteceu. São **707 cotas**: 545 do Irrigafour, 162 do caderno Netafim.
+
+**A redução excêntrica precisa do par, não da bitola maior.** Descoberto ao
+ligar a tabela no motor: a excêntrica de 8" mede 200 mm contra 6" e **300 mm
+contra 3"** — o cone mais fechado precisa de corpo mais longo. A concêntrica
+não tem isso (150 mm em quase tudo). Então a chave da cota é
+`(fabricante, família, variante, DN maior, DN menor)`, com o par caindo para o
+valor mais comum da bitola quando não estiver listado.
+
+**A curva passou a ter duas pernas.** A `geometria()` avançava o comprimento e
+depois girava — o que desenha uma perna só. Agora a curva avança a perna, gira,
+e avança a segunda perna: uma curva de 90° de 8" ocupa 335 mm em cada direção.
+É a `sentido = +1 | -1` que espelha a curva para cima ou para baixo, sem
+mexer no código da peça.
+
 ### As três camadas do desenho
 
 O que separa "símbolo paramétrico" de "clipart" é que a geometria é real:
