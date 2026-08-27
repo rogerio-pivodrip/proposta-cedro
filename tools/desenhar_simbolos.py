@@ -28,11 +28,13 @@ def elenco(dn):
     menor = {14: 12, 12: 10, 10: 8, 8: 6, 6: 4, 5: 4, 4: 3, 3: 2}.get(dn, 2)
     return [
         s.tubo(dn, 1000),
-        s.curva(dn, 90),
-        s.curva(dn, 60),
-        s.curva(dn, 45),
-        s.curva(dn, 30),
-        s.curva_saida(dn, 90, 2),
+        # o catalogo desenha a curva de pe, entrando por baixo: aqui e so a
+        # pose da folha, a peca e a mesma que a montagem usa deitada
+        s.girado(s.curva(dn, 90, -1), -90),
+        s.girado(s.curva(dn, 60, -1), -90),
+        s.girado(s.curva(dn, 45, -1), -90),
+        s.girado(s.curva(dn, 30, -1), -90),
+        s.girado(s.curva_saida(dn, 90, 2, sentido=-1), -90),
         s.te(dn, 2),
         s.reducao(dn, menor, "CONCENTRICA"),
         s.reducao(dn, menor, "EXCENTRICA", "topo"),
@@ -48,11 +50,15 @@ def elenco(dn):
 
 
 def desenhar(elemento):
-    girar = elemento.get("girar")
     abre = fecha = ""
+    fora = elemento.get("girar_fora")
+    if fora:
+        abre += f'<g transform="rotate({fora:g})">'
+        fecha += "</g>"
+    girar = elemento.get("girar")
     if girar:
-        abre = f'<g transform="rotate({girar[0]:g} {girar[1]:.1f} {girar[2]:.1f})">'
-        fecha = "</g>"
+        abre += f'<g transform="rotate({girar[0]:g} {girar[1]:.1f} {girar[2]:.1f})">'
+        fecha = "</g>" + fecha
     classe = elemento.get("classe", "corpo")
     if elemento["tipo"] == "path":
         corpo = f'<path class="{classe}" d="{elemento["d"]}"/>'

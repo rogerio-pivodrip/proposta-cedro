@@ -109,86 +109,82 @@ def placa(x, dn_pol, y=0.0, direcao=0.0, norma="NBR PN16", lado="entrada"):
 
 
 def giro(x, perna, angulo, dn_pol, sentido=1, y=0.0, gomos=4):
-    """Curva de gomos - que e como a curva de aco zincado e feita de verdade.
+    """Curva de gomos: N chapas retas soldadas, com N-1 dobras.
 
-    Nao e um arco liso: sao chapas cortadas e soldadas. Uma curva de 90 com 4
-    gomos vira 15 + 30 + 30 + 15 graus, exatamente como o caderno Netafim
-    desenha (Z1 a Z4). As pontas viram metade do que os gomos do meio viram.
+    Cada gomo e um cilindro reto - nada de arco. As direcoes sao 0, um passo,
+    dois passos, ate o angulo cheio, entao um gomo vira sempre o mesmo tanto.
+    O primeiro gomo sai na direcao da entrada e o ultimo chega na direcao da
+    saida, que e por isso que a flange encosta perpendicular nas duas pontas.
 
-    Devolve as paredes, as soldas entre gomos, e a saida (x, y, direcao).
+    A dobra fica onde as retas de dois gomos vizinhos se cruzam - e a mesma
+    construcao do serralheiro: duas chapas cortadas no meio do angulo.
     """
     r = DE_TUBO.get(dn_pol, 100) / 2
-    t = math.radians(angulo)
-    # O gomo ocupa quase toda a perna: sobra so um toco reto para a flange.
-    # Com raio pequeno as pernas retas comiam os gomos das pontas e a curva
-    # saia com dois gomos largos no meio e dois fiapos nas beiras.
-    recuo = perna * 0.86
-    raio = max(recuo / math.tan(t / 2), r * 1.05)
-    recuo = raio * math.tan(t / 2)
-    if recuo > perna * 0.92:
-        recuo = perna * 0.92
-        raio = recuo / math.tan(t / 2)
-
-    vx, vy = x + perna, y
-    # cortes: as pontas viram metade do gomo do meio
     n = max(int(gomos), 2)
-    passo = angulo / (n - 1)
-    cortes = [0.0]
-    for i in range(n):
-        cortes.append(cortes[-1] + (passo / 2 if i in (0, n - 1) else passo))
-    cortes = [c for c in cortes if c <= angulo + 1e-6]
-    if abs(cortes[-1] - angulo) > 1e-6:
-        cortes.append(angulo)
+    total = math.radians(angulo)
+    passo = total / (n - 1)
+    meia = math.tan(passo / 2)
 
-    # centro do arco, do lado de dentro da curva
-    t1 = (vx - recuo, vy)
-    centro = (t1[0], t1[1] - raio * sentido)
-    pontos = []
-    for c in cortes:
-        a = math.radians(c) * sentido
-        # ponto do arco medido a partir de t1, girando em torno de centro
-        px = centro[0] + raio * math.sin(a) * sentido
-        py = centro[1] + raio * math.cos(a) * sentido
-        pontos.append((px, py))
-    inicio = (x, y)
-    dsx, dsy = math.cos(-t * sentido), math.sin(-t * sentido)
+    # raio de dobra: o toco reto na flange fica curto, o gomo domina a perna
+    raio = perna * 0.88 / math.tan(total / 2)
+    vx, vy = x + perna, y
+    centro = (vx - raio * math.tan(total / 2), vy - raio * sentido)
+
+    def direcao(k):
+        a = -k * passo * sentido
+        return math.cos(a), math.sin(a)
+
+    dobras = []
+    for k in range(n - 1):
+        a = k * passo * sentido
+        tangente = (centro[0] + raio * math.sin(a) * sentido,
+                    centro[1] + raio * math.cos(a) * sentido)
+        dx, dy = direcao(k)
+        dobras.append((tangente[0] + raio * meia * dx,
+                       tangente[1] + raio * meia * dy))
+
+    dsx, dsy = direcao(n - 1)
     fim = (vx + perna * dsx, vy + perna * dsy)
-    t2 = (vx + recuo * dsx, vy + recuo * dsy)
-    # pontos ja contem os dois pontos de tangencia (corte 0 e corte final):
-    # repeti-los criava dois segmentos a mais e a curva de 4 gomos aparecia
-    # com 6. A linha e: perna de entrada, os N gomos, perna de saida.
-    centro_linha = [inicio] + pontos + [fim]
+    centro_linha = [(x, y)] + dobras + [fim]
 
     def normal(a, b):
         dx, dy = b[0] - a[0], b[1] - a[1]
-        n = math.hypot(dx, dy) or 1
-        return (-dy / n, dx / n)
+        c = math.hypot(dx, dy) or 1
+        return (-dy / c, dx / c)
 
     def parede(lado):
-        saida = []
+        # cada gomo deslocado de meio diametro; a dobra e o encontro das duas
+        # retas vizinhas, nao a media - senao a parede estrangula na dobra
+        retas = []
         for i in range(len(centro_linha) - 1):
             a, b = centro_linha[i], centro_linha[i + 1]
             nx, ny = normal(a, b)
-            saida.append(((a[0] + nx * r * lado, a[1] + ny * r * lado),
+            retas.append(((a[0] + nx * r * lado, a[1] + ny * r * lado),
                           (b[0] + nx * r * lado, b[1] + ny * r * lado)))
-        # une os segmentos pelo encontro aproximado: o proprio vertice deslocado
-        pts = [saida[0][0]]
-        for i, (_, b) in enumerate(saida):
-            pts.append(b if i == len(saida) - 1 else
-                       ((b[0] + saida[i + 1][0][0]) / 2,
-                        (b[1] + saida[i + 1][0][1]) / 2))
-        return pts
+        pontos = [retas[0][0]]
+        for i in range(len(retas) - 1):
+            pontos.append(_cruzamento(retas[i], retas[i + 1]) or retas[i][1])
+        pontos.append(retas[-1][1])
+        return pontos
 
     fora, dentro = parede(1 * sentido), parede(-1 * sentido)
     caminho = lambda pts: "M" + " L".join(f"{p[0]:.1f} {p[1]:.1f}" for p in pts)
     elementos = [_p(caminho(fora)), _p(caminho(dentro))]
-    # solda so entre gomo e gomo: N gomos dao N-1 soldas. As juntas com as
-    # pernas nao aparecem, que e onde o tubo continua reto.
-    for i in range(2, len(fora) - 2):
+    for i in range(1, len(fora) - 1):
         elementos.append(_p(f"M{fora[i][0]:.1f} {fora[i][1]:.1f} "
                             f"L{dentro[i][0]:.1f} {dentro[i][1]:.1f}", "solda"))
     return (elementos, (fim[0], fim[1], -angulo * sentido), (centro, raio),
             centro_linha)
+
+
+def _cruzamento(r1, r2):
+    (x1, y1), (x2, y2) = r1
+    (x3, y3), (x4, y4) = r2
+    d = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3)
+    if abs(d) < 1e-9:
+        return None
+    t = ((x3 - x1) * (y4 - y3) - (y3 - y1) * (x4 - x3)) / d
+    return (x1 + t * (x2 - x1), y1 + t * (y2 - y1))
 
 
 def eixo_de(pontos, sobra=60.0):
@@ -243,9 +239,9 @@ def limites(elementos):
         elif e["tipo"] == "circulo":
             pontos = [(e["cx"] - e["r"], e["cy"] - e["r"]),
                       (e["cx"] + e["r"], e["cy"] + e["r"])]
-        girar = e.get("girar")
-        if girar:
-            ang, cx, cy = math.radians(girar[0]), girar[1], girar[2]
+        for ang_graus, cx, cy in ([e["girar"]] if e.get("girar") else []) + \
+                ([(e["girar_fora"], 0.0, 0.0)] if e.get("girar_fora") else []):
+            ang = math.radians(ang_graus)
             cos, sen = math.cos(ang), math.sin(ang)
             pontos = [(cx + (px - cx) * cos - (py - cy) * sen,
                        cy + (px - cx) * sen + (py - cy) * cos) for px, py in pontos]
@@ -593,20 +589,17 @@ def curva_saida(dn_pol, angulo=90, dn_saida=2, sentido=1, gomos=4):
         0, perna, angulo, dn_pol, sentido, gomos=gomos)
     r = DE_TUBO.get(dn_pol, 100) / 2
     rs = DE_TUBO.get(dn_saida, 60) / 2
-    # A saida e vertical, para cima: a ventosa fica em pe sobre a curva. Ela
-    # nasce no meio do giro, que e o ponto alto do corpo, e sobe reta - nao
-    # sai radial pelo dorso, senao a ventosa deitava.
-    # No comeco do giro, nao no meio: mais adiante o bocal bate na flange de
-    # saida, e a ventosa nao teria por onde subir.
-    inicio_giro = eixo_linha[1 + max((len(eixo_linha) - 3) // 3, 0)]
-    base = (inicio_giro[0], inicio_giro[1] - r)
-    haste = DE_TUBO.get(dn_saida, 60) * 2.4
-    topo = (base[0], base[1] - haste)
-    el.append(_p(f"M{base[0] - rs:.1f} {base[1]:.1f} V{topo[1]:.1f}"))
-    el.append(_p(f"M{base[0] + rs:.1f} {base[1]:.1f} V{topo[1]:.1f}"))
+    # O bocal sai PARALELO a perna de entrada, na parede externa do ultimo
+    # gomo. Montada como o catalogo desenha - entrando por baixo e saindo de
+    # lado - a saida aponta para cima, e a ventosa fica em pe sobre a curva.
+    fora = sentido                            # parede externa do giro
+    ultima = eixo_linha[-2]
+    base = (ultima[0], ultima[1] + r * fora)
+    haste = DE_TUBO.get(dn_saida, 60) * 2.2
+    topo = (base[0] + haste, base[1])
+    el.append(_p(f"M{base[0]:.1f} {base[1] - rs:.1f} H{topo[0]:.1f}"))
+    el.append(_p(f"M{base[0]:.1f} {base[1] + rs:.1f} H{topo[0]:.1f}"))
     bocal = placa(topo[0], dn_saida, topo[1], lado="saida")
-    for e in bocal:
-        e["girar"] = (-90, topo[0], topo[1])
     el += bocal
     el += placa(0, dn_pol)
     saida_fl = placa(sx, dn_pol, sy, lado="saida")
@@ -614,11 +607,11 @@ def curva_saida(dn_pol, angulo=90, dn_saida=2, sentido=1, gomos=4):
         e["girar"] = (direcao, sx, sy)
     el += saida_fl
     el.append(_p(eixo_de(eixo_linha), "centro"))
-    el.append(_p(f"M{base[0]:.1f} {base[1] + 25:.1f} V{topo[1] - 30:.1f}",
+    el.append(_p(f"M{base[0] - 25:.1f} {base[1]:.1f} H{topo[0] + 30:.1f}",
                  "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol),
               Porta("saida", sx, sy, direcao, dn_pol),
-              Porta("derivacao", topo[0], topo[1], -90, dn_saida)]
+              Porta("derivacao", topo[0], topo[1], 0, dn_saida)]
     return _montar("CURVA_SAIDA",
                    f'curva {angulo}° {dn_pol:g}" c/ saída {dn_saida:g}"',
                    el, portas, fonte)
@@ -684,6 +677,38 @@ def orientar(lista):
         saida[i] = reducao(p["dn_maior"], p["dn_menor"], p["tipo"],
                            p["lado_plano"], p["crescente"])
     return saida
+
+
+def girado(simbolo, graus):
+    """O mesmo simbolo, virado - para mostrar a peca na pose do catalogo.
+
+    A geometria nao muda: e a folha que gira. O catalogo Irrigafour desenha a
+    curva entrando por baixo, na vertical, e saindo para cima; internamente o
+    motor desenha toda peca entrando pela esquerda, que e o que a montagem
+    espera.
+    """
+    rad = math.radians(graus)
+    cos, sen = math.cos(rad), math.sin(rad)
+
+    def vira(px, py):
+        return px * cos - py * sen, px * sen + py * cos
+
+    elementos = []
+    for e in simbolo.elementos:
+        novo = dict(e)
+        if e.get("girar"):
+            # ja tem giro proprio (a flange de saida): o giro da folha entra
+            # por fora, senao a peca gira mas a flange fica para tras
+            novo["girar_fora"] = graus
+        else:
+            novo["girar"] = (graus, 0.0, 0.0)
+        elementos.append(novo)
+    portas = []
+    for p in simbolo.portas:
+        x, y = vira(p.x, p.y)
+        portas.append(Porta(p.papel, x, y, p.direcao + graus, p.dn_pol))
+    return Simbolo(simbolo.familia, simbolo.rotulo, elementos, portas,
+                   limites(elementos), simbolo.fonte, simbolo.params)
 
 
 def montar(lista):
