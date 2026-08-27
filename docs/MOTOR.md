@@ -104,6 +104,99 @@ A terceira apareceu duas vezes e não cabia em "inserir adaptador":
 Cada resultado carrega o **motivo**, que é o que alimenta o aviso na lista. Isso
 já está certo no modelo atual e deve continuar: o motor nunca conserta calado.
 
+## 3.1 A solução de conectar
+
+Conectar não é comparar duas portas. É uma operação com **contexto**, que produz
+uma junção e **três validações no mesmo ato**.
+
+```python
+def conectar(porta_a, porta_b, contexto) -> Juncao
+```
+
+O `contexto` importa porque **o mesmo par de portas resolve diferente conforme
+onde está**. Já provado: uma redução de 8" para 5" é excêntrica se a bomba está
+deitada e concêntrica se está em pé. Sem contexto, o conector teria de escolher
+uma e errar metade das vezes.
+
+```python
+Contexto:
+    norma_da_linha       # NBR PN16 — o padrão da casa
+    material_vizinho     # para o parafuso: AZ×AZ, aço×Plasson, contra a bomba
+    orientacao_bomba     # decide excêntrica ou concêntrica na sucção
+    trecho               # casa de máquinas ou adutora — decide se K entra
+    posicao              # antes ou depois da bomba, entrada ou saída
+```
+
+### A junção que sai
+
+```python
+Juncao:
+    resultado     # ENCAIXA | TRANSICAO | TROCA | RECUSA
+    pecas         # o que entra no meio, se entrar
+    substituicao  # a peça trocada, se for troca
+    derivados     # ferragem, contra-flange, tirante
+    avisos        # cada um com severidade e motivo
+```
+
+### As três validações, nesta ordem
+
+Elas dependem umas das outras — não dá para inverter.
+
+**1. Conexão.** Tipo e norma das duas portas.
+
+| situação | resultado |
+|---|---|
+| tipo e norma iguais | encaixa |
+| uma ponta não declara norma | encaixa, na norma do vizinho — válvula, medidor e junta têm a norma definida no pedido |
+| normas diferentes | transição: adaptador |
+| tipos diferentes (flange × engate K) | transição, ou recusa se o trecho for casa de máquinas |
+| existe a mesma peça com a ponta certa | **troca**, não adapta |
+
+**2. Medida.** Três coisas diferentes, e só a primeira é o DN.
+
+| o que se valida | como |
+|---|---|
+| **DN** | pela identidade da bitola, não pelo número exibido: 225 mm e 8" são o mesmo DN200 |
+| **comprimento** | soma face a face das peças contra o vão disponível; o caderno de desenhos dá o face a face que a descrição não tem |
+| **trecho reto** | o hidrômetro exige 10 bitolas antes e 5 depois, e a contagem zera em qualquer peça que perturbe o fluxo |
+
+O segundo é o que transforma a lista em desenho: sem face a face não há vista
+lateral em escala, só sequência.
+
+**3. Acessórios.** Só faz sentido depois que a junção está resolvida — o
+parafuso depende de qual junta ficou, e a junta depende da negociação.
+
+| a junção virou | puxa |
+|---|---|
+| flangeada | junta plana + n parafusos + n porcas + 2n arruelas, com bitola e comprimento pelo contexto |
+| flange de PVC de um lado | contra-flange, e o kit do manual leva junta e ferragem |
+| válvula wafer no meio | 3 barras roscadas, ou mais se a furação exigir |
+| solda, rosca ou engate | nada |
+
+### Severidade, não sim ou não
+
+A validação **não bloqueia a lista**. O projetista precisa do rascunho mesmo com
+pendência, e é isso que hoje já funciona: o motor emite a lista e anota o que
+está aberto.
+
+| severidade | significa | exemplo |
+|---|---|---|
+| **erro** | a lista sai errada se ninguém olhar | não existe redução excêntrica de 5" para 4" |
+| **aviso** | resolve sozinho, mas alguém precisa saber | tirante contado como barra inteira |
+| **nota** | escolha registrada, sem pendência | redução excêntrica porque a bomba está deitada |
+
+Cada aviso carrega o **motivo**, nunca só o código. `"juncao 1: engate K não é
+usado nas montagens"` diz o que fazer; `"incompatível"` não diz nada.
+
+### Por que a validação mora na junção, e não na peça
+
+Uma peça sozinha nunca está errada. A `CURVA 90 AZ 8" FL NBR PN16 X K10` é uma
+peça legítima — ela só fica errada quando encontra uma flange NBR PN16 numa casa
+de máquinas. O erro nasce do encontro, então é no encontro que ele é detectado.
+
+Isso também é o que permite o **recálculo incremental**: mexeu numa peça,
+revalida só as duas junções vizinhas, não a linha inteira.
+
 ## 4. O que a peça puxa: um mecanismo só
 
 Hoje as derivações estão em quatro lugares diferentes. São todas o mesmo padrão
