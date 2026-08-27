@@ -203,7 +203,10 @@ rende 3 por barra. O motor lembra, em cada válvula, de pedi-la na norma da linh
 
 ### 4.3 Kits: peças que nunca vêm sozinhas
 
-Achado nos projetos: **flange de PVC é sempre par**.
+**A flange de PVC não prende no tubo sozinha** — precisa da contra-flange, que é
+o adaptador soldável. Uma para cada flange lançada na linha.
+
+Isso aparecia nos projetos antes de eu saber o porquê:
 
 | projeto | `FL PVC` | `ADAPTADOR P/FL … SOLDA` |
 |---|---|---|
@@ -211,10 +214,16 @@ Achado nos projetos: **flange de PVC é sempre par**.
 | Marcelo Amorim | 110 mm × 4 | 110 mm × 4 |
 | Lincoln Junqueira | 160 mm × 14 | 160 mm × 14 |
 
-Quantidades idênticas nos dois projetos. Logo: `FLANGE_PVC` é um kit
-(flange + adaptador de solda + junta + ferragem), lançado como uma peça só e
-explodido na lista. Vale o mesmo para conjuntos como `Retrolavagem 90mm`, que
-aparece na lista de peças como um item mas é uma montagem.
+Um a um, em dois projetos diferentes. E explica o número ímpar: o par vale por
+**ponta de tubo**, não por junta — quando o Plasson encontra um flange de aço ou
+de válvula, só o lado do Plasson leva o par.
+
+`data/kits_flange_pvc.csv` amarra os cinco pares que existem no catálogo
+(75, 90, 110, 160 e 225 mm) e `regras.contra_flange_de()` puxa a contra-flange
+sozinha, marcada como origem `contra-flange` na lista.
+
+Vale o mesmo para conjuntos como `Retrolavagem 90mm`, que aparece na lista de
+peças como um item mas é uma montagem.
 
 ### 4.4 Corte × barra (`motor/corte.py`)
 

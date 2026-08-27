@@ -25,6 +25,8 @@ def _procurar(catalogo, padrao):
 
 def resolver(catalogo, papel, esp):
     """(papel, especificacao) -> item do catalogo ou None."""
+    if esp.get("sap"):
+        return catalogo.por_sap.get(esp["sap"])
     if papel == "JUNTA_PLANA":
         dn = _pol_texto(esp["dn"]).replace(" ", "")
         return _procurar(catalogo, rf'^JUNTA PLANA\s+{re.escape(dn)}"')

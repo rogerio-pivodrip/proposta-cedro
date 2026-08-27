@@ -1,0 +1,12 @@
+# Flange de PVC nao se liga direto ao tubo: precisa da contra-flange, que e o
+# adaptador soldavel. O par foi confirmado nos projetos - FL PVC 90 = 9 e
+# ADAPTADOR P/ FL 90MM = 9 no Marcelo Amorim; 14 e 14 em 160 mm no Lincoln
+# Junqueira - e vale por PONTA de tubo, nao por junta: quando o Plasson encontra
+# um flange de aco ou de valvula, so o lado do Plasson leva o par, e e por isso
+# que a quantidade do projeto da impar.
+dn_mm,sap_flange,sap_contra_flange
+75,77400-001800,77400-002600
+90,77400-001900,77400-002700
+110,77400-002000,77400-002800
+160,77400-002200,77400-003000
+225,77400-002300,77400-003100

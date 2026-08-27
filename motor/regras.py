@@ -18,6 +18,7 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FURACAO = os.path.join(RAIZ, "data", "regras_furacao.csv")
 FERRAGEM = os.path.join(RAIZ, "data", "regras_ferragem.csv")
 WAFER = os.path.join(RAIZ, "data", "valvulas_wafer.csv")
+KITS_PVC = os.path.join(RAIZ, "data", "kits_flange_pvc.csv")
 
 TIPOS_FLANGE = {"FLANGE", "FLANGE_K"}
 
@@ -149,9 +150,29 @@ def _tabela_wafer():
     return tabela
 
 
+def _tabela_kits_pvc():
+    return {int(r["dn_mm"]): (r["sap_flange"], r["sap_contra_flange"])
+            for r in _carregar(KITS_PVC)}
+
+
 FUROS = _tabela_furacao()
 FERRAGENS = _tabela_ferragem()
 WAFERS = _tabela_wafer()
+KITS_FLANGE_PVC = _tabela_kits_pvc()
+
+
+def contra_flange_de(item):
+    """Flange de PVC nao prende no tubo sozinha: puxa a contra-flange, que e o
+    adaptador soldavel. Uma para cada flange lancada na linha.
+    """
+    if item["familia"] != "FLANGE" or item["material"] not in PLASSON:
+        return []
+    if item["unidade_dn"] != "mm" or not item["dn"]:
+        return []
+    par = KITS_FLANGE_PVC.get(int(item["dn"][0]))
+    if not par or par[0] != item["sap"]:
+        return []
+    return [("CONTRA_FLANGE_PVC", {"sap": par[1]}, 1)]
 
 
 def dn_em_polegada(dn, unidade="in"):

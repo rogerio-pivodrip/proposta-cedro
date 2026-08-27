@@ -150,6 +150,13 @@ class Linha:
 
         for peca in self.pecas:
             somar(peca.sap, peca.descricao, 1, "linha")
+            # flange de PVC puxa a contra-flange que a prende no tubo
+            for papel, esp, qtd in regras.contra_flange_de(peca.item):
+                item = ferragem.resolver(self.catalogo, papel, esp)
+                if not item:
+                    avisos.append(f"sem contra-flange para {peca.sap}")
+                    continue
+                somar(item["sap"], item["descricao"], qtd, "contra-flange")
 
         # valvula wafer: 3 barras roscadas inteiras por valvula. O corte
         # acontece na montagem e nao muda a quantidade comprada.
