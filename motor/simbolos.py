@@ -177,7 +177,7 @@ def giro(x, perna, angulo, dn_pol, sentido=1, y=0.0, gomos=4):
     for i in range(1, len(fora) - 1):
         elementos.append(_p(f"M{fora[i][0]:.1f} {fora[i][1]:.1f} "
                             f"L{dentro[i][0]:.1f} {dentro[i][1]:.1f}", "solda"))
-    return elementos, (fim[0], fim[1], -angulo * sentido)
+    return elementos, (fim[0], fim[1], -angulo * sentido), (centro, raio)
 
 
 def caixa(x, largura, altura_acima, altura_abaixo, y=0.0, classe="corpo"):
@@ -253,7 +253,7 @@ def curva(dn_pol, angulo=90, sentido=1, gomos=None):
     perna, fonte = _cota("CURVA", dn_pol, str(angulo), "perna_mm")
     perna = perna or DE_TUBO.get(dn_pol, 100) * 1.5
     gomos = gomos or (4 if angulo >= 90 else 3 if angulo >= 45 else 2)
-    el, (sx, sy, direcao) = giro(0, perna, angulo, dn_pol, sentido, gomos=gomos)
+    el, (sx, sy, direcao), _ = giro(0, perna, angulo, dn_pol, sentido, gomos=gomos)
     el += placa(0, dn_pol)
     bocal = placa(sx, dn_pol, sy, lado="saida")
     for e in bocal:
@@ -386,43 +386,57 @@ def _corpo_valvula(dn_pol, comp, acima, abaixo):
 
 
 def valvula_borboleta(dn_pol, acionamento="ALAVANCA"):
+    """Wafer: corpo estreito entre flanges, disco na diagonal, e o acionamento.
+
+    O corpo nao tem a altura do tubo - tem a do disco, que a ficha da em A.
+    Ele fica dentro do circulo de parafusos, que e o que segura a valvula.
+    """
     comp, fonte = _cota("VALVULA_BORBOLETA", dn_pol, acionamento)
     comp = comp or 60
     acima, _ = _cota("VALVULA_BORBOLETA", dn_pol, acionamento, "altura_acima_mm")
-    acima = acima or DE_TUBO.get(dn_pol, 100)
+    disco, _ = _cota("VALVULA_BORBOLETA", dn_pol, acionamento, "diametro_disco_mm")
     alcance, _ = _cota("VALVULA_BORBOLETA", dn_pol, acionamento,
                        "alcance_acionamento_mm")
-    alcance = alcance or 200
-    r = DE_TUBO.get(dn_pol, 100) / 2
+    f = flange(dn_pol)
+    disco = disco or DE_TUBO.get(dn_pol, 100) * 0.95
+    corpo = min(disco * 1.22, f["circulo"] * 0.94)
+    acima = acima or corpo * 0.9
+    alcance = alcance or corpo * 1.4
     meio = comp / 2
-    el = caixa(0, comp, r * 1.15, r * 1.15)
-    # disco na diagonal: a borboleta fechada aparece assim na vista lateral
-    el.append(_p(f"M{meio - comp*0.32:.1f} {r*0.95:.1f} "
-                 f"L{meio + comp*0.32:.1f} {-r*0.95:.1f}", "obturador"))
-    topo = -r * 1.15
-    el.append(_p(f"M{meio:.1f} {topo:.1f} V{-acima + comp*0.6:.1f}", "haste"))
+    el = caixa(0, comp, corpo / 2, corpo / 2)
+    # a boca: onde a agua passa
+    el.append(_p(f"M0 {-disco/2:.1f} H{comp:.1f} M0 {disco/2:.1f} H{comp:.1f}",
+                 "oculto"))
+    # disco fechado, na diagonal
+    el.append(_p(f"M{meio - comp*0.34:.1f} {disco*0.47:.1f} "
+                 f"L{meio + comp*0.34:.1f} {-disco*0.47:.1f}", "obturador"))
+    # flange do atuador em cima do corpo, e a haste
+    topo = -corpo / 2
+    flangete = comp * 0.55
+    el += caixa(meio - comp*0.7, comp*1.4, -topo + flangete, topo)
+    el.append(_p(f"M{meio:.1f} {topo - flangete:.1f} V{-acima + comp*0.8:.1f}",
+                 "haste"))
+    yl = -acima + comp * 0.8
     if acionamento == "ALAVANCA":
-        yl = -acima + comp * 0.6
-        el += caixa(meio - comp*0.55, comp*1.1, -yl + comp*0.55, yl + comp*0.55,
+        el += caixa(meio - comp*0.5, comp, -yl + comp*0.45, yl + comp*0.45,
                     classe="acionamento")
         el.append(_p(f"M{meio:.1f} {yl:.1f} h{alcance:.1f}", "acionamento"))
+        el.append(_p(f"M{meio + alcance*0.15:.1f} {yl - comp*0.22:.1f} "
+                     f"h{alcance*0.75:.1f}", "acionamento"))
         el.append(_p(f"M{meio:.1f} {yl:.1f} l{alcance*0.71:.1f} {-alcance*0.71:.1f}",
                      "acionamento fantasma"))
     else:
-        yc = -acima + comp * 0.6
-        el += caixa(meio - comp*0.8, comp*1.6, -yc, yc + comp*1.1,
+        el += caixa(meio - comp*0.9, comp*1.8, -yl, yl + comp*1.3,
                     classe="acionamento")
-        # volante lateral, visto de perfil: um traco do diametro real
-        eixo_x = meio + comp * 1.5
-        el.append(_p(f"M{meio + comp*0.8:.1f} {yc + comp*0.4:.1f} "
-                     f"H{eixo_x:.1f}", "acionamento"))
-        el.append(_p(f"M{eixo_x:.1f} {yc + comp*0.4 - alcance/2:.1f} "
-                     f"v{alcance:.1f}", "acionamento"))
-        el.append(_p(f"M{eixo_x - comp*0.25:.1f} {yc + comp*0.4 - alcance/2:.1f} "
-                     f"h{comp*0.5:.1f} M{eixo_x - comp*0.25:.1f} "
-                     f"{yc + comp*0.4 + alcance/2:.1f} h{comp*0.5:.1f}",
-                     "acionamento fantasma"))
-    el += placa(0, dn_pol) + placa(comp, dn_pol)
+        ex = meio + comp * 1.7
+        yv = yl + comp * 0.55
+        el.append(_p(f"M{meio + comp*0.9:.1f} {yv:.1f} H{ex:.1f}", "acionamento"))
+        el.append(_p(f"M{ex:.1f} {yv - alcance/2:.1f} v{alcance:.1f}",
+                     "acionamento"))
+        el.append(_p(f"M{ex - comp*0.3:.1f} {yv - alcance/2:.1f} h{comp*0.6:.1f} "
+                     f"M{ex - comp*0.3:.1f} {yv + alcance/2:.1f} h{comp*0.6:.1f}",
+                     "acionamento"))
+    el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
     rot = f'borboleta {dn_pol:g}" {"alavanca" if acionamento == "ALAVANCA" else "caixa"}'
@@ -430,27 +444,42 @@ def valvula_borboleta(dn_pol, acionamento="ALAVANCA"):
 
 
 def valvula_gaveta(dn_pol):
+    """Corpo curto, castelo aparafusado, cunha emborrachada e volante fixo."""
     comp, fonte = _cota("VALVULA_GAVETA", dn_pol)
     comp = comp or 230
     alt, _ = _cota("VALVULA_GAVETA", dn_pol, "", "altura_total_mm")
     volante, _ = _cota("VALVULA_GAVETA", dn_pol, "", "volante_mm")
-    r = DE_TUBO.get(dn_pol, 100) / 2
-    alt = alt or r * 3
-    volante = volante or r * 2
+    f = flange(dn_pol)
+    corpo = f["externo"] * 0.62
+    alt = alt or corpo * 2.4
+    volante = volante or corpo
     meio = comp / 2
-    el = caixa(0, comp, r * 1.25, r * 1.25)
-    el += caixa(meio - comp*0.24, comp*0.48, alt*0.52, -r*1.25, classe="corpo")
-    # cunha dentro do corpo, e a haste ate o volante
-    el.append(_p(f"M{meio - r*0.5:.1f} {r*1.0:.1f} v{-r*1.5:.1f} "
-                 f"h{r:.1f} v{r*1.5:.1f} Z", "obturador"))
-    el.append(_p(f"M{meio:.1f} {-alt*0.52:.1f} V{-alt + comp*0.05:.1f}", "haste"))
-    # o volante e horizontal: de lado ele e um traco do diametro real
-    yv = -alt + comp * 0.05
+    bocal = DE_TUBO.get(dn_pol, 100)
+    el = [_p(f"M0 {-bocal/2:.1f} L{comp*0.24:.1f} {-corpo/2:.1f} "
+             f"H{comp*0.76:.1f} L{comp:.1f} {-bocal/2:.1f}"),
+          _p(f"M0 {bocal/2:.1f} L{comp*0.24:.1f} {corpo/2:.1f} "
+             f"H{comp*0.76:.1f} L{comp:.1f} {bocal/2:.1f}")]
+    # castelo: flange do corpo e a tampa
+    castelo = comp * 0.5
+    topo = -alt * 0.46
+    el += caixa(meio - castelo/2, castelo, -topo, topo + corpo/2)
+    el.append(_p(f"M{meio - castelo*0.62:.1f} {-corpo*0.5:.1f} h{castelo*1.24:.1f}",
+                 "obturador"))
+    el.append(_p(f"M{meio - castelo*0.56:.1f} {topo:.1f} h{castelo*1.12:.1f}",
+                 "obturador"))
+    # cunha, tracejada dentro do corpo
+    el.append(_p(f"M{meio - bocal*0.3:.1f} {-corpo*0.42:.1f} h{bocal*0.6:.1f} "
+                 f"v{corpo*0.72:.1f} l{-bocal*0.3:.1f} {corpo*0.12:.1f} "
+                 f"l{-bocal*0.3:.1f} {-corpo*0.12:.1f} Z", "oculto"))
+    el.append(_p(f"M{meio:.1f} {topo:.1f} V{-alt + comp*0.06:.1f}", "haste"))
+    yv = -alt + comp * 0.06
     el.append(_p(f"M{meio - volante/2:.1f} {yv:.1f} h{volante:.1f}", "acionamento"))
-    el.append(_p(f"M{meio - volante/2:.1f} {yv - comp*0.06:.1f} v{comp*0.12:.1f} "
-                 f"M{meio + volante/2:.1f} {yv - comp*0.06:.1f} v{comp*0.12:.1f}",
+    el.append(_p(f"M{meio - volante/2:.1f} {yv - comp*0.05:.1f} v{comp*0.1:.1f} "
+                 f"M{meio + volante/2:.1f} {yv - comp*0.05:.1f} v{comp*0.1:.1f}",
                  "acionamento"))
-    el += placa(0, dn_pol) + placa(comp, dn_pol)
+    el.append(_p(f"M{meio - comp*0.09:.1f} {yv + comp*0.02:.1f} h{comp*0.18:.1f} "
+                 f"v{comp*0.09:.1f} h{-comp*0.18:.1f} Z", "acionamento"))
+    el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
     return _montar("VALVULA_GAVETA", f'gaveta {dn_pol:g}"', el, portas, fonte)
@@ -490,29 +519,86 @@ def valvula_hidraulica(dn_pol, serie="47"):
 
 
 def medidor(dn_pol):
+    """Woltmann: corpo entre flanges, torre do registrador e o mostrador."""
     comp, fonte = _cota("MEDIDOR", dn_pol)
     comp = comp or 350
     alt, _ = _cota("MEDIDOR", dn_pol, "", "altura_total_mm")
     baixo, _ = _cota("MEDIDOR", dn_pol, "", "altura_abaixo_mm")
-    r = DE_TUBO.get(dn_pol, 100) / 2
-    baixo = baixo or r
-    alt = alt or r * 3
+    largura, _ = _cota("MEDIDOR", dn_pol, "", "largura_mm")
+    f = flange(dn_pol)
+    corpo = (largura or f["externo"]) * 0.62
+    baixo = baixo or corpo / 2
+    alt = alt or corpo * 2
     meio = comp / 2
-    el = caixa(0, comp, r, r)
-    torre = comp * 0.5
+    bocal = DE_TUBO.get(dn_pol, 100)
+    el = [_p(f"M0 {-bocal/2:.1f} L{comp*0.2:.1f} {-corpo/2:.1f} "
+             f"H{comp*0.8:.1f} L{comp:.1f} {-bocal/2:.1f}"),
+          _p(f"M0 {bocal/2:.1f} L{comp*0.2:.1f} {corpo/2:.1f} "
+             f"H{comp*0.8:.1f} L{comp:.1f} {bocal/2:.1f}")]
+    torre = comp * 0.44
     topo = -(alt - baixo)
-    el += caixa(meio - torre/2, torre, -topo, -r)
-    # o registrador: mostrador com ponteiro, virado para cima
-    cx, cy, rr = meio, topo + torre * 0.3, torre * 0.28
-    el.append({"tipo": "circulo", "cx": cx, "cy": cy, "r": rr,
-               "classe": "mostrador"})
-    el.append(_p(f"M{cx:.1f} {cy:.1f} L{cx + rr*0.62:.1f} {cy - rr*0.5:.1f}",
+    el += caixa(meio - torre/2, torre, -topo, topo + corpo/2)
+    # o registrador, com o mostrador virado para cima
+    el += caixa(meio - torre*0.62, torre*1.24, -topo + torre*0.34, topo)
+    cx, cy, rr = meio, topo - torre * 0.17, torre * 0.24
+    el.append({"tipo": "circulo", "cx": cx, "cy": cy, "r": rr, "classe": "mostrador"})
+    el.append(_p(f"M{cx:.1f} {cy:.1f} L{cx + rr*0.6:.1f} {cy - rr*0.52:.1f}",
                  "mostrador"))
-    el.append(_p(f"M{cx:.1f} {cy - rr:.1f} v{rr*0.28:.1f}", "mostrador"))
+    el.append(_p(f"M{cx:.1f} {cy - rr:.1f} v{rr*0.3:.1f} M{cx + rr:.1f} {cy:.1f} "
+                 f"h{-rr*0.3:.1f}", "mostrador"))
     el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
     return _montar("MEDIDOR", f'medidor {dn_pol:g}"', el, portas, fonte)
+
+
+def curva_saida(dn_pol, angulo=90, dn_saida=2, sentido=1, gomos=4):
+    """Curva com saida de 2" no dorso - e onde a ventosa entra.
+
+    O catalogo Irrigafour desenha essa familia separada. A saida fica na parte
+    convexa do giro, que e o ponto alto da curva quando ela sobe: e por isso
+    que a ventosa vive ali.
+    """
+    perna, fonte = _cota("CURVA_SAIDA", dn_pol, str(angulo), "perna_mm")
+    if perna is None:
+        perna, fonte = _cota("CURVA", dn_pol, str(angulo), "perna_mm")
+    perna = perna or DE_TUBO.get(dn_pol, 100) * 1.5
+    el, (sx, sy, direcao), (centro, raio) = giro(0, perna, angulo, dn_pol,
+                                                 sentido, gomos=gomos)
+    r = DE_TUBO.get(dn_pol, 100) / 2
+    rs = DE_TUBO.get(dn_saida, 60) / 2
+    # dorso: do centro do arco para o meio da curva
+    a = math.radians(angulo / 2) * sentido
+    ux, uy = math.sin(a) * sentido, math.cos(a) * sentido
+    base = (centro[0] + (raio + r) * ux, centro[1] + (raio + r) * uy)
+    haste = DE_TUBO.get(dn_saida, 60) * 1.6
+    topo = (base[0] + haste * ux, base[1] + haste * uy)
+    tx, ty = -uy, ux
+    el.append(_p(f"M{base[0] + tx*rs:.1f} {base[1] + ty*rs:.1f} "
+                 f"L{topo[0] + tx*rs:.1f} {topo[1] + ty*rs:.1f}"))
+    el.append(_p(f"M{base[0] - tx*rs:.1f} {base[1] - ty*rs:.1f} "
+                 f"L{topo[0] - tx*rs:.1f} {topo[1] - ty*rs:.1f}"))
+    graus = math.degrees(math.atan2(uy, ux))
+    bocal = placa(topo[0], dn_saida, topo[1], lado="saida")
+    for e in bocal:
+        e["girar"] = (graus, topo[0], topo[1])
+    el += bocal
+    el += placa(0, dn_pol)
+    saida_fl = placa(sx, dn_pol, sy, lado="saida")
+    for e in saida_fl:
+        e["girar"] = (direcao, sx, sy)
+    el += saida_fl
+    rad = math.radians(direcao)
+    el.append(_p(f"M-60 0 H{perna:.0f} L{sx + 60*math.cos(rad):.0f} "
+                 f"{sy + 60*math.sin(rad):.0f}", "centro"))
+    el.append(_p(f"M{base[0] - ux*20:.1f} {base[1] - uy*20:.1f} "
+                 f"L{topo[0] + ux*30:.1f} {topo[1] + uy*30:.1f}", "centro"))
+    portas = [Porta("entrada", 0, 0, 180, dn_pol),
+              Porta("saida", sx, sy, direcao, dn_pol),
+              Porta("derivacao", topo[0], topo[1], graus, dn_saida)]
+    return _montar("CURVA_SAIDA",
+                   f'curva {angulo}° {dn_pol:g}" c/ saída {dn_saida:g}"',
+                   el, portas, fonte)
 
 
 def valvula_pe(dn_pol):

@@ -29,7 +29,10 @@ def elenco(dn):
     return [
         s.tubo(dn, 1000),
         s.curva(dn, 90),
+        s.curva(dn, 60),
         s.curva(dn, 45),
+        s.curva(dn, 30),
+        s.curva_saida(dn, 90, 2),
         s.te(dn, 2),
         s.reducao(dn, menor, "CONCENTRICA"),
         s.reducao(dn, menor, "EXCENTRICA", "topo"),
@@ -89,15 +92,18 @@ def seta(x, y, sentido, tamanho=4.5, vertical=False):
 
 def celula(simbolo):
     x0, y0, larg, alt = simbolo.caixa
+    # Celula uniforme. A borboleta de 8" mede 60 mm de corpo e sobe 480 com o
+    # acionamento: no papel ela e um fio alto mesmo, e essa e a informacao.
+    altura = ALTURA
     escala = min((LARGURA - 2 * MARGEM) / max(larg, 1),
-                 (ALTURA - 2 * MARGEM - 50) / max(alt, 1))
+                 (altura - 2 * MARGEM - 50) / max(alt, 1))
     dx = (LARGURA - larg * escala) / 2 - x0 * escala
-    dy = (ALTURA - 50 - alt * escala) / 2 - y0 * escala
+    dy = (altura - 50 - alt * escala) / 2 - y0 * escala
     corpo = "".join(desenhar(e) for e in simbolo.elementos
                     if e["tipo"] != "texto_furos")
     furos = next((e for e in simbolo.elementos if e["tipo"] == "texto_furos"), None)
 
-    partes = [f'<svg viewBox="0 0 {LARGURA} {ALTURA}" role="img" '
+    partes = [f'<svg viewBox="0 0 {LARGURA} {altura:.0f}" role="img" '
               f'aria-label="{simbolo.rotulo}">',
               f'<g class="geo" transform="translate({dx:.2f} {dy:.2f}) '
               f'scale({escala:.5f})">{corpo}</g>']
@@ -142,12 +148,12 @@ def celula(simbolo):
         partes.append(f'<g class="anota"><text class="cota vertical" '
                       f'transform="rotate(-90 12 {ym:.1f})" x="12" '
                       f'y="{ym:.1f}">⌀{de:g}</text></g>')
-    partes.append(f'<text class="rotulo" x="{LARGURA/2:.0f}" y="{ALTURA-14}">'
+    partes.append(f'<text class="rotulo" x="{LARGURA/2:.0f}" y="{altura-14:.0f}">'
                   f'{simbolo.rotulo}</text>')
-    partes.append(f'<text class="fonte" x="{LARGURA/2:.0f}" y="{ALTURA-2}">'
+    partes.append(f'<text class="fonte" x="{LARGURA/2:.0f}" y="{altura-2:.0f}">'
                   f'{simbolo.fonte or ""}</text>')
     partes.append("</svg>")
-    return "".join(partes)
+    return "".join(partes), altura > ALTURA
 
 
 def main():
@@ -155,7 +161,8 @@ def main():
     p.add_argument("--dn", type=float, default=8)
     args = p.parse_args()
     for simbolo in elenco(args.dn):
-        print(f'<figure class="simbolo">{celula(simbolo)}</figure>')
+        svg, alto = celula(simbolo)
+        print(f'<figure class="simbolo{" alto" if alto else ""}">{svg}</figure>')
     print(f"# {len(elenco(args.dn))} simbolos em {args.dn:g}\"", file=sys.stderr)
 
 
