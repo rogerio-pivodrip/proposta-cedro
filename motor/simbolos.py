@@ -471,11 +471,10 @@ def valvula_borboleta(dn_pol, acionamento="ALAVANCA"):
         el.append(_p(f"M{ex - comp*0.3:.1f} {yv - alcance/2:.1f} h{comp*0.6:.1f} "
                      f"M{ex - comp*0.3:.1f} {yv + alcance/2:.1f} h{comp*0.6:.1f}",
                      "acionamento"))
-    el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
-    el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
+    el.append(_p(f"M-40 0 H{comp+40:.0f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
     rot = f'borboleta {dn_pol:g}" {"alavanca" if acionamento == "ALAVANCA" else "caixa"}'
-    return _montar("VALVULA_BORBOLETA", rot, el, portas, fonte)
+    return _montar("VALVULA_BORBOLETA", rot, el, portas, fonte, {"wafer": True})
 
 
 def valvula_gaveta(dn_pol):
@@ -660,11 +659,12 @@ def valvula_retencao(dn_pol):
     el.append(_p(f"M{meio:.1f} 0 L{comp*0.95:.1f} {bocal*0.44:.1f}",
                  "obturador"))
     el.append(_p(f"M{meio:.1f} {-bocal*0.1:.1f} v{bocal*0.2:.1f}", "haste"))
-    el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
-    el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
+    el.append(_p(f"M-40 0 H{comp+40:.0f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
+    # wafer nao tem flange: ela e abracada pelas flanges das duas pecas
+    # vizinhas, e a barra roscada atravessa o conjunto inteiro
     return _montar("VALVULA_RETENCAO", f'retenção wafer {dn_pol:g}"', el, portas,
-                   "MP" if ficha else None)
+                   "MP" if ficha else None, {"wafer": True})
 
 
 def valvula_pe(dn_pol):
@@ -812,6 +812,39 @@ def encaixa(a, b):
         return True, ""
     bitolas = " ou ".join(f'{p.dn_pol:g}"' for p in pontas)
     return False, f'{sa.dn_pol:g}" contra {bitolas}'
+
+
+def sanduiche_wafer(x_entrada, x_saida, y=0.0, direcao=0.0, dn_pol=8,
+                    barras=3, norma="NBR PN16"):
+    """A wafer nao tem flange: ela e abracada pelas duas flanges vizinhas.
+
+    Entao nao ha duas juntas, ha uma so - e a barra roscada atravessa o
+    conjunto inteiro, da porca de um lado ate a do outro, passando pela
+    flange, pelo corpo da valvula e pela outra flange. E por isso que a lista
+    conta barra roscada, e nao parafuso, nessas pecas.
+    """
+    f = flange(dn_pol, norma)
+    esp = f["espessura"]
+    raio_furo = f["circulo"] / 2
+    d = f["furo"] * 0.85
+    porca = d * 1.6
+    x0 = x_entrada - esp - porca * 0.75
+    comprimento = (x_saida - x_entrada) + 2 * esp + 2 * porca * 0.75
+    el = []
+    for lado, x in (("entrada", x_entrada), ("saida", x_saida)):
+        el.append(_p(f"M{x:.1f} {y - f['externo']/2:.1f} "
+                     f"V{y + f['externo']/2:.1f}", "junta"))
+    for sinal in (-1, 1):
+        yy = y + sinal * raio_furo
+        el.append({"tipo": "rect", "x": x0, "y": yy - d / 2, "w": comprimento,
+                   "h": d, "classe": "barra"})
+        for xn in (x0, x0 + comprimento - porca * 0.75):
+            el.append({"tipo": "rect", "x": xn, "y": yy - porca / 2,
+                       "w": porca * 0.75, "h": porca, "classe": "porca"})
+    if direcao:
+        for e in el:
+            e["girar"] = (direcao, x_entrada, y)
+    return el
 
 
 def junta_flangeada(x, y=0.0, direcao=0.0, dn_pol=8, norma="NBR PN16"):

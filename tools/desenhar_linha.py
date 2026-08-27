@@ -95,9 +95,14 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620):
         partes.append(f'<g transform="translate({p.dx:.1f} {p.dy:.1f}) '
                       f'rotate({p.giro:g})">{corpo}</g>')
     # cada ligacao tem duas flanges encostadas e os parafusos que as fecham -
-    # e a juncao que puxa a ferragem, entao e ela que desenha o parafuso
+    # e a juncao que puxa a ferragem, entao e ela que desenha o parafuso.
+    # A wafer e a excecao: ela nao tem flange, e abracada pelas duas vizinhas,
+    # e entao as duas juncoes viram uma so, com barra roscada de ponta a ponta.
+    wafer = {i for i, p in enumerate(postos) if p.simbolo.params.get("wafer")}
     ruins = []
     for i, p in enumerate(postos[:-1]):
+        if i in wafer or (i + 1) in wafer:
+            continue
         ok, motivo = s.encaixa(p.simbolo, postos[i + 1].simbolo)
         saida = s.porta(p.simbolo, s.SAIDA)
         if ok and saida is not None:
@@ -107,6 +112,16 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620):
             partes.append("".join(desenhar(e) for e in ferragem))
         else:
             ruins.append((p, motivo))
+    for i in sorted(wafer):
+        p = postos[i]
+        entrada = s.porta(p.simbolo, s.ENTRADA)
+        comp = abs(s.porta(p.simbolo, s.SAIDA).x - entrada.x)
+        # a ferragem sai no eixo da propria peca e viaja com ela, no mesmo
+        # grupo de transformacao que o corpo - senao ela fica solta na folha
+        ferragem = s.sanduiche_wafer(0.0, comp, 0.0, 0.0, entrada.dn_pol)
+        partes.append(f'<g transform="translate({p.dx:.1f} {p.dy:.1f}) '
+                      f'rotate({p.giro:g})">'
+                      + "".join(desenhar(e) for e in ferragem) + "</g>")
     partes.append("</g>")
     # cada peca leva a bitola e a medida, em cinza claro, fora da escala
     partes.append('<g class="anota">')
