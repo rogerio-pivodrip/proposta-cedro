@@ -15,6 +15,7 @@ import sys
 sys.path.insert(0, ".")
 from motor import simbolos as s  # noqa: E402
 from tools.desenhar_simbolos import ESTILO, legenda  # noqa: E402
+from tools.desenhar_simbolos import texto_no_eixo  # noqa: E402
 from tools.desenhar_simbolos import desenhar  # noqa: E402
 
 MARGEM = 46
@@ -187,9 +188,7 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620):
             continue
         mx = MARGEM + ((p.entrada[0] + p.saida[0]) / 2 - minx) * escala
         my = MARGEM + ((p.entrada[1] + p.saida[1]) / 2 - miny) * escala
-        # a cota fica DENTRO da peca, na metade de cima, longe do eixo
-        raio = s.DE_TUBO.get(entrada.dn_pol, 100) / 2 * escala
-        recuo = max(min(raio * 0.62, 12), 6)   # longe do eixo vermelho
+        # a cota fica NO eixo da peca, com o eixo aparado atras dela
         vertical = abs(p.saida[1] - p.entrada[1]) > abs(p.saida[0] - p.entrada[0])
         gira = f' transform="rotate(-90 {mx:.1f} {my:.1f})"' if vertical else ""
         duas = abs((entrada.dn_pol or 0) - (saida.dn_pol or 0)) > 0.01
@@ -198,8 +197,7 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620):
                   if p.simbolo.params.get("dn_mm")
                   else f'{(entrada.dn_pol or 0):g}"')
         rotulo = f"{comp:.0f}" if duas else f"{bitola}  {comp:.0f}"
-        partes.append(f'<text class="marca" x="{mx:.1f}" y="{my - recuo:.1f}"{gira}>'
-                      f'{rotulo}</text>')
+        partes.append(texto_no_eixo(mx, my, rotulo, "marca", 9.0, gira))
         if duas:
             # a bitola de cada flange, na sua ponta
             for porta, ponto in ((entrada, p.entrada), (saida, p.saida)):

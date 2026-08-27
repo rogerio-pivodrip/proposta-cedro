@@ -12,7 +12,7 @@ Description - do jeito que a lista da Netafim nomeia.
 """
 import re
 
-from . import simbolos as s
+from . import cotas, simbolos as s
 from .bomba import MM_PARA_POLEGADA
 
 # METB 150-125-200 -> o tamanho 125-200 do folheto, com succao de 150.
@@ -133,6 +133,10 @@ def _pead(item, familia, maior):
         return s.bucha_reducao(maior, menor)
     if familia == "CAP":
         return s.cap_pvc(maior, junta)
+    if familia == "UNIAO":
+        return s.uniao(maior, junta, "casa")
+    if familia == "NIPLE":
+        return s.niple(maior, junta, "casa")
     if familia == "COLAR_TOMADA":
         return _colar_tomada(item, maior)
     if familia == "FLANGE":
@@ -189,6 +193,107 @@ def _flange_em_mm(item, dn_mm):
     return s.flange_avulsa(pol, "SOLTA")
 
 
+# A serie que a descricao aponta. A mesma polegada cai em milimetro diferente
+# em cada uma - 2" e 60 na soldavel e 50 na PBA - entao ler a serie errada
+# compra a peca errada.
+RX_PBA = re.compile(r"IRRI\s*LF|\bPBA\b|\bB(?:P|)S\b|\bPBS\b|\bBS\b", re.I)
+RX_SOLDAVEL = re.compile(r"\bSOLD\w*\b|\bSCH\s?\d+\b|\bPVC\s+S\b|\bJS\b",
+                         re.I)
+# familia -> como montar a peca em milimetro, para a linha de polegada pequena
+POR_MILIMETRO = {
+    "LUVA": lambda mm, menor, junta, fonte, norma: (
+        s.luva_reducao(mm, menor, junta) if menor
+        else s.luva_pvc(mm, junta)),
+    "BUCHA_REDUCAO": lambda mm, menor, junta, fonte, norma: s.bucha_reducao(
+        mm, menor),
+    "CAP": lambda mm, menor, junta, fonte, norma: s.cap_pvc(mm, junta),
+    "UNIAO": lambda mm, menor, junta, fonte, norma: s.uniao(
+        mm, junta, fonte, norma),
+    "NIPLE": lambda mm, menor, junta, fonte, norma: s.niple(
+        mm, junta, fonte, norma),
+    "TE": lambda mm, menor, junta, fonte, norma: s.te_pvc(mm, menor, junta),
+    "TE_REDUZIDO": lambda mm, menor, junta, fonte, norma: s.te_pvc(
+        mm, menor, junta),
+}
+
+
+def serie_de(descricao, junta):
+    """Qual serie nominal a descricao aponta.
+
+    A regra e mais simples do que parece, e sai do proprio jeito de a lista
+    nomear: a peca soldavel e a PBA sao designadas em MILIMETRO - "LUVA PVC
+    IRRI LF BS 75 MM", "CURVA 90. SOLDA 225MM". Entao **conexao pequena
+    designada em polegada e rosqueada** - "LUVA PVC R 1/2\"", "NIPEL DUPLO FG
+    1\"" - e e por isso que a rosca e o padrao aqui em vez de uma excecao.
+
+    O que quebra a regra diz na descricao: SOLD/SCH e soldavel, IRRI LF/BS/PBA
+    e bolsa.
+    """
+    if RX_SOLDAVEL.search(descricao):
+        return "SOLDA"
+    if RX_PBA.search(descricao):
+        return "BOLSA"
+    return "ROSCA"
+
+
+def _por_norma(item, familia, maior, menor):
+    """A conexao de bitola pequena, pela norma que a serie define.
+
+    Aqui a cota nao vem de folha nem do desenho da casa: vem de NORMA - a
+    equivalencia entre a polegada e o milimetro. E uma quinta fonte, e por isso
+    a tarja da peca mostra qual norma foi usada. Sem isso o desenho diria que
+    2" tem 60 mm sem dizer que na outra serie tem 50.
+    """
+    descricao = item["descricao"]
+    junta = junta_de(descricao)
+    serie = serie_de(descricao, junta)
+    if not serie:
+        raise SemSimbolo(f"{familia} em polegada sem série na descrição")
+    mm, norma = cotas.milimetro_da_serie(serie, maior)
+    if not mm:
+        raise SemSimbolo(f'{maior:g}" fora da série {serie}')
+    mm_menor = cotas.milimetro_da_serie(serie, menor)[0] if menor else None
+    monta = POR_MILIMETRO[familia]
+    junta_desenho = "ROSCA" if serie == "ROSCA" else (
+        "SOLDA" if serie == "SOLDA" else "BOLSA")
+    peca = monta(mm, mm_menor, junta_desenho, norma, norma)
+    return em_polegada(peca, mm, maior, mm_menor, menor, norma, serie)
+
+
+def em_polegada(peca, mm, dn_pol, mm_menor=None, menor=None, norma="", serie=""):
+    """A peca montada em milimetro, falando a lingua da lista.
+
+    A geometria fica igual - ela saiu do milimetro que a norma deu. O que muda
+    e o rotulo, a porta e a tarja: a lista chama esta peca de 2", nao de
+    DN60,3, e e a lista que a casa le. A tarja passa a dizer a NORMA que fez a
+    conversao, em vez de dizer "casa" - a casa nao mediu esta peca.
+    """
+    rotulo = peca.rotulo
+    for de, para in sorted([(mm, dn_pol)] + ([(mm_menor, menor)] if mm_menor
+                                             else []),
+                           key=lambda par: -par[0]):
+        rotulo = rotulo.replace(f"DN{de:g}", f'{para:g}"').replace(
+            f"{de:g}", f'{para:g}"')
+    portas = tuple(
+        porta._replace(dn_pol=(menor if (mm_menor and porta.papel in
+                                        ("menor", "derivacao")) else dn_pol))
+        for porta in peca.portas)
+    # a nota dentro da peca tambem: ela escreve o DN, e o DN desta peca e a
+    # polegada. Deixar 60,3 escrito dentro de um nipe de 2" e dizer que a peca
+    # e outra
+    trocas = {f"{mm:g}": f'{dn_pol:g}"'}
+    if mm_menor:
+        trocas[f"{mm_menor:g}"] = f'{menor:g}"'
+    elementos = [
+        {**e, "texto": trocas.get(e.get("texto", ""), e.get("texto"))}
+        if e["tipo"] == "nota" else e
+        for e in peca.elementos]
+    return peca._replace(rotulo=rotulo, fonte=norma or peca.fonte,
+                         portas=portas, elementos=elementos,
+                         params={**peca.params, "norma": norma,
+                                 "dn_pol": dn_pol, "serie": serie})
+
+
 def de_item(item):
     """O simbolo do item, ja com o codigo e a descricao nos params."""
     simbolo = _desenhar(item)
@@ -235,6 +340,8 @@ def _desenhar(item):
         "VALVULA_RETENCAO": lambda: s.valvula_retencao(maior),
         "VALVULA_PE": lambda: s.valvula_pe(maior),
     }
+    if familia in POR_MILIMETRO and familia not in despacho:
+        return _por_norma(item, familia, maior, menor)
     if familia not in despacho:
         raise SemSimbolo("familia sem simbolo")
     return despacho[familia]()

@@ -626,8 +626,8 @@ manual da Meganorm chegou. Estimativa não sobrevive à folha.
 
 `tools/conferir_cobertura.py` tenta desenhar cada código do catálogo:
 
-> **1.487 de 5.157 códigos saem desenhados** — eram 919 antes destas
-> famílias, e 1.237 antes das de milímetro (4.7).
+> **1.701 de 5.157 códigos saem desenhados** — eram 919 antes destas
+> famílias, 1.237 antes das de milímetro (4.7) e 1.487 antes da norma (4.9).
 
 O que ainda não sai quase nunca é falha de símbolo: **2.265** códigos não têm
 DN na descrição e **1.040** não têm família — e o resto é filtro e quadro
@@ -689,7 +689,7 @@ Isso obrigou a fechar uma ponte que estava só na ferramenta de conferência:
 código e a descrição nos `params`. É a mesma ponte que o contador de cobertura
 usa, agora numa casa só.
 
-`--catalogo` exporta a biblioteca inteira: **1.487 blocos, um por código**.
+`--catalogo` exporta a biblioteca inteira: **1.701 blocos, um por código**.
 `--dn 8` exporta os 175 códigos de 8". Peça que só existe no desenho — um tubo
 de 500 mm cortado na obra — não tem código, e cai no rótulo.
 
@@ -1009,6 +1009,65 @@ E a gaveta da casa merece nota. O bloco dela mede, nas seis bitolas de 4" a
 desenho só, escalado seis vezes, e confirma o que a casa já tinha avisado. A
 folha da RAN (Fig. 37) e a da MP concordam entre si nas nove bitolas, e é delas
 que a cota sai. Do bloco da casa aproveita-se a forma; a medida, não.
+
+## 4.9 A norma como quinta fonte, e a regra que a lista já dizia
+
+Faltava a conexão de bitola pequena — nipe, luva, bucha, união, cap, tê
+reduzido — cerca de 140 códigos. Ela não tem folha de fabricante nem desenho da
+casa: tem **norma**, a equivalência entre a polegada e o milímetro. Isso entra
+como quinta fonte de cota, em `data/series_nominais.csv`, e a tarja da peça
+mostra qual norma foi usada — porque a mesma polegada cai em milímetro
+diferente em cada série:
+
+| série | norma | 2" | 3" | 4" |
+|---|---|---|---|---|
+| soldável | NBR 5648 | 60 | 85 | 110 |
+| PBA / irrigação | NBR 5647 | 50 | 75 | 100 |
+| rosca | ISO 65 | 60,3 | 88,9 | 114,3 |
+
+Comprar pela tabela errada não encaixa, e é por isso que a série tem de ser
+lida e não presumida. As três linhas da PBA vêm confirmadas pelo DXF da casa:
+os adaptadores medidos lá são `ADAP. BS x RM 50 x 2"`, `75 x 3"` e `100 x 4"`.
+
+### A regra estava no jeito de a lista nomear
+
+Eu comecei tentando detectar a rosca por marcadores na descrição, e caía em
+metade dos códigos. A regra é mais simples, e sai do próprio catálogo: **a peça
+soldável e a PBA são designadas em MILÍMETRO** — `LUVA PVC IRRI LF BS 75 MM`,
+`CURVA 90. SOLDA 225MM`. Então **conexão pequena designada em polegada é
+rosqueada** — `LUVA PVC R 1/2"`, `NIPEL DUPLO FG 1"`. A rosca é o padrão, e o
+que quebra a regra diz na descrição.
+
+### A peça é montada em milímetro e comprada em polegada
+
+A geometria sai do milímetro que a norma deu — é o único jeito de desenhar. Mas
+o rótulo, a porta e a tarja voltam para a língua da lista: `nipe 2"`, não
+`nipe DN60,3`. E a tarja passa a dizer `ISO 65` em vez de `casa`, que não mediu
+esta peça. A nota dentro do desenho também: deixar *60,3* escrito dentro de um
+nipe de 2" é dizer que a peça é outra.
+
+Isso mora numa função só, `desenho.em_polegada`, usada tanto pelo catálogo
+quanto pela folha de símbolos — senão a folha mostraria uma peça e a lista
+outra.
+
+### Duas peças novas, e um traço que não aparecia
+
+**Nipe** e **união** não tinham símbolo. O nipe é o toco com rosca macho nas
+duas pontas e o sextavado no meio; a união são duas meias luvas e a porca que
+aperta uma na outra — e a porca *é* a peça, porque é por ela que a linha
+rosqueada se desmonta sem girar tudo desde a ponta.
+
+O filete da rosca deu trabalho, e o erro vale registro: eu desenhei o filete
+como tracinhos sobre a linha do corpo, e **não aparecia nada** — os tracinhos
+caíam exatamente onde o corpo já estava. O traço certo é o do desenho técnico:
+a *crista* é a própria linha do corpo, e o *fundo* do filete é uma linha fina
+por dentro dela.
+
+### Onde isso chegou
+
+Com as famílias de milímetro, o equipamento corrigido e a norma, a cobertura foi
+de **1.487 para 1.701** códigos, e a folha passou de 37 para **42 símbolos por
+bitola** — todos com bloco de DXF conferido nas oito bitolas.
 
 ## 5. O que a peça puxa: um mecanismo só
 

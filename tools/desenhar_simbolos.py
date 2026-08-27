@@ -40,6 +40,9 @@ SECOES = {
     # o PVC injetado desenha em arco liso, sem gomo: o gomo e chapa de aco
     # soldada, e essa peca sai de molde
     "PVC e Plasson": ("o traço de molde, não de chapa", 220, 1),
+    # a conexao pequena e designada em polegada, e por isso e rosqueada: a
+    # soldavel e a PBA a lista chama em milimetro
+    "Rosca e bitola pequena": ("o que a norma converte", 150, 1),
     "PEAD": ("depois da primeira bomba", 160, 1),
     # a bomba e a ancora do desenho: numa coluna ela virava fio de cabelo
     "Bomba": ("a âncora do desenho", 300, 2),
@@ -96,6 +99,15 @@ def elenco(dn):
             s.adaptador_flange(_pead(dn)),
             s.bucha_reducao(_pead(dn), _pead(menor)),
         ]),
+        # a bitola pequena nao acompanha a da linha: ela e derivacao, e a
+        # ventosa e o manometro entram em 1/2" a 2" em qualquer casa de bomba
+        ("Rosca e bitola pequena", [
+            _em_pol(s.niple(_rosca_mm(2)), 2),
+            _em_pol(s.uniao(_rosca_mm(2)), 2),
+            _em_pol(s.luva_pvc(_rosca_mm(1), "ROSCA"), 1),
+            _em_pol(s.cap_pvc(_rosca_mm(1), "ROSCA"), 1),
+            _em_pol(s.bucha_reducao(_rosca_mm(2), _rosca_mm(1)), 2, 1),
+        ]),
         ("PEAD", [s.tubo_pead(_pead(dn), 6000), s.colar_pead(_pead(dn))]),
         ("Bomba", [
             # a mesma bomba na menor e na maior potencia do folheto: o que
@@ -128,6 +140,20 @@ def _maior_cv(tamanho):
     s.ficha_bomba(tamanho)
     linhas = s._bombas.get((tamanho, 4)) or []
     return max((float(r["cv"]) for r in linhas), default=None)
+
+
+def _rosca_mm(dn_pol):
+    """O milímetro que a ISO 65 dá para essa polegada de rosca."""
+    from motor import cotas
+    return cotas.milimetro_da_serie("ROSCA", dn_pol)[0]
+
+
+def _em_pol(peca, dn_pol, menor=None):
+    """A peça de rosca com o rótulo na polegada da lista, como o catálogo faz."""
+    from motor import desenho
+    return desenho.em_polegada(peca, _rosca_mm(dn_pol), dn_pol,
+                               _rosca_mm(menor) if menor else None, menor,
+                               "ISO 65", "ROSCA")
 
 
 def _ponta_pvc(dn_pol):
@@ -173,6 +199,28 @@ def desenhar(elemento):
     return abre + corpo + fecha
 
 
+def texto_no_eixo(x, y, texto, classe="cota", tamanho=8.0, gira=""):
+    """A cota centrada NO eixo, com o eixo aparado atras dela.
+
+    E a convencao de CAD, e a casa pediu as duas coisas juntas: a cota fica
+    centrada no eixo e o eixo abre para ela passar. As duas andam juntas mesmo
+    - encostada no eixo sem trim a cota fica ilegivel, e fugindo do eixo para o
+    lado ela deixa de dizer a que peca pertence.
+
+    O trim e um retangulo da cor do papel desenhado ANTES do texto: nao da para
+    cortar um path em SVG, e mascara custa mais do que vale numa folha com
+    trezentas pecas. Por isso o giro vai no grupo e nao no texto - o retangulo
+    tem de girar com ele.
+    """
+    largura = len(texto) * tamanho * 0.62 + tamanho * 0.8
+    altura = tamanho * 1.3
+    return (f'<g{gira}><rect class="trim" x="{x - largura/2:.1f}" '
+            f'y="{y - altura/2:.1f}" width="{largura:.1f}" '
+            f'height="{altura:.1f}"/>'
+            f'<text class="{classe}" x="{x:.1f}" y="{y:.1f}" '
+            f'dominant-baseline="central">{texto}</text></g>')
+
+
 def cota_escrita(simbolo):
     """A medida que manda no desenho, escrita como o projetista escreve."""
     def acha(papel):
@@ -186,7 +234,11 @@ def cota_escrita(simbolo):
 
 def bitola(simbolo):
     """A bitola escrita como o projetista fala dela."""
-    if simbolo.params.get("dn_mm"):
+    # a peca de rosca e montada em milimetro mas COMPRADA em polegada: quando
+    # os dois estao nos params, quem manda na tarja e a lista
+    if simbolo.params.get("dn_pol"):
+        pass
+    elif simbolo.params.get("dn_mm"):
         return f'DN{simbolo.params["dn_mm"]:g}'
     pontas = [p for p in simbolo.portas if p.papel in s.ENTRADA + s.SAIDA]
     valores = []
@@ -206,8 +258,7 @@ def fatos(simbolo):
         saida.append(f'{furos["n"]}×⌀{furos["furo"]:g}')
     for chave, molde in (("norma_flange", "{}"), ("carcaca_motor", "carcaça {}"),
                          ("cv", "{:g} CV"), ("peso_kg", "{} kg"),
-                         ("base", "base BD-{}"), ("acionamento", "{}"),
-                         ("serie", "série {}")):
+                         ("base", "base BD-{}"), ("acionamento", "{}")):
         if p.get(chave):
             saida.append(molde.format(p[chave]))
     if p.get("wafer"):
@@ -263,22 +314,20 @@ def celula(simbolo, altura=DESENHO, minimo=1):
         pa, pb = (pontas[0], pontas[-1]) if pontas else (simbolo.portas[0],) * 2
         xm = dx + (pa.x + pb.x) / 2 * escala
         ym = dy + (pa.y + pb.y) / 2 * escala
-        raio = s.DE_TUBO.get(pa.dn_pol, 100) / 2 * escala
-        partes.append(f'<text class="cota" x="{xm:.1f}" '
-                      f'y="{ym - max(min(raio * 0.62, 13), 7):.1f}">{medida}</text>')
+        partes.append(texto_no_eixo(xm, ym, medida))
     for n in notas:
         # elemento repetido, letra de folheto: o desenho mostra e a nota diz.
         # A posicao vem girada: a nota nao passa pelo transform da geometria
         nx, ny = s.posicao_da_nota(n)
-        partes.append(f'<text class="cota" x="{dx + nx * escala:.1f}" '
-                      f'y="{dy + ny * escala + 3:.1f}">{n["texto"]}</text>')
+        partes.append(texto_no_eixo(dx + nx * escala, dy + ny * escala,
+                                    n["texto"]))
     partes.append("</g></svg>")
     return "".join(partes)
 
 
 ESTILO = """
 :root{--tinta:#16181d;--eixo:#c0392b;--anota:#8c9099;--linha:#e6e8ec;
-  --chapa:#f4f5f7;--fundo:#fff;--titulo:#3d424d}
+  --chapa:#f4f5f7;--fundo:#fff;--papel:#fff;--titulo:#3d424d}
 *{box-sizing:border-box}
 body{margin:0;padding:40px 32px 64px;background:var(--fundo);color:var(--tinta);
   font:400 13px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;
@@ -327,6 +376,9 @@ figcaption{padding:0 14px}
 .geo .fluxo{fill:#8f949c;stroke:none}
 text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .cota{font-size:8px;text-anchor:middle}
+.marca{font-size:9px;text-anchor:middle}
+/* o trim: a cota nao foge do eixo, o eixo abre para ela */
+.trim{fill:var(--papel);stroke:none}
 """
 
 LEGENDA = [

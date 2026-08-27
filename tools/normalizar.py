@@ -288,7 +288,8 @@ def normalizar_item(item):
     # Colar de tomada: '160X2"' e '125 X 2"' sao tubo em milimetro e saida em
     # polegada. Sem isso o 160 se perde e o colar fica sem diametro de tubo.
     if peca["familia"] == "COLAR_TOMADA":
-        m = re.search(r"(\d{2,3})\s*(?:MM)?\s*X\s*(\d+(?:\s?\d/\d)?)\s*\"",
+        # "326MM X", "326M X" e "326 X" - a lista escreve dos tres jeitos
+        m = re.search(r"(\d{2,3})\s*M?M?\s*X\s*(\d+(?:\s?\d/\d)?)\s*\"",
                       desc)
         if m:
             peca["dn"] = [int(m.group(1))]

@@ -1,0 +1,36 @@
+# Equivalencia entre a bitola nominal em polegada e o diametro em milimetro.
+#
+# NAO e folha de fabricante nem desenho da casa: e NORMA. Entra como quinta
+# fonte de cota, e a tarja da peca mostra qual norma foi usada, porque a mesma
+# polegada cai em milimetro diferente em cada serie - 2" e 60 mm na soldavel e
+# 50 mm na PBA, e comprar pela tabela errada nao encaixa.
+#
+# As tres linhas da PBA que a casa desenhou confirmam a tabela: os adaptadores
+# medidos no DXF dela sao "ADAP. BS x RM 50 x 2\"", "75 x 3\"" e "100 x 4\"".
+norma,serie,dn_pol,dn_mm
+NBR 5648,SOLDA,0.5,20
+NBR 5648,SOLDA,0.75,25
+NBR 5648,SOLDA,1,32
+NBR 5648,SOLDA,1.25,40
+NBR 5648,SOLDA,1.5,50
+NBR 5648,SOLDA,2,60
+NBR 5648,SOLDA,2.5,75
+NBR 5648,SOLDA,3,85
+NBR 5648,SOLDA,4,110
+NBR 5647,BOLSA,2,50
+NBR 5647,BOLSA,3,75
+NBR 5647,BOLSA,4,100
+NBR 5647,BOLSA,5,125
+NBR 5647,BOLSA,6,150
+ISO 65,ROSCA,0.125,10.2
+ISO 65,ROSCA,0.25,13.7
+ISO 65,ROSCA,0.375,17.1
+ISO 65,ROSCA,0.5,21.3
+ISO 65,ROSCA,0.75,26.9
+ISO 65,ROSCA,1,33.7
+ISO 65,ROSCA,1.25,42.4
+ISO 65,ROSCA,1.5,48.3
+ISO 65,ROSCA,2,60.3
+ISO 65,ROSCA,2.5,76.1
+ISO 65,ROSCA,3,88.9
+ISO 65,ROSCA,4,114.3

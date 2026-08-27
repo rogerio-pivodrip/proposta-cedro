@@ -83,6 +83,35 @@ def _carregar_casa():
     return _casa
 
 
+TABELA_SERIE = f"{DADOS}/series_nominais.csv" if "DADOS" in dir() else \
+    "data/series_nominais.csv"
+_series = None
+
+
+def _carregar_series():
+    global _series
+    if _series is not None:
+        return _series
+    _series = {}
+    with open(TABELA_SERIE, encoding="utf-8") as fh:
+        for r in csv.DictReader(l for l in fh if not l.startswith("#")):
+            _series[(r["serie"], float(r["dn_pol"]))] = (float(r["dn_mm"]),
+                                                         r["norma"])
+    return _series
+
+
+def milimetro_da_serie(serie, dn_pol):
+    """O diametro em milimetro que a norma da para essa polegada, e qual norma.
+
+    Devolve (dn_mm, norma) ou (None, None). A serie importa: 2" e 60 mm na
+    soldavel (NBR 5648) e 50 mm na PBA (NBR 5647), e a peca comprada pela
+    tabela errada nao encaixa. Por isso quem chama tem de dizer a serie, que
+    sai da descricao, e a norma volta para aparecer na tarja.
+    """
+    achado = _carregar_series().get((serie, float(dn_pol)))
+    return achado if achado else (None, None)
+
+
 def cota_da_casa(familia, dn_mm, variante="", significado="comprimento_mm",
                  dn_menor=None, aceitar_suspeita=False):
     """A cota medida no DXF da casa, em milimetro. None se nao houver.

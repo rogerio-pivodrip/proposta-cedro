@@ -1248,6 +1248,87 @@ def tubo_pvc(dn_mm, comprimento_mm=6000, ponta="BOLSA"):
                    {"material": "PVC", "dn_mm": dn_mm, "ponta": ponta})
 
 
+def _rosca(x, comp, raio, lado="entrada"):
+    """O filete da rosca: o que faz uma ponta lisa virar ponta rosqueada.
+
+    Nao e decoracao. De lado, a unica coisa que separa um nipe de um pedaco de
+    tubo e o filete - e separar os dois importa, porque um solda e o outro
+    aparafusa.
+
+    O traco e o do desenho tecnico: a CRISTA e a propria linha do corpo, e o
+    FUNDO do filete e uma linha fina por dentro dela. Desenhar tracinhos sobre
+    a linha do corpo nao aparece - eles caem exatamente onde o corpo ja esta.
+    """
+    fundo = raio * 0.86
+    x0 = x if lado == "entrada" else x - comp
+    x1 = x0 + comp
+    el = [_p(f"M{x0:.1f} {-fundo:.1f} H{x1:.1f}", "malha"),
+          _p(f"M{x0:.1f} {fundo:.1f} H{x1:.1f}", "malha")]
+    # o fim da rosca: onde ela para, o filete fecha
+    fim = x1 if lado == "entrada" else x0
+    el.append(_p(f"M{fim:.1f} {-fundo:.1f} V{fundo:.1f}", "malha"))
+    return el
+
+
+def niple(dn_mm, junta="ROSCA", fonte="norma", norma=""):
+    """Nipe: um toco com rosca macho nas duas pontas.
+
+    A peca mais simples da lista, e a que mais precisa do filete: sem ele e um
+    tubo curto. O comprimento nao esta em folha - o nipe duplo comercial mede
+    perto de 2,4 diametros, e a tarja diz que isso e proporcao.
+    """
+    r = dn_mm / 2
+    comp = dn_mm * 2.4
+    trecho = comp * 0.36
+    el = [_p(f"M0 {-r:.1f} H{comp:.1f}"), _p(f"M0 {r:.1f} H{comp:.1f}"),
+          _p(f"M0 {-r:.1f} V{r:.1f}"), _p(f"M{comp:.1f} {-r:.1f} V{r:.1f}")]
+    el += _rosca(0, trecho, r)
+    el += _rosca(comp, trecho, r, "saida")
+    # o sextavado do meio, onde a chave pega
+    el.append({"tipo": "rect", "x": comp/2 - comp*0.11, "y": -r*1.14,
+               "w": comp*0.22, "h": r*2.28, "classe": "corpo"})
+    el.append(_p(f"M{-comp*0.2:.1f} 0 H{comp*1.2:.1f}", "centro"))
+    dn_pol = _pvc_em_polegada(dn_mm)
+    portas = [Porta("entrada", 0, 0, 180, dn_pol),
+              Porta("saida", comp, 0, 0, dn_pol)]
+    el += _dn_nas_pontas(portas[:1], (dn_mm,), comp * 0.5, r * 0.55)
+    return _montar("NIPLE", f'nipe DN{dn_mm:g}', el, portas, fonte,
+                   {"dn_mm": dn_mm, "junta": junta, "norma": norma})
+
+
+def uniao(dn_mm, junta="ROSCA", fonte="norma", norma=""):
+    """Uniao: duas meias luvas e a porca no meio que aperta uma na outra.
+
+    A porca e a peca - e por ela que a uniao existe. Desmontar uma linha
+    rosqueada sem uniao obriga a girar tudo desde a ponta; com ela, solta-se a
+    porca e o trecho sai. De lado a porca aparece como a cinta gorda no meio,
+    com o sextavado nas quinas.
+    """
+    r = dn_mm / 2
+    comp = dn_mm * 1.9
+    porca_l = comp * 0.34
+    rp = r * 1.30
+    el = [_p(f"M0 {-r:.1f} H{comp:.1f}"), _p(f"M0 {r:.1f} H{comp:.1f}"),
+          _p(f"M0 {-r:.1f} V{r:.1f}"), _p(f"M{comp:.1f} {-r:.1f} V{r:.1f}")]
+    if junta == "ROSCA":
+        el += _rosca(0, comp * 0.26, r)
+        el += _rosca(comp, comp * 0.26, r, "saida")
+    else:
+        el += bolsa(0, dn_mm, dn_mm * 1.16, "entrada")
+        el += bolsa(comp, dn_mm, dn_mm * 1.16, "saida")
+    # a porca central, e o assento conico onde as duas metades se encostam
+    el.append({"tipo": "rect", "x": comp/2 - porca_l/2, "y": -rp,
+               "w": porca_l, "h": 2 * rp, "classe": "porca"})
+    el.append(_p(f"M{comp/2:.1f} {-rp:.1f} V{rp:.1f}", "junta"))
+    el.append(_p(f"M{-comp*0.2:.1f} 0 H{comp*1.2:.1f}", "centro"))
+    dn_pol = _pvc_em_polegada(dn_mm)
+    portas = [Porta("entrada", 0, 0, 180, dn_pol),
+              Porta("saida", comp, 0, 0, dn_pol)]
+    el += _dn_nas_pontas(portas[:1], (dn_mm,), comp * 0.22, r * 0.55)
+    return _montar("UNIAO", f'união DN{dn_mm:g}', el, portas, fonte,
+                   {"dn_mm": dn_mm, "junta": junta, "norma": norma})
+
+
 def cap_pvc(dn_mm, junta="BOLSA"):
     """Cap: a bolsa de um lado e o fundo fechado do outro.
 
@@ -1754,12 +1835,16 @@ def valvula_hidraulica(dn_pol, serie="47"):
 
 
 def medidor(dn_pol):
-    """Woltmann: corpo em ampulheta, torre e o registrador de tampa articulada.
+    """Woltmann: corpo cilindrico, torre e o registrador de tampa articulada.
 
-    O bloco da casa desenha o corpo estreitando para o meio - largo na flange,
-    apertado no eixo do rotor - e o registrador com a tampa levantada, que e
-    como ele fica quando alguem le. A tampa levantada tambem diz de que lado
-    se le, o que importa quando o medidor entra encostado numa parede.
+    O bloco da casa desenha o ombro do corpo entrando na flange, e o
+    registrador com a tampa levantada - que e como ele fica quando alguem le,
+    e diz tambem de que lado se le, o que importa quando o medidor entra
+    encostado numa parede.
+
+    Em cima e embaixo o corpo e reto. A altura sai repartida da folha da ARAD,
+    que cota altura_total e altura_abaixo; ver docs/MOTOR.md 4.8 para o que
+    altura_abaixo pode e nao pode dizer.
     """
     comp, fonte = _cota("MEDIDOR", dn_pol)
     comp = comp or 350
@@ -1767,33 +1852,49 @@ def medidor(dn_pol):
     baixo, _ = _cota("MEDIDOR", dn_pol, "", "altura_abaixo_mm")
     largura, _ = _cota("MEDIDOR", dn_pol, "", "largura_mm")
     f = flange(dn_pol)
-    corpo = (largura or f["externo"]) * 0.62
+    bocal_de = DE_TUBO.get(dn_pol, 100)
+    # o corpo tem de conter o furo: em 12" largura*0.62 da 303 e o tubo tem
+    # 324 de diametro externo, e um corpo mais estreito que o furo nao existe
+    corpo = max((largura or f["externo"]) * 0.62, bocal_de * 1.06)
     baixo = baixo or corpo / 2
     alt = alt or corpo * 2
     meio = comp / 2
-    # o Woltmann nao e simetrico no eixo: a folha da ARAD cota altura_total E
-    # altura_abaixo, e a diferenca entre as duas e justamente o que sobe. A
-    # camara de medicao desce mais do que o registrador sobe, e usar meia
-    # largura para os dois lados perdia isso - em 10" a peca saia 10% baixa
+    # altura_abaixo_mm entra como LIMITE, nao como forma. Em 3" ela vale 90 de
+    # 259 e casa com meia largura do corpo; em 12" vale 330 de 505, e usar isso
+    # como profundidade do corpo deixaria 13 mm acima do eixo para o
+    # registrador - impossivel, porque so o furo da flange ja tem 162 de raio.
+    # O que ela e de fato na folha da ARAD nao esta dito; o que se pode afirmar
+    # e que o corpo nao passa dela.
     r = corpo / 2
-    fundo = baixo
-    bocal = DE_TUBO.get(dn_pol, 100)
-    cintura = bocal * 0.5
+    fundo = min(r, baixo)
+    bocal = bocal_de
+    # a cintura e o aperto do corpo no eixo do rotor. Ela nao pode ser menor
+    # que o furo - a agua passa por ali - nem maior que o corpo. Em bitola
+    # grande as duas se encostam e o corpo sai quase reto, que e o que ele e:
+    # a ampulheta e feicao de bitola pequena, nao convencao de desenho
+    cintura = min(bocal * 0.5, r * 0.97)
 
-    # ampulheta: da flange para o meio o corpo aperta
+    # O corpo e um cilindro com o ombro entrando na flange - reto em cima e
+    # embaixo. A "ampulheta" que o bloco da casa mostra E esse ombro: em 3" o
+    # corpo tem 62 de raio contra 44 do furo e o ombro aparece; em 12" os dois
+    # se encostam e sobra um serrote de 10 mm que le como defeito de traco.
     el = [_p(f"M0 {-bocal/2:.1f} L{comp*0.16:.1f} {-r:.1f} "
-             f"L{meio - comp*0.10:.1f} {-cintura:.1f} "
-             f"H{meio + comp*0.10:.1f} L{comp*0.84:.1f} {-r:.1f} "
-             f"L{comp:.1f} {-bocal/2:.1f}"),
+             f"H{comp*0.84:.1f} L{comp:.1f} {-bocal/2:.1f}"),
+          # embaixo o corpo e RETO, como a casa pediu: a ampulheta em baixo
+          # vira um V no meio do desenho e le como defeito, nao como peca. A
+          # camara de medicao fica ali, e ela e um fundo chato mesmo
           _p(f"M0 {bocal/2:.1f} L{comp*0.16:.1f} {fundo:.1f} "
-             f"L{meio - comp*0.10:.1f} {cintura:.1f} "
-             f"H{meio + comp*0.10:.1f} L{comp*0.84:.1f} {fundo:.1f} "
-             f"L{comp:.1f} {bocal/2:.1f}")]
+             f"H{comp*0.84:.1f} L{comp:.1f} {bocal/2:.1f}")]
     # o V do fundo, que e onde a sujeira nao para
-    # o V do fundo, que e onde a sujeira nao para
-    el.append(_p(f"M{meio - comp*0.14:.1f} {cintura*0.92:.1f} "
-                 f"L{meio:.1f} {cintura + (fundo-cintura)*0.5:.1f} "
-                 f"L{meio + comp*0.14:.1f} {cintura*0.92:.1f}", "malha"))
+    # a tampa da camara de medicao, aparafusada no fundo chato - e por ela que
+    # o rotor sai para manutencao
+    tampa_baixo = comp * 0.44
+    el += [_p(f"M{meio - tampa_baixo/2:.1f} {fundo:.1f} "
+              f"V{fundo - max(fundo*0.16, 8):.1f}", "malha"),
+           _p(f"M{meio + tampa_baixo/2:.1f} {fundo:.1f} "
+              f"V{fundo - max(fundo*0.16, 8):.1f}", "malha"),
+           _p(f"M{meio - tampa_baixo/2:.1f} {fundo - max(fundo*0.16, 8):.1f} "
+              f"H{meio + tampa_baixo/2:.1f}", "malha")]
 
     # A altura acima do eixo e REPARTIDA, nao empilhada: o registrador ocupa
     # o terco de cima, os dois flanges o encosto dele, e a torre o que sobra
@@ -1801,7 +1902,7 @@ def medidor(dn_pol):
     # estourava a cota - o medidor saia 70% mais alto que a folha em toda
     # bitola, e ninguem via porque a torre parecia proporcional ao corpo.
     torre = comp * 0.34
-    topo = -(alt - baixo)
+    topo = -(alt - fundo)
     # A faixa livre e o que existe entre o topo do corpo e o topo cotado, e a
     # reparticao sai dela - nao de uma proporcao do comprimento. Em 12" a
     # camara desce 330 mm dos 505 de altura total, sobram 175 acima do eixo e
@@ -1827,16 +1928,18 @@ def medidor(dn_pol):
                "classe": "corpo"})
     # a tampa articulada abre PARA DENTRO da altura cotada: ela levantada e o
     # estado em que alguem le, e nao pode passar da peca
-    el.append(_p(f"M{meio - torre*0.72:.1f} {caixa_topo:.1f} "
-                 f"L{meio + torre*0.95:.1f} {caixa_topo + caixa_h*0.42:.1f}",
-                 "acionamento"))
-    el.append(_p(f"M{meio - torre*0.72:.1f} {caixa_topo + esp*0.5:.1f} "
-                 f"L{meio + torre*0.95:.1f} "
-                 f"{caixa_topo + caixa_h*0.42 + esp*0.5:.1f}", "acionamento"))
+    # a tampa vai da dobradica de um lado ao canto do outro, sem passar da
+    # caixa: levantada e o estado em que alguem le, e o desenho nao pode
+    # sugerir uma tampa maior que o registrador
+    for desvio in (0.0, esp * 0.5):
+        el.append(_p(f"M{meio - torre*0.66:.1f} {caixa_topo + desvio:.1f} "
+                     f"L{meio + torre*0.62:.1f} "
+                     f"{caixa_topo + caixa_h*0.52 + desvio:.1f}",
+                     "acionamento"))
 
     el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
-    el.append(_p(f"M{meio:.1f} {topo - 40:.1f} V{baixo+40:.1f}", "centro"))
+    el.append(_p(f"M{meio:.1f} {topo - 40:.1f} V{fundo+40:.1f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
     return _montar("MEDIDOR", f'medidor {dn_pol:g}"', el, portas, fonte)
 
@@ -1962,7 +2065,9 @@ def valvula_pe(dn_pol):
     # cesto perfurado embaixo, com a chapa lisa no fundo
     el += [_p(f"M{-cesto:.1f} {-r*0.95:.1f} H0"),
            _p(f"M{-cesto:.1f} {r*0.95:.1f} H0"),
-           _p(f"M{-cesto:.1f} {-r*0.95:.1f} V{r*1.9:.1f}", "chapa_lisa")]
+           # V do SVG e absoluto: sair de -r*0.95 e ir para r*1.9 descia o
+           # dobro e a chapa sobrava embaixo da peca. O fim e r*0.95
+           _p(f"M{-cesto:.1f} {-r*0.95:.1f} V{r*0.95:.1f}", "chapa_lisa")]
     passo = max(9.0, cesto / 14)
     for i in range(int((cesto - passo) / passo)):
         x = -cesto + passo * (i + 1)

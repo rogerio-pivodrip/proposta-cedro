@@ -9214,9 +9214,9 @@
   "familia": "COLAR_TOMADA",
   "material": null,
   "dn": [
-   4.0
+   326
   ],
-  "unidade_dn": "in",
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
@@ -9229,7 +9229,7 @@
   ],
   "derivacoes": [],
   "manifold": null,
-  "saida_pol": null,
+  "saida_pol": 4.0,
   "acionamento": null,
   "serie": null,
   "confianca": 0.86
