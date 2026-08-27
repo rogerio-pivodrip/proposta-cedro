@@ -197,7 +197,91 @@ de máquinas. O erro nasce do encontro, então é no encontro que ele é detecta
 Isso também é o que permite o **recálculo incremental**: mexeu numa peça,
 revalida só as duas junções vizinhas, não a linha inteira.
 
-## 4. O que a peça puxa: um mecanismo só
+## 4. Desenhar: dez símbolos, não 836
+
+A pergunta é se cada peça vira um desenho ou se um desenho serve para várias.
+A medição responde: **nem 836 desenhos, nem um símbolo genérico. Cerca de dez
+símbolos paramétricos, um por família.**
+
+O escopo de 3" a 14" tem **836 itens em 19 famílias** — 44 itens por família,
+em média. E dentro de cada família a variação é **paramétrica, não formal**:
+
+| família | itens no escopo | formas distintas |
+|---|---|---|
+| TUBO | 201 | **1** — muda o DN e o comprimento |
+| REDUCAO_CONCENTRICA | 103 | **1** — muda só o par de DN |
+| REDUCAO_EXCENTRICA | 67 | **1** |
+| CURVA | 60 | **3** — 90°, 45°, 30° |
+| ADAPTADOR | 51 | **1** — muda o DN e a ponta |
+| TE | 15 | **1** |
+
+103 reduções não são 103 desenhos. São um cone, desenhado 103 vezes com
+parâmetros diferentes. Somando as famílias geométricas, dez símbolos cobrem
+tudo que o motor precisa traçar; as demais famílias — filtro, válvula, medidor
+— são caixas, e a caixa sai da ficha do fabricante.
+
+### A prova: a cota não é do código, é da família
+
+O caderno de desenhos da Netafim (páginas 36–39) mostra a redução medida por
+uma cota só, e essa cota **depende apenas do DN maior** — não do DN menor, não
+da norma da outra ponta:
+
+| DN maior | 3" | 4" | 5" | 6" | 8" | 10" | 12" | 14" |
+|---|---|---|---|---|---|---|---|---|
+| face a face | 250 | 250 | 250 | 300 | 300 | 350 | 450 | 600 |
+
+Quatro amostras por bitola, uma por norma de flange. **Zero divergências.**
+
+Generalizando para as demais famílias, com a variante certa como segunda
+chave — o ângulo na curva, o modelo de derivação no manifold —, a tabela fecha:
+
+> **150 combinações de (família, variante, DN). 0 divergências.**
+
+Isso está em `data/cotas_por_familia.csv`, gerado por `tools/extrair_cotas.py`.
+A segunda chave era o que faltava: sem ela, curva e manifold divergiam em toda
+bitola, porque a página 15 (45°) e a página 22 (90°) medem coisas diferentes —
+a curva de 45° de 8" mede 337 mm, a de 90° mede 297 mm — e um manifold D06 de
+8" tem 500 mm contra 3250 mm de um D12.
+
+### De onde sai a cota de cada peça, na ordem
+
+| fonte | itens no escopo |
+|---|---|
+| tabela `(família, variante, DN)` | **359** |
+| comprimento na própria descrição (tubo de 1 m, 6 m) | **200** |
+| ficha do fabricante (`valvulas_wafer.csv`, `valvulas_gaveta.csv`) | wafer e gaveta |
+| **sem cota** | **277** |
+
+Os 277 sem cota não são um buraco aleatório: são filtro (53), válvula
+borboleta (38), válvula hidráulica (31), medidor (15) — exatamente as famílias
+de **lista fechada** da seção 5. A cota delas vem da ficha do fornecedor, não
+do caderno, e é assim que deve ser. O que sobra de verdade é pequeno:
+manifold (44, variantes de derivação ainda não mapeadas), flange cega (23) e
+curva (11 — as sete de 30°, que o caderno não desenha, mais quatro sem ângulo
+na descrição).
+
+### As três camadas do desenho
+
+O que separa "símbolo paramétrico" de "clipart" é que a geometria é real:
+
+1. **Geometria em escala real** — cada peça ocupa no papel a sua cota em
+   milímetro. Os projetos reais desenham em 1:15 a 1:35; nessa escala um erro
+   de 50 mm na redução aparece. A linha é a soma vetorial das cotas, e é ela
+   que fecha a cota geral do conjunto.
+2. **Símbolo paramétrico** — a forma da família, redesenhada com os parâmetros
+   da peça: o cone da redução recebe (DN maior, DN menor, face a face); a curva
+   recebe (raio, ângulo); o tê recebe (DN corrido, DN derivação). Um símbolo
+   por família, ~10 no total.
+3. **Anotação em tamanho fixo** — balão, código SAP, cota escrita. Esta camada
+   **não escala**: texto de 3 mm é texto de 3 mm em 1:15 e em 1:35. Por isso
+   ela vive fora da geometria, num plano próprio.
+
+A consequência prática é a que interessa: **cadastrar uma peça nova não é
+desenhar nada**. Se ela é de uma família conhecida, já tem símbolo; só precisa
+de uma linha na tabela de cotas — e, na maior parte das bitolas, nem isso,
+porque a linha já existe.
+
+## 5. O que a peça puxa: um mecanismo só
 
 Hoje as derivações estão em quatro lugares diferentes. São todas o mesmo padrão
 — *peça ou junção na linha implica outros itens*:
@@ -213,7 +297,7 @@ Hoje as derivações estão em quatro lugares diferentes. São todas o mesmo pad
 Um `derivar(gatilho) -> [(papel, especificação, quantidade)]` só, com as regras
 em tabela, e a resolução em SAP separada da regra.
 
-## 5. O catálogo tem dois modos, e isso precisa ser explícito
+## 6. O catálogo tem dois modos, e isso precisa ser explícito
 
 Aprendido a duras penas:
 
@@ -230,17 +314,19 @@ A borboleta prova de outro jeito: 47 itens de sete linhas comerciais, três
 fabricantes, com alavanca, caixa redutora ou volante. O DN e a norma não
 escolhem; a política da casa escolhe.
 
-## 6. Ordem de implementação
+## 7. Ordem de implementação
 
 1. **`Bitola`** — é a base de tudo e a fonte de mais bugs.
 2. **Gabarito por família** — dá topologia a 340 itens que hoje têm uma lista.
 3. **Negociação com quatro saídas** — inclui a troca de peça.
 4. **`derivar()` unificado** — junta o que está espalhado.
 5. **Modo do catálogo explícito** — encerra a busca que traz a coisa errada.
+6. **Símbolo por família + tabela de cotas** — o desenho vem depois do modelo,
+   não antes.
 
 Nada disso muda as regras de montagem já levantadas. Muda onde elas moram.
 
-## 7. Desktop ou web?
+## 8. Desktop ou web?
 
 **Recomendação: servidor local em Python, interface no navegador.** Um
 executável que a pessoa abre e que sobe o programa em `localhost` — sem
