@@ -27,7 +27,13 @@ def desenhar(elemento):
         fecha = "</g>" + fecha
     classe = elemento.get("classe", "corpo")
     if elemento["tipo"] == "path":
-        corpo = f'<path class="{classe}" d="{elemento["d"]}"/>'
+        # caminho FECHADO ganha uma segunda classe. E o que permite pintar a
+        # carcaca do motor, que e um poligono com os cantos chanfrados e nao
+        # um retangulo - sem isso o motor ficava branco ao lado da bomba
+        # pintada. Caminho aberto continua sem preenchimento: fechar um traco
+        # solto por dentro faria o SVG inventar uma reta e pintar um triangulo
+        fechado = " fechado" if "Z" in elemento["d"].upper() else ""
+        corpo = f'<path class="{classe}{fechado}" d="{elemento["d"]}"/>'
     elif elemento["tipo"] == "rect":
         # a quina arredondada e da carcaça fundida do motor
         raio = (f' rx="{elemento["rx"]:.1f}"' if elemento.get("rx") else "")
@@ -226,7 +232,8 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .geo .revolucao{fill:none;stroke:none}
 
 .modo-metal .geo .tubulo{fill:url(#aco);stroke:none}
-.modo-metal .geo rect.corpo{fill:url(#aco)}
+.modo-metal .geo rect.corpo,
+.modo-metal .geo path.corpo.fechado{fill:url(#aco)}
 .modo-metal .geo .flange,.modo-metal .geo .chapa_lisa{fill:url(#chapa)}
 .modo-metal .geo .parafuso,.modo-metal .geo .porca{fill:url(#ferragem)}
 /* traco mais escuro e mais fino: com o corpo pintado, a linha nao precisa
@@ -257,26 +264,32 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
    parafuso zincado nao vai junto na pintura */
 .modo-metal .peca[data-cor="azul"] .tubulo,
 .modo-metal .peca[data-cor="azul"] rect.corpo,
+.modo-metal .peca[data-cor="azul"] path.corpo.fechado,
 .modo-metal .peca[data-cor="azul"] .flange,
 .modo-metal .peca[data-cor="azul"] .chapa_lisa{fill:url(#azul)}
 .modo-metal .peca[data-cor="azul_medio"] .tubulo,
 .modo-metal .peca[data-cor="azul_medio"] rect.corpo,
+.modo-metal .peca[data-cor="azul_medio"] path.corpo.fechado,
 .modo-metal .peca[data-cor="azul_medio"] .flange,
 .modo-metal .peca[data-cor="azul_medio"] .chapa_lisa{fill:url(#azul_medio)}
 .modo-metal .peca[data-cor="escuro"] .tubulo,
 .modo-metal .peca[data-cor="escuro"] rect.corpo,
+.modo-metal .peca[data-cor="escuro"] path.corpo.fechado,
 .modo-metal .peca[data-cor="escuro"] .flange,
 .modo-metal .peca[data-cor="escuro"] .chapa_lisa{fill:url(#escuro)}
 .modo-metal .peca[data-cor="claro"] .tubulo,
 .modo-metal .peca[data-cor="claro"] rect.corpo,
+.modo-metal .peca[data-cor="claro"] path.corpo.fechado,
 .modo-metal .peca[data-cor="claro"] .flange,
 .modo-metal .peca[data-cor="claro"] .chapa_lisa{fill:url(#claro)}
 .modo-metal .peca[data-cor="pvc"] .tubulo,
 .modo-metal .peca[data-cor="pvc"] rect.corpo,
+.modo-metal .peca[data-cor="pvc"] path.corpo.fechado,
 .modo-metal .peca[data-cor="pvc"] .flange,
 .modo-metal .peca[data-cor="pvc"] .chapa_lisa{fill:url(#pvc)}
 .modo-metal .peca[data-cor="pead"] .tubulo,
 .modo-metal .peca[data-cor="pead"] rect.corpo,
+.modo-metal .peca[data-cor="pead"] path.corpo.fechado,
 .modo-metal .peca[data-cor="pead"] .chapa_lisa{fill:url(#pead)}
 /* a flange do colar de PEAD e de ACO solta: ela nao e pintada de preto */
 .modo-metal .peca[data-cor="pead"] .flange{fill:url(#chapa)}
