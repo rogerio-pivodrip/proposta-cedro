@@ -1561,6 +1561,58 @@ num casco quase igual ao da 200 (`ØAC` 403 contra 402), e o dimensional da
 EBARA é de um motor IEC genérico. As duas folhas discordam de verdade; quem
 decide é a casa, e o teste mostra o par.
 
+## 4.16 Duas coisas que a casa viu no papel
+
+### O manifold não tem essas duas flanges para cima
+
+A casa apontou um manifold de 14" com dois bocais flangeados em cima e disse
+que não tem. Estava certa, e o erro era meu de raiz: o símbolo punha
+`derivacoes=2` **por padrão**. Inventar topologia é o mesmo erro de inventar
+cota, só que na forma.
+
+E a topologia não precisa ser inventada — ela está escrita no nome:
+
+| descrição | o que tem em cima |
+|---|---|
+| `MNFD AZ D06 14" FL NBR PN16 C/ L2` | nada; uma luva de 2" |
+| `MNFD AZ D12 8" FL C/ 2 LG2"` | nada; duas luvas |
+| `MNFD AZ D09 12"X2,65X2100MM FL E 2 FL8"` | dois bocais de 8" flangeados |
+| `MNFD AZ D10 12"X2,65X3260MM FL E 3 K8"` | três bocais de 8" com anel K |
+| `MNFD AZ D20 20" FL X 1FL14" X 2FL12"` | um de 14" e dois de 12" |
+
+`motor/manifold.py` lê isso. O que separa **bocal** de **ponta** é o que vem
+antes: bocal vem com contagem, com `C/`, ou depois de um separador. Sem
+nenhum dos três, o que está escrito é a ponta do próprio manifold — é o que
+distingue `FLK14" 2K10"` (ponta de 14", dois bocais de 10") de `2K10"` sozinho.
+E a aspa deixa de ser obrigatória **quando há contagem**: `2 FL10` é bocal
+tanto quanto `2 FL10"`, mas `K10` sem contagem é classe de anel, não bitola.
+
+### O código D é o desenho do barrilete, e quase sempre fixa a topologia
+
+`tools/gabarito_manifold.py` levanta a tabela do próprio catálogo — 151
+manifolds em 14 códigos — e mostra quem discorda do próprio código:
+
+| código | bocais | luvas | itens | concordam |
+|---|---|---|---|---|
+| D04, D05, D07, D11 | 0 | 0 | 34 | 34 |
+| D06 | 0 | 1 | 8 | 8 |
+| D12 | 0 | 2 | 7 | 7 |
+| D08 | 1 | 0 | 7 | 7 |
+| D09 | 2 | 0 | 43 | 34 |
+| D10, D13, D20 | varia | varia | 26 | — |
+
+Oito códigos têm topologia única e servem de reserva para quem tem descrição
+truncada na lista (`MNFD AZ D09 20"X4,75X2050MM FL FL12"FL8"` perde o começo da
+conta). Os outros variam de verdade, e aí manda a descrição — não o código.
+
+### O colar de PEAD tem lado
+
+A casa viu um trecho de PEAD com a flange da esquerda invertida. O colar é uma
+peça com lado: ponta lisa de um lado, que funde no tubo, e flange do outro, que
+aparafusa na linha de aço. Num trecho os dois colares olham para **fora**, e eu
+desenhava os dois iguais — o da esquerda ficava de costas. `colar_pead` ganhou
+`lado`, e o da ponta de entrada é o mesmo desenho espelhado.
+
 ## 5. O que a peça puxa: um mecanismo só
 
 Hoje as derivações estão em quatro lugares diferentes. São todas o mesmo padrão

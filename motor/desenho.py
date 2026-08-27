@@ -12,7 +12,7 @@ Description - do jeito que a lista da Netafim nomeia.
 """
 import re
 
-from . import cotas, simbolos as s
+from . import cotas, manifold as mnfd, simbolos as s
 from .bomba import MM_PARA_POLEGADA
 
 # METB 150-125-200 -> o tamanho 125-200 do folheto, com succao de 150.
@@ -393,7 +393,12 @@ def _desenhar(item):
         "CRIVO": lambda: s.crivo(maior),
         "FLANGE_CEGA": lambda: s.flange_cega(maior, menor),
         "FLANGE": lambda: s.flange_avulsa(maior),
-        "MANIFOLD": lambda: s.manifold(maior, menor),
+        # a topologia do manifold sai da descricao dele, e nao de um padrao:
+        # e ela que diz quantos bocais existem e de que tamanho
+        "MANIFOLD": lambda: s.manifold(
+            maior, *mnfd.topologia(item["descricao"]),
+            comprimento_mm=item.get("comprimento_mm"),
+            ponta="FLANGE" if "FL" in (item["descricao"] or "").upper() else "K"),
         "ADAPTADOR": lambda: s.adaptador(maior),
         "VALVULA_BORBOLETA": lambda: s.valvula_borboleta(
             maior, item.get("acionamento") or "ALAVANCA"),

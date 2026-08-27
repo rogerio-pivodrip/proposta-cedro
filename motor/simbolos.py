@@ -1499,7 +1499,7 @@ def colar_tomada(dn_mm, saida_pol, tipo="ROSCA", norma="NBR PN16"):
                                  "tipo": tipo, "norma": norma})
 
 
-def colar_pead(dn_mm, pn=10, norma="NBR PN16"):
+def colar_pead(dn_mm, pn=10, norma="NBR PN16", lado="saida"):
     """Colar de flange PEAD com a flange solta ja enfiada.
 
     E uma peca so no desenho porque e uma peca so na obra: a flange entra no
@@ -1510,6 +1510,13 @@ def colar_pead(dn_mm, pn=10, norma="NBR PN16"):
     O ressalto tem o diametro do ressalto da flange de aco da mesma bitola,
     que e onde a junta assenta; o comprimento do pescoco e o unico numero sem
     folha de fabricante e esta estimado - ver docs/MOTOR.md.
+
+    A peca TEM LADO, e e por isso que `lado` existe: o colar tem a ponta lisa
+    de um lado, que funde no tubo, e a flange do outro, que aparafusa na linha
+    de aco. Num trecho de PEAD os dois colares olham para FORA - a flange na
+    ponta do trecho e a solda para dentro. O de baixo (`lado="saida"`) tem a
+    flange na direita; o da ponta de entrada e o mesmo desenho espelhado, e
+    desenhar os dois iguais deixava o da esquerda de costas.
     """
     dn_pol = _pead_em_polegada(dn_mm)
     f = flange(dn_pol, norma)
@@ -1524,39 +1531,48 @@ def colar_pead(dn_mm, pn=10, norma="NBR PN16"):
     pescoco = max(esp + 40, dn_mm * 0.40)
     comp = pescoco + esp_ressalto
 
+    # X() espelha a peca quando ela e a ponta de ENTRADA do trecho: a ponta
+    # lisa passa a olhar para dentro e a flange para fora
+    espelha = lado == "entrada"
+
+    def X(v):
+        return comp - v if espelha else v
+
     el = [
         # o pescoco: tubo de PEAD com a parede cheia, ponta lisa para fundir
-        _p(f"M0 {-r:.1f} H{pescoco:.1f}"), _p(f"M0 {r:.1f} H{pescoco:.1f}"),
-        _p(f"M0 {-r+parede:.1f} H{comp:.1f}", "malha"),
-        _p(f"M0 {r-parede:.1f} H{comp:.1f}", "malha"),
-        _p(f"M0 {-r:.1f} V{r:.1f}", "solda"),
+        _p(f"M{X(0):.1f} {-r:.1f} H{X(pescoco):.1f}"),
+        _p(f"M{X(0):.1f} {r:.1f} H{X(pescoco):.1f}"),
+        _p(f"M{X(0):.1f} {-r+parede:.1f} H{X(comp):.1f}", "malha"),
+        _p(f"M{X(0):.1f} {r-parede:.1f} H{X(comp):.1f}", "malha"),
+        _p(f"M{X(0):.1f} {-r:.1f} V{r:.1f}", "solda"),
         # o ressalto: o anel que cresce no fim do colar. E ele que segura a
         # flange, e e nele que a junta assenta - dai ter o diametro do
         # ressalto da flange de aco da mesma bitola.
-        _p(f"M{pescoco:.1f} {-r:.1f} V{-ressalto/2:.1f}"),
-        _p(f"M{pescoco:.1f} {r:.1f} V{ressalto/2:.1f}"),
-        _p(f"M{pescoco:.1f} {-ressalto/2:.1f} H{comp:.1f}"),
-        _p(f"M{pescoco:.1f} {ressalto/2:.1f} H{comp:.1f}"),
-        _p(f"M{comp:.1f} {-ressalto/2:.1f} V{ressalto/2:.1f}"),
+        _p(f"M{X(pescoco):.1f} {-r:.1f} V{-ressalto/2:.1f}"),
+        _p(f"M{X(pescoco):.1f} {r:.1f} V{ressalto/2:.1f}"),
+        _p(f"M{X(pescoco):.1f} {-ressalto/2:.1f} H{X(comp):.1f}"),
+        _p(f"M{X(pescoco):.1f} {ressalto/2:.1f} H{X(comp):.1f}"),
+        _p(f"M{X(comp):.1f} {-ressalto/2:.1f} V{ressalto/2:.1f}"),
     ]
     # a flange solta, encostada por tras do ressalto. Nao solda em nada: entrou
     # pelo tubo antes de o colar existir e agora nao passa mais pelo ressalto.
-    el.append({"tipo": "rect", "x": pescoco - esp, "y": -f["externo"] / 2,
+    x_flange = min(X(pescoco - esp), X(pescoco))
+    el.append({"tipo": "rect", "x": x_flange, "y": -f["externo"] / 2,
                "w": esp, "h": f["externo"], "classe": "flange"})
     for sinal in (-1, 1):
-        el.append(_p(f"M{pescoco-esp:.1f} {sinal*f['circulo']/2:.1f} "
+        el.append(_p(f"M{x_flange:.1f} {sinal*f['circulo']/2:.1f} "
                      f"h{esp:.1f}", "furo"))
         # o furo central da flange, por onde o tubo passa
-        el.append(_p(f"M{pescoco-esp:.1f} {sinal*(r+2):.1f} h{esp:.1f}",
+        el.append(_p(f"M{x_flange:.1f} {sinal*(r+2):.1f} h{esp:.1f}",
                      "malha"))
-    el.append({"tipo": "texto_furos", "x": pescoco, "y": 0, "n": f["furos"],
+    el.append({"tipo": "texto_furos", "x": X(pescoco), "y": 0, "n": f["furos"],
                "furo": f["furo"]})
     el.append(_p(f"M-60 0 H{comp+50:.0f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol),
               Porta("saida", comp, 0, 0, dn_pol)]
     return _montar("COLAR_PEAD", f'colar PEAD DN{dn_mm:g} + flange solta', el,
                    portas, "netafim",
-                   {"material": "PEAD", "dn_mm": dn_mm, "pn": pn,
+                   {"material": "PEAD", "dn_mm": dn_mm, "pn": pn, "lado": lado,
                     "flange_solta": True, "pescoco_estimado": True})
 
 
@@ -1581,8 +1597,20 @@ def ficha_manifold(dn_pol, derivacao_pol=None):
     return candidatos[0] if candidatos else None
 
 
-def manifold(dn_pol, derivacao_pol=None, derivacoes=2, ponta="FLANGE"):
-    """O barrilete do recalque: corpo longo, derivacoes em cima e as ventosas.
+def manifold(dn_pol, bocais=(), luvas=((2, 2.0),), comprimento_mm=None,
+             ponta="FLANGE"):
+    """O barrilete do recalque: corpo longo, as luvas de ventosa, e o que a
+    descricao mandar em cima.
+
+    **Nao ha bocal por padrao.** Antes o desenho punha dois sempre, e a casa
+    apontou o erro num manifold que nao os tem: "acho que esse manifold nao tem
+    essas 2 flanges pra cima". Estava certa - inventar topologia e o mesmo erro
+    de inventar cota, e as duas saidas eram invencao minha.
+
+    A topologia sai do nome, que a diz por extenso: `2 FL8"` sao dois bocais de
+    8 polegadas flangeados, `3 K8"` sao tres com anel K, `2 LG2"` sao as duas
+    luvas de ventosa. Ver motor/manifold.topologia() e o levantamento por
+    codigo D em tools/gabarito_manifold.py.
 
     As duas luvas de 2" BSP nao sao acessorio - sao a razao de o manifold ter
     ventosa. A folha as cota pelo topo, a 40 mm acima da geratriz do corpo, e
@@ -1590,10 +1618,23 @@ def manifold(dn_pol, derivacao_pol=None, derivacoes=2, ponta="FLANGE"):
 
     A ponta e o que a descricao chama de FL ou K: flange soldada ou anel K10
     para junta mecanica.
+
+    bocais: [(qtd, dn_pol, tipo)] ou [{"qtd","dn_pol","tipo"}], tipo FL ou K
+    luvas:  [(qtd, dn_pol)] ou [{"qtd","dn_pol"}]
     """
-    ficha = ficha_manifold(dn_pol, derivacao_pol) or {}
-    comp = float(ficha.get("comprimento_mm") or 1500)
-    der_pol = float(ficha.get("derivacao_pol") or derivacao_pol or 4)
+    def _lista(itens, campos):
+        saida = []
+        for item in itens or ():
+            if isinstance(item, dict):
+                item = tuple(item[c] for c in campos)
+            saida.append(item)
+        return saida
+
+    bocais = _lista(bocais, ("qtd", "dn_pol", "tipo"))
+    luvas = _lista(luvas, ("qtd", "dn_pol"))
+    der_pol = bocais[0][1] if bocais else None
+    ficha = ficha_manifold(dn_pol, der_pol) or {}
+    comp = float(comprimento_mm or ficha.get("comprimento_mm") or 1500)
     pescoco = float(ficha.get("derivacao_pescoco_mm") or 100)
     luva_alt = float(ficha.get("luva_altura_mm") or DE_TUBO.get(dn_pol, 200) / 2 + 40)
     r = DE_TUBO.get(dn_pol, 200) / 2
@@ -1608,33 +1649,47 @@ def manifold(dn_pol, derivacao_pol=None, derivacoes=2, ponta="FLANGE"):
             el.append({"tipo": "rect", "x": x0, "y": -r - 14, "w": largura,
                        "h": 2 * r + 28, "classe": "corpo"})
 
-    # as derivacoes, distribuidas no corpo, saindo para cima
-    passo = comp / (derivacoes + 1)
-    rd = DE_TUBO.get(der_pol, 100) / 2
-    for i in range(derivacoes):
-        x = passo * (i + 1)
-        el += [_p(f"M{x-rd:.1f} {-r:.1f} V{-(r+pescoco):.1f}"),
-               _p(f"M{x+rd:.1f} {-r:.1f} V{-(r+pescoco):.1f}")]
-        el += placa(x, der_pol, y=-r - pescoco, direcao=-90, lado="saida")
-
-    # as duas luvas de ventosa. A folha cota o topo (G2), nao o comprimento
-    # da luva: os 30 mm da coluna F3 sao a rosca, e a luva sai da parede ate
-    # os 40 mm acima dela que a cota manda.
-    saliencia = luva_alt - r
-    for x in (comp * 0.16, comp * 0.84):
-        el += luva(x, -r, -90, LUVA_BSP["dn_pol"], comprimento=saliencia)
-
-    el.append(_p(f"M-70 0 H{comp+70:.0f}", "centro"))
+    # os bocais, distribuidos no corpo, saindo para cima
+    abertos = [(dn, tipo) for qtd, dn, tipo in bocais for _ in range(int(qtd))]
+    passo = comp / (len(abertos) + 1)
     portas = [Porta("entrada", 0, 0, 180, dn_pol),
               Porta("saida", comp, 0, 0, dn_pol)]
-    for i in range(derivacoes):
-        portas.append(Porta("derivacao", passo * (i + 1), -r - pescoco, -90,
-                            der_pol))
-    rot = (f'manifold {dn_pol:g}" {comp:g} mm · {derivacoes}×{der_pol:g}" '
-           f'· 2 lv 2"')
+    for i, (dn_b, tipo) in enumerate(abertos):
+        x = passo * (i + 1)
+        rd = DE_TUBO.get(dn_b, 100) / 2
+        el += [_p(f"M{x-rd:.1f} {-r:.1f} V{-(r+pescoco):.1f}"),
+               _p(f"M{x+rd:.1f} {-r:.1f} V{-(r+pescoco):.1f}")]
+        if tipo == "K":
+            # anel K: ressalto de topo, sem furacao - mesma logica da ponta
+            el.append({"tipo": "rect", "x": x - rd - 10, "y": -r - pescoco,
+                       "w": 2 * rd + 20, "h": 20, "classe": "corpo"})
+        else:
+            el += placa(x, dn_b, y=-r - pescoco, direcao=-90, lado="saida")
+        portas.append(Porta("derivacao", x, -r - pescoco, -90, dn_b))
+
+    # as luvas de ventosa. A folha cota o topo (G2), nao o comprimento da
+    # luva: os 30 mm da coluna F3 sao a rosca, e a luva sai da parede ate os
+    # 40 mm acima dela que a cota manda.
+    saliencia = luva_alt - r
+    postas = [dn for qtd, dn in luvas for _ in range(int(qtd))]
+    for i, dn_l in enumerate(postas):
+        x = comp * (0.16 + 0.68 * i / (len(postas) - 1)) if len(postas) > 1 \
+            else comp * 0.5
+        el += luva(x, -r, -90, dn_l, comprimento=saliencia)
+
+    el.append(_p(f"M-70 0 H{comp+70:.0f}", "centro"))
+    partes = []
+    for qtd, dn_b, tipo in bocais:
+        partes.append(f'{int(qtd)}×{dn_b:g}"{"" if tipo == "FL" else " K"}')
+    for qtd, dn_l in luvas:
+        partes.append(f'{int(qtd)} lv {dn_l:g}"')
+    rot = f'manifold {dn_pol:g}" {comp:g} mm'
+    if partes:
+        rot += " · " + " · ".join(partes)
     return _montar("MANIFOLD", rot, el, portas, fonte,
-                   {"derivacoes": derivacoes, "derivacao_pol": der_pol,
-                    "luvas_ventosa": 2, "ponta": ponta})
+                   {"bocais": bocais, "luvas": luvas, "ponta": ponta,
+                    "derivacoes": len(abertos),
+                    "luvas_ventosa": len(postas)})
 
 
 # ------------------------------------------------------- familias de equipamento

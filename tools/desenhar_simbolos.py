@@ -65,7 +65,10 @@ def elenco(dn):
         ]),
         ("Derivação e mudança de bitola", [
             s.te(dn, 2),
-            s.manifold(dn if dn >= 4 else 4, menor),
+            # a folha mostra o D12, que e o liso com as duas luvas de
+            # ventosa - e o que a legenda dela ja dizia. Bocal em cima so
+            # quando a descricao do item pede
+            s.manifold(dn if dn >= 4 else 4),
             s.reducao(dn, menor, "CONCENTRICA"),
             s.reducao(dn, menor, "EXCENTRICA", "topo"),
             s.adaptador(dn),

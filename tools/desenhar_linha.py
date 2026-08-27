@@ -95,15 +95,21 @@ def trecho_pead(dn, tubos=4):
     """
     from motor.traducao import POLEGADA_MM
     dn_mm = POLEGADA_MM.get(dn) or 225
-    return ([s.colar_pead(dn_mm)] + [s.tubo_pead(dn_mm)] * tubos
+    # os dois colares olham para FORA: a flange na ponta do trecho e a solda
+    # para dentro. O da esquerda e o mesmo desenho espelhado
+    return ([s.colar_pead(dn_mm, lado="entrada")] + [s.tubo_pead(dn_mm)] * tubos
             + [s.colar_pead(dn_mm)])
 
 
-def manifold_ventosas(dn, derivacao=None):
+def manifold_ventosas(dn, bocais=()):
     """O barrilete do recalque, com as duas luvas de ventosa e a flange cega
-    fechando a ponta - a cega leva a terceira luva de 2\"."""
-    menor = derivacao or {14: 8, 12: 6, 10: 6, 8: 6, 6: 4, 4: 3}.get(dn, 4)
-    return [s.manifold(dn, menor), s.flange_cega(dn, 2)]
+    fechando a ponta - a cega leva a terceira luva de 2\".
+
+    Sem bocal por padrao: e o D12 da lista, o liso com as duas luvas. Bocal em
+    cima e o que a descricao do item pedir, e nao um numero que este desenho
+    escolha - ver motor/manifold.py.
+    """
+    return [s.manifold(dn, bocais), s.flange_cega(dn, 2)]
 
 
 def _os_dois_pead(a, b):

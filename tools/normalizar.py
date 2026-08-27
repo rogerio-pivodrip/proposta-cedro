@@ -8,10 +8,14 @@ que o motor de desenho e o gerador de lista consomem.
 Uso: python3 tools/normalizar.py [entrada.json] [saida.json]
 """
 import json
+import os
 import re
 import sys
 import unicodedata
 from collections import Counter
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from motor import manifold  # noqa: E402
 
 PADRAO_ENTRADA = "data/catalogo_bruto.json"
 PADRAO_SAIDA = "data/catalogo.json"
@@ -226,6 +230,8 @@ def normalizar_item(item):
     peca["comprimento_mm"] = None
     peca["conexoes"] = []
     peca["derivacoes"] = []
+    peca["bocais"] = []
+    peca["luvas"] = []
     peca["manifold"] = None
     peca["saida_pol"] = None
     peca["acionamento"] = None
@@ -326,6 +332,13 @@ def normalizar_item(item):
             peca["serie"] = m.group(1)
 
     peca["conexoes"] = extrair_conexoes(desc, dns_pos)
+
+    # O manifold e a peca com mais variacao de FORMA e nenhuma cota nova: o
+    # que muda e o que ha em cima dele, e isso esta escrito no nome. Ver
+    # motor/manifold.py - sem isto o desenho teria de inventar quantos bocais
+    # existem, que foi o erro que a casa apontou
+    if peca["familia"] == "MANIFOLD":
+        peca["bocais"], peca["luvas"] = manifold.topologia(desc)
 
     for m in RX_ESCAPE.finditer(desc):
         peca["derivacoes"].append(
