@@ -27,6 +27,30 @@ TIPOS_FLANGE = {"FLANGE", "FLANGE_K"}
 # tem ponta K e avisar, em vez de aceitar em silencio.
 TIPOS_RECUSADOS = {"ENGATE_K"}
 
+# Trecho reto obrigatorio antes e depois de certos equipamentos, em multiplos
+# do diametro nominal. O medidor so mede direito com o fluxo desenvolvido.
+TRECHO_RETO = {
+    "MEDIDOR": (10, 5),
+}
+
+# Pecas que perturbam o fluxo e por isso interrompem a contagem do trecho reto
+PERTURBAM_FLUXO = {"CURVA", "TE", "TE_REDUZIDO", "Y", "REDUCAO_CONCENTRICA",
+                   "REDUCAO_EXCENTRICA", "BUCHA_REDUCAO", "VALVULA_RETENCAO",
+                   "VALVULA_BORBOLETA", "VALVULA_GAVETA", "VALVULA_HIDRAULICA",
+                   "BOMBA", "MANIFOLD", "FILTRO", "CRIVO", "ARTICULADOR"}
+
+
+def trecho_reto_exigido(familia, dn, unidade="in"):
+    """(antes_mm, depois_mm) que a peca exige de tubo reto, ou None."""
+    regra = TRECHO_RETO.get(familia)
+    if not regra:
+        return None
+    dn_mm = dn_nominal(dn, unidade)
+    if not dn_mm:
+        return None
+    return regra[0] * dn_mm, regra[1] * dn_mm
+
+
 # Valvulas do tipo wafer, presas por tirante. A regra de compra e por BARRA
 # INTEIRA, nao por tirante: 3 barras de 1 m por valvula. O corte acontece na
 # montagem e nao reduz a quantidade comprada.

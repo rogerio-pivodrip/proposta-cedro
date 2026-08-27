@@ -112,6 +112,41 @@ class Linha:
         return [j for j in self.juncoes()
                 if j["acao"] in ("reducao", "adaptador", "recusada")]
 
+    def trechos_retos(self):
+        """Confere o tubo reto exigido antes e depois de cada equipamento.
+
+        Conta so tubo: qualquer peca que perturba o fluxo - curva, te, reducao,
+        valvula - zera a contagem, porque e ela que estraga a medicao.
+        """
+        achados = []
+        for i, peca in enumerate(self.pecas):
+            dn = peca.item["dn"][0] if peca.item["dn"] else None
+            if dn is None:
+                continue
+            exigido = regras.trecho_reto_exigido(peca.familia, dn,
+                                                 peca.unidade_dn)
+            if not exigido:
+                continue
+            antes = self._reto(range(i - 1, -1, -1))
+            depois = self._reto(range(i + 1, len(self.pecas)))
+            achados.append({
+                "pos": i, "peca": peca,
+                "antes_mm": antes, "depois_mm": depois,
+                "exige_antes_mm": exigido[0], "exige_depois_mm": exigido[1],
+                "ok": antes >= exigido[0] and depois >= exigido[1],
+            })
+        return achados
+
+    def _reto(self, indices):
+        total = 0
+        for i in indices:
+            peca = self.pecas[i]
+            if peca.familia in regras.PERTURBAM_FLUXO:
+                break
+            if peca.familia == "TUBO":
+                total += peca.comprimento_mm or 0
+        return total
+
     def geometria(self):
         """Posicao acumulada de cada peca no eixo da linha (mm) e angulo corrente.
 
@@ -234,5 +269,15 @@ class Linha:
                     avisos.append(f"sem SAP para {papel} {esp}")
                     continue
                 somar(item["sap"], item["descricao"], qtd, "ferragem")
+
+        for t in self.trechos_retos():
+            if t["ok"]:
+                continue
+            avisos.append(
+                f"{t['peca'].familia} na posicao {t['pos']}: precisa de "
+                f"{t['exige_antes_mm']/1000:.2f} m de tubo reto antes e "
+                f"{t['exige_depois_mm']/1000:.2f} m depois; o desenho tem "
+                f"{t['antes_mm']/1000:.2f} m e {t['depois_mm']/1000:.2f} m"
+            )
 
         return list(bom.values()), avisos

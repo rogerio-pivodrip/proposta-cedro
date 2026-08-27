@@ -350,6 +350,30 @@ cada um:
 | 250 mm · 10" | 15 | ANSI 300, EN PN16, EN PN10, ANSI 150 |
 | 300 mm · 12" | 1 | NBR PN25, EN PN16, NBR PN40, EN PN10, ANSI 150 |
 
+### 4.7 Trecho reto: regra de layout, não de peça
+
+O hidrômetro só mede direito com o fluxo desenvolvido: **10 vezes a bitola de
+tubo reto antes e 5 depois**. É a primeira regra que não fala de peça, e sim de
+espaço — vale no desenho antes de valer na lista.
+
+| bitola | antes (10×) | depois (5×) | total |
+|---|---|---|---|
+| 3" | 0,80 m | 0,40 m | 1,20 m |
+| 4" | 1,00 m | 0,50 m | 1,50 m |
+| 6" | 1,50 m | 0,75 m | 2,25 m |
+| 8" | 2,00 m | 1,00 m | 3,00 m |
+| 10" | 2,50 m | 1,25 m | 3,75 m |
+| 12" | 3,00 m | 1,50 m | 4,50 m |
+
+A contagem é só de tubo. Qualquer peça que perturba o fluxo — curva, tê, redução,
+válvula, filtro, bomba — zera o trecho, porque é ela que estraga a medição
+(`regras.PERTURBAM_FLUXO`). `Linha.trechos_retos()` mede os dois lados e a lista
+acusa quando falta.
+
+O mecanismo é genérico: `regras.TRECHO_RETO` é um dicionário família → (antes,
+depois) em múltiplos do DN. Outros equipamentos com exigência parecida entram
+adicionando uma linha.
+
 ## 5. Do desenho à geometria — sem CAD
 
 Vista lateral 2D. Cada peça tem comprimento face a face; curva tem ângulo. A
