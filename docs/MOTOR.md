@@ -1245,6 +1245,48 @@ de uma vez:
 Na 150-250 isso põe o caracol de 22 a 160, o eixo da descarga em **91**, e o
 motor começando em 160 — depois do eixo, como a casa disse.
 
+### A tabela toda, e o que ela deixa em aberto
+
+A casa mandou um segundo desenho de fábrica — METB 125-80-315 30CV — e pediu
+para comparar. A comparação fechou a **forma** e abriu o **comprimento**.
+
+A forma primeiro. Medindo o desenho dela pela escala da flange de sucção:
+
+| | desenho de fábrica | o motor desenha | Δ |
+|---|---|---|---|
+| largura do caracol | ~206 mm | 205 | −0,6% |
+| diâmetro do caracol | ~435 mm | 430 | −1,1% |
+
+São 0,65 e 1,38 do rotor. Eu vinha de 0,95 e 1,85 — chute, e o caracol saía
+gordo e alto demais. Agora as duas proporções são **medidas**, não estimadas.
+
+O comprimento é outra história. A tabela da 150-250, contra os 949,7 mm que o
+bloco da casa mede:
+
+| CV | carcaça | `a + l` | `w + l` |
+|---|---|---|---|
+| 30 | 180M | 848 (−10,7%) | **942 (−0,8%)** |
+| 40 | 200M | 913 (−3,9%) | 1019 (+7,3%) |
+| **50** | **200L** | **951 (+0,1%)** | 1057 (+11,3%) |
+| 60 | 225S/M | 1040 (+9,5%) | 1162 (+22,4%) |
+
+O bloco está rotulado **50cv**, e nessa linha quem casa é `a + l`, em 0,1%. Mas
+`a` = 125 na 80-315 não cabe um caracol de 205 mm de largura antes do motor — e
+a casa disse que o motor não chega no eixo da descarga. As duas coisas só
+convivem se `l` **não for o comprimento do motor sozinho**: se `l` for medido do
+eixo da descarga até o fim do motor, incluindo a metade de trás do caracol e a
+lanterna, então `a + l` é o total e o motor começa depois do eixo — tudo fecha.
+
+Isso é consistente com `l` depender só da carcaça (22 de 22 tamanhos), porque na
+monobloco o adaptador é padronizado por carcaça IEC. E o `w` não serve de
+alternativa: ele **varia com a carcaça** (254, 266, 266, 282 na mesma bomba),
+então é cota do motor e não do caracol.
+
+Fica registrado como está: o desenho segue o que a casa afirmou — caracol
+centrado na boca, motor depois dela — e por isso o comprimento passa de `a + l`
+pela metade da largura do caracol. `conferir_cad` mostra **+10,8%** na METB. Só
+a KSB ou um conjunto medido resolve se `l` inclui a lanterna.
+
 ### O que eu tinha desfeito por achar impossível
 
 Dois turnos atrás eu centrei a boca no caracol, vi a flange de descarga avançar

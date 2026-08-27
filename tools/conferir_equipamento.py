@@ -26,7 +26,11 @@ from motor import simbolos as s  # noqa: E402
 # piloto, que e peca pendurada e vem listado junto. Comparar a caixa cheia
 # contra H seria cobrar da folha uma medida que ela nao deu.
 SEM_CORPO = {"centro"}
-FORA_DA_ALTURA = {"flange", "furo", "piloto", "parafuso", "porca"}
+# O parafuso ENTRA na altura: numa tampa aparafusada a cabeca dele e o ponto
+# mais alto da peca, e e ate ela que a folha cota. Sai da conta so o que a folha
+# de fato nao cobre - a flange do tubo, que em bitola pequena e mais larga que a
+# peca inteira, e o piloto, que vem pendurado e listado a parte.
+FORA_DA_ALTURA = {"flange", "furo", "piloto"}
 BITOLAS = (3, 4, 5, 6, 8, 10, 12, 14)
 
 # familia -> (como montar, cota de comprimento, cota de altura)

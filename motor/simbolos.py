@@ -1890,8 +1890,14 @@ def valvula_hidraulica(dn_pol, serie="47"):
     # corpo; a casa pediu a torre subindo ate em cima
     esp = alt * 0.07
     # -(alt - fundo) e nao -alt: o que a folha cota e a peca inteira, e a
-    # barriga desce abaixo do eixo
-    ytampa = -(alt - fundo) + esp
+    # barriga desce abaixo do eixo.
+    #
+    # E a CABECA DO PARAFUSO da tampa e que fica mais alta, nao a tampa: ela
+    # sobrava acima da cota, e era so ela que fazia a peca parecer alta. Baixar
+    # o conjunto pela altura da cabeca poe o ponto mais alto do desenho no
+    # ponto mais alto da folha.
+    cabeca = esp * 0.62
+    ytampa = -(alt - fundo) + esp + cabeca
     el.append({"tipo": "rect", "x": meio - tampa/2, "y": ytampa - esp,
                "w": tampa, "h": esp, "rx": esp * 0.25, "classe": "corpo"})
     el.append({"tipo": "rect", "x": meio - tampa*0.42, "y": ytampa,
@@ -1997,12 +2003,15 @@ def medidor(dn_pol):
     # manda e -r, nao a cintura antiga: usar a cintura deixava a torre
     # apoiada no ar, com um vao entre o mostrador e a peca
     livre = max(-topo - r, alt * 0.10)
-    esp = min(torre * 0.16, livre * 0.22)
-    caixa_h = livre * 0.46                      # o registrador
+    # o registrador ocupa a maior parte do vao livre, e nao metade dele: com
+    # metade sobrava um vao de chapa fina entre ele e o corpo, e o mostrador
+    # ficava flutuando em cima da peca em vez de assentado nela
+    esp = min(torre * 0.13, livre * 0.11)
+    caixa_h = livre * 0.66                      # o registrador
     caixa_topo = topo
     caixa_base = topo + caixa_h
     # os dois flanges aparafusados, encostados sob o registrador
-    flange_base = caixa_base + esp * 2.7
+    flange_base = caixa_base + esp * 2.4
     el.append({"tipo": "rect", "x": meio - torre/2, "y": flange_base,
                "w": torre, "h": -r - flange_base, "classe": "corpo"})
     for y in (caixa_base + esp * 1.7, caixa_base):
@@ -2342,28 +2351,23 @@ def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, pe_base=None):
     # motor e desce quase ate a base, com pe proprio. Em 1,15 do raio do rotor
     # ele saia um caroco no meio do conjunto. O teto e b: o caracol nao passa
     # da base, senao a peca fura o chao.
-    rv = min(rotor / 2 * 1.85, b * 0.86)
+    rv = min(rotor * 0.69, b * 0.86)
     # A largura AXIAL do caracol. Em 0,42 do rotor ela saia desproporcional -
     # um caracol de 105 mm carregando uma boca de 152 de furo, com o pescoco
     # mais largo que a peca que o sustenta. O piso agora e a propria boca: o
     # caracol nao pode ser mais estreito do que ela pede. E o teto e o vao
     # ate a face de succao, senao o caracol engole o bocal de entrada.
-    # o teto e o vao entre a face de succao e a face do motor: o caracol vive
-    # todo dentro dele, e ainda tem de sobrar toco para a boca de succao
-    largura = min(max(rotor * 0.95, 2 * r2 * 0.90), c * 0.86)
-    # O caracol e centrado na BOCA, e a face de tras dele fica em c - as duas
-    # coisas ao mesmo tempo, e e isso que fecha com a medida da casa:
-    #
-    #   c (o a do folheto) e a face de succao ate a face do FLANGE DO MOTOR, e
-    #   nao ate o eixo da descarga: c + l da 951 contra 949,7 medidos na casa;
-    #   o motor nao chega no eixo da descarga - a casa disse, e o desenho de
-    #   fabrica mostra. Ele para em c, e o eixo fica antes, no meio do caracol;
-    #   entao a boca fica em c - largura/2, e o funil sai concentrico com ela.
-    #
-    # A consequencia e que a flange de descarga avanca um pouco atras da face
-    # de succao. Eu tinha desfeito isso por achar impossivel; no desenho de
-    # fabrica da casa ela avanca mesmo.
-    x0, x1 = c - largura, c
+    # A largura e o diametro do caracol saem MEDIDOS no desenho de fabrica que
+    # a casa mandou (METB 125-80-315): 206 mm de largura e 435 de diametro para
+    # um rotor de 315, ou 0,65 e 1,38 do rotor. Antes eram 0,95 e 1,85 - chute,
+    # e o caracol saia gordo e alto demais. O piso continua sendo a boca: ela
+    # nao pode ser mais larga que o caracol que a sustenta.
+    largura = max(rotor * 0.65, 2 * r2 * 0.90)
+    # O caracol e CENTRADO na boca de descarga, que fica em c - o a do folheto,
+    # face de succao ate o eixo da descarga. O motor comeca depois dele, e nao
+    # no eixo: a casa disse, e o desenho de fabrica mostra. Ver 4.13 para o que
+    # isso deixa em aberto no comprimento total.
+    x0, x1 = c - largura / 2, c + largura / 2
     # A BOCA DA DESCARGA fica em c, que e onde o folheto a coloca, e nao no
     # meio do caracol. Duas medidas mandam nisso e as duas conferem:
     #
