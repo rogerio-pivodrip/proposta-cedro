@@ -39,7 +39,6 @@ LINHAS = [
     ("manifold", "MANIFOLD", {}),
     ("medidor", "MEDIDOR", {}),
     ("articulador 30", "ARTICULADOR", {}),
-    ("flutuador PEAD", "FLUTUADOR", {}),
 ]
 
 

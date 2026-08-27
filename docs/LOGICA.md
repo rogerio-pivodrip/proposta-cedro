@@ -454,38 +454,26 @@ Os **manifolds já são desenhos padrão** no catálogo: `MNFD AZ D02 … D20`,
 14 tipos, 151 itens; só o `D09` tem 43 variações de DN e comprimento. O conceito
 já existe na Netafim — o programa formaliza.
 
-### 7.1.1 Sucção com flutuante: o articulador
+### 7.1.1 Articulador
 
-O manual recomenda sucção com flutuante para **água de baixa qualidade**. Nela
-entra o **articulador de 30°**, que é o eixo em que a tomada gira quando o nível
-da água sobe e desce, e o **flutuador bipartido** no tubo de PEAD.
+O **articulador de 30°** entra como opção da sucção, depois da tomada:
 
 ```
 crivo → válvula de retenção → articulador 30° → tubo de 1 m → curva → redução → bomba
-                                     └── e os flutuadores no trecho de PEAD
 ```
 
-`templates.succao(..., flutuante=True)` insere o articulador logo depois da
-tomada. Resolvido de 4" a 14":
+`templates.succao(..., articulador=True)`. Resolvido de 4" a 14":
 
-| DN | articulador | flutuador |
-|---|---|---|
-| 4" | `01523-850000` | `01541-000004` |
-| 6" | `01523-850001` | `01541-000005` |
-| 8" | `01523-850002` | `01541-000006` |
-| 10" | `01523-850003` | `01541-000007` ou `-000008` |
-| 12" | `01523-850004` | `01541-000009` |
-| 14" | `01523-850005` | `01541-000010` |
+| DN | 4" | 6" | 8" | 10" | 12" | 14" |
+|---|---|---|---|---|---|---|
+| código | `01523-850000` | `-850001` | `-850002` | `-850003` | `-850004` | `-850005` |
 
-Dois pontos de atenção:
+**Não existe em 3"** — a série começa em 4".
 
-- **3" não tem articulador.** O flutuador existe (`01541-000003`), mas o
-  articulador começa em 4" — então sucção flutuante de 3" não fecha.
-- **10" tem dois flutuadores**, `T1` e `-T2`. O que separa os dois não está na
-  descrição.
-
-Quantos flutuadores por tubo também não está definido: o motor conta **um por
-tubo de PEAD** e avisa.
+> **Flutuador fica fora.** O manual descreve sucção com flutuante e o catálogo
+> tem o flutuador bipartido de 3" a 16", mas a casa **ainda não usa**. Deixei a
+> peça reconhecida no catálogo e fora do template, marcado em
+> `templates.FLUTUADOR_EM_USO`. Quando passar a usar, é uma linha.
 
 ### 7.2 Trecho de PEAD, depois da primeira bomba
 
