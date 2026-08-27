@@ -14,6 +14,9 @@ Fontes (data/fichas/):
   RAN               Fig. 37 gaveta cunha emborrachada corpo curto (ISO 5752
                     serie 14, flange NBR 7675) e Fig. 39 retencao de
                     fechamento rapido wafer
+  MP VALVULAS       Fig. 140 borboleta wafer (API 609, alavanca de 10 posicoes
+                    ou caixa redutora - a tabela e a mesma), Fig. 114 valvula
+                    de pe com crivo, Fig. 153 gaveta haste fixa
 
 Uso: python3 tools/fichas_equipamento.py > data/cotas_equipamento.csv
 """
@@ -112,6 +115,47 @@ RETENCAO_RAN = [
     (350, 429, 413, 223, '1"',   286,  75.0),
     (400, 485, 475, 235, '1"',   215, 104.0),
 ]
+# ---- borboleta MP Valvulas Fig. 140, wafer ANSI ou DIN 150 LBS -----------
+# B = face a face | D = altura do centro ate o topo | A = diametro do disco.
+# E e a bitola do tirante na ficha - fica marcada para conferencia porque
+# diverge da regra da casa acima de 6" (ver docs/LOGICA.md).
+# Alavanca de 10 posicoes e caixa redutora com volante lateral partilham a
+# mesma tabela: o acionamento nao muda o corpo nesta linha.
+BORBOLETA_MP = [
+    # dn_pol,  A,     B,   D,     tirante
+    (1.5,   45.5,  30, 100,   '3/8"'),
+    (2,     51,    43, 140,   '9/16"'),
+    (2.5,   65.5,  46, 152,   '9/16"'),
+    (3,     76,    46, 159,   '9/16"'),
+    (4,    101,    52, 178,   '5/8"'),
+    (5,    127,    56, 190,   '3/4"'),
+    (6,    146.5,  56, 202,   '3/4"'),
+    (8,    194,    60, 242.5, '7/8"'),
+    (10,   247,    68, 278,   '1"'),
+    (12,   301,    78, 310,   '1.1/8"'),
+    (14,   337,    78, 340,   '1.3/8"'),
+    (16,   384,   102, 365,   '1.5/8"'),
+    (18,   438,   114, 415,   '1.3/4"'),
+    (20,   491,   127, 450,   '1.3/4"'),
+    (24,   614,   154, 500,   '2.1/4"'),
+]
+# ---- valvula de pe com crivo MP Fig. 114, fundo de poco ------------------
+# H = altura total do conjunto. E outra peca que o crivo conico do caderno
+# Netafim e que o cesto do Irrigafour: aqui a retencao vem junto.
+VALVULA_PE = [
+    # dn_mm, H
+    (50, 152), (65, 167), (75, 195), (80, 195), (100, 206), (125, 237),
+    (150, 328), (200, 330), (250, 382), (300, 417), (350, 435), (400, 686),
+]
+# ---- gaveta MP Fig. 153: o que faltava era altura e volante --------------
+# L (face a face) ja estava em data/valvulas_gaveta.csv e bate com o RAN.
+GAVETA_MP = [
+    # dn_mm,  L,   V volante
+    (50,  150, 200), (65,  170, 200), (75,  180, 200), (100, 190, 200),
+    (125, 200, 250), (150, 210, 300), (200, 230, 350), (250, 250, 350),
+    (300, 270, 400), (350, 290, 500), (400, 310, 500),
+]
+FONTE_MP = "MP Valvulas fichas T.140, T.114 e T.153"
 FONTE_RAN = "RAN Valvulas Fig. 37 (gaveta) e Fig. 39 (retencao)"
 FONTE_DOROT = "DOROT secao A - valvulas metalicas basicas"
 FONTE_BORB = "SAINT-GOBAIN PAM FTSG 0406 rev01"
@@ -167,6 +211,26 @@ def main():
             escritor.writerow(["RAN", "VALVULA_RETENCAO", "FECHAMENTO_RAPIDO",
                                f"{POLEGADA[dn_mm]:g}", dn_mm, significado,
                                f"{valor:g}", FONTE_RAN])
+            n += 1
+    for dn_pol, a, b, d, tirante in BORBOLETA_MP:
+        for significado, valor in (("face_a_face_mm", b),
+                                   ("altura_acima_mm", d),
+                                   ("diametro_disco_mm", a)):
+            escritor.writerow(["MP", "VALVULA_BORBOLETA", "", f"{dn_pol:g}", "",
+                               significado, f"{valor:g}", FONTE_MP])
+            n += 1
+        escritor.writerow(["MP", "VALVULA_BORBOLETA", "", f"{dn_pol:g}", "",
+                           "tirante_conferir_pol", tirante, FONTE_MP])
+        n += 1
+    for dn_mm, altura in VALVULA_PE:
+        escritor.writerow(["MP", "VALVULA_PE", "COM_CRIVO", f"{POLEGADA[dn_mm]:g}",
+                           dn_mm, "altura_total_mm", altura, FONTE_MP])
+        n += 1
+    for dn_mm, comp, volante in GAVETA_MP:
+        for significado, valor in (("face_a_face_mm", comp),
+                                   ("volante_mm", volante)):
+            escritor.writerow(["MP", "VALVULA_GAVETA", "", f"{POLEGADA[dn_mm]:g}",
+                               dn_mm, significado, f"{valor:g}", FONTE_MP])
             n += 1
     bitolas = sum(len(t) for t in DOROT.values())
     print(f"# {n} cotas de equipamento: borboleta {len(BORBOLETA)} bitolas, "

@@ -101,6 +101,12 @@ def main():
 
     # ---- equipamento: cada familia tem um fabricante so, entao a fonte e ele
     for r in csv.DictReader(open(EQUIPAMENTO, encoding="utf-8")):
+        # cotas.csv guarda so milimetro: peso e bitola de tirante ficam na
+        # tabela de equipamento, que e onde a ficha inteira vive
+        try:
+            float(r["valor_mm"])
+        except ValueError:
+            continue
         if r["significado"].endswith("_kg"):
             continue
         linhas.append([r["fabricante"], r["familia"], r["variante"], r["dn_pol"],

@@ -14,6 +14,17 @@ import csv
 import os
 
 PADRAO = "IRRIGAFOUR"
+# Conexao vem do Irrigafour; equipamento vem de quem a casa ja compra.
+# A MP Valvulas ja fornece a gaveta e a retencao (fichas 153, 160 e 162), entao
+# a borboleta dela e a escolha coerente - a Saint-Gobain fica como alternativa.
+PREFERIDA_POR_FAMILIA = {
+    "VALVULA_BORBOLETA": "MP",
+    "VALVULA_GAVETA": "MP",
+    "VALVULA_RETENCAO": "MP",
+    "VALVULA_PE": "MP",
+    "VALVULA_HIDRAULICA": "DOROT",
+    "MEDIDOR": "ARAD",
+}
 TABELA = os.path.join(os.path.dirname(__file__), "..", "data", "cotas.csv")
 
 _indice = None
@@ -49,16 +60,19 @@ def cota_com_fonte(familia, dn_pol, variante="", significado="face_a_face_mm",
     indice = _carregar()
     if dn_pol is None:
         return None, None
-    preferida = fonte or PADRAO
+    preferida = fonte or PREFERIDA_POR_FAMILIA.get(familia, PADRAO)
     ordem = [preferida] + [f for f in fontes() if f != preferida]
     menores = [dn_menor_pol, None] if dn_menor_pol is not None else [None]
+    # a variante afina a busca; quem nao separa por variante responde no ""
+    variantes = [variante, ""] if variante else [""]
     for f in ordem:
-        for menor in menores:
-            chave = (f, familia, variante, float(dn_pol),
-                     float(menor) if menor is not None else None, significado)
-            valor = indice.get(chave)
-            if valor is not None:
-                return valor, f
+        for var in variantes:
+            for menor in menores:
+                chave = (f, familia, var, float(dn_pol),
+                         float(menor) if menor is not None else None, significado)
+                valor = indice.get(chave)
+                if valor is not None:
+                    return valor, f
     return None, None
 
 
