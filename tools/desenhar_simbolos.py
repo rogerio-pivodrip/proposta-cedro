@@ -311,10 +311,15 @@ def celula(simbolo, altura=DESENHO, minimo=1):
     medida = cota_escrita(simbolo)
     pontas = [p for p in simbolo.portas if p.papel in s.ENTRADA + s.SAIDA]
     if medida and not notas:
-        pa, pb = (pontas[0], pontas[-1]) if pontas else (simbolo.portas[0],) * 2
-        xm = dx + (pa.x + pb.x) / 2 * escala
-        ym = dy + (pa.y + pb.y) / 2 * escala
-        partes.append(texto_no_eixo(xm, ym, medida))
+        # a cota cai no MEIO DO EIXO, nao no meio entre as portas: na curva o
+        # meio entre as portas fica na corda, fora do tubo
+        meio = s.meio_do_eixo(simbolo)
+        if meio is None:
+            pa, pb = ((pontas[0], pontas[-1]) if pontas
+                      else (simbolo.portas[0],) * 2)
+            meio = ((pa.x + pb.x) / 2, (pa.y + pb.y) / 2)
+        partes.append(texto_no_eixo(dx + meio[0] * escala,
+                                    dy + meio[1] * escala, medida))
     for n in notas:
         # elemento repetido, letra de folheto: o desenho mostra e a nota diz.
         # A posicao vem girada: a nota nao passa pelo transform da geometria

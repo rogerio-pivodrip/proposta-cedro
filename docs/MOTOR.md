@@ -1069,6 +1069,55 @@ Com as famílias de milímetro, o equipamento corrigido e a norma, a cobertura f
 de **1.487 para 1.701** códigos, e a folha passou de 37 para **42 símbolos por
 bitola** — todos com bloco de DXF conferido nas oito bitolas.
 
+## 4.10 Seis correções de traço, todas apontadas olhando a folha
+
+A casa foi lendo a folha e apontando. Nenhuma destas seis apareceria numa
+conferência de cota — todas passam pelo teste e todas estavam erradas no
+desenho. Vale registrar porque mostra o limite do que a conferência pega.
+
+**A cota centrada no eixo, com trim.** Pedido como duas coisas, é uma: a cota
+encostada no eixo sem trim fica ilegível, e fugindo dele para o lado deixa de
+dizer a que peça pertence. Agora o eixo abre para ela passar — a convenção de
+CAD. O trim é um retângulo da cor do papel desenhado antes do texto: não há
+como cortar um `path` em SVG, e máscara custa mais do que vale numa folha com
+trezentas peças.
+
+**Na curva, a cota no meio do EIXO.** O meio entre as duas portas cai na
+*corda* da curva, fora do tubo — a cota ia parar no ar ao lado da peça.
+`meio_do_eixo()` anda o eixo pelo comprimento dele e devolve o meio de verdade.
+Na peça reta nada muda; na curva muda tudo.
+
+**O medidor reto de flange a flange.** O ombro entrando na flange era o que
+restava da "ampulheta" do bloco da casa, e em qualquer bitola lia como defeito
+de traço. E o mostrador tinha de descer para tocar a peça: com o corpo reto
+quem manda é `-r`, não a cintura antiga — usar a cintura deixava a torre
+apoiada no ar.
+
+**A hidráulica tem sede, não barriga.** A peça de diafragma não tem barriga
+para baixo: tem duas curvas subindo do fundo até uma face no meio, e é por cima
+dela que a água passa. As curvas se encontram numa *face* e não numa ponta —
+uma ponta não veda nada.
+
+**O volante da gaveta caía dentro da sobreposta.** A altura dela era 44% da
+cota total, e em bitola grande passava do volante. Agora sai do vão disponível
+— do topo do corpo ao topo do volante — e sobra haste livre entre os dois, como
+no bloco da casa. Achei junto um erro de sinal meu: `-(alt - r) - r` é `-alt`,
+não `alt - 2r`.
+
+**A furação do crivo em dobro.** Furo de 6 mm num cesto de 368 é um ponto. O
+furo e o passo dobram *juntos*, para a proporção entre chapa e vazio não mudar,
+e a malha vai até perto da flange. A cota de verdade passou a sair sempre na
+nota — antes ela só aparecia quando o desenho cortava a contagem, e agora é o
+único lugar onde o 6 mm existe.
+
+### E um bug de parser, de novo
+
+A chapa do fundo da válvula de pé sobrava embaixo da peça: `V` do SVG é
+**absoluto**, e sair de `-r*0.95` para `r*1.9` desce o dobro. É o terceiro erro
+desta família — `H`/`V` lidos como par (4.4), Bézier reduzida à ponta (4.8), e
+agora `V` absoluto usado como relativo. Todos no mesmo lugar: a fronteira entre
+o que se escreve no path e o que se acredita que ele desenha.
+
 ## 5. O que a peça puxa: um mecanismo só
 
 Hoje as derivações estão em quatro lugares diferentes. São todas o mesmo padrão

@@ -370,6 +370,40 @@ def _rodar(x, y, angulo, cx=0.0, cy=0.0):
             cy + dx * math.sin(a) + dy * math.cos(a))
 
 
+def meio_do_eixo(simbolo):
+    """O ponto no MEIO do eixo da peca, medido pelo comprimento dele.
+
+    Na peca reta isso e o meio dela e nada muda. Na curva muda tudo: o meio
+    entre as duas portas cai na corda, fora do tubo, e a cota ia parar no ar ao
+    lado da peca. O meio do eixo cai no meio da curva, dentro dela.
+
+    O primeiro eixo e o que vale - no te o segundo e o da derivacao.
+    """
+    eixo = next((e for e in simbolo.elementos
+                 if e.get("classe") == "centro" and e["tipo"] == "path"), None)
+    if eixo is None:
+        return None
+    pontos = [p for linha in pontos_do_path(eixo["d"]) for p in linha]
+    girar = eixo.get("girar")
+    if girar:
+        pontos = [_rodar(x, y, girar[0], girar[1], girar[2])
+                  for x, y in pontos]
+    if eixo.get("girar_fora"):
+        pontos = [_rodar(x, y, eixo["girar_fora"]) for x, y in pontos]
+    if len(pontos) < 2:
+        return pontos[0] if pontos else None
+    passos = [math.dist(a, b) for a, b in zip(pontos, pontos[1:])]
+    metade = sum(passos) / 2
+    andado = 0.0
+    for (a, b), passo in zip(zip(pontos, pontos[1:]), passos):
+        if andado + passo >= metade and passo:
+            fracao = (metade - andado) / passo
+            return (a[0] + (b[0] - a[0]) * fracao,
+                    a[1] + (b[1] - a[1]) * fracao)
+        andado += passo
+    return pontos[-1]
+
+
 def posicao_da_nota(nota):
     """Onde a nota cai DEPOIS do giro da peca.
 
@@ -538,10 +572,11 @@ def crivo(dn_pol, variante=""):
     primeiro furo e o passo de 3 mm entre furos. O fundo e CHAPA LISA: a agua
     entra so pela parede, e e isso que separa o crivo de um tubo aberto.
 
-    A furacao vai desenhada no tamanho real - furo de 6 mm num cesto de 368
-    e um ponto mesmo. Como um crivo de 14" tem mais de dois mil furos, o
-    desenho mostra o trecho junto ao fundo e deixa o resto liso: e a convencao
-    de elemento repetido, a mesma que o caderno usa no DETALHE.
+    A furacao vai desenhada em DOBRO - furo e passo juntos, para a proporcao
+    entre chapa e vazio nao mudar. No tamanho real o furo de 6 mm num cesto de
+    368 e um ponto, e a casa pediu para se ver o que e. A cota de verdade vai
+    na nota, que por isso sai sempre e nao so quando o desenho corta a
+    contagem: e o unico lugar onde o 6 mm aparece.
     """
     ficha = ficha_crivo(dn_pol) or {}
     comp, fonte = _cota("CRIVO", dn_pol, variante, "comprimento_mm")
@@ -554,6 +589,13 @@ def crivo(dn_pol, variante=""):
     furo = float(ficha.get("furo_mm") or 6.0)
     passo = furo + passo_livre
     r = de / 2
+    # A furacao vai desenhada em DOBRO, furo e passo juntos. O furo de 6 mm num
+    # cesto de 368 e um ponto - a casa pediu o dobro para se ver o que e. A cota
+    # de verdade continua escrita na nota, e dobrar o passo com o furo mantem a
+    # proporcao entre chapa e vazio, que e o que o desenho comunica.
+    amplia = 2.0
+    furo_visto = furo * amplia
+    passo_visto = passo * amplia
 
     el = [_p(f"M0 {-r:.1f} H{comp:.1f}"), _p(f"M0 {r:.1f} H{comp:.1f}"),
           _p(f"M0 {-r+parede:.1f} H{comp:.1f}", "malha"),
@@ -566,20 +608,25 @@ def crivo(dn_pol, variante=""):
     # dela do outro lado. Corta no meio do cesto quando a contagem explode.
     inicio = margem + parede * 2
     fim = comp - margem
-    colunas = int((fim - inicio) / passo)
-    fileiras = int((2 * r - 2 * margem) / passo)
-    limite = 900
+    colunas = int((fim - inicio) / passo_visto)
+    fileiras = int((2 * r - 2 * margem) / passo_visto)
+    # a malha vai ate perto da flange, como a casa pediu: o corte por contagem
+    # so entra se o cesto for grande demais para caber em desenho
+    limite = 2600
     mostradas = min(colunas, max(1, limite // max(fileiras, 1)))
     for i in range(mostradas):
-        x = inicio + furo / 2 + passo * i
+        x = inicio + furo_visto / 2 + passo_visto * i
         for j in range(fileiras):
-            yy = -r + margem + furo / 2 + passo * j + (passo / 2 if i % 2 else 0)
+            yy = (-r + margem + furo_visto / 2 + passo_visto * j
+                  + (passo_visto / 2 if i % 2 else 0))
             if abs(yy) < r - margem:
-                el.append({"tipo": "circulo", "cx": x, "cy": yy, "r": furo / 2,
-                           "classe": "malha"})
-    if mostradas < colunas:
-        el.append({"tipo": "nota", "x": (inicio + fim) / 2, "y": -r * 0.55,
-                   "texto": f"furo {furo:g} c/ {passo_livre:g}"})
+                el.append({"tipo": "circulo", "cx": x, "cy": yy,
+                           "r": furo_visto / 2, "classe": "malha"})
+    # A nota da furacao vai SEMPRE, e nao so quando o desenho corta a
+    # contagem: e ela que carrega a cota de verdade, e agora que o furo esta
+    # desenhado em dobro ela e o unico lugar onde o 6 mm aparece.
+    el.append({"tipo": "nota", "x": (inicio + fim) / 2, "y": -r * 0.62,
+               "texto": f"furo {furo:g} c/ {passo_livre:g}"})
 
     el += placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-40 0 H{comp+60:.0f}", "centro"))
@@ -1737,9 +1784,16 @@ def valvula_gaveta(dn_pol):
                "w": largura_flange, "h": esp, "classe": "corpo"})
     el.append(_p(f"M{meio - largura_flange/2:.1f} {yf:.1f} h{largura_flange:.1f}",
                  "junta"))
-    # sobreposta: dois degraus estreitando, e a caixa de gaxeta no topo
+    # sobreposta: dois degraus estreitando, e a caixa de gaxeta no topo.
+    #
+    # A altura dela sai do VAO disponivel - do topo do corpo ao topo do
+    # volante - e nao de uma fracao da cota total. Com 44% da cota total a
+    # sobreposta passava do volante em bitola grande, e o volante aparecia
+    # dentro dela em vez de em cima; a casa pediu ele mais para cima, e o que
+    # faltava era justamente sobrar haste livre entre os dois
     y1 = yf - esp
-    passo = (alt * 0.44 - esp)
+    vao = alt - 2 * r          # do topo do corpo ao topo do volante
+    passo = vao * 0.52
     el.append({"tipo": "rect", "x": meio - comp*0.24, "y": y1 - passo*0.55,
                "w": comp*0.48, "h": passo*0.55, "classe": "corpo"})
     el.append({"tipo": "rect", "x": meio - comp*0.17, "y": y1 - passo,
@@ -1754,8 +1808,10 @@ def valvula_gaveta(dn_pol):
     # eixo para cima. Tratar como se fosse do eixo somava o corpo por baixo e
     # deixava a valvula 29% mais alta que a folha - erro que nao aparece
     # olhando, porque a torre parece proporcional em qualquer bitola.
+    # o volante encosta no topo cotado: a porca da haste, que e o que fica mais
+    # alto nele, termina la
     topo_volante = -(alt - r)
-    yv = topo_volante + volante_d * 0.10
+    yv = topo_volante + comp * 0.055 * 2.1
     el.append(_p(f"M{meio:.1f} {y2 - comp*0.11:.1f} V{yv:.1f}", "haste"))
     el += volante_de_canto(meio, yv, volante_d, comp * 0.055)
 
@@ -1782,23 +1838,29 @@ def valvula_hidraulica(dn_pol, serie="47"):
     meio = comp / 2
     corpo = r * 1.1
     # como na gaveta: a altura da folha e TOTAL, e o corpo desce abaixo do
-    # eixo. O que sobra para a tampa e o que fica acima da barriga.
-    #
-    # O fundo e o APICE da quadratica, nao o ponto de controle: para uma
-    # quadratica que sai e chega em corpo com controle em c, o apice fica em
-    # corpo/2 + c/2. Querendo apice em fundo, o controle vai em
-    # 2*fundo - corpo - e usar o controle como fundo deixava a valvula 13%
-    # baixa, porque a curva nunca chega la.
-    fundo = corpo * 1.45
-    controle = 2 * fundo - corpo
+    # eixo. Aqui o fundo e a propria parede - a casa tirou a barriga
+    fundo = corpo
 
     # o corpo: reto em cima, abaulado embaixo - a barriga onde o obturador cai
     el = [_p(f"M0 {-corpo:.1f} H{comp:.1f}"),
-          _p(f"M0 {corpo:.1f} L{comp*0.22:.1f} {corpo:.1f} "
-             f"Q{meio:.1f} {controle:.1f} {comp*0.78:.1f} {corpo:.1f} "
-             f"H{comp:.1f}"),
+          _p(f"M0 {corpo:.1f} H{comp:.1f}"),
           _p(f"M0 {-corpo:.1f} V{corpo:.1f}", "malha"),
           _p(f"M{comp:.1f} {-corpo:.1f} V{corpo:.1f}", "malha")]
+    # A SEDE, em duas curvas subindo do fundo ate um pico no meio. E por cima
+    # dela que a agua passa, e e nela que o obturador assenta - a peca de
+    # diafragma nao tem barriga para baixo, tem sede para cima. Cada curva sai
+    # do fundo quase na horizontal e chega ao pico ingreme
+    pico = -corpo * 0.04
+    face = comp * 0.035          # a face da sede, onde o obturador assenta
+    for sinal in (-1, 1):
+        pe = meio - sinal * comp * 0.31
+        alto = meio - sinal * face
+        controle = meio - sinal * comp * 0.13
+        el.append(_p(f"M{pe:.1f} {corpo:.1f} "
+                     f"Q{controle:.1f} {corpo:.1f} {alto:.1f} {pico:.1f}"))
+    # as duas curvas se encontram numa FACE e nao numa ponta: e nela que o
+    # obturador assenta, e uma ponta nao veda nada
+    el.append(_p(f"M{meio - face:.1f} {pico:.1f} H{meio + face:.1f}"))
 
     # a tampa chata, larga, com o parafuso nas pontas
     tampa = comp * 0.66
@@ -1815,10 +1877,10 @@ def valvula_hidraulica(dn_pol, serie="47"):
     # o diafragma, e a haste descendo ate o obturador
     el.append(_p(f"M{meio - tampa*0.40:.1f} {ytampa + esp*0.55:.1f} "
                  f"h{tampa*0.80:.1f}", "obturador"))
-    el.append(_p(f"M{meio:.1f} {ytampa + esp*0.55:.1f} V{corpo*0.35:.1f}",
-                 "haste"))
-    el.append(_p(f"M{meio - r*0.62:.1f} {corpo*0.35:.1f} h{r*1.24:.1f}",
-                 "obturador"))
+    el.append(_p(f"M{meio:.1f} {ytampa + esp*0.55:.1f} "
+                 f"V{pico - corpo*0.22:.1f}", "haste"))
+    el.append(_p(f"M{meio - r*0.52:.1f} {pico - corpo*0.22:.1f} "
+                 f"h{r*1.04:.1f}", "obturador"))
     # piloto: corpo pequeno ligado a tampa por tubinho - sempre listado junto
     px = meio + comp * 0.40
     py = ytampa + esp * 1.6
@@ -1874,26 +1936,23 @@ def medidor(dn_pol):
     # a ampulheta e feicao de bitola pequena, nao convencao de desenho
     cintura = min(bocal * 0.5, r * 0.97)
 
-    # O corpo e um cilindro com o ombro entrando na flange - reto em cima e
-    # embaixo. A "ampulheta" que o bloco da casa mostra E esse ombro: em 3" o
-    # corpo tem 62 de raio contra 44 do furo e o ombro aparece; em 12" os dois
-    # se encostam e sobra um serrote de 10 mm que le como defeito de traco.
-    el = [_p(f"M0 {-bocal/2:.1f} L{comp*0.16:.1f} {-r:.1f} "
-             f"H{comp*0.84:.1f} L{comp:.1f} {-bocal/2:.1f}"),
-          # embaixo o corpo e RETO, como a casa pediu: a ampulheta em baixo
-          # vira um V no meio do desenho e le como defeito, nao como peca. A
-          # camara de medicao fica ali, e ela e um fundo chato mesmo
-          _p(f"M0 {bocal/2:.1f} L{comp*0.16:.1f} {fundo:.1f} "
-             f"H{comp*0.84:.1f} L{comp:.1f} {bocal/2:.1f}")]
+    # O corpo e um cilindro RETO de flange a flange, como a casa pediu. O
+    # ombro entrando na flange era o que restava da "ampulheta" do bloco dela,
+    # e em qualquer bitola ele le como defeito de traco e nao como peca.
+    el = [_p(f"M0 {-r:.1f} H{comp:.1f}"),
+          _p(f"M0 {fundo:.1f} H{comp:.1f}"),
+          _p(f"M0 {-r:.1f} V{fundo:.1f}", "malha"),
+          _p(f"M{comp:.1f} {-r:.1f} V{fundo:.1f}", "malha")]
     # o V do fundo, que e onde a sujeira nao para
     # a tampa da camara de medicao, aparafusada no fundo chato - e por ela que
     # o rotor sai para manutencao
     tampa_baixo = comp * 0.44
+    recuo_tampa = max(fundo * 0.20, 10.0)
     el += [_p(f"M{meio - tampa_baixo/2:.1f} {fundo:.1f} "
-              f"V{fundo - max(fundo*0.16, 8):.1f}", "malha"),
+              f"V{fundo - recuo_tampa:.1f}", "malha"),
            _p(f"M{meio + tampa_baixo/2:.1f} {fundo:.1f} "
-              f"V{fundo - max(fundo*0.16, 8):.1f}", "malha"),
-           _p(f"M{meio - tampa_baixo/2:.1f} {fundo - max(fundo*0.16, 8):.1f} "
+              f"V{fundo - recuo_tampa:.1f}", "malha"),
+           _p(f"M{meio - tampa_baixo/2:.1f} {fundo - recuo_tampa:.1f} "
               f"H{meio + tampa_baixo/2:.1f}", "malha")]
 
     # A altura acima do eixo e REPARTIDA, nao empilhada: o registrador ocupa
@@ -1908,7 +1967,10 @@ def medidor(dn_pol):
     # camara desce 330 mm dos 505 de altura total, sobram 175 acima do eixo e
     # o corpo ja ocupa 162 deles: uma espessura tirada do comprimento poe o
     # flange do registrador 22 mm acima da cota.
-    livre = max(-topo - cintura, alt * 0.10)
+    # a faixa livre e do TOPO DO CORPO ao topo cotado. Com o corpo reto quem
+    # manda e -r, nao a cintura antiga: usar a cintura deixava a torre
+    # apoiada no ar, com um vao entre o mostrador e a peca
+    livre = max(-topo - r, alt * 0.10)
     esp = min(torre * 0.16, livre * 0.22)
     caixa_h = livre * 0.46                      # o registrador
     caixa_topo = topo
@@ -1916,7 +1978,7 @@ def medidor(dn_pol):
     # os dois flanges aparafusados, encostados sob o registrador
     flange_base = caixa_base + esp * 2.7
     el.append({"tipo": "rect", "x": meio - torre/2, "y": flange_base,
-               "w": torre, "h": -cintura - flange_base, "classe": "corpo"})
+               "w": torre, "h": -r - flange_base, "classe": "corpo"})
     for y in (caixa_base + esp * 1.7, caixa_base):
         el.append({"tipo": "rect", "x": meio - torre*0.66, "y": y - esp,
                    "w": torre*1.32, "h": esp, "classe": "corpo"})
@@ -2068,14 +2130,16 @@ def valvula_pe(dn_pol):
            # V do SVG e absoluto: sair de -r*0.95 e ir para r*1.9 descia o
            # dobro e a chapa sobrava embaixo da peca. O fim e r*0.95
            _p(f"M{-cesto:.1f} {-r*0.95:.1f} V{r*0.95:.1f}", "chapa_lisa")]
-    passo = max(9.0, cesto / 14)
+    # a furacao em dobro, como no crivo AZ: o furo real e um ponto no desenho,
+    # e o cesto da valvula de pe e a mesma chapa perfurada
+    passo = max(18.0, cesto / 7)
     for i in range(int((cesto - passo) / passo)):
         x = -cesto + passo * (i + 1)
         for j in range(int((1.9 * r - passo) / passo)):
             yy = -r * 0.95 + passo * (j + 1) + (passo / 2 if i % 2 else 0)
-            if abs(yy) < r * 0.95 - passo / 6:
+            if abs(yy) < r * 0.95 - passo / 3:
                 el.append({"tipo": "circulo", "cx": x, "cy": yy,
-                           "r": passo / 6, "classe": "malha"})
+                           "r": passo / 3, "classe": "malha"})
     el += placa(corpo, dn_pol, lado="saida")
     el.append(_p(f"M{-cesto-40:.0f} 0 H{corpo+60:.0f}", "centro"))
     portas = [Porta("saida", corpo, 0, 0, dn_pol)]
