@@ -216,13 +216,13 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620):
     return "".join(partes), postos, fim
 
 
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("--dn", type=float, default=8)
-    p.add_argument("--fragmento", action="store_true",
-                   help="só as <figure>, sem a página em volta")
-    args = p.parse_args()
-    menor = {14: 12, 12: 10, 10: 8, 8: 6, 6: 4, 5: 4, 4: 3, 3: 2}.get(args.dn, 2)
+def fragmento(dn):
+    """As montagens, sem a pagina em volta - devolve (html, quantas).
+
+    Serve a folha solta e a prancha, como em desenhar_simbolos.fragmento.
+    """
+    menor = {14: 12, 12: 10, 10: 8, 8: 6, 6: 4, 5: 4, 4: 3, 3: 2}.get(dn, 2)
+    args = argparse.Namespace(dn=dn)
     linhas = [("sucção · bomba vertical",
                "sobe reta e entra por baixo da bomba",
                succao_vertical(args.dn), -90),
@@ -251,10 +251,20 @@ def main():
         print(f"# {nome}: {len(postos)} pecas, fim em "
               f"({fim[0]:.0f}, {fim[1]:.0f}) direcao {fim[2]:.0f}",
               file=sys.stderr)
+    return "\n".join(figuras), len(linhas)
 
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("--dn", type=float, default=8)
+    p.add_argument("--fragmento", action="store_true",
+                   help="só as <figure>, sem a página em volta")
+    args = p.parse_args()
+    figuras, quantas = fragmento(args.dn)
     if args.fragmento:
-        print("\n".join(figuras))
+        print(figuras)
         return
+    linhas = range(quantas)
     print(f'<!doctype html><meta charset="utf-8">'
           f'<title>Linhas {args.dn:g}"</title>'
           f'<style>{ESTILO}{ESTILO_LINHA}</style>'
@@ -262,7 +272,7 @@ def main():
           f'<span class="dn">{args.dn:g}"</span>'
           f'<span class="sub">{len(linhas)} montagens · a mesma peça, '
           f'a direção acumulada pela corrente</span></header>'
-          f'{legenda()}' + "".join(figuras) + "</div>")
+          f'{legenda()}' + figuras + "</div>")
 
 
 ESTILO_LINHA = """

@@ -362,15 +362,13 @@ def figura(simbolo, altura=DESENHO, minimo=1):
             f'</figcaption></figure>')
 
 
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("--dn", type=float, default=8)
-    p.add_argument("--fragmento", action="store_true",
-                   help="so as <figure>, sem a pagina em volta")
-    args = p.parse_args()
-    grupos = elenco(args.dn)
-    total = sum(len(pecas) for _, pecas in grupos)
+def fragmento(dn):
+    """As secoes da folha, sem a pagina em volta - devolve (html, total).
 
+    Serve a folha solta e a prancha: quem compoe varias bitolas numa pagina
+    so precisa disto.
+    """
+    grupos = elenco(dn)
     corpo = []
     for titulo, pecas in grupos:
         detalhe, altura, minimo = SECOES.get(titulo, ("", DESENHO, 1))
@@ -378,6 +376,17 @@ def main():
         corpo.append('<div class="folha">'
                      + "".join(figura(peca, altura, minimo) for peca in pecas)
                      + "</div>")
+    return "\n".join(corpo), sum(len(pecas) for _, pecas in grupos)
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("--dn", type=float, default=8)
+    p.add_argument("--fragmento", action="store_true",
+                   help="so as <figure>, sem a pagina em volta")
+    args = p.parse_args()
+    texto, total = fragmento(args.dn)
+    corpo = [texto]
     if args.fragmento:
         print("\n".join(corpo))
     else:
