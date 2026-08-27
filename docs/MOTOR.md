@@ -302,6 +302,27 @@ PN16 tem 8; 8" PN10 tem 8 furos e PN16 tem 12. Nas outras bitolas da casa, PN10
 e PN16 furam igual. Como o parafuso e a porca saem da furação, especificar PN10
 onde a casa usa PN16 erra a ferragem de 8" em um terço.
 
+### A quarta fonte: a própria folha de flange da Netafim
+
+O caderno Netafim tem duas folhas de flange que ninguém tinha lido —
+a página 6 (*Flange para soldar, EN 1092-1 PN16*) e a página 4 (*Flange cega
+com luva fêmea 2" BSP*). Extraídas para `data/flanges_netafim.csv`, elas
+respondem à pergunta que estava em aberto desde o Irrigafour:
+
+> **Até 8" as duas tabelas dizem a mesma coisa. De 10" para cima o caderno
+> desenha 355 / 410 / 470 / 525 / 585 / 650 / 770 de círculo — que é EN PN16,
+> não os 350 / 400 / 460 / 515 / 565 / 620 / 725 da NBR 7675 PN16.**
+
+`tools/conferir_flanges_netafim.py`: 11 linhas batem, 14 não, e **todas as 14
+casam exatamente com a EN**. É a terceira fonte independente a dizer o mesmo —
+Irrigafour (DIN 2533), MP/RAN, e agora o desenho de fabricação da própria
+Netafim. Quem compra flange pela NBR e monta contra peça Netafim de 10" ou
+mais **não fecha o parafuso**: o círculo erra 5 mm e o furo erra 6.
+
+As folhas trouxeram também duas cotas que a tabela de furação não tinha e o
+desenho usa: o **ressalto** (onde a junta assenta) e a **espessura real da
+chapa**. Entram por `simbolos.flange_netafim()`.
+
 ### Decidido: o padrão da casa é Irrigafour
 
 A cota que entra no desenho passa a sair do Irrigafour. A Netafim fica como
@@ -353,6 +374,78 @@ A consequência prática é a que interessa: **cadastrar uma peça nova não é
 desenhar nada**. Se ela é de uma família conhecida, já tem símbolo; só precisa
 de uma linha na tabela de cotas — e, na maior parte das bitolas, nem isso,
 porque a linha já existe.
+
+## 4.1 As famílias que faltavam: PEAD, flange e manifold
+
+Três buracos fechados, todos com folha de fabricante atrás.
+
+### PEAD é tubo de 6 m com colar soldado e flange solta
+
+No PEAD **o DN é o diâmetro externo** — o tubo DN225 mede 225 mm por fora.
+Não há tabela de DE a consultar como no aço: o número do código já é o do
+desenho. A parede sai da razão DN/SDR fixada pela pressão, e a tabela
+`SDR_POR_PN` foi conferida contra a parede que a própria descrição carrega:
+
+> `tools/conferir_pead.py` — **40 tubos conferem, 2 não.** Um erra 0,4 mm
+> (arredondamento da norma) e o outro é um `PN80` que não é pressão, é a
+> resina PE80.
+
+A ponta do trecho é uma peça só, e é assim que se desenha:
+
+    a flange entra no tubo → o colar é soldado depois → o ressalto a prende
+
+Desenhar o colar sem a flange seria desenhar um estado que não existe montado.
+Por isso `colar_pead()` devolve os dois, e a lista já pedia os dois aos pares
+(`templates.trecho_pead`: N tubos, 2 colares, 2 flanges AZ). O ressalto tem o
+diâmetro do ressalto da flange de aço da mesma bitola — é onde a junta assenta.
+
+**O único número sem folha** é o comprimento do pescoço do colar. Está
+estimado (`max(esp_flange + 40, DN×0,40)`, que cai perto do stub end
+DIN 16963-4) e marcado com `params["pescoco_estimado"]`. É a próxima tabela a
+buscar.
+
+### Flange: a mesma chapa, dois papéis
+
+`flange_avulsa(dn, tipo)` cobre as duas: `SOLDAR` solda na ponta do tubo de
+aço; `SOLTA` é a mesma chapa correndo pelo tubo de PEAD até travar no
+ressalto — muda o furo central, não o desenho. E `flange_cega(dn, saída)`
+cobre as três versões que o catálogo tem: sem luva, com luva 2" BSP (a
+ventosa, o manômetro) e com flange pequena.
+
+A luva de 2" BSP não precisa de tabela: mede **30 mm de comprimento por 40 de
+externo** nas duas folhas em que o caderno a desenha.
+
+### Manifold: o barrilete que carrega as ventosas
+
+Página 25 do caderno, extraída para `data/manifold_netafim.csv`. As duas luvas
+de 2" BSP não são acessório — são a razão de o manifold ter ventosa. A folha as
+cota pelo topo, e a regra fecha em todas as bitolas de 4" a 20":
+
+> **altura do topo da luva = D/2 + 40 — 20 linhas, 20 confirmadas.**
+
+Nem toda coluna da folha entrou no desenho, e isso está registrado em vez de
+inventado: `R` e `F2` são alturas ligadas por `F2 = (R + D/2)/2` (também 20 de
+20) mas sem a folha em imagem não dá para dizer o que cada uma mede; `X1..X4`
+são o gabarito da boca de lobo a 0°, 15°, 30° e 45°, que serve ao caldeireiro
+e não à vista lateral. Ficam gravadas na tabela, fora do traço.
+
+### O crivo, com a folha na mão
+
+Página 14. O que faz um crivo não ser um tubo furado está tudo lá: furo de
+6 mm a cada 3, margem lisa de 10 mm antes do primeiro furo, parede de 2 a
+6,35 conforme a bitola, e **fundo de chapa lisa** — a água entra só pela
+parede. Um crivo de 14" tem mais de dois mil furos; o desenho mostra o trecho
+junto ao fundo e anota o resto, que é a convenção de elemento repetido.
+
+### Onde isso chegou
+
+`tools/conferir_cobertura.py` tenta desenhar cada código do catálogo:
+
+> **1.164 de 5.157 códigos saem desenhados** — eram 919 antes destas famílias.
+
+O que ainda não sai não é falha de símbolo: 1.764 códigos não têm DN na
+descrição, 611 não têm família, e o resto é PVC, filtro e quadro elétrico —
+fora do escopo de sucção e recalque.
 
 ## 5. O que a peça puxa: um mecanismo só
 

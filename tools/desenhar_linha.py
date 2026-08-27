@@ -54,6 +54,26 @@ def recalque(dn, menor):
             s.valvula_hidraulica(dn, "47"), s.tubo(dn, 1000), s.curva(dn, 90, -1)]
 
 
+def trecho_pead(dn, tubos=4):
+    """Depois da primeira bomba a linha vira PEAD.
+
+    O trecho e sempre o mesmo: N barras de 6 m fundidas topo a topo e, em cada
+    ponta, um colar com a flange solta ja presa pelo ressalto. E por isso que a
+    lista pede colar e flange sempre aos pares - motor/templates.trecho_pead.
+    """
+    from motor.traducao import POLEGADA_MM
+    dn_mm = POLEGADA_MM.get(dn) or 225
+    return ([s.colar_pead(dn_mm)] + [s.tubo_pead(dn_mm)] * tubos
+            + [s.colar_pead(dn_mm)])
+
+
+def manifold_ventosas(dn, derivacao=None):
+    """O barrilete do recalque, com as duas luvas de ventosa e a flange cega
+    fechando a ponta - a cega leva a terceira luva de 2\"."""
+    menor = derivacao or {14: 8, 12: 6, 10: 6, 8: 6, 6: 4, 4: 3}.get(dn, 4)
+    return [s.manifold(dn, menor), s.flange_cega(dn, 2)]
+
+
 def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620):
     postos, fim = s.montar(pecas)
     if giro:
@@ -142,8 +162,11 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620):
         vertical = abs(p.saida[1] - p.entrada[1]) > abs(p.saida[0] - p.entrada[0])
         gira = f' transform="rotate(-90 {mx:.1f} {my:.1f})"' if vertical else ""
         duas = abs((entrada.dn_pol or 0) - (saida.dn_pol or 0)) > 0.01
-        rotulo = (f"{comp:.0f}" if duas
-                  else f'{(entrada.dn_pol or 0):g}"  {comp:.0f}')
+        # no PEAD a bitola do papel e o DN em milimetro, que E o externo
+        bitola = (f'DN{p.simbolo.params["dn_mm"]:g}'
+                  if p.simbolo.params.get("dn_mm")
+                  else f'{(entrada.dn_pol or 0):g}"')
+        rotulo = f"{comp:.0f}" if duas else f"{bitola}  {comp:.0f}"
         partes.append(f'<text class="marca" x="{mx:.1f}" y="{my - recuo:.1f}"{gira}>'
                       f'{rotulo}</text>')
         if duas:
@@ -169,7 +192,9 @@ def main():
     menor = {14: 12, 12: 10, 10: 8, 8: 6, 6: 4, 5: 4, 4: 3, 3: 2}.get(args.dn, 2)
     linhas = [("sucção · bomba vertical", succao_vertical(args.dn), -90),
               ("sucção · bomba horizontal", succao_horizontal(args.dn), -90),
-              ("recalque", recalque(args.dn, menor), 0)]
+              ("recalque", recalque(args.dn, menor), 0),
+              ("manifold c/ ventosas", manifold_ventosas(args.dn), 0),
+              ("trecho de PEAD", trecho_pead(args.dn), 0)]
     for nome, pecas, giro in linhas:
         svg, postos, fim = desenhar_linha(pecas, giro=giro)
         print(f'<figure class="linha"><figcaption>{nome} {args.dn:g}" — '

@@ -42,11 +42,23 @@ def elenco(dn):
         s.crivo(dn),
         s.valvula_pe(dn),
         s.flange_cega(dn),
+        s.flange_cega(dn, 2),
+        s.flange_avulsa(dn),
+        s.flange_avulsa(dn, "SOLTA"),
+        s.manifold(dn if dn >= 4 else 4, menor),
         s.valvula_borboleta(dn, "ALAVANCA" if dn <= 6 else "CAIXA"),
         s.valvula_gaveta(dn),
         s.valvula_hidraulica(dn, "47"),
         s.medidor(dn),
+        # o PEAD entra pela equivalencia da casa: 8" de aco vira DN225
+        s.tubo_pead(_pead(dn), 6000),
+        s.colar_pead(_pead(dn)),
     ]
+
+
+def _pead(dn_pol):
+    from motor.traducao import POLEGADA_MM
+    return POLEGADA_MM.get(dn_pol) or 225
 
 
 def desenhar(elemento):
@@ -106,7 +118,8 @@ def celula(simbolo):
     dx = (LARGURA - larg * escala) / 2 - x0 * escala
     dy = (altura - 50 - alt * escala) / 2 - y0 * escala
     corpo = "".join(desenhar(e) for e in simbolo.elementos
-                    if e["tipo"] != "texto_furos")
+                    if e["tipo"] not in ("texto_furos", "nota"))
+    notas = [e for e in simbolo.elementos if e["tipo"] == "nota"]
     furos = next((e for e in simbolo.elementos if e["tipo"] == "texto_furos"), None)
 
     partes = [f'<svg viewBox="0 0 {LARGURA} {altura:.0f}" role="img" '
@@ -136,9 +149,15 @@ def celula(simbolo):
         ym = dy + (pa.y + pb.y) / 2 * escala
         raio = ms.DE_TUBO.get(pa.dn_pol, 100) / 2 * escala
         recuo = max(min(raio * 0.62, 13), 7)
-        rotulo = medida if len(bitolas) > 1 else f'{pa.dn_pol:g}"  {medida}'
+        bitola = (f'DN{simbolo.params["dn_mm"]:g}'
+                  if simbolo.params.get("dn_mm") else f'{pa.dn_pol:g}"')
+        rotulo = medida if len(bitolas) > 1 else f'{bitola}  {medida}'
         partes.append(f'<text class="marca" x="{xm:.1f}" '
                       f'y="{ym - recuo:.1f}">{rotulo}</text>')
+    for n in notas:
+        # elemento repetido: o desenho mostra um trecho e a nota diz o resto
+        partes.append(f'<text class="marca" x="{dx + n["x"] * escala:.1f}" '
+                      f'y="{dy + n["y"] * escala + 3:.1f}">{n["texto"]}</text>')
     partes.append("</g>")
     if furos:
         partes.append(f'<text class="furos" x="{LARGURA-MARGEM}" y="{MARGEM+4}">'
@@ -149,7 +168,10 @@ def celula(simbolo):
                                   if p.papel in ("maior", "saida")), None)
     if entrada:
         import motor.simbolos as ms
-        de = ms.flange(entrada.dn_pol)["externo"]
+        # no PEAD o que manda no papel e o tubo, nao a flange: o DN E o
+        # diametro externo, e e ele que a folha cota
+        de = (simbolo.params.get("dn_mm")
+              or ms.flange(entrada.dn_pol)["externo"])
         ym = dy + entrada.y * escala
         partes.append(f'<g class="anota"><text class="cota vertical" '
                       f'transform="rotate(-90 12 {ym:.1f})" x="12" '
@@ -162,14 +184,59 @@ def celula(simbolo):
     return "".join(partes), altura > ALTURA
 
 
+# Traco fino e preto, eixo vermelho traco-ponto, anotacao em cinza claro - o
+# estilo pedido para a folha. Fica no gerador e nao numa folha solta para a
+# folha sair sempre igual, sem ninguem remontar o HTML na mao.
+ESTILO = """
+:root{--tinta:#111;--eixo:#c0392b;--anota:#8a8a8a;--chapa:#f2f2f2}
+body{margin:0;padding:24px;background:#fff;color:var(--tinta);
+  font:13px/1.5 ui-sans-serif,system-ui,sans-serif}
+h1{font-size:15px;font-weight:600;margin:0 0 4px}
+p.sub{margin:0 0 20px;color:var(--anota);font-size:12px}
+.folha{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+figure{margin:0;border:1px solid #e4e4e4;border-radius:3px;overflow:hidden}
+figure svg{display:block;width:100%;height:auto}
+.geo *{vector-effect:non-scaling-stroke;fill:none;stroke:var(--tinta);
+  stroke-width:.9;stroke-linejoin:round}
+.geo .flange{fill:var(--chapa)}
+.geo .chapa_lisa{fill:var(--chapa)}
+.geo .malha,.geo .furo,.geo .solda{stroke-width:.6;stroke:#666}
+.geo .centro{stroke:var(--eixo);stroke-width:.7;
+  stroke-dasharray:14 4 2 4;fill:none}
+.geo .parafuso,.geo .porca{fill:var(--chapa);stroke-width:.7}
+.geo .junta{stroke:var(--eixo);stroke-width:.9}
+text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
+.marca{font-size:8px;text-anchor:middle}
+.cota{font-size:8px;text-anchor:middle}
+.furos{font-size:7.5px;text-anchor:end}
+.rotulo{font-size:9.5px;text-anchor:middle;fill:var(--tinta)}
+.fonte{font-size:7px;text-anchor:middle;letter-spacing:.08em}
+.anota .seta{fill:var(--anota);stroke:none}
+"""
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--dn", type=float, default=8)
+    p.add_argument("--fragmento", action="store_true",
+                   help="so as <figure>, sem a pagina em volta")
     args = p.parse_args()
-    for simbolo in elenco(args.dn):
+    lista = elenco(args.dn)
+    figuras = []
+    for simbolo in lista:
         svg, alto = celula(simbolo)
-        print(f'<figure class="simbolo{" alto" if alto else ""}">{svg}</figure>')
-    print(f"# {len(elenco(args.dn))} simbolos em {args.dn:g}\"", file=sys.stderr)
+        figuras.append(f'<figure class="simbolo{" alto" if alto else ""}">'
+                       f'{svg}</figure>')
+    if args.fragmento:
+        print("\n".join(figuras))
+    else:
+        print(f'<!doctype html><meta charset="utf-8">'
+              f'<title>Simbolos {args.dn:g}"</title><style>{ESTILO}</style>'
+              f'<h1>Simbolos parametricos &mdash; {args.dn:g}"</h1>'
+              f'<p class="sub">{len(lista)} familias, cota do fabricante, '
+              f'milimetro real</p><div class="folha">'
+              + "\n".join(figuras) + "</div>")
+    print(f"# {len(lista)} simbolos em {args.dn:g}\"", file=sys.stderr)
 
 
 if __name__ == "__main__":

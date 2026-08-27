@@ -54,7 +54,46 @@ def flange(dn_pol, norma="NBR PN16"):
     ficha.setdefault("furos", 8)
     ficha.setdefault("furo", 22.0)
     ficha.setdefault("espessura", 20.0)
+    ficha.setdefault("ressalto", ficha["externo"] * 0.78)
+    folha = flange_netafim(dn_pol)
+    if folha:
+        # a folha do caderno tem duas cotas que a tabela de furacao nao tem:
+        # o ressalto, que e onde a junta assenta, e a espessura da chapa
+        ficha["ressalto"] = folha["d_ressalto_mm"]
+        ficha["espessura"] = folha["esp_mm"]
     return ficha
+
+
+_netafim = None
+
+
+def flange_netafim(dn_pol, tipo="SOLDAR"):
+    """A folha de flange do caderno Netafim - paginas 4 e 6.
+
+    Vale a pena ler alem da furacao: a folha traz o ressalto (o diametro onde
+    a junta assenta), a espessura real da chapa e, na flange cega, a luva de
+    2" BSP por onde entra a ventosa.
+
+    A furacao dessa folha nao e a NBR da tabela da casa a partir de 10": o
+    caderno desenha 355 / 410 / 470 de circulo, que e EN PN16, contra
+    350 / 400 / 460 da NBR - ver tools/conferir_flanges_netafim.py.
+    """
+    global _netafim
+    if _netafim is None:
+        _netafim = {}
+        with open(f"{DADOS}/flanges_netafim.csv", encoding="utf-8") as fh:
+            for r in csv.DictReader(fh):
+                linha = {k: (float(v) if v and k.endswith("_mm") else v)
+                         for k, v in r.items()}
+                linha["furos"] = int(r["furos"])
+                _netafim[(r["tipo"], float(r["dn_pol"]))] = linha
+    return _netafim.get((tipo, float(dn_pol)))
+
+
+# A luva roscada de ventosa e sempre a mesma peca: 2" BSP femea, 30 mm de
+# comprimento por 40 mm de externo. Aparece com essas medidas nas duas folhas
+# onde o caderno a desenha - a flange cega (pagina 4) e o manifold (pagina 25).
+LUVA_BSP = {"dn_pol": 2, "comprimento_mm": 30.0, "externo_mm": 40.0}
 
 
 # ---------------------------------------------------------------- primitivas
@@ -364,50 +403,74 @@ def te(dn_pol, dn_derivacao=None):
     return _montar("TE", f'tê {dn_pol:g}"×{dn_derivacao:g}"', el, portas, fonte)
 
 
-def crivo(dn_pol, variante=""):
-    """Cesto cilindrico de chapa perfurada, flange em cima e chapa lisa no fundo.
+_crivos = None
 
-    O caderno Netafim (desenho 01523) manda furo de 6 mm com espacamento de
-    3 mm, e a vista inferior diz CHAPA LISA - o fundo e fechado. O Irrigafour
-    desenha a mesma peca; muda o comprimento, que na Netafim cresce com a
-    bitola e no Irrigafour e 300 fixo.
+
+def ficha_crivo(dn_pol):
+    """A folha do crivo - pagina 14 do caderno."""
+    global _crivos
+    if _crivos is None:
+        with open(f"{DADOS}/crivos_netafim.csv", encoding="utf-8") as fh:
+            _crivos = {float(r["dn_pol"]): r for r in csv.DictReader(fh)}
+    return _crivos.get(float(dn_pol))
+
+
+def crivo(dn_pol, variante=""):
+    """Cesto de chapa perfurada: furo de 6 mm a cada 3, fundo fechado.
+
+    A folha do caderno (pagina 14) cota tudo o que o desenho precisa - o
+    comprimento por bitola, a parede da chapa, a margem lisa de 10 mm antes do
+    primeiro furo e o passo de 3 mm entre furos. O fundo e CHAPA LISA: a agua
+    entra so pela parede, e e isso que separa o crivo de um tubo aberto.
+
+    A furacao vai desenhada no tamanho real - furo de 6 mm num cesto de 368
+    e um ponto mesmo. Como um crivo de 14" tem mais de dois mil furos, o
+    desenho mostra o trecho junto ao fundo e deixa o resto liso: e a convencao
+    de elemento repetido, a mesma que o caderno usa no DETALHE.
     """
+    ficha = ficha_crivo(dn_pol) or {}
     comp, fonte = _cota("CRIVO", dn_pol, variante, "comprimento_mm")
-    comp = comp or 300
-    r = DE_TUBO.get(dn_pol, 100) / 2
+    comp = float(ficha.get("comprimento_mm") or comp or 300)
+    fonte = "netafim" if ficha else fonte
+    de = float(ficha.get("d_externo_mm") or DE_TUBO.get(dn_pol, 100))
+    parede = float(ficha.get("parede_mm") or 2.0)
+    margem = float(ficha.get("margem_mm") or 10.0)
+    passo_livre = float(ficha.get("passo_mm") or 3.0)
+    furo = float(ficha.get("furo_mm") or 6.0)
+    passo = furo + passo_livre
+    r = de / 2
+
     el = [_p(f"M0 {-r:.1f} H{comp:.1f}"), _p(f"M0 {r:.1f} H{comp:.1f}"),
-          _p(f"M0 {-r:.1f} V{2*r:.1f}", "chapa_lisa")]
-    # a furacao: 6 mm de furo a cada 9 mm de passo, como o caderno pede.
-    # Em bitola grande sao centenas de furos - o desenho mostra o padrao,
-    # nao a contagem, entao o passo cresce para o furo continuar legivel.
-    passo = max(9.0, comp / 22)
-    furo = passo / 3
-    linhas = int((comp - passo) / passo)
-    fileiras = int((2 * r - passo) / passo)
-    for i in range(linhas):
-        x = passo * (i + 1)
+          _p(f"M0 {-r+parede:.1f} H{comp:.1f}", "malha"),
+          _p(f"M0 {r-parede:.1f} H{comp:.1f}", "malha"),
+          # o fundo: chapa lisa fechando o cesto, com a espessura da folha
+          {"tipo": "rect", "x": 0, "y": -r, "w": parede * 2, "h": 2 * r,
+           "classe": "chapa_lisa"}]
+
+    # a malha, em quincuncio, comecando depois da margem lisa e parando antes
+    # dela do outro lado. Corta no meio do cesto quando a contagem explode.
+    inicio = margem + parede * 2
+    fim = comp - margem
+    colunas = int((fim - inicio) / passo)
+    fileiras = int((2 * r - 2 * margem) / passo)
+    limite = 900
+    mostradas = min(colunas, max(1, limite // max(fileiras, 1)))
+    for i in range(mostradas):
+        x = inicio + furo / 2 + passo * i
         for j in range(fileiras):
-            yy = -r + passo * (j + 1) + (passo / 2 if i % 2 else 0)
-            if abs(yy) < r - furo:
+            yy = -r + margem + furo / 2 + passo * j + (passo / 2 if i % 2 else 0)
+            if abs(yy) < r - margem:
                 el.append({"tipo": "circulo", "cx": x, "cy": yy, "r": furo / 2,
                            "classe": "malha"})
+    if mostradas < colunas:
+        el.append({"tipo": "nota", "x": (inicio + fim) / 2, "y": -r * 0.55,
+                   "texto": f"furo {furo:g} c/ {passo_livre:g}"})
+
     el += placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-40 0 H{comp+60:.0f}", "centro"))
     portas = [Porta("saida", comp, 0, 0, dn_pol)]
-    return _montar("CRIVO", f'crivo {dn_pol:g}"', el, portas, fonte)
-
-
-def flange_cega(dn_pol):
-    """Fecha a linha: a placa cega e o toco de tubo que morre nela."""
-    f = flange(dn_pol)
-    toco = f["externo"] * 0.5
-    el = eixo(-toco, toco, dn_pol) + placa(0, dn_pol, lado="entrada")
-    r = DE_TUBO.get(dn_pol, 100) / 2
-    el += [_p(f"M{-toco*0.75 + i*toco*0.2:.1f} {-r:.1f} l{-toco*0.16:.1f} "
-              f"{2*r:.1f}", "malha") for i in range(4)]
-    el.append(_p(f"M{-toco-40:.0f} 0 H{f['espessura']/2:.0f}", "centro"))
-    return _montar("FLANGE_CEGA", f'flange cega {dn_pol:g}"', el,
-                   [Porta("entrada", -toco, 0, 180, dn_pol)], "norma")
+    return _montar("CRIVO", f'crivo {dn_pol:g}"', el, portas, fonte,
+                   {"fundo": "CHAPA_LISA", "furo_mm": furo})
 
 
 def adaptador(dn_pol):
@@ -421,6 +484,278 @@ def adaptador(dn_pol):
     portas = [Porta("entrada", 0, 0, 180, dn_pol),
               Porta("saida", comp, 0, 0, dn_pol)]
     return _montar("ADAPTADOR", f'adaptador {dn_pol:g}"', el, portas, fonte)
+
+
+def luva(x, y=0.0, direcao=0.0, dn_pol=2, comprimento=None, externo=None):
+    """A luva roscada que recebe a ventosa - 2" BSP femea, 30 x 40.
+
+    Sai da parede da peca e nao do eixo: e um toco soldado num furo. Por isso
+    o desenho e sempre o mesmo, mude o corpo em que ela esta cravada.
+    """
+    comprimento = comprimento or LUVA_BSP["comprimento_mm"]
+    externo = externo or LUVA_BSP["externo_mm"]
+    r = externo / 2
+    furo = r - 3.5                      # a parede da luva, para a rosca aparecer
+    el = [{"tipo": "rect", "x": x, "y": y - r, "w": comprimento, "h": externo,
+           "classe": "corpo"},
+          _p(f"M{x:.1f} {y-furo:.1f} H{x+comprimento:.1f}", "malha"),
+          _p(f"M{x:.1f} {y+furo:.1f} H{x+comprimento:.1f}", "malha")]
+    if direcao:
+        for e in el:
+            e["girar"] = (direcao, x, y)
+    return el
+
+
+def flange_cega(dn_pol, saida_pol=None, saida_tipo="LUVA"):
+    """Fecha a linha. Tres versoes, e o catalogo tem as tres:
+
+        sem luva     FL CEGA AZ 3" NBR PN16
+        com luva     FL CEGA AZ 12" NBR PN16 C/ LG 2"    -> ventosa, manometro
+        com flange   FL CEGA AZ 20" NBR PN16 C/ FL 3"    -> derivacao pequena
+
+    Nao tem toco de tubo: e o anel de flange com a chapa fechando o meio, e a
+    propria face flangeada e a ligacao. A chapa vai hachurada porque em corte
+    e material macico - e o que separa no papel uma cega de uma flange comum.
+    """
+    f = flange(dn_pol)
+    esp = f["espessura"]
+    meia = f["ressalto"] / 2
+    el = list(placa(0, dn_pol, lado="entrada"))
+    el.append({"tipo": "rect", "x": 0, "y": -meia, "w": esp, "h": f["ressalto"],
+               "classe": "chapa_lisa"})
+    for i in range(1, 7):
+        yy = -meia + f["ressalto"] * i / 7
+        el.append(_p(f"M0 {yy:.1f} l{esp:.1f} {-esp:.1f}", "malha"))
+    rotulo = f'flange cega {dn_pol:g}"'
+    fim = esp
+    if saida_pol and saida_tipo == "LUVA":
+        el += luva(esp, 0, 0, saida_pol)
+        fim = esp + LUVA_BSP["comprimento_mm"]
+        rotulo += f' c/ luva {saida_pol:g}"'
+    elif saida_pol:
+        el += eixo(esp, 100, saida_pol) + placa(esp + 100, saida_pol,
+                                                lado="saida")
+        fim = esp + 100
+        rotulo += f' c/ flange {saida_pol:g}"'
+    el.append(_p(f"M-60 0 H{fim + 40:.0f}", "centro"))
+    portas = [Porta("entrada", 0, 0, 180, dn_pol)]
+    if saida_pol and saida_tipo != "LUVA":
+        portas.append(Porta("derivacao", fim, 0, 0, saida_pol))
+    return _montar("FLANGE_CEGA", rotulo, el, portas, "netafim",
+                   {"saida_pol": saida_pol, "saida_tipo": saida_tipo})
+
+
+def flange_avulsa(dn_pol, tipo="SOLDAR"):
+    """A flange sozinha, como peca de lista.
+
+    SOLDAR  solda na ponta do tubo de aco - o furo central e o diametro do
+            tubo, entao ela encosta e o cordao fecha.
+    SOLTA   e a mesma chapa entrando no tubo de PEAD: nao solda em nada, corre
+            livre pelo tubo ate travar no ressalto do colar. Por isso o furo
+            central e maior que o tubo.
+    """
+    folha = flange_netafim(dn_pol) or {}
+    f = flange(dn_pol)
+    esp = f["espessura"]
+    bore = folha.get("d_furo_central_mm") or DE_TUBO.get(dn_pol, 100) + 2
+    if tipo == "SOLTA":
+        bore += 4                       # folga para correr no tubo
+    el = [{"tipo": "rect", "x": 0, "y": -f["externo"] / 2, "w": esp,
+           "h": f["externo"], "classe": "flange"}]
+    for sinal in (-1, 1):
+        el.append(_p(f"M0 {sinal*bore/2:.1f} h{esp:.1f}", "malha"))
+        el.append(_p(f"M0 {sinal*f['circulo']/2:.1f} h{esp:.1f}", "furo"))
+    el.append({"tipo": "texto_furos", "x": 0, "y": 0, "n": f["furos"],
+               "furo": f["furo"]})
+    if tipo == "SOLTA":
+        # o tubo atravessando: e por ele que ela corre ate travar no ressalto
+        rt = bore / 2 - 2
+        for sinal in (-1, 1):
+            el.append(_p(f"M-70 {sinal*rt:.1f} H{esp+70:.1f}", "malha"))
+    el.append(_p(f"M-40 0 H{esp+40:.0f}", "centro"))
+    nome = "flange" if tipo == "SOLDAR" else "flange solta"
+    portas = [Porta("entrada", 0, 0, 180, dn_pol),
+              Porta("saida", esp, 0, 0, dn_pol)]
+    return _montar("FLANGE", f'{nome} {dn_pol:g}"', el, portas, "netafim",
+                   {"tipo": tipo})
+
+
+# ------------------------------------------------------------------ PEAD
+# No PEAD o DN E o diametro externo: o tubo DN225 mede 225 mm por fora. Nao ha
+# tabela de DE a consultar como no aco - o numero do codigo ja e o do desenho.
+# A parede sai do SDR, que e a razao DN/parede fixada pela pressao.
+SDR_POR_PN = {6: 26, 8: 21, 10: 17, 12.5: 13.6, 16: 11, 20: 9, 25: 7.4}
+# A equivalencia que a casa pratica entre a linha de aco e a de PEAD, a mesma
+# de motor/traducao.POLEGADA_MM lida ao contrario.
+PEAD_POL = {63: 2, 75: 2.5, 90: 3, 110: 4, 140: 5, 160: 6, 225: 8, 280: 10,
+            315: 12, 355: 14}
+
+
+def _pead_em_polegada(dn_mm):
+    if dn_mm in PEAD_POL:
+        return PEAD_POL[dn_mm]
+    return min(PEAD_POL.items(), key=lambda kv: abs(kv[0] - dn_mm))[1]
+
+
+def tubo_pead(dn_mm, comprimento_mm=6000, pn=10):
+    """A barra de PEAD: 6 metros, ponta lisa dos dois lados.
+
+    Nao tem flange nem rosca - PEAD emenda por termofusao, topo a topo. O que
+    aparece no desenho e a parede, que aqui e grossa o bastante para valer o
+    traco: DN225 PN10 da 13 mm de cada lado.
+    """
+    r = dn_mm / 2
+    parede = dn_mm / SDR_POR_PN.get(pn, 17)
+    el = [_p(f"M0 {-r:.1f} H{comprimento_mm:.1f}"),
+          _p(f"M0 {r:.1f} H{comprimento_mm:.1f}"),
+          _p(f"M0 {-r+parede:.1f} H{comprimento_mm:.1f}", "malha"),
+          _p(f"M0 {r-parede:.1f} H{comprimento_mm:.1f}", "malha"),
+          _p(f"M0 {-r:.1f} V{r:.1f}"),
+          _p(f"M{comprimento_mm:.1f} {-r:.1f} V{r:.1f}"),
+          _p(f"M-80 0 H{comprimento_mm+80:.0f}", "centro")]
+    portas = [Porta("entrada", 0, 0, 180, _pead_em_polegada(dn_mm)),
+              Porta("saida", comprimento_mm, 0, 0, _pead_em_polegada(dn_mm))]
+    return _montar("TUBO", f'tubo PEAD DN{dn_mm:g} {comprimento_mm/1000:g} m',
+                   el, portas, "descricao",
+                   {"material": "PEAD", "dn_mm": dn_mm, "pn": pn})
+
+
+def colar_pead(dn_mm, pn=10, norma="NBR PN16"):
+    """Colar de flange PEAD com a flange solta ja enfiada.
+
+    E uma peca so no desenho porque e uma peca so na obra: a flange entra no
+    tubo primeiro, o colar e soldado depois, e o ressalto do colar e que a
+    prende - dai ela nao sai mais. Desenhar o colar sem a flange seria
+    desenhar um estado que nao existe montado.
+
+    O ressalto tem o diametro do ressalto da flange de aco da mesma bitola,
+    que e onde a junta assenta; o comprimento do pescoco e o unico numero sem
+    folha de fabricante e esta estimado - ver docs/MOTOR.md.
+    """
+    dn_pol = _pead_em_polegada(dn_mm)
+    f = flange(dn_pol, norma)
+    esp = f["espessura"]
+    r = dn_mm / 2
+    parede = dn_mm / SDR_POR_PN.get(pn, 17)
+    ressalto = f["ressalto"]
+    esp_ressalto = max(parede, 12.0)
+    # o unico numero sem folha: o pescoco tem que dar espaco para a flange
+    # correr e ainda sobrar tubo para a termofusao. A estimativa fica perto
+    # do stub end DIN 16963-4 (DN110 da 62, DN225 da 108).
+    pescoco = max(esp + 40, dn_mm * 0.40)
+    comp = pescoco + esp_ressalto
+
+    el = [
+        # o pescoco: tubo de PEAD com a parede cheia, ponta lisa para fundir
+        _p(f"M0 {-r:.1f} H{pescoco:.1f}"), _p(f"M0 {r:.1f} H{pescoco:.1f}"),
+        _p(f"M0 {-r+parede:.1f} H{comp:.1f}", "malha"),
+        _p(f"M0 {r-parede:.1f} H{comp:.1f}", "malha"),
+        _p(f"M0 {-r:.1f} V{r:.1f}", "solda"),
+        # o ressalto: o anel que cresce no fim do colar. E ele que segura a
+        # flange, e e nele que a junta assenta - dai ter o diametro do
+        # ressalto da flange de aco da mesma bitola.
+        _p(f"M{pescoco:.1f} {-r:.1f} V{-ressalto/2:.1f}"),
+        _p(f"M{pescoco:.1f} {r:.1f} V{ressalto/2:.1f}"),
+        _p(f"M{pescoco:.1f} {-ressalto/2:.1f} H{comp:.1f}"),
+        _p(f"M{pescoco:.1f} {ressalto/2:.1f} H{comp:.1f}"),
+        _p(f"M{comp:.1f} {-ressalto/2:.1f} V{ressalto/2:.1f}"),
+    ]
+    # a flange solta, encostada por tras do ressalto. Nao solda em nada: entrou
+    # pelo tubo antes de o colar existir e agora nao passa mais pelo ressalto.
+    el.append({"tipo": "rect", "x": pescoco - esp, "y": -f["externo"] / 2,
+               "w": esp, "h": f["externo"], "classe": "flange"})
+    for sinal in (-1, 1):
+        el.append(_p(f"M{pescoco-esp:.1f} {sinal*f['circulo']/2:.1f} "
+                     f"h{esp:.1f}", "furo"))
+        # o furo central da flange, por onde o tubo passa
+        el.append(_p(f"M{pescoco-esp:.1f} {sinal*(r+2):.1f} h{esp:.1f}",
+                     "malha"))
+    el.append({"tipo": "texto_furos", "x": pescoco, "y": 0, "n": f["furos"],
+               "furo": f["furo"]})
+    el.append(_p(f"M-60 0 H{comp+50:.0f}", "centro"))
+    portas = [Porta("entrada", 0, 0, 180, dn_pol),
+              Porta("saida", comp, 0, 0, dn_pol)]
+    return _montar("COLAR_PEAD", f'colar PEAD DN{dn_mm:g} + flange solta', el,
+                   portas, "netafim",
+                   {"material": "PEAD", "dn_mm": dn_mm, "pn": pn,
+                    "flange_solta": True, "pescoco_estimado": True})
+
+
+# --------------------------------------------------------------- manifold
+_manifold = None
+
+
+def ficha_manifold(dn_pol, derivacao_pol=None):
+    """A folha do manifold, pagina 25 do caderno."""
+    global _manifold
+    if _manifold is None:
+        _manifold = []
+        with open(f"{DADOS}/manifold_netafim.csv", encoding="utf-8") as fh:
+            _manifold = list(csv.DictReader(fh))
+    candidatos = [r for r in _manifold
+                  if float(r["dn_pol"]) == float(dn_pol)]
+    if derivacao_pol:
+        exato = [r for r in candidatos
+                 if float(r["derivacao_pol"]) == float(derivacao_pol)]
+        if exato:
+            return exato[0]
+    return candidatos[0] if candidatos else None
+
+
+def manifold(dn_pol, derivacao_pol=None, derivacoes=2, ponta="FLANGE"):
+    """O barrilete do recalque: corpo longo, derivacoes em cima e as ventosas.
+
+    As duas luvas de 2" BSP nao sao acessorio - sao a razao de o manifold ter
+    ventosa. A folha as cota pelo topo, a 40 mm acima da geratriz do corpo, e
+    esse numero fecha em todas as bitolas de 4" a 20".
+
+    A ponta e o que a descricao chama de FL ou K: flange soldada ou anel K10
+    para junta mecanica.
+    """
+    ficha = ficha_manifold(dn_pol, derivacao_pol) or {}
+    comp = float(ficha.get("comprimento_mm") or 1500)
+    der_pol = float(ficha.get("derivacao_pol") or derivacao_pol or 4)
+    pescoco = float(ficha.get("derivacao_pescoco_mm") or 100)
+    luva_alt = float(ficha.get("luva_altura_mm") or DE_TUBO.get(dn_pol, 200) / 2 + 40)
+    r = DE_TUBO.get(dn_pol, 200) / 2
+    fonte = "netafim" if ficha else None
+
+    el = eixo(0, comp, dn_pol)
+    if ponta == "FLANGE":
+        el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
+    else:
+        # anel K10: um ressalto de topo, sem furacao
+        for x0, largura in ((0, 24), (comp - 24, 24)):
+            el.append({"tipo": "rect", "x": x0, "y": -r - 14, "w": largura,
+                       "h": 2 * r + 28, "classe": "corpo"})
+
+    # as derivacoes, distribuidas no corpo, saindo para cima
+    passo = comp / (derivacoes + 1)
+    rd = DE_TUBO.get(der_pol, 100) / 2
+    for i in range(derivacoes):
+        x = passo * (i + 1)
+        el += [_p(f"M{x-rd:.1f} {-r:.1f} V{-(r+pescoco):.1f}"),
+               _p(f"M{x+rd:.1f} {-r:.1f} V{-(r+pescoco):.1f}")]
+        el += placa(x, der_pol, y=-r - pescoco, direcao=-90, lado="saida")
+
+    # as duas luvas de ventosa. A folha cota o topo (G2), nao o comprimento
+    # da luva: os 30 mm da coluna F3 sao a rosca, e a luva sai da parede ate
+    # os 40 mm acima dela que a cota manda.
+    saliencia = luva_alt - r
+    for x in (comp * 0.16, comp * 0.84):
+        el += luva(x, -r, -90, LUVA_BSP["dn_pol"], comprimento=saliencia)
+
+    el.append(_p(f"M-70 0 H{comp+70:.0f}", "centro"))
+    portas = [Porta("entrada", 0, 0, 180, dn_pol),
+              Porta("saida", comp, 0, 0, dn_pol)]
+    for i in range(derivacoes):
+        portas.append(Porta("derivacao", passo * (i + 1), -r - pescoco, -90,
+                            der_pol))
+    rot = (f'manifold {dn_pol:g}" {comp:g} mm · {derivacoes}×{der_pol:g}" '
+           f'· 2 lv 2"')
+    return _montar("MANIFOLD", rot, el, portas, fonte,
+                   {"derivacoes": derivacoes, "derivacao_pol": der_pol,
+                    "luvas_ventosa": 2, "ponta": ponta})
 
 
 # ------------------------------------------------------- familias de equipamento
