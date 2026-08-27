@@ -14,8 +14,13 @@ sys.path.insert(0, ".")
 from motor import simbolos as s  # noqa: E402
 
 LARGURA = 300          # px da celula
-ALTURA = 190
+ALTURA = 200
 MARGEM = 16
+# a letra com que o catalogo chama a cota principal de cada familia
+LETRA = {"CURVA": "C", "REDUCAO_CONCENTRICA": "E", "REDUCAO_EXCENTRICA": "E",
+         "TE": "E", "MANIFOLD": "C", "CRIVO": "C", "ADAPTADOR": "C",
+         "TUBO": "L", "VALVULA_BORBOLETA": "A", "VALVULA_GAVETA": "L",
+         "VALVULA_HIDRAULICA": "L", "MEDIDOR": "L", "VALVULA_PE": "H"}
 
 
 def elenco(dn):
@@ -72,6 +77,17 @@ def cota_escrita(simbolo):
     return f"{abs(b.x - a.x):.0f}"
 
 
+def seta(x, y, sentido, tamanho=4.5, vertical=False):
+    """Ponta de seta da linha de cota, como o catalogo desenha."""
+    if vertical:
+        return (f'<path class="seta" d="M{x:.1f} {y:.1f} '
+                f'l{-tamanho*0.42:.1f} {sentido*tamanho:.1f} '
+                f'l{tamanho*0.84:.1f} 0 Z"/>')
+    return (f'<path class="seta" d="M{x:.1f} {y:.1f} '
+            f'l{sentido*tamanho:.1f} {-tamanho*0.42:.1f} '
+            f'l0 {tamanho*0.84:.1f} Z"/>')
+
+
 def celula(simbolo):
     x0, y0, larg, alt = simbolo.caixa
     escala = min((LARGURA - 2 * MARGEM) / max(larg, 1),
@@ -87,8 +103,8 @@ def celula(simbolo):
               f'<g class="geo" transform="translate({dx:.2f} {dy:.2f}) '
               f'scale({escala:.5f})">{corpo}</g>']
     medida = cota_escrita(simbolo)
-    # a linha de cota fica logo abaixo do desenho, nunca em cima dele
-    y_cota = min(dy + (y0 + alt) * escala + 13, ALTURA - 40)
+    y_base = dy + (y0 + alt) * escala
+    y_cota = min(y_base + 16, ALTURA - 38)
     if medida:
         def acha(papel):
             return next((p for p in simbolo.portas if p.papel == papel), None)
@@ -96,16 +112,38 @@ def celula(simbolo):
         pb = acha("saida") or acha("menor")
         xa = dx + pa.x * escala
         xb = dx + pb.x * escala
+        letra = LETRA.get(simbolo.familia, "")
         partes.append(
             f'<g class="anota">'
-            f'<path class="chamada" d="M{xa:.1f} {y_cota-8:.1f} V{y_cota+5:.1f} '
-            f'M{xb:.1f} {y_cota-8:.1f} V{y_cota+5:.1f}"/>'
+            f'<path class="chamada" d="M{xa:.1f} {y_base + 3:.1f} V{y_cota+4:.1f} '
+            f'M{xb:.1f} {y_base + 3:.1f} V{y_cota+4:.1f}"/>'
             f'<path class="linha-cota" d="M{xa:.1f} {y_cota:.1f} H{xb:.1f}"/>'
-            f'<text class="cota" x="{(xa+xb)/2:.1f}" y="{y_cota-4:.1f}">{medida}</text>'
+            + seta(xa, y_cota, 1) + seta(xb, y_cota, -1) +
+            f'<text class="cota" x="{(xa+xb)/2:.1f}" y="{y_cota-5:.1f}">'
+            f'<tspan class="letra">{letra}</tspan> {medida}</text>'
             f'</g>')
     if furos:
         partes.append(f'<text class="furos" x="{LARGURA-MARGEM}" y="{MARGEM+4}">'
                       f'{furos["n"]}×⌀{furos["furo"]:g}</text>')
+    # cota vertical: o diametro externo da flange de entrada
+    entrada = next((p for p in simbolo.portas if p.papel == "entrada"),
+                   None) or next((p for p in simbolo.portas
+                                  if p.papel in ("maior", "saida")), None)
+    if entrada:
+        import motor.simbolos as ms
+        de = ms.flange(entrada.dn_pol)["externo"]
+        xv = 12          # sempre na margem, nunca em cima do desenho
+        ya = dy + (entrada.y - de / 2) * escala
+        yb = dy + (entrada.y + de / 2) * escala
+        if yb - ya > 26:
+            partes.append(
+                f'<g class="anota">'
+                f'<path class="linha-cota" d="M{xv:.1f} {ya:.1f} V{yb:.1f}"/>'
+                + seta(xv, ya, 1, 4.2, vertical=True)
+                + seta(xv, yb, -1, 4.2, vertical=True) +
+                f'<text class="cota vertical" transform="rotate(-90 {xv-4:.1f} '
+                f'{(ya+yb)/2:.1f})" x="{xv-4:.1f}" y="{(ya+yb)/2:.1f}">'
+                f'<tspan class="letra">⌀</tspan>{de:g}</text></g>')
     partes.append(f'<text class="rotulo" x="{LARGURA/2:.0f}" y="{ALTURA-14}">'
                   f'{simbolo.rotulo}</text>')
     partes.append(f'<text class="fonte" x="{LARGURA/2:.0f}" y="{ALTURA-2}">'

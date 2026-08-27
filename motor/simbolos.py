@@ -102,41 +102,76 @@ def placa(x, dn_pol, y=0.0, direcao=0.0, norma="NBR PN16"):
     return saida
 
 
-def giro(x, perna, angulo, dn_pol, sentido=1, y=0.0):
-    """Curva: duas pernas e um arco tangente entre elas.
+def giro(x, perna, angulo, dn_pol, sentido=1, y=0.0, gomos=4):
+    """Curva de gomos - que e como a curva de aco zincado e feita de verdade.
 
-    A perna e a cota do fabricante, medida do flange ate o vertice. O raio de
-    dobra sai dela, e as paredes sao o arco deslocado de meio diametro para
-    cada lado - por isso a parede de fora e um arco maior que a de dentro.
+    Nao e um arco liso: sao chapas cortadas e soldadas. Uma curva de 90 com 4
+    gomos vira 15 + 30 + 30 + 15 graus, exatamente como o caderno Netafim
+    desenha (Z1 a Z4). As pontas viram metade do que os gomos do meio viram.
+
+    Devolve as paredes, as soldas entre gomos, e a saida (x, y, direcao).
     """
     r = DE_TUBO.get(dn_pol, 100) / 2
     t = math.radians(angulo)
-    raio = max(perna * 0.55, r * 1.2)
-    recuo = raio * math.tan(t / 2)          # do vertice ate o ponto de tangencia
-    recuo = min(recuo, perna * 0.8)
+    raio = max(perna * 0.5, r * 1.15)
+    recuo = min(raio * math.tan(t / 2), perna * 0.85)
     raio = recuo / math.tan(t / 2)
 
-    vx, vy = x + perna, y                                   # vertice
-    dsx, dsy = math.cos(-t * sentido), math.sin(-t * sentido)   # direcao de saida
+    vx, vy = x + perna, y
+    # cortes: as pontas viram metade do gomo do meio
+    n = max(int(gomos), 2)
+    passo = angulo / (n - 1)
+    cortes = [0.0]
+    for i in range(n):
+        cortes.append(cortes[-1] + (passo / 2 if i in (0, n - 1) else passo))
+    cortes = [c for c in cortes if c <= angulo + 1e-6]
+    if abs(cortes[-1] - angulo) > 1e-6:
+        cortes.append(angulo)
+
+    # centro do arco, do lado de dentro da curva
     t1 = (vx - recuo, vy)
-    t2 = (vx + recuo * dsx, vy + recuo * dsy)
+    centro = (t1[0], t1[1] - raio * sentido)
+    pontos = []
+    for c in cortes:
+        a = math.radians(c) * sentido
+        # ponto do arco medido a partir de t1, girando em torno de centro
+        px = centro[0] + raio * math.sin(a) * sentido
+        py = centro[1] + raio * math.cos(a) * sentido
+        pontos.append((px, py))
+    inicio = (x, y)
+    dsx, dsy = math.cos(-t * sentido), math.sin(-t * sentido)
     fim = (vx + perna * dsx, vy + perna * dsy)
-    # normal que aponta para fora da curva
-    ne = (0, 1 * sentido)
-    ns = (-dsy * sentido, dsx * sentido)
-    varredura = 0 if sentido > 0 else 1
+    t2 = (vx + recuo * dsx, vy + recuo * dsy)
+    centro_linha = [inicio, t1] + pontos[1:-1] + [t2, fim]
 
-    def caminho(lado):
-        rr = raio + lado * r
-        a = (x + ne[0] * r * lado, y + ne[1] * r * lado)
-        b = (t1[0] + ne[0] * r * lado, t1[1] + ne[1] * r * lado)
-        c = (t2[0] + ns[0] * r * lado, t2[1] + ns[1] * r * lado)
-        d = (fim[0] + ns[0] * r * lado, fim[1] + ns[1] * r * lado)
-        return (f"M{a[0]:.1f} {a[1]:.1f} L{b[0]:.1f} {b[1]:.1f} "
-                f"A{rr:.1f} {rr:.1f} 0 0 {varredura} {c[0]:.1f} {c[1]:.1f} "
-                f"L{d[0]:.1f} {d[1]:.1f}")
+    def normal(a, b):
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        n = math.hypot(dx, dy) or 1
+        return (-dy / n, dx / n)
 
-    return [_p(caminho(1)), _p(caminho(-1))], (fim[0], fim[1], -angulo * sentido)
+    def parede(lado):
+        saida = []
+        for i in range(len(centro_linha) - 1):
+            a, b = centro_linha[i], centro_linha[i + 1]
+            nx, ny = normal(a, b)
+            saida.append(((a[0] + nx * r * lado, a[1] + ny * r * lado),
+                          (b[0] + nx * r * lado, b[1] + ny * r * lado)))
+        # une os segmentos pelo encontro aproximado: o proprio vertice deslocado
+        pts = [saida[0][0]]
+        for i, (_, b) in enumerate(saida):
+            pts.append(b if i == len(saida) - 1 else
+                       ((b[0] + saida[i + 1][0][0]) / 2,
+                        (b[1] + saida[i + 1][0][1]) / 2))
+        return pts
+
+    fora, dentro = parede(1 * sentido), parede(-1 * sentido)
+    caminho = lambda pts: "M" + " L".join(f"{p[0]:.1f} {p[1]:.1f}" for p in pts)
+    elementos = [_p(caminho(fora)), _p(caminho(dentro))]
+    # a solda de cada gomo, so nas juntas do meio
+    for i in range(1, len(fora) - 1):
+        elementos.append(_p(f"M{fora[i][0]:.1f} {fora[i][1]:.1f} "
+                            f"L{dentro[i][0]:.1f} {dentro[i][1]:.1f}", "solda"))
+    return elementos, (fim[0], fim[1], -angulo * sentido)
 
 
 def caixa(x, largura, altura_acima, altura_abaixo, y=0.0, classe="corpo"):
@@ -207,10 +242,11 @@ def tubo(dn_pol, comprimento_mm=1000):
                    el, portas, "descricao")
 
 
-def curva(dn_pol, angulo=90, sentido=1):
+def curva(dn_pol, angulo=90, sentido=1, gomos=None):
     perna, fonte = _cota("CURVA", dn_pol, str(angulo), "perna_mm")
     perna = perna or DE_TUBO.get(dn_pol, 100) * 1.5
-    el, (sx, sy, direcao) = giro(0, perna, angulo, dn_pol, sentido)
+    gomos = gomos or (4 if angulo >= 90 else 3 if angulo >= 45 else 2)
+    el, (sx, sy, direcao) = giro(0, perna, angulo, dn_pol, sentido, gomos=gomos)
     el += placa(0, dn_pol)
     bocal = placa(sx, dn_pol, sy)
     for e in bocal:
@@ -221,7 +257,8 @@ def curva(dn_pol, angulo=90, sentido=1):
                  f"{sy + 60*math.sin(rad):.0f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol),
               Porta("saida", sx, sy, direcao, dn_pol)]
-    return _montar("CURVA", f'curva {angulo}° {dn_pol:g}"', el, portas, fonte)
+    return _montar("CURVA", f'curva {angulo}° {dn_pol:g}" {gomos} gomos',
+                   el, portas, fonte)
 
 
 def reducao(dn_maior, dn_menor, tipo="CONCENTRICA", lado_plano="topo"):
