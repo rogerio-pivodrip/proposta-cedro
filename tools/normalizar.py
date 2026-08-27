@@ -102,6 +102,8 @@ CONEXOES = [
 
 # Derivacoes auxiliares: LG 2" = luva galvanizada, LV = luva, L2 = luva 2"
 RX_DERIV = re.compile(r"\b(?:C/\s*)?(\d)?\s*(LG|LV|L)\s*(\d+(?:\s?\d/\d)?)\s*\"?", re.I)
+# "C/ESC.2"" e o escape de 2 polegadas da curva, por onde entra a ventosa
+RX_ESCAPE = re.compile(r"C/\s*ESC\.?\s*(\d+(?:\s?\d/\d)?)\s*\"?", re.I)
 # O lookbehind impede ler o denominador de uma fracao como diametro: em
 # 'QC 3/4"' o que vale e 3/4, nao 4.
 RX_DN = re.compile(
@@ -198,6 +200,7 @@ def normalizar_item(item):
     peca["conexoes"] = []
     peca["derivacoes"] = []
     peca["manifold"] = None
+    peca["saida_pol"] = None
     peca["confianca"] = 0.0
 
     fam = detectar(FAMILIAS, desc)
@@ -245,8 +248,21 @@ def normalizar_item(item):
         if m:
             peca["comprimento_mm"] = round(para_float(m.group(1)) * 1000)
 
+    # Colar de tomada: '160X2"' e '125 X 2"' sao tubo em milimetro e saida em
+    # polegada. Sem isso o 160 se perde e o colar fica sem diametro de tubo.
+    if peca["familia"] == "COLAR_TOMADA":
+        m = re.search(r"(\d{2,3})\s*(?:MM)?\s*X\s*(\d+(?:\s?\d/\d)?)\s*\"",
+                      desc)
+        if m:
+            peca["dn"] = [int(m.group(1))]
+            peca["unidade_dn"] = "mm"
+            peca["saida_pol"] = para_float(m.group(2))
+
     peca["conexoes"] = extrair_conexoes(desc, dns_pos)
 
+    for m in RX_ESCAPE.finditer(desc):
+        peca["derivacoes"].append(
+            {"qtd": 1, "dn": para_float(m.group(1)), "tipo": "ESCAPE"})
     for m in RX_DERIV.finditer(desc):
         peca["derivacoes"].append(
             {"qtd": int(m.group(1) or 1), "dn": para_float(m.group(3)), "tipo": "LUVA"}

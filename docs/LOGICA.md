@@ -448,7 +448,7 @@ orientação, sempre no DN do bocal de entrada.
 Mesma ordem, mesmas famílias, mesmos DN — e o tipo da redução saindo certo dos
 dois lados pela orientação da bomba.
 
-### 7.5 Manifolds
+### 7.6 Manifolds
 
 Os **manifolds já são desenhos padrão** no catálogo: `MNFD AZ D02 … D20`,
 14 tipos, 151 itens; só o `D09` tem 43 variações de DN e comprimento. O conceito
@@ -504,7 +504,46 @@ Sem giro dá 90°; com giro de 90° as duas se cancelam e a linha volta ao rumo
 original, só deslocada. `motor/talude.py` calcula os dois sentidos e devolve as
 peças com o plano de montagem.
 
-### 7.4 Cobertura de 3" a 14"
+### 7.4 Ventosa: colar de tomada ou saída na peça
+
+A ventosa entra de duas maneiras, conforme o material do trecho:
+
+| material | como | peça |
+|---|---|---|
+| Plasson, PVC, PEAD | **colar de tomada** com saída de 2" | `COLAR TOMADA POLIPROPILENO 160X2" PN 10` |
+| aço zincado | a **saída já vem na peça** | manifold com luva de 2", flange cega com LG 2", ou curva de 90 com escape de 2" |
+
+A diferença importa para a lista: no plástico a ventosa **acrescenta** um item (o
+colar); no aço ela **troca** a peça por uma versão com saída — a curva de 90
+simples vira `CURVA 90 AZ 8" FL NBR PN16 C/ESC.2"`, mesmo código de família,
+outro SAP.
+
+Colar de tomada resolvido em todos os diâmetros de Plasson:
+
+| tubo | colar |
+|---|---|
+| 90 mm | `78400-005580` |
+| 110 mm | `78400-020000` |
+| 160 mm | `78400-020050` |
+| 225 mm | `78400-020100` |
+
+E em aço, as peças que já trazem a saída de 2":
+
+| DN | opções |
+|---|---|
+| 3" | flange cega c/ LG 2", curva 90 c/ escape |
+| 4" | manifold D06, curva 90 c/ escape |
+| 6" | só a curva 90 c/ escape |
+| 8" | manifold D06, curva 90 c/ escape |
+| 10" | flange cega c/ LG 2", curva 90 c/ escape |
+| 12" | manifold D06, flange cega, curva 90 c/ escape |
+| 14" | só o manifold D06 |
+
+**Uma observação dos projetos:** Marcelo Amorim e Lincoln Junqueira têm ambos
+**3 colares de tomada para 2 ventosas**. O terceiro colar é de outra coisa —
+manômetro, provavelmente. Fica registrado como pergunta.
+
+### 7.5 Cobertura de 3" a 14"
 
 Antes de montar qualquer linha, `tools/matriz_bitolas.py` responde onde o
 catálogo tem buraco. `#` serve na linha (é NBR PN16, ou a peça não declara norma
@@ -563,12 +602,14 @@ por aí — as peças de 14" existem, o que falta é a bomba.
 
 ## 8. Decisões em aberto
 
-1. **Norma do flange de cada família de bomba** (`data/bombas_norma.csv`). É o
+1. **Por que 3 colares de tomada para 2 ventosas?** Aparece igual em dois
+   projetos. O terceiro é de manômetro?
+2. **Norma do flange de cada família de bomba** (`data/bombas_norma.csv`). É o
    que falta para o motor escolher a redução sozinho, sem perguntar.
-2. **Comprimento do prisioneiro em NBR.** A ficha mede a versão ASME 150, cujo
+3. **Comprimento do prisioneiro em NBR.** A ficha mede a versão ASME 150, cujo
    flange é mais grosso — o tirante em NBR sai um pouco mais curto. Mantive o
    número da ficha, que erra para mais.
-3. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
+4. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
    ainda são norma escrita — e são justamente as do lado da bomba.
 
 ## 9. Estado do código
@@ -588,6 +629,7 @@ tools/demo_template.py        template de sucção conferido contra os dois proj
 tools/matriz_bitolas.py       cobertura de peças e reduções de 3" a 14"
 motor/templates.py            receitas padrão resolvidas contra o catálogo
 motor/talude.py               travessia do talude e o giro das curvas de 90
+motor/ventosa.py              colar de tomada ou peça de aço com saída de 2"
 motor/bomba.py                nomenclatura da bomba -> entrada, saída e rotor
 motor/catalogo.py             índice por (família, DN, norma)
 motor/regras.py               compatibilidade + ferragem
