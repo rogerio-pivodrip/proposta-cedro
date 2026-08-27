@@ -40379,7 +40379,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    2.0
@@ -40392,7 +40392,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000107",
@@ -40544,7 +40544,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    3.0
@@ -40563,7 +40563,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "01542-000114",
@@ -40712,7 +40712,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -40723,7 +40723,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000122",
@@ -41498,7 +41498,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -41509,7 +41509,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000156",
@@ -41517,7 +41517,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    4.0
@@ -41536,7 +41536,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "01542-000157",
@@ -41544,7 +41544,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    6.0
@@ -41563,7 +41563,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "01542-000158",
@@ -41571,7 +41571,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    8.0
@@ -41590,7 +41590,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "01542-000159",
@@ -41598,7 +41598,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    10.0
@@ -41617,7 +41617,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "01542-000160",
@@ -41770,7 +41770,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    12.0
@@ -41789,7 +41789,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "01542-000168",
@@ -42026,7 +42026,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -42037,7 +42037,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000183",
@@ -42045,7 +42045,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -42056,7 +42056,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000184",
@@ -42064,7 +42064,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -42075,7 +42075,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000185",
@@ -42083,7 +42083,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -42094,7 +42094,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000186",
@@ -42102,7 +42102,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -42113,7 +42113,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000187",
@@ -42121,7 +42121,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -42132,7 +42132,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000188",
@@ -42140,7 +42140,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -42151,7 +42151,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000189",
@@ -42159,7 +42159,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -42170,7 +42170,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000190",
@@ -42283,7 +42283,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": "BRONZE",
   "dn": [],
   "unidade_dn": null,
@@ -42294,7 +42294,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.14
+  "confianca": 0.43
  },
  {
   "sap": "01542-000196",
@@ -42377,7 +42377,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -42388,7 +42388,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000200",
@@ -42417,7 +42417,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": "BRONZE",
   "dn": [],
   "unidade_dn": null,
@@ -42428,7 +42428,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.14
+  "confianca": 0.43
  },
  {
   "sap": "01542-000202",
@@ -42668,7 +42668,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    4.0
@@ -42687,7 +42687,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "01542-000217",
@@ -42695,7 +42695,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    6.0
@@ -42714,7 +42714,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "01542-000218",
@@ -42722,7 +42722,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VENTOSA",
   "material": null,
   "dn": [
    2.0
@@ -42741,7 +42741,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "01542-000219",
@@ -42749,7 +42749,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VENTOSA",
   "material": null,
   "dn": [
    2.0
@@ -42768,7 +42768,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "01542-000220",
@@ -42936,7 +42936,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    2.0
@@ -42949,7 +42949,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000230",
@@ -43096,7 +43096,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VENTOSA",
   "material": null,
   "dn": [
    2.0
@@ -43115,7 +43115,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "01542-000238",
@@ -43123,7 +43123,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VENTOSA",
   "material": null,
   "dn": [
    2.0
@@ -43142,7 +43142,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "01542-000239",
@@ -43536,7 +43536,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    12.0
@@ -43549,7 +43549,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000267",
@@ -43597,7 +43597,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    2.0,
@@ -43611,7 +43611,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000271",
@@ -43681,7 +43681,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VENTOSA",
   "material": null,
   "dn": [
    2.0
@@ -43694,7 +43694,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000275",
@@ -44528,7 +44528,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    2.0
@@ -44541,7 +44541,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000324",
@@ -44625,7 +44625,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [
    2.0,
@@ -44639,7 +44639,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000329",
@@ -44647,7 +44647,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [
    3.0
@@ -44660,7 +44660,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000330",
@@ -44706,7 +44706,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [
    4.0
@@ -44719,7 +44719,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000338",
@@ -44727,7 +44727,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [
    6.0
@@ -44740,7 +44740,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000339",
@@ -44748,7 +44748,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [
    8.0,
@@ -44762,7 +44762,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000340",
@@ -44884,7 +44884,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [
    12.0
@@ -44897,7 +44897,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000349",
@@ -44905,7 +44905,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    1.5,
@@ -44919,7 +44919,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000352",
@@ -44927,7 +44927,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    1.5,
@@ -44941,7 +44941,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000353",
@@ -44949,7 +44949,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    2.5,
@@ -44963,7 +44963,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000354",
@@ -44971,7 +44971,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    2.5,
@@ -44985,7 +44985,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000357",
@@ -44993,7 +44993,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    3.0
@@ -45006,7 +45006,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000358",
@@ -45014,7 +45014,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    3.0
@@ -45027,7 +45027,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000359",
@@ -45035,7 +45035,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    4.0
@@ -45048,7 +45048,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000362",
@@ -45132,7 +45132,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    4.0
@@ -45145,7 +45145,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000368",
@@ -45153,7 +45153,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    6.0
@@ -45166,7 +45166,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000369",
@@ -45195,7 +45195,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    6.0
@@ -45208,7 +45208,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000371",
@@ -45216,7 +45216,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    8.0,
@@ -45230,7 +45230,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000372",
@@ -45238,7 +45238,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    8.0,
@@ -45252,7 +45252,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000374",
@@ -93685,7 +93685,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VENTOSA",
   "material": null,
   "dn": [
    1.0
@@ -93698,7 +93698,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "70440-001700",
@@ -96388,7 +96388,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -96399,7 +96399,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71000-013360",
@@ -96407,7 +96407,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -96418,7 +96418,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71000-016000",
@@ -96525,7 +96525,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -96536,7 +96536,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71020-006348",
@@ -96544,7 +96544,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -96555,7 +96555,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71020-012270",
@@ -96563,7 +96563,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -96574,7 +96574,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71200-006959",
@@ -96677,7 +96677,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    8.0
@@ -96690,7 +96690,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-000157",
@@ -96698,7 +96698,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    6.0
@@ -96711,7 +96711,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-000158",
@@ -96719,7 +96719,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    12.0
@@ -96732,7 +96732,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-000241",
@@ -96761,7 +96761,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    12.0
@@ -96774,7 +96774,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-000266",
@@ -96882,7 +96882,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    1.0
@@ -96895,7 +96895,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-001280",
@@ -96903,7 +96903,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    1.0
@@ -96916,7 +96916,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-001920",
@@ -96924,7 +96924,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    1.5
@@ -96937,7 +96937,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-002100",
@@ -96945,7 +96945,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    1.5
@@ -96958,7 +96958,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-002150",
@@ -96966,7 +96966,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    1.5
@@ -96979,7 +96979,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-002270",
@@ -97008,7 +97008,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    2.0
@@ -97021,7 +97021,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-002360",
@@ -97051,7 +97051,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    2.0
@@ -97064,7 +97064,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-002720",
@@ -97072,7 +97072,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    2.0
@@ -97085,7 +97085,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-002846",
@@ -97093,7 +97093,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    2.0
@@ -97106,7 +97106,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-003350",
@@ -97114,7 +97114,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    3.0
@@ -97127,7 +97127,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-003441",
@@ -97135,7 +97135,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    3.0
@@ -97148,7 +97148,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-003445",
@@ -97156,7 +97156,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    3.0
@@ -97169,7 +97169,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-003450",
@@ -97177,7 +97177,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    3.0
@@ -97196,7 +97196,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "71600-003590",
@@ -97352,7 +97352,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    90
@@ -97365,7 +97365,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-005520",
@@ -97373,7 +97373,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": "PVC",
   "dn": [
    90
@@ -97386,7 +97386,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "71600-005872",
@@ -97394,7 +97394,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    160
@@ -97407,7 +97407,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-005878",
@@ -97415,7 +97415,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": "PVC",
   "dn": [
    160
@@ -97428,7 +97428,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "71600-005897",
@@ -97436,7 +97436,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    110
@@ -97449,7 +97449,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-005990",
@@ -97457,7 +97457,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": "PVC",
   "dn": [
    110
@@ -97470,7 +97470,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "71600-006515",
@@ -97606,7 +97606,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    2.0
@@ -97619,7 +97619,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-008175",
@@ -97648,7 +97648,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    6.0
@@ -97661,7 +97661,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-011002",
@@ -97669,7 +97669,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    3.0
@@ -97682,7 +97682,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-012813",
@@ -97738,7 +97738,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    3.0
@@ -97751,7 +97751,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-050438",
@@ -97759,7 +97759,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    16.0
@@ -97772,7 +97772,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-050601",
@@ -97780,7 +97780,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    2.0
@@ -97793,7 +97793,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-050652",
@@ -97801,7 +97801,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    3.0
@@ -97814,7 +97814,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-051098",
@@ -97822,7 +97822,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    4.0
@@ -97841,7 +97841,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "71600-051099",
@@ -97849,7 +97849,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -97866,7 +97866,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71600-052300",
@@ -97962,7 +97962,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    6.0
@@ -97981,7 +97981,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.57
+  "confianca": 0.86
  },
  {
   "sap": "71610-035900",
@@ -98128,7 +98128,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    1.0
@@ -98141,7 +98141,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71640-007530",
@@ -98149,7 +98149,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    1.5
@@ -98162,7 +98162,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71640-007750",
@@ -98170,7 +98170,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    2.0
@@ -98183,7 +98183,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71660-000880",
@@ -98890,7 +98890,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -98901,7 +98901,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-000960",
@@ -98928,7 +98928,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    200
@@ -98941,7 +98941,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-001100",
@@ -98949,7 +98949,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -98960,7 +98960,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-001175",
@@ -98968,7 +98968,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -98979,7 +98979,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-001195",
@@ -98987,7 +98987,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -98998,7 +98998,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-001200",
@@ -99006,7 +99006,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99017,7 +99017,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-001210",
@@ -99025,7 +99025,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99036,7 +99036,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-001225",
@@ -99044,7 +99044,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    310
@@ -99057,7 +99057,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-001228",
@@ -99065,7 +99065,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99076,7 +99076,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-001370",
@@ -99103,7 +99103,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99114,7 +99114,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-001401",
@@ -99122,7 +99122,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99133,7 +99133,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-001430",
@@ -99141,7 +99141,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99152,7 +99152,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-001590",
@@ -99160,7 +99160,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [
    310
@@ -99173,7 +99173,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-001715",
@@ -99202,7 +99202,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99213,7 +99213,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-006170",
@@ -99221,7 +99221,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99232,7 +99232,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-006175",
@@ -99240,7 +99240,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99251,7 +99251,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-006270",
@@ -99287,7 +99287,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    3.0,
@@ -99301,7 +99301,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-006380",
@@ -99309,7 +99309,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99320,7 +99320,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-006410",
@@ -99328,7 +99328,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    4.0
@@ -99341,7 +99341,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-006500",
@@ -99349,7 +99349,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    6.0
@@ -99362,7 +99362,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-006520",
@@ -99370,7 +99370,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    6.0
@@ -99383,7 +99383,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-006630",
@@ -99391,7 +99391,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    6.0
@@ -99404,7 +99404,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-006720",
@@ -99412,7 +99412,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    8.0
@@ -99425,7 +99425,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-006800",
@@ -99433,7 +99433,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    10.0
@@ -99446,7 +99446,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-006850",
@@ -99454,7 +99454,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    8.0,
@@ -99469,7 +99469,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-006860",
@@ -99477,7 +99477,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    8.0,
@@ -99492,7 +99492,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-007045",
@@ -99500,7 +99500,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99511,7 +99511,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-007300",
@@ -99519,7 +99519,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    2.0
@@ -99532,7 +99532,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-007400",
@@ -99540,7 +99540,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    2.0
@@ -99553,7 +99553,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-007480",
@@ -99561,7 +99561,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    2.0
@@ -99574,7 +99574,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-007600",
@@ -99603,7 +99603,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99614,7 +99614,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-007670",
@@ -99622,7 +99622,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99633,7 +99633,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-007710",
@@ -99641,7 +99641,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99652,7 +99652,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-007840",
@@ -99681,7 +99681,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99692,7 +99692,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-008000",
@@ -99700,7 +99700,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99711,7 +99711,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-008100",
@@ -99719,7 +99719,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    3.0
@@ -99732,7 +99732,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-008190",
@@ -99740,7 +99740,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99751,7 +99751,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-008200",
@@ -99759,7 +99759,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99770,7 +99770,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-008206",
@@ -99778,7 +99778,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    67
@@ -99791,7 +99791,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-008300",
@@ -99799,7 +99799,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": "VALVULA_HIDRAULICA",
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    8.0,
@@ -99821,7 +99821,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99832,7 +99832,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-008510",
@@ -99840,7 +99840,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99851,7 +99851,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-008900",
@@ -99859,7 +99859,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": "VALVULA_HIDRAULICA",
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    3.0
@@ -99880,7 +99880,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99891,7 +99891,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-008990",
@@ -99899,7 +99899,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    160
@@ -99912,7 +99912,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-008995",
@@ -99920,7 +99920,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": "VALVULA_HIDRAULICA",
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    8.0,
@@ -99942,7 +99942,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": "VALVULA_HIDRAULICA",
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -99982,7 +99982,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    1.5,
@@ -99996,7 +99996,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-009170",
@@ -100004,7 +100004,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    110
@@ -100017,7 +100017,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-009178",
@@ -100025,7 +100025,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    3.0,
@@ -100039,7 +100039,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-009181",
@@ -100047,7 +100047,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    160
@@ -100060,7 +100060,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-010500",
@@ -100068,7 +100068,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100079,7 +100079,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-010550",
@@ -100087,7 +100087,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100098,7 +100098,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-010600",
@@ -100106,7 +100106,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100117,7 +100117,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-010700",
@@ -100125,7 +100125,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100136,7 +100136,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-010720",
@@ -100144,7 +100144,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100155,7 +100155,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-010800",
@@ -100163,7 +100163,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100174,7 +100174,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-010850",
@@ -100182,7 +100182,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100193,7 +100193,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-010860",
@@ -100201,7 +100201,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100212,7 +100212,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-011000",
@@ -100220,7 +100220,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100231,7 +100231,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-011020",
@@ -100239,7 +100239,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100250,7 +100250,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-011100",
@@ -100258,7 +100258,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100269,7 +100269,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-011120",
@@ -100296,7 +100296,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [
    3.0,
@@ -100310,7 +100310,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-012400",
@@ -100339,7 +100339,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100350,7 +100350,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-012927",
@@ -100396,7 +100396,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": "VALVULA_HIDRAULICA",
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    12,
@@ -100418,7 +100418,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": "VALVULA_HIDRAULICA",
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    400
@@ -100439,7 +100439,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    2.0
@@ -100452,7 +100452,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-014000",
@@ -100524,7 +100524,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    52
@@ -100537,7 +100537,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-015630",
@@ -100545,7 +100545,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    2.0
@@ -100558,7 +100558,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-015670",
@@ -100587,7 +100587,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
    3.0
@@ -100600,7 +100600,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-016400",
@@ -100627,7 +100627,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100638,7 +100638,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-016650",
@@ -100646,7 +100646,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100657,7 +100657,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-016700",
@@ -100665,7 +100665,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100676,7 +100676,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-016900",
@@ -100706,7 +100706,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": "PVC",
   "dn": [
    90
@@ -100719,7 +100719,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "71680-018050",
@@ -100727,7 +100727,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_HIDRAULICA",
   "material": "PVC",
   "dn": [
    110
@@ -100740,7 +100740,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "71680-018283",
@@ -100842,7 +100842,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [
    10.0,
@@ -100857,7 +100857,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71680-041130",
@@ -100865,7 +100865,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100876,7 +100876,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-041140",
@@ -100884,7 +100884,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100895,7 +100895,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-051268",
@@ -100903,7 +100903,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PECA_REPOSICAO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100914,7 +100914,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71680-051269",
@@ -100922,7 +100922,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "PILOTO",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -100933,7 +100933,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "71910-000017",

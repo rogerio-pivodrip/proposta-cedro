@@ -56,9 +56,22 @@ FAMILIAS = [
     (r"VALV\w*\s*(?:DE\s*)?PE\b", "VALVULA_PE", None),
     (r"VALV\w*\s*BORBOLETA|^BORBOLETA\b", "VALVULA_BORBOLETA", None),
     (r"VALV\w*\s*GAVETA|^REGISTRO\s*GAVETA", "VALVULA_GAVETA", None),
+
+
+    # Ordem importa: ventosa e alivio ganham da hidraulica, senao uma
+    # "BERMAD VALV AR ANTIVACUO" seria lida como valvula de controle.
+    (r"ANTI-?VACUO|\bVENTOSA\b|\bVALV\w*\s*(?:DE\s*)?AR\b", "VENTOSA", None),
     (r"\bALIVIO\b", "VALVULA_ALIVIO", None),
-    (r"VALV\w*\s*HIDRAULICA|\bDOROT\b[^,]*\b47-|\bDOROT\s*\d", "VALVULA_HIDRAULICA", None),
-    (r"ANTI-?VACUO|\bVENTOSA\b", "VENTOSA", None),
+    # Peca de reposicao de valvula ou piloto - nao e a valvula.
+    (r"\b(MOLA|ASSENTO|TACA|BOIA|REPARO|DIAFRAGMA|HASTE|PISTAO|LACRE|"
+     r"TURBINA|SUP\.?\s?P/\s?PILOTO)\b.*\b(DOROT|BERMAD|PILOTO|VALV)"
+     r"|\b(DOROT|BERMAD)\b.*\b(MOLA|ASSENTO|TACA|BOIA|REPARO|DIAFRAGMA|"
+     r"HASTE|PISTAO|LACRE|TURBINA)\b", "PECA_REPOSICAO", None),
+    (r"\bPILOTO\b|\bPILOT\b", "PILOTO", None),
+    # Corpo de valvula de controle hidraulico: marca + VALV + serie
+    (r"VALV\w*\s*HIDRAULICA"
+     r"|\b(?:DOROT|BERMAD)\b.*\bVALV\w*\b.*\b\d{2,3}\s?[-/]?\s?\w"
+     r"|\bVALV\w*\b.*\b(?:DOROT|BERMAD)\b", "VALVULA_HIDRAULICA", None),
     (r"^MANOVACUOMETRO|^MANOMETRO", "MANOMETRO", None),
     (r"^FILTRO\b|\bESPELHO\b|^ALPHADISC|^ARKAL|^SANDSTORM", "FILTRO", None),
     (r"^RETROLAVAGEM\b", "RETROLAVAGEM", None),

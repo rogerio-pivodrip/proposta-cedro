@@ -560,6 +560,33 @@ filtro → válvula hidráulica → medidor
 `hidraulica.conferir_sequencia()` acusa filtro sem válvula na saída, e medidor
 que venha antes dela.
 
+**Achei todas?** Não, na primeira passada. Auditando o catálogo, o classificador
+pegava **14** e errava dos dois lados:
+
+- **falsos positivos** — `DOROT MOLA P/ VALV 47-8"`, `ASSENTO P/ MOLA`,
+  `TAÇA DA JUNTA`, `BOIA` entravam como válvula, e são peça de reposição;
+- **falsos negativos** — a linha **Bermad inteira** ficava de fora
+  (`BERMAD VALV MET IR 6" 405 FL NBR PN10/16`, série 735, 350P), e as séries
+  Dorot que não são a 47 (44, 57, 67, 75, 77, 96, Galil 09).
+
+Corrigido, são **69 corpos de válvula de controle**, com reposição e piloto
+separados em famílias próprias:
+
+| família | itens |
+|---|---|
+| `VALVULA_HIDRAULICA` | 69 |
+| `PECA_REPOSICAO` | 71 |
+| `PILOTO` | 33 |
+| `VENTOSA` | 18 |
+| `VALVULA_ALIVIO` | 7 |
+
+Por marca e série: Dorot 96 (10), 75 (9), 47 (7), 77, 67, 57, 44, Galil 09;
+Bermad 405 (7), 735, 350P. A ordem das regras passou a importar — ventosa e
+alívio ganham da hidráulica, senão `BERMAD VALV AR ANTIVACUO` seria lida como
+válvula de controle.
+
+Os projetos usam só a **série 47**, que existe de 3" a 12".
+
 **A válvula nunca vem sozinha:** leva o esquema de piloto
 (`data/fichas/DOROT_esquema_valvula_redutora_sustentadora_31-310.pdf`), e o
 conjunto lista junto. `data/pilotos.csv` amarra:
