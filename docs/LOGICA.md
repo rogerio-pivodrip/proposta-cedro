@@ -585,7 +585,24 @@ Bermad 405 (7), 735, 350P. A ordem das regras passou a importar — ventosa e
 alívio ganham da hidráulica, senão `BERMAD VALV AR ANTIVACUO` seria lida como
 válvula de controle.
 
-Os projetos usam só a **série 47**, que existe de 3" a 12".
+Os projetos usam só a **série 47**. A faixa cadastrada não é contínua:
+
+```
+corpos cadastrados: 3"  4"  --  6"  8"  10"  12"
+                            5"                    14"
+```
+
+- **5"** não tem corpo — coerente com 5" não ser bitola de linha.
+- **14" não tem corpo, mas existe.** Dois acessórios provam:
+  `DOROT MOLA P/ VALV 47-8" A 14"` (`71680-008300`) e
+  `DOROT ASSENTO P/ MOLA VALV 47-8" A 14"` (`71680-008995`). A válvula está na
+  linha do fabricante; **o código do corpo é que não está na LM**.
+- **12" tem dois códigos**: `71600-005120` e `01542-000285`
+  (`BR DOROT VALV MET 47-12" BASICA - ABNT`). Conferir se um substituiu o outro.
+
+`tools/conferir_serie_valvula.py` faz essa varredura para qualquer série: cruza
+o DN dos corpos com o DN que só aparece em acessório, e aponta códigos
+duplicados. Na série 75 ele acha o mesmo padrão — 2" e 3" com dois códigos cada.
 
 **A válvula nunca vem sozinha:** leva o esquema de piloto
 (`data/fichas/DOROT_esquema_valvula_redutora_sustentadora_31-310.pdf`), e o
