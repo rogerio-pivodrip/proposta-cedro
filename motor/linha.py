@@ -158,6 +158,11 @@ class Linha:
         self.tipo = tipo          # SUCCAO | RECALQUE
         self.area = area
         self.pecas = []
+        # a POSE da linha na folha: de quanto ela esta girada, e se esta
+        # espelhada. Nao e geometria da peca - e como o conjunto se deita no
+        # papel, e por isso vale para a tela E para o DXF exportado
+        self.giro = 0.0           # graus, no sentido do SVG (y para baixo)
+        self.espelho = 1          # +1 normal, -1 refletida no eixo da linha
         self.feitos = []          # pilha de comandos aplicados
         self.desfeitos = []       # o que saiu do desfazer, esperando refazer
 
@@ -265,6 +270,31 @@ class Linha:
 
         self._executar(Comando("alterar", fazer, desfazer, peca.id))
         return peca
+
+    def pose(self, giro=None, espelho=None):
+        """Gira ou espelha a LINHA INTEIRA na folha. Tambem e comando.
+
+        A peca de uma linha nao tem posicao propria - ela cai onde a anterior
+        deixou, ver geometria(). Entao "girar a peca" nao existe aqui: o que
+        existe e girar o conjunto, e espelhar uma peca, que e o `sentido` dela.
+
+        Passa pelo historico como qualquer edicao porque muda o que sai no
+        DXF: quem girou a folha e desfez tem de voltar ao que exportou antes.
+        """
+        antes = (self.giro, self.espelho)
+        depois = (self.giro if giro is None else float(giro) % 360,
+                  self.espelho if espelho is None else (1 if espelho > 0 else -1))
+        if depois == antes:
+            return self
+
+        def fazer():
+            self.giro, self.espelho = depois
+
+        def desfazer():
+            self.giro, self.espelho = antes
+
+        self._executar(Comando("pose", fazer, desfazer, None))
+        return self
 
     def mover(self, alvo, para):
         """Tira a peca de onde ela esta e a poe em outra posicao da sequencia.
@@ -374,8 +404,8 @@ class Linha:
         import math
 
         x = y = 0.0
-        direcao = 0.0
-        pontos = []
+        direcao = self.giro          # a pose da folha vale aqui tambem: o
+        pontos = []                  # esquema nao pode discordar do desenho
 
         for peca in self.pecas:
             antes, depois = peca.avancos()
@@ -387,7 +417,7 @@ class Linha:
             x, y = nx, ny
 
             if peca.familia == "CURVA" and peca.angulo:
-                direcao += peca.angulo * peca.sentido
+                direcao += peca.angulo * peca.sentido * self.espelho
                 ponto["direcao_saida"] = direcao
                 if depois:
                     ponto["canto"] = (x, y)

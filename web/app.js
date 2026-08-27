@@ -9,6 +9,7 @@
 
 let documento = null;
 let escolhida = null;
+let modo = "inserir";        // o que um clique no catálogo faz com a escolhida
 
 const $ = (id) => document.getElementById(id);
 
@@ -44,9 +45,19 @@ function pintar() {
 }
 
 function pintarVista() {
-  const alvo = $("vista");
+  const alvo = $("palco");
   const svg = documento.vista && documento.vista.svg;
   alvo.innerHTML = svg || '<p class="nada">Nada para desenhar ainda.</p>';
+  // o SVG vem com viewBox e sem tamanho: dentro do palco, que é flex, isso
+  // deixa a largura indefinida. Fixar aqui o tamanho natural faz o zoom ser a
+  // única coisa que muda a escala na tela
+  const desenhado = alvo.querySelector("svg");
+  if (desenhado) {
+    const [, , w, h] = desenhado.getAttribute("viewBox").split(/\s+/).map(Number);
+    desenhado.style.width = w + "px";
+    desenhado.style.height = h + "px";
+    desenhado.style.maxWidth = "none";
+  }
   alvo.querySelectorAll("g.peca[data-id]").forEach((g) => {
     const id = g.dataset.id;
     if (id === escolhida) g.classList.add("escolhida");
@@ -60,7 +71,10 @@ function pintarVista() {
     }
     g.addEventListener("click", () => escolher(id));
     g.addEventListener("pointerdown", (ev) => comecarArrasto(ev, id));
+    g.addEventListener("pointerenter", () => mostrarEtiqueta(id));
+    g.addEventListener("pointerleave", esconderEtiqueta);
   });
+  aplicarZoom();
   const recusadas = (documento.vista && documento.vista.recusadas) || [];
   if (recusadas.length) {
     recado(recusadas.map((r) => `${r.sap}: ${r.motivo}`).join(" · "));
@@ -95,14 +109,120 @@ function linhaDaTabela(registro, derivada) {
   tr.innerHTML =
     `<td class="qtd">${registro.qtd}</td>` +
     `<td class="sap">${registro.sap || ""}</td>` +
-    `<td>${registro.descricao || ""}</td>`;
-  if (registro.id) tr.addEventListener("click", () => escolher(registro.id));
+    `<td>${registro.descricao || ""}</td>` +
+    // só a peça da linha tem × : ferragem é consequência, e some sozinha
+    // quando a peça que a puxou sai
+    `<td class="apagar">${registro.id ? "×" : ""}</td>`;
+  if (registro.id) {
+    tr.addEventListener("click", () => escolher(registro.id));
+    tr.querySelector("td.apagar").addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      apagar(registro.id);
+    });
+  }
   return tr;
 }
 
 function pintarAvisos() {
   $("avisos").innerHTML = (documento.avisos || [])
     .map((a) => `<p>${a}</p>`).join("");
+  // peça de uma ponta só no lugar errado: o motor descobre, a tela mostra por
+  // extenso. Um ponto vermelho na junção não diz o que está errado
+  const pontas = documento.pontas || [];
+  if (pontas.length) recado(pontas.map((p) => p.motivo).join(" · "));
+}
+
+/* ------------------------------------------------- zoom, pan e etiqueta
+
+   O motor desenha em milímetro real, já escalado para caber na janela. O zoom
+   é da TELA: uma transformação no palco, sem ida ao motor. Duas consequências
+   boas: responde na hora, e o traço não engorda - `vector-effect` faz a
+   espessura ser em pixel, então ampliar mostra mais peça e não linha mais
+   grossa, que é o que se espera de um CAD.
+
+   Como a seleção e o arrasto, isto é estado DA TELA: o documento não sabe em
+   que zoom alguém está olhando, e não deve saber. */
+let zoom = 1;
+let pan = {x: 0, y: 0};
+const ZOOM_MIN = 0.2, ZOOM_MAX = 40;
+
+function aplicarZoom() {
+  $("palco").style.transform =
+    `translate(${pan.x.toFixed(1)}px, ${pan.y.toFixed(1)}px) scale(${zoom})`;
+  $("zoom_texto").textContent = Math.round(zoom * 100) + "%";
+}
+
+function ajustar() {
+  // zoom 1 e pan zero É o enquadramento: o motor já escalou o desenho para
+  // caber na janela que a tela avisou
+  zoom = 1;
+  pan = {x: 0, y: 0};
+  aplicarZoom();
+}
+
+function ampliar(fator, alvoX, alvoY) {
+  const caixa = $("vista").getBoundingClientRect();
+  // sem ponto de referência, amplia pelo meio da janela
+  const px = (alvoX === undefined ? caixa.width / 2 : alvoX - caixa.left);
+  const py = (alvoY === undefined ? caixa.height / 2 : alvoY - caixa.top);
+  const novo = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom * fator));
+  // o ponto sob o cursor não pode se mexer: é o que faz o zoom parecer que
+  // aproxima o desenho, e não que o empurra para fora da tela
+  pan.x = px - (px - pan.x) * (novo / zoom);
+  pan.y = py - (py - pan.y) * (novo / zoom);
+  zoom = novo;
+  aplicarZoom();
+}
+
+function mostrarEtiqueta(id) {
+  if (arrasto || folha) return;
+  const peca = (documento.pecas || []).find((p) => p.id === id);
+  if (!peca) return;
+  const et = $("etiqueta");
+  et.textContent = `${peca.descricao}  ·  ${Math.round(peca.comprimento_mm)} mm`;
+  et.hidden = false;
+}
+
+function esconderEtiqueta() { $("etiqueta").hidden = true; }
+
+function seguirEtiqueta(ev) {
+  const et = $("etiqueta");
+  if (et.hidden) return;
+  const caixa = $("vista").getBoundingClientRect();
+  et.style.left = Math.min(ev.clientX - caixa.left + 14,
+                           caixa.width - et.offsetWidth - 6) + "px";
+  et.style.top = (ev.clientY - caixa.top + 16) + "px";
+}
+
+/* ------------------------------------------------------- mover a folha
+
+   Arrastar o FUNDO move a folha; arrastar uma PEÇA a reposiciona na sequência.
+   São dois gestos com o mesmo botão, e o que os separa é onde o dedo desceu -
+   por isso este listener fica na .vista e desiste quando o alvo é uma peça. */
+let folha = null;
+
+function comecarFolha(ev) {
+  if (ev.button === 0 && ev.target.closest && ev.target.closest("g.peca")) return;
+  if (ev.button !== 0 && ev.button !== 1) return;
+  ev.preventDefault();
+  folha = {x: ev.clientX, y: ev.clientY, px: pan.x, py: pan.y};
+  esconderEtiqueta();
+  $("vista").classList.add("arrastando_folha");
+  addEventListener("pointermove", moverFolha);
+  addEventListener("pointerup", soltarFolha, {once: true});
+}
+
+function moverFolha(ev) {
+  if (!folha) return;
+  pan.x = folha.px + (ev.clientX - folha.x);
+  pan.y = folha.py + (ev.clientY - folha.y);
+  aplicarZoom();
+}
+
+function soltarFolha() {
+  folha = null;
+  $("vista").classList.remove("arrastando_folha");
+  removeEventListener("pointermove", moverFolha);
 }
 
 function pecaEscolhida() {
@@ -112,7 +232,14 @@ function pecaEscolhida() {
 function pintarPainel() {
   const peca = pecaEscolhida();
   $("painel").hidden = !peca;
-  if (!peca) return;
+  if (!peca) {
+    // sem peça escolhida não há o que substituir: o catálogo volta a só
+    // acrescentar, senão o próximo clique num código não teria alvo
+    modo = "inserir";
+    $("modo").hidden = true;
+    pintarModo();
+    return;
+  }
   $("painel_nome").textContent = peca.descricao;
   $("painel_sap").textContent =
     `${peca.sap} · ${peca.familia}` +
@@ -124,6 +251,16 @@ function pintarPainel() {
       .forEach((f) => fonte.add(new Option(f, f)));
   }
   fonte.value = peca.fonte || "IRRIGAFOUR";
+  $("espelhar").classList.toggle("ligado", peca.sentido < 0);
+  $("modo").hidden = false;
+  pintarModo();
+}
+
+function pintarModo() {
+  document.querySelectorAll("#modo button").forEach((b) =>
+    b.classList.toggle("ligado", b.dataset.modo === modo));
+  $("titulo_candidatos").textContent =
+    modo === "substituir" ? "trocar por" : "acrescentar";
 }
 
 function escolher(id) {
@@ -132,8 +269,8 @@ function escolher(id) {
 }
 
 /* -------------------------------------------------------------- comandos */
-async function acrescentar(familia) {
-  const dn = Number($("bitola").value);
+async function acrescentar(familia, dnPedido) {
+  const dn = dnPedido !== undefined ? dnPedido : Number($("bitola").value);
   const resposta = await mandar({nome: "catalogo", familia, dn, limite: 12});
   const caixa = $("candidatos");
   caixa.innerHTML = "";
@@ -146,12 +283,41 @@ async function acrescentar(familia) {
   itens.forEach((item) => {
     const b = document.createElement("button");
     b.innerHTML = `<span class="codigo">${item.sap}</span>${item.descricao}`;
-    b.addEventListener("click", () => mandar({
-      nome: "inserir", sap: item.sap,
-      pos: escolhida ? posicaoDe(escolhida) + 1 : null,
-    }));
+    b.addEventListener("click", () => {
+      // substituir não é remover e inserir: o comando é um só, ele volta num
+      // desfazer só, e a peça nova cai exatamente onde a velha estava
+      if (modo === "substituir" && escolhida) {
+        mandar({nome: "substituir", alvo: escolhida, sap: item.sap})
+          .then((r) => { if (r.ok && r.peca) { escolhida = r.peca; pintar(); } });
+        return;
+      }
+      mandar({nome: "inserir", sap: item.sap,
+              pos: escolhida ? posicaoDe(escolhida) + 1 : null});
+    });
     caixa.appendChild(b);
   });
+}
+
+async function apagar(id) {
+  if (!id) return;
+  if (escolhida === id) escolhida = null;
+  await mandar({nome: "remover", alvo: id});
+}
+
+function trocar() {
+  const peca = pecaEscolhida();
+  if (!peca) return;
+  // já abre o catálogo na família e na bitola da própria peça: quem quer
+  // trocar uma curva de 8" quer ver as outras curvas de 8"
+  modo = "substituir";
+  $("familia").value = peca.familia;
+  const dn = (peca.dn || [])[0];
+  if (dn !== undefined) {
+    const opcao = [...$("bitola").options].find((o) => Number(o.value) === dn);
+    if (opcao) $("bitola").value = opcao.value;
+  }
+  pintarModo();
+  acrescentar(peca.familia, dn);
 }
 
 function posicaoDe(id) {
@@ -279,11 +445,22 @@ function ligar() {
   }));
   $("desfazer").addEventListener("click", () => mandar({nome: "desfazer"}));
   $("refazer").addEventListener("click", () => mandar({nome: "refazer"}));
-  $("remover").addEventListener("click", async () => {
-    const id = escolhida;
-    escolhida = null;
-    await mandar({nome: "remover", alvo: id});
-  });
+  $("remover").addEventListener("click", () => apagar(escolhida));
+  $("espelhar").addEventListener("click", () => mandar({
+    nome: "espelhar", alvo: escolhida,
+  }));
+  $("trocar").addEventListener("click", trocar);
+  // a pose da linha na folha. Girar é do conjunto: a peça de uma linha não
+  // tem posição própria, ela cai onde a anterior deixou
+  $("girar_esq").addEventListener("click", () => mandar({
+    nome: "girar", graus: -90,
+  }));
+  $("girar_dir").addEventListener("click", () => mandar({
+    nome: "girar", graus: 90,
+  }));
+  $("espelhar_linha").addEventListener("click", () => mandar({
+    nome: "espelhar",
+  }));
   $("subir").addEventListener("click", () => mandar({
     nome: "mover", alvo: escolhida, para: Math.max(0, posicaoDe(escolhida) - 1),
   }));
@@ -298,7 +475,48 @@ function ligar() {
     nome: "alterar", alvo: escolhida, campos: {fonte: ev.target.value},
   }));
   $("familia").addEventListener("change", (ev) => acrescentar(ev.target.value));
+  $("bitola").addEventListener("change", () => {
+    if ($("familia").value) acrescentar($("familia").value);
+  });
+  document.querySelectorAll("#modo button").forEach((b) =>
+    b.addEventListener("click", () => {
+      modo = b.dataset.modo;
+      pintarModo();
+    }));
+
+  // ------------------------------------------------------------ o palco
+  const vista = $("vista");
+  vista.addEventListener("wheel", (ev) => {
+    ev.preventDefault();
+    // exponencial: cada passo multiplica, para o zoom andar igual perto e
+    // longe. Somar daria passos gigantes no fim e imperceptíveis no começo
+    ampliar(Math.exp(-ev.deltaY * 0.0015), ev.clientX, ev.clientY);
+  }, {passive: false});
+  vista.addEventListener("pointerdown", comecarFolha);
+  vista.addEventListener("pointermove", seguirEtiqueta);
+  vista.addEventListener("pointerleave", esconderEtiqueta);
+  vista.addEventListener("dblclick", () => ajustar());
+  $("mais").addEventListener("click", () => ampliar(1.35));
+  $("menos").addEventListener("click", () => ampliar(1 / 1.35));
+  $("zoom_texto").addEventListener("click", ajustar);
+  $("contorno").addEventListener("click", () => {
+    const ligado = vista.classList.toggle("contornos");
+    $("contorno").classList.toggle("ligado", ligado);
+  });
+
   addEventListener("keydown", (ev) => {
+    const digitando = /^(INPUT|SELECT|TEXTAREA)$/.test(ev.target.tagName);
+    if (!ev.ctrlKey && !ev.metaKey && !digitando) {
+      if (ev.key === "Delete" || ev.key === "Backspace") {
+        if (escolhida) { ev.preventDefault(); apagar(escolhida); }
+        return;
+      }
+      if (ev.key === "+" || ev.key === "=") { ev.preventDefault(); ampliar(1.35); }
+      if (ev.key === "-") { ev.preventDefault(); ampliar(1 / 1.35); }
+      if (ev.key === "0") { ev.preventDefault(); ajustar(); }
+      if (ev.key === "Escape") { escolhida = null; pintar(); }
+      return;
+    }
     if (!(ev.ctrlKey || ev.metaKey)) return;
     if (ev.key === "z" && !ev.shiftKey) { ev.preventDefault(); mandar({nome: "desfazer"}); }
     if (ev.key === "y" || (ev.key === "z" && ev.shiftKey)) {
@@ -319,9 +537,11 @@ let tamanhoPendente = null;
 function avisarTamanho() {
   clearTimeout(tamanhoPendente);
   tamanhoPendente = setTimeout(() => {
+    // o motor escala o desenho para caber NESTA caixa - a de verdade, medida
+    // agora. Antes ia uma fração da altura da janela, e sobrava papel branco
     const caixa = $("vista").getBoundingClientRect();
-    mandar({nome: "janela", largura: Math.round(caixa.width) - 20,
-            altura_max: Math.round(innerHeight * 0.62)});
+    mandar({nome: "janela", largura: Math.round(caixa.width),
+            altura_max: Math.round(caixa.height)});
   }, 200);
 }
 
@@ -330,6 +550,7 @@ async function comecar() {
   if (estilo.css) $("desenho").textContent = estilo.css;
   FAMILIAS.forEach((f) => $("familia").add(new Option(f.toLowerCase().replace(/_/g, " "), f)));
   ligar();
+  ajustar();
   avisarTamanho();
 }
 

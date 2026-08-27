@@ -390,6 +390,8 @@ def meio_do_eixo(simbolo):
                   for x, y in pontos]
     if eixo.get("girar_fora"):
         pontos = [_rodar(x, y, eixo["girar_fora"]) for x, y in pontos]
+    if eixo.get("espelhar"):
+        pontos = [(x, -y) for x, y in pontos]
     if len(pontos) < 2:
         return pontos[0] if pontos else None
     passos = [math.dist(a, b) for a, b in zip(pontos, pontos[1:])]
@@ -419,6 +421,8 @@ def posicao_da_nota(nota):
     fora = nota.get("girar_fora")
     if fora:
         x, y = _rodar(x, y, fora)
+    if nota.get("espelhar"):
+        y = -y
     return x, y
 
 
@@ -443,6 +447,8 @@ def limites(elementos):
             pontos = [(cx + (px - cx) * cos - (py - cy) * sen,
                        cy + (px - cx) * sen + (py - cy) * cos)
                       for px, py in pontos]
+        if e.get("espelhar"):
+            pontos = [(px, -py) for px, py in pontos]
         xs += [p[0] for p in pontos]
         ys += [p[1] for p in pontos]
     if not xs:
@@ -3454,6 +3460,45 @@ def girado(simbolo, graus):
                    limites(elementos), simbolo.fonte, simbolo.params)
 
 
+def espelhado(simbolo):
+    """O mesmo simbolo virado de cabeca para baixo - a curva que subia, desce.
+
+    E uma reflexao em torno do eixo da linha (y -> -y), e nao um giro: girar
+    180 graus tambem inverteria a entrada com a saida, e a peca passaria a
+    apontar contra o fluxo. Espelhar mantem a entrada na esquerda.
+
+    O espelho entra como uma MARCA no elemento, do mesmo jeito que `girar`, e
+    nao reescrevendo os pontos: os paths tem arco, e arco espelhado troca o
+    flag de varredura. Quem desenha e quem mede aplicam a marca - motor/svg.py,
+    motor/dxf.py e limites() aqui embaixo -, sempre por fora dos giros.
+
+    Espelhar duas vezes volta ao original, e por isso a marca alterna em vez
+    de ligar.
+    """
+    elementos = [dict(e, espelhar=not e.get("espelhar"))
+                 for e in simbolo.elementos]
+    # a porta troca de lado e a direcao troca de sinal: uma curva que virava a
+    # linha -90 passa a vira-la +90, que e exatamente o que se ve no espelho
+    portas = [Porta(p.papel, p.x, -p.y, -p.direcao, p.dn_pol)
+              for p in simbolo.portas]
+    params = dict(simbolo.params or {})
+    params["espelhado"] = not params.get("espelhado")
+    return Simbolo(simbolo.familia, simbolo.rotulo, elementos, portas,
+                   limites(elementos), simbolo.fonte, params)
+
+
+def caixa_do_corpo(simbolo):
+    """O retangulo do CORPO da peca, sem a linha de eixo.
+
+    A caixa cheia serve para enquadrar a folha, e ai o eixo tem de entrar. Mas
+    para dizer onde a peca comeca e acaba na tela ela mente: o eixo sai 40 mm
+    antes e 60 depois, e as caixas de duas pecas vizinhas se sobrepoem. Quem
+    olha ve dois retangulos cruzados onde ha duas pecas encostadas.
+    """
+    corpo = [e for e in simbolo.elementos if e.get("classe") != "centro"]
+    return limites(corpo) if corpo else simbolo.caixa
+
+
 def montar(lista):
     """Encadeia simbolos: a saida de um vira a entrada do proximo.
 
@@ -3501,6 +3546,12 @@ def encaixa(a, b):
     pontas = [p for p in b.portas if p.papel in ENTRADA + SAIDA]
     if not pontas:
         return False, "peça terminal"
+    # peca sem porta de ENTRADA e fechada de um lado - crivo e valvula de pe
+    # tem cesto no fundo e flange so na saida. Ela abre a linha e nao recebe
+    # ninguem: montar() inventa uma entrada em x=0 para poder posiciona-la, e
+    # sem esta recusa a peca anterior encostaria no fundo fechado dela
+    if porta(b, ENTRADA) is None:
+        return False, "só conecta pela flange - fechada do outro lado"
     if any(abs((p.dn_pol or 0) - (sa.dn_pol or 0)) < 0.01 for p in pontas):
         return True, ""
     bitolas = " ou ".join(f'{p.dn_pol:g}"' for p in pontas)

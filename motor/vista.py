@@ -24,9 +24,18 @@ def simbolos_da_linha(linha):
     que falta e o traco, nao o item.
     """
     prontos, recusadas = [], []
+    espelho_da_linha = getattr(linha, "espelho", 1)
     for peca in linha.pecas:
         try:
-            prontos.append((peca, desenho.de_item(peca.item)))
+            simbolo = desenho.de_item(peca.item)
+            # o `sentido` da peca e o espelho da linha se multiplicam: a curva
+            # que ja descia, numa linha espelhada, volta a subir. Espelhar o
+            # SIMBOLO e o que faz a corrente inteira acompanhar - montar()
+            # encadeia pelas portas, e a porta espelhada vira a linha para o
+            # outro lado sozinha
+            if peca.sentido * espelho_da_linha < 0:
+                simbolo = s.espelhado(simbolo)
+            prontos.append((peca, simbolo))
         except Exception as erro:                       # noqa: BLE001
             recusadas.append({"id": peca.id, "sap": peca.sap,
                               "descricao": peca.descricao,
@@ -34,7 +43,34 @@ def simbolos_da_linha(linha):
     return prontos, recusadas
 
 
-def postos_da_linha(linha, giro=0.0):
+def pontas_erradas(linha):
+    """Peca de uma ponta so, posta onde ela nao cabe.
+
+    Crivo e valvula de pe tem cesto fechado no fundo e flange so na saida:
+    elas ABREM a linha. Flange cega e cap fecham, e nao tem saida. Postas no
+    meio, a vizinha encosta no lado fechado e o desenho fica mentindo.
+
+    Quem sabe disso e o SIMBOLO, que e onde as portas estao - por isso a
+    conferencia mora aqui e nao numa lista de familias escrita a mao, que
+    envelheceria a cada peca nova do catalogo.
+    """
+    prontos, _recusadas = simbolos_da_linha(linha)
+    ultimo = len(prontos) - 1
+    fora = []
+    for i, (peca, simbolo) in enumerate(prontos):
+        if s.porta(simbolo, s.ENTRADA) is None and i != 0:
+            fora.append({"id": peca.id, "sap": peca.sap, "pos": i,
+                         "motivo": f"{peca.descricao} só conecta pela flange - "
+                                   f"é fechada do outro lado, e só entra no "
+                                   f"começo da linha"})
+        elif s.porta(simbolo, s.SAIDA) is None and i != ultimo:
+            fora.append({"id": peca.id, "sap": peca.sap, "pos": i,
+                         "motivo": f"{peca.descricao} fecha a linha - "
+                                   f"nada encaixa depois dela"})
+    return fora
+
+
+def postos_da_linha(linha, giro=None):
     """Onde cada peca cai, ja encadeada pelas portas. (postos, recusadas)
 
     E a mesma cadeia que o SVG usa, e de proposito: a vista da tela e o DXF de
@@ -44,6 +80,8 @@ def postos_da_linha(linha, giro=0.0):
     prontos, recusadas = simbolos_da_linha(linha)
     if not prontos:
         return [], recusadas
+    if giro is None:
+        giro = getattr(linha, "giro", 0.0)
     postos, _fim = s.montar([sim for _, sim in prontos])
     if giro:
         postos = _girar_postos(postos, giro)
@@ -63,11 +101,13 @@ def _girar_postos(postos, giro):
             for p in postos]
 
 
-def vista(linha, largura=940, altura_max=620, giro=0.0):
+def vista(linha, largura=940, altura_max=620, giro=None):
     """O SVG da linha, com cada peca marcada pelo id dela."""
     prontos, recusadas = simbolos_da_linha(linha)
     if not prontos:
         return {"svg": "", "pecas": 0, "recusadas": recusadas}
+    if giro is None:
+        giro = getattr(linha, "giro", 0.0)
     ids = [peca.id for peca, _ in prontos]
     svg, postos, fim = desenhar_linha([sim for _, sim in prontos],
                                       largura=largura, giro=giro,
@@ -141,7 +181,7 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None):
             # a area de clique da peca. Sem ela so o traco recebe o dedo, e
             # traco de 1 px nao e alvo: quem quer selecionar o tubo aponta
             # para o meio dele, que e vazio
-            cx, cy, cw, ch = p.simbolo.caixa
+            cx, cy, cw, ch = s.caixa_do_corpo(p.simbolo)
             corpo = (f'<rect class="alvo" x="{cx:.1f}" y="{cy:.1f}" '
                      f'width="{max(cw, 1):.1f}" height="{max(ch, 1):.1f}"/>'
                      + corpo)

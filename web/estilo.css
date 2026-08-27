@@ -34,17 +34,67 @@ button.perigo:hover{border-color:var(--perigo); color:var(--perigo)}
 
 main{display:grid; grid-template-columns:1fr 330px; gap:0; align-items:start}
 .desenho{padding:18px 20px; min-width:0}
-.vista{background:var(--papel); border:1px solid var(--linha); border-radius:8px;
-  padding:8px; overflow:auto}
-.vista svg{display:block; margin:0 auto; max-width:100%; height:auto}
-.nada{color:var(--anota); text-align:center; padding:70px 0; margin:0}
+
+/* ---------------------------------------------------------------- o palco
+
+   O desenho é papel branco com traço preto, sempre - inclusive no tema
+   escuro. E os TOKENS dele são redefinidos aqui, na .vista: os nomes são os
+   mesmos que a página usa (--papel, --tinta, --anota) e a folha do motor os
+   declara no :root. Sem esta redefinição o tema escuro da página vencia, e a
+   cota - que é texto cinza sobre um retângulo de --papel - saía como uma
+   tarja preta em cima do desenho. Custom property herda do elemento mais
+   próximo, então declarar na .vista basta, sem depender da ordem das folhas. */
+.vista{
+  --papel:#fff; --fundo:#fff; --tinta:#16181d; --titulo:#3d424d;
+  --anota:#7c828c; --linha:#e6e8ec; --chapa:#f2f3f6; --eixo:#c0392b;
+  position:relative; background:#fff; border:1px solid var(--linha);
+  border-radius:8px; overflow:hidden; touch-action:none;
+  height:calc(100vh - 210px); min-height:340px; cursor:grab;
+}
+.vista.arrastando_folha{cursor:grabbing}
+.palco{position:absolute; inset:0; transform-origin:0 0;
+  display:flex; align-items:center; justify-content:center;
+  will-change:transform}
+.vista svg{display:block; overflow:visible}
+.nada{color:#8c9099; text-align:center; padding:70px 0; margin:0}
+
+/* na tela o traço é mais firme que na folha impressa: a folha é vista de
+   perto e em papel, a tela é vista a um metro e em pixel */
+.vista .geo *{stroke-width:1.05}
+.vista .geo .malha,.vista .geo .furo,.vista .geo .solda{stroke-width:.7}
+.vista .geo .centro{stroke-width:.75}
+
+/* o contorno de cada peça: é o que responde "onde uma peça acaba e a outra
+   começa" numa linha em que tudo é flange encostada em flange */
+.vista.contornos g.peca rect.alvo{stroke:#c3c8d0; stroke-width:.9;
+  stroke-dasharray:5 4}
+.vista.contornos g.peca:hover rect.alvo{stroke:var(--marca); stroke-dasharray:none}
+
+.zoom{position:absolute; right:10px; bottom:10px; display:flex; gap:4px;
+  background:rgba(255,255,255,.92); border:1px solid #e0e2e6; border-radius:7px;
+  padding:3px; box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.zoom button{border:none; background:none; color:#41464f; padding:3px 8px;
+  border-radius:4px; font-size:12px; line-height:1.4}
+.zoom button:hover{background:#eef3fb; color:var(--marca)}
+.zoom button.ligado{background:#eef3fb; color:var(--marca)}
+#zoom_texto{font:400 11px/1.4 "IBM Plex Mono",ui-monospace,monospace;
+  min-width:46px}
+
+/* o nome da peça sob o cursor: sem isto a única forma de saber o que é cada
+   traço é clicar nele */
+.etiqueta{position:absolute; pointer-events:none; z-index:3;
+  background:#16181d; color:#f2f3f5; font-size:11px; line-height:1.4;
+  padding:3px 7px; border-radius:4px; max-width:280px; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis}
+.dica{margin:8px 0 0; font-size:11px; color:var(--anota)}
 aside{padding:18px 20px 60px; border-left:1px solid var(--linha);
   background:var(--papel); min-height:calc(100vh - 52px)}
 
 /* a peça do desenho e a linha da tabela são a mesma peça, com o mesmo id */
 .vista g.peca{cursor:pointer}
-.vista g.peca:hover rect.alvo{fill:rgba(47,111,208,.06)}
-.vista g.peca.escolhida rect.alvo{fill:rgba(47,111,208,.10)}
+.vista g.peca:hover rect.alvo{fill:rgba(47,111,208,.07)}
+.vista g.peca.escolhida rect.alvo{fill:rgba(47,111,208,.11);
+  stroke:var(--marca); stroke-width:1.2; stroke-dasharray:none}
 .vista g.peca.escolhida path,
 .vista g.peca.escolhida rect:not(.alvo){stroke:var(--marca)}
 
@@ -54,6 +104,11 @@ tr{cursor:pointer}
 tr:hover td{background:var(--realce)}
 tr.escolhida td{background:var(--realce); box-shadow:inset 2px 0 0 var(--marca)}
 td.qtd{text-align:right; width:34px; color:var(--anota)}
+/* o × da linha: apagar a peça sem precisar selecionar e ir ao painel */
+td.apagar{width:20px; text-align:center; color:transparent; font-size:14px;
+  line-height:1; padding:5px 4px}
+tr:hover td.apagar{color:var(--anota)}
+td.apagar:hover{color:var(--perigo)}
 td.sap{font:400 11px/1.4 "IBM Plex Mono",ui-monospace,monospace;
   color:var(--anota); white-space:nowrap; width:96px}
 tr.derivada td{color:var(--anota)}
@@ -66,8 +121,19 @@ tr.derivada td{color:var(--anota)}
 .painel label{display:flex; align-items:center; gap:8px; margin-bottom:8px;
   font-size:12px; color:var(--titulo)}
 .painel label input,.painel label select{flex:1; min-width:0}
-.acoes{display:flex; gap:6px; margin-top:10px}
+.acoes{display:flex; gap:6px; margin-top:6px}
 .acoes button{flex:1; padding:5px 4px; font-size:12px}
+
+/* inserir ou substituir: o mesmo catálogo, dois destinos. Sem este par,
+   escolher uma peça e clicar num código só sabia acrescentar - trocar a peça
+   escolhida exigia remover e inserir, e nesse caminho ela perde o lugar */
+/* o `display:flex` vence o atributo hidden, que é só `display:none` da folha
+   do navegador - sem esta linha o par aparece mesmo sem peça escolhida */
+.modo[hidden]{display:none}
+.modo{display:flex; gap:4px; margin-bottom:8px}
+.modo button{flex:1; font-size:11.5px; padding:4px 6px}
+.modo button.ligado{border-color:var(--marca); color:var(--marca);
+  background:var(--realce)}
 
 .candidatos{display:flex; flex-direction:column; gap:4px; max-height:180px;
   overflow:auto}
@@ -101,7 +167,8 @@ tr.derivada td{color:var(--anota)}
     --anota:#878d96; --linha:#2a2e34; --realce:#1e2937; --marca:#6ba3f0;
     --perigo:#e2776c;
   }
-  /* o desenho é traço preto sobre papel branco: no escuro ele inverte pelo
-     mesmo token que a folha usa, e não por uma segunda folha de estilo */
-  .vista{background:#f7f7f5}
+  /* o desenho continua papel branco no tema escuro - e isso já está resolvido
+     nos tokens da própria .vista, lá em cima. Aqui fica só a moldura */
+  .vista{border-color:#31363d}
+  .zoom{background:rgba(255,255,255,.94); border-color:#d7dade}
 }

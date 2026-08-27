@@ -34,6 +34,11 @@ def succao(catalogo, dn_linha, modelo_bomba=None, orientacao=HORIZONTAL,
            curva=None, area="P01"):
     """Monta a succao padrao. curva = None, 45 ou 90."""
     linha = Linha(catalogo, tipo="SUCCAO", area=area)
+    # a succao NASCE de pe: o crivo fica no fundo do poco e a linha sobe ate a
+    # bomba. Toda peca e desenhada olhando para +x, entao a linha inteira gira
+    # 90 no anti-horario da tela - e como y do SVG aponta para baixo, isso e
+    # -90. Nao entra no historico: e a pose de nascimento, nao uma edicao
+    linha.giro = -90.0
     faltando = []
 
     receita = [("CRIVO", {}), ("VALVULA_RETENCAO", {}),

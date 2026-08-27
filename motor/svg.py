@@ -12,6 +12,11 @@ dentro de um <g transform="scale(...)">, o traco nao engorda
 
 def desenhar(elemento):
     abre = fecha = ""
+    # o espelho vem por fora de tudo: ele reflete a peca ja montada, e nao
+    # cada traco dela antes de girar
+    if elemento.get("espelhar"):
+        abre += '<g transform="scale(1,-1)">'
+        fecha += "</g>"
     fora = elemento.get("girar_fora")
     if fora:
         abre += f'<g transform="rotate({fora:g})">'

@@ -22,6 +22,11 @@
       </select>"
     </label>
     <button id="succao">montar sucção</button>
+    <span class="separa"></span>
+    <!-- a pose da linha na folha: girar é do conjunto, não de uma peça -->
+    <button id="girar_esq" title="girar a linha 90° anti-horário">⟲</button>
+    <button id="girar_dir" title="girar a linha 90° horário">⟳</button>
+    <button id="espelhar_linha" title="espelhar a linha inteira">⇅</button>
     <span class="vazio"></span>
     <button id="desfazer" disabled>desfazer</button>
     <button id="refazer" disabled>refazer</button>
@@ -34,9 +39,25 @@
 
 <main>
   <section class="desenho">
-    <div id="vista" class="vista"><p class="nada">Monte uma sucção para começar.</p></div>
+    <!-- o palco: o motor desenha em milímetro real e já escalado para caber.
+         O zoom e o pan são da TELA - uma transformação no palco, sem pedir
+         nada ao motor. Por isso o traço não engorda: vector-effect faz a
+         espessura ser em pixel, e ampliar mostra mais peça, não linha mais
+         gorda -->
+    <div id="vista" class="vista contornos">
+      <div id="palco" class="palco"><p class="nada">Monte uma sucção para começar.</p></div>
+      <div class="zoom">
+        <button id="menos" title="afastar (−)">−</button>
+        <button id="zoom_texto" title="voltar ao enquadramento (0)">100%</button>
+        <button id="mais" title="aproximar (+)">+</button>
+        <button id="contorno" class="ligado" title="contorno de cada peça">▢</button>
+      </div>
+      <div id="etiqueta" class="etiqueta" hidden></div>
+    </div>
     <p id="recado" class="recado" hidden></p>
     <p id="previsao" class="previsao" hidden></p>
+    <p class="dica">roda do mouse amplia · arrastar o fundo move a folha ·
+      arrastar uma peça a reposiciona na sequência</p>
   </section>
 
   <aside>
@@ -53,12 +74,20 @@
       <div class="acoes">
         <button id="subir">◂ mover</button>
         <button id="descer">mover ▸</button>
+        <button id="espelhar" title="virar a peça de cabeça para baixo">⇅ espelhar</button>
+      </div>
+      <div class="acoes">
+        <button id="trocar">trocar peça…</button>
         <button id="remover" class="perigo">remover</button>
       </div>
     </div>
 
     <div class="acrescentar">
-      <h2>acrescentar</h2>
+      <h2 id="titulo_candidatos">acrescentar</h2>
+      <div class="modo" id="modo" hidden>
+        <button data-modo="inserir" class="ligado">inserir depois</button>
+        <button data-modo="substituir">substituir</button>
+      </div>
       <label>família
         <select id="familia"></select>
       </label>

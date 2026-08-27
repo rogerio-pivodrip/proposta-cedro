@@ -39,10 +39,28 @@ python3 -m api.http --abrir          # abre o navegador no programa
 
 Se aparecer "porta em uso", troque: `--porta 8770`.
 
-Na tela: escolha a bitola, **montar sucção**, e daí em diante clique numa peça
-(no desenho ou na lista), acrescente pela família, **arraste uma peça sobre
-outra** para mudar a ordem — antes de soltar, o programa diz o que aconteceria.
-Ctrl+Z e Ctrl+Y desfazem e refazem.
+Na tela: escolha a bitola, **montar sucção** — ela nasce de pé, com o crivo no
+fundo do poço — e daí em diante clique numa peça, no desenho ou na lista.
+
+| o que fazer | como |
+| --- | --- |
+| ver de perto | roda do mouse, ou `+` `−`; `0` ou duplo clique volta ao enquadramento |
+| mover a folha | arrastar o fundo |
+| mudar a ordem | arrastar uma peça sobre outra — antes de soltar, o programa diz o que aconteceria |
+| trocar a peça | selecionar e **trocar peça…**: o catálogo abre na família e bitola dela |
+| virar uma peça | **⇅ espelhar** no painel — a curva que descia, sobe |
+| girar o conjunto | **⟲ ⟳** na barra de cima |
+| apagar | tecla `Delete`, o **×** na linha da lista, ou **remover** no painel |
+| desfazer / refazer | `Ctrl+Z` e `Ctrl+Y` |
+
+Girar é do conjunto e espelhar é da peça, e a diferença não é de interface: a
+peça de uma linha **não tem posição própria** — ela cai onde a anterior deixou,
+encadeada pelas portas. Girar uma peça no meio abriria a linha no ar. O que ela
+tem é lado, e espelhar é trocá-lo; a pose (giro e espelho do conjunto) é do
+documento, entra no desfazer e sai junto no DXF.
+
+O zoom é da tela, e não do motor: o desenho continua saindo em milímetro real,
+e ampliar mostra mais peça em vez de traço mais gordo.
 
 Para exportar DXF e planilha:
 

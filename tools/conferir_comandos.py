@@ -161,6 +161,78 @@ def main():
             problemas.append(caso)
             print(f"  ! {caso}: passou sem reclamar")
 
+    print("\n== espelhar e girar")
+    from motor import vista, simbolos as s          # noqa: E402
+    linha = monta(catalogo)
+    curva = next(p for p in linha.pecas if p.familia == "CURVA")
+
+    def saida_da_curva(linha):
+        """Para onde a curva manda a linha, na vista - o que o espelho vira."""
+        postos, _ = vista.postos_da_linha(linha)
+        i = [p.id for p in linha.pecas].index(curva.id)
+        return round(postos[i].saida[1] - postos[i].entrada[1], 1)
+
+    antes = saida_da_curva(linha)
+    linha.alterar(curva.id, sentido=-1)
+    depois = saida_da_curva(linha)
+    if antes == -depois and antes != 0:
+        print(f"  ok espelhar a curva inverte o desenho ({antes} → {depois})")
+    else:
+        problemas.append("espelhar não virou a curva no desenho")
+        print(f"  ! espelhar não virou a curva no desenho: {antes} → {depois}")
+    if curva.sap == next(p for p in linha.pecas if p.familia == "CURVA").sap:
+        print("  ok espelhar não troca o código que se compra")
+
+    marca = retrato(linha)
+    linha.desfazer()
+    if saida_da_curva(linha) == antes:
+        print("  ok desfazer devolve a curva ao lado de origem")
+    else:
+        problemas.append("desfazer não devolveu o espelho")
+        print("  ! desfazer não devolveu o espelho")
+    linha.refazer()
+    if retrato(linha) == marca:
+        print("  ok refazer devolve o espelho")
+    else:
+        problemas.append("refazer não devolveu o espelho")
+        print("  ! refazer não devolveu o espelho")
+
+    linha = monta(catalogo)
+    alto = lambda: max(abs(p.saida[1]) for p in vista.postos_da_linha(linha)[0])
+    largo = lambda: max(abs(p.saida[0]) for p in vista.postos_da_linha(linha)[0])
+    deitada = (largo(), alto())
+    linha.pose(giro=-90)
+    de_pe = (largo(), alto())
+    if round(deitada[0]) == round(de_pe[1]) and round(deitada[1]) == round(de_pe[0]):
+        print("  ok girar 90° troca a largura pela altura da linha inteira")
+    else:
+        problemas.append("girar não virou a linha")
+        print(f"  ! girar não virou a linha: {deitada} → {de_pe}")
+    linha.desfazer()
+    if (round(largo()), round(alto())) == (round(deitada[0]), round(deitada[1])):
+        print("  ok desfazer devolve a pose")
+    else:
+        problemas.append("desfazer não devolveu a pose")
+        print("  ! desfazer não devolveu a pose")
+
+    print("\n== peça de uma ponta só não entra no meio da linha")
+    linha = monta(catalogo)
+    crivo = catalogo.melhor("CRIVO", 8, material=None)
+    if crivo:
+        linha.inserir(Peca(crivo), 2)
+        fora = vista.pontas_erradas(linha)
+        if any(f["sap"] == crivo["sap"] for f in fora):
+            print(f"  ok o motor reclama: {fora[0]['motivo']}")
+        else:
+            problemas.append("crivo no meio da linha passou calado")
+            print("  ! crivo no meio da linha passou calado")
+        linha.mover(linha.pecas[2].id, 0)
+        if not vista.pontas_erradas(linha):
+            print("  ok no começo da linha ele para de reclamar")
+        else:
+            problemas.append("crivo no começo ainda reclama")
+            print("  ! crivo no começo ainda reclama")
+
     print("\n== editar depois de desfazer apaga o refazer")
     linha = monta(catalogo)
     linha.remover(-1)

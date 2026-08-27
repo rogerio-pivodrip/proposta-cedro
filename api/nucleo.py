@@ -40,6 +40,8 @@ class Sessao:
         return {
             "tipo": linha.tipo,
             "area": linha.area,
+            "giro": linha.giro,
+            "espelho": linha.espelho,
             "pecas": [_peca(p) for p in linha.pecas],
             "geometria": [_ponto(g) for g in linha.geometria()],
             "juncoes": [_juncao(j) for j in linha.juncoes()],
@@ -47,6 +49,7 @@ class Sessao:
             "lista": [dict(r) for r in lista],
             "avisos": list(avisos),
             "vista": vista.vista(linha, **self.janela),
+            "pontas": vista.pontas_erradas(linha),
             "pode_desfazer": bool(linha.feitos),
             "pode_refazer": bool(linha.desfeitos),
             "historico": [c.nome for c in linha.feitos],
@@ -149,6 +152,38 @@ def _alterar(sessao, comando):
 
 def _mover(sessao, comando):
     return {"peca": sessao.linha.mover(comando["alvo"], comando["para"]).id}
+
+
+def _girar(sessao, comando):
+    """Gira a linha inteira na folha. `graus` e relativo, `para` e absoluto.
+
+    Nao existe girar UMA peca: a peca de uma linha nao tem posicao propria,
+    ela cai onde a anterior deixou. Girar uma no meio da corrente abriria a
+    linha no ar. O que a peca tem e espelho - ver _espelhar.
+    """
+    if comando.get("alvo"):
+        raise Erro("girar e da linha inteira - para virar uma peca, espelhar")
+    if comando.get("para") is not None:
+        sessao.linha.pose(giro=float(comando["para"]))
+    else:
+        sessao.linha.pose(giro=sessao.linha.giro + float(comando.get("graus", 90)))
+    return {"giro": sessao.linha.giro}
+
+
+def _espelhar(sessao, comando):
+    """Vira a peca de cabeca para baixo - ou a linha inteira, sem alvo.
+
+    Na peca isto e `alterar(sentido)`, e nao um comando novo: espelhar nao
+    troca o codigo que se compra, e por isso a peca mantem o id e a lista de
+    materiais nao muda. E a mesma curva, montada para o outro lado.
+    """
+    alvo = comando.get("alvo")
+    if not alvo:
+        sessao.linha.pose(espelho=-sessao.linha.espelho)
+        return {"espelho": sessao.linha.espelho}
+    pos = sessao.linha.posicao(alvo)
+    peca = sessao.linha.pecas[pos]
+    return {"peca": sessao.linha.alterar(alvo, sentido=-peca.sentido).id}
 
 
 def _desfazer(sessao, comando):
@@ -311,6 +346,7 @@ def _janela(sessao, comando):
 COMANDOS = {
     "inserir": _inserir, "remover": _remover, "substituir": _substituir,
     "alterar": _alterar, "mover": _mover,
+    "girar": _girar, "espelhar": _espelhar,
     "desfazer": _desfazer, "refazer": _refazer,
     "template": _template, "catalogo": _catalogo, "janela": _janela,
     "estilo": _estilo, "simular": _simular, "exportar": _exportar,

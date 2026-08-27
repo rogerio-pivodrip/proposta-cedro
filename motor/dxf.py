@@ -74,6 +74,8 @@ def _transformar(elemento, pontos):
             + ([(elemento["girar_fora"], 0.0, 0.0)]
                if elemento.get("girar_fora") else []):
         pontos = _girar(pontos, graus, cx, cy)
+    if elemento.get("espelhar"):
+        pontos = [(px, -py) for px, py in pontos]
     return _y_para_cima(pontos)
 
 
