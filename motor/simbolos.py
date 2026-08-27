@@ -2325,8 +2325,7 @@ def tamanho_meganorm(nome):
     raise ValueError(f"nome de Meganorm nao reconhecido: {nome}")
 
 
-def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, recuar=False,
-                 pe_base=None):
+def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, pe_base=None):
     """A parte hidraulica: bocal de succao, carcaca e pescoco da descarga.
 
     E a mesma nas duas linhas - Megabloc e Meganorm dividem a ponta molhada, e
@@ -2349,16 +2348,22 @@ def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, recuar=False,
     # mais largo que a peca que o sustenta. O piso agora e a propria boca: o
     # caracol nao pode ser mais estreito do que ela pede. E o teto e o vao
     # ate a face de succao, senao o caracol engole o bocal de entrada.
-    # o teto depende de como o caracol se apoia em c: na monobloco ele e recuado
-    # e cresce so para tras da face de succao, entao nao pode passar de c; na
-    # mancalizada ele e centrado em c e pode crescer para os dois lados
-    teto = c * 0.85 if recuar else c * 1.55
-    largura = min(max(rotor * 0.95, 2 * r2 * 0.90), teto)
-    # recuar: a face de tras do caracol fica NO eixo da descarga, que e onde o
-    # flange do motor aparafusa. E o caso da monobloco, e e o que faz o
-    # comprimento total fechar em a + l.
-    x0, x1 = ((c - largura, c) if recuar
-              else (c - largura / 2, c + largura / 2))
+    # o teto e o vao entre a face de succao e a face do motor: o caracol vive
+    # todo dentro dele, e ainda tem de sobrar toco para a boca de succao
+    largura = min(max(rotor * 0.95, 2 * r2 * 0.90), c * 0.86)
+    # O caracol e centrado na BOCA, e a face de tras dele fica em c - as duas
+    # coisas ao mesmo tempo, e e isso que fecha com a medida da casa:
+    #
+    #   c (o a do folheto) e a face de succao ate a face do FLANGE DO MOTOR, e
+    #   nao ate o eixo da descarga: c + l da 951 contra 949,7 medidos na casa;
+    #   o motor nao chega no eixo da descarga - a casa disse, e o desenho de
+    #   fabrica mostra. Ele para em c, e o eixo fica antes, no meio do caracol;
+    #   entao a boca fica em c - largura/2, e o funil sai concentrico com ela.
+    #
+    # A consequencia e que a flange de descarga avanca um pouco atras da face
+    # de succao. Eu tinha desfeito isso por achar impossivel; no desenho de
+    # fabrica da casa ela avanca mesmo.
+    x0, x1 = c - largura, c
     # A BOCA DA DESCARGA fica em c, que e onde o folheto a coloca, e nao no
     # meio do caracol. Duas medidas mandam nisso e as duas conferem:
     #
@@ -2371,7 +2376,7 @@ def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, recuar=False,
     # porque e o flange do motor, e a boca sobe da parte da frente. Tentar
     # centrar a boca no caracol fazia a flange dela recuar 45 mm atras da face
     # de succao, o que nenhuma bomba faz.
-    xd = c
+    xd = (x0 + x1) / 2
 
     el = list(placa(0, dn1, lado="entrada"))
     # A SUCCAO abre em sino para dentro do caracol, e nao entra como tubo reto:
@@ -2541,7 +2546,7 @@ def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4, cv=None):
     rotor = float(ficha["tamanho"].split("-")[2].split(".")[0])
 
     el, x0, x1, rv, largura, xd = _corpo_bomba(a, b, c, rotor, dn1, dn2,
-                                               recuar=True, pe_base=b - 22)
+                                               pe_base=b - 22)
     # monobloco nao tem lanterna: o flange do motor aparafusa na tampa de tras
     # da voluta, e o eixo do motor E o eixo da bomba. O comprimento total sai
     # de a + l, e e isso que o DXF da casa mede - 951 contra 949,7 na

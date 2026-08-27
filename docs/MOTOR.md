@@ -1142,7 +1142,8 @@ o comprimento total fechar em `a + l`, e foi assim que a 4.3 bateu com o DXF da
 casa. Mas eu deixei a **boca** em `c` também. As duas coisas não podem estar
 no mesmo lugar: `c` é onde o flange do motor aparafusa, e a boca fica *sobre* o
 caracol, no meio dele. Com a boca em `c` o pescoço ficava pendurado na quina de
-trás.
+trás. *(A 4.13 corrige o que este parágrafo diz sobre o `a`: ele mede até a
+face do flange do motor, e o eixo da descarga fica antes dela.)*
 
 Agora a boca, o rotor, o dreno, a seta de fluxo, o eixo da descarga e a porta
 de saída saem todos de `xd = (x0 + x1) / 2`. Com duas paredes verticais isso
@@ -1218,6 +1219,47 @@ Do desenho do fabricante ficaram de fora, e de propósito: o olhal de içamento,
 as nervuras da lanterna, a tampa cônica do ventilador, o logotipo na fundição.
 Isso é traçado do modelo 3D, como diz a 4.5 — não sai de cota, e fingir que sai
 seria pior que a diferença.
+
+## 4.13 Retratação: o que o `a` do folheto mede
+
+A 4.11 diz que `c + l` bater com o bloco da casa em 0,1% "fixa a face de trás
+do caracol em `c`, onde o flange do motor aparafusa". A conta estava certa e a
+explicação estava errada, e a casa desfez o nó com três frases:
+
+> tem que deslocar a voluta para centralizar com a flange de saída
+> o funil é concêntrico
+> **o motor não vai até o eixo das blocs**
+
+A terceira é a que decide. Se o motor não chega no eixo da descarga, então o
+`a` do folheto — 160 mm na 150-250 — **não** é a face de sucção até o eixo da
+descarga. É a face de sucção até a face do **flange do motor**. E aí tudo fecha
+de uma vez:
+
+| fato | vem de |
+|---|---|
+| o motor começa em `a` e o total é `a + l` | 951 contra 949,7 medidos na casa |
+| o eixo da descarga fica **antes** de `a` | a casa, e o desenho de fábrica |
+| o caracol é centrado na boca, com a face de trás em `a` | as duas acima juntas |
+| o funil sai concêntrico | consequência, não escolha |
+
+Na 150-250 isso põe o caracol de 22 a 160, o eixo da descarga em **91**, e o
+motor começando em 160 — depois do eixo, como a casa disse.
+
+### O que eu tinha desfeito por achar impossível
+
+Dois turnos atrás eu centrei a boca no caracol, vi a flange de descarga avançar
+atrás da face de sucção, achei que nenhuma bomba faz isso, e desfiz. **Faz.** No
+desenho de fábrica que a casa mandou, a borda esquerda da flange de descarga
+está visivelmente à esquerda da face de sucção. Eu tinha a medida certa e a
+descartei por um argumento de plausibilidade — o oposto da regra que este
+projeto segue em toda parte.
+
+O `recuar` saiu junto: as duas linhas centram o caracol na boca, e não havia
+dois casos, havia um só mal entendido.
+
+Fica registrado no relatório: `conferir_cad` mostra a caixa da METB em **+7,6%**
+contra o bloco da casa, e a diferença é justamente esse avanço da flange — o
+corpo, da face de sucção ao fim do motor, fecha em 951 contra 949,7.
 
 ## 5. O que a peça puxa: um mecanismo só
 
