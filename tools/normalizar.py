@@ -222,6 +222,7 @@ def normalizar_item(item):
     peca["derivacoes"] = []
     peca["manifold"] = None
     peca["saida_pol"] = None
+    peca["acionamento"] = None
     peca["confianca"] = 0.0
 
     fam = detectar(FAMILIAS, desc)
@@ -278,6 +279,14 @@ def normalizar_item(item):
             peca["dn"] = [int(m.group(1))]
             peca["unidade_dn"] = "mm"
             peca["saida_pol"] = para_float(m.group(2))
+
+    # Alavanca ou volante: a casa prefere alavanca na borboleta.
+    if re.search(r"ALAVANCA", desc):
+        peca["acionamento"] = "ALAVANCA"
+    elif re.search(r"VOLANTE", desc):
+        peca["acionamento"] = "VOLANTE"
+    elif re.search(r"CABECOTE|CABECOTE", desc):
+        peca["acionamento"] = "CABECOTE"
 
     peca["conexoes"] = extrair_conexoes(desc, dns_pos)
 

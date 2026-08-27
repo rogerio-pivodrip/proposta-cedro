@@ -520,6 +520,47 @@ existem de 4" para cima. O motor aponta os dois.
 > segue reconhecida no catálogo e fora dos templates
 > (`templates.FLUTUADOR_EM_USO`).
 
+### 7.3.1 Medidor e borboleta: lista fechada, não busca por família
+
+Duas peças em que buscar pela família traz a coisa errada.
+
+**Medidor** (`data/medidores.csv`). Usar só a linha **ARAD IRT analógica de
+pulso**, que já vem com cabo:
+
+| DN | código |
+|---|---|
+| 3" | `70240-006010` ARAD IRT 3" ISO16 EV 100L |
+| 4" | `70240-006125` |
+| 6" | `70240-006157` |
+| 8" | `70240-006277` |
+| 10" | `70240-006390` |
+
+**Não usar** os ARAD IRT **ER**: são digitais e dependem do cabo
+`70220-030000`. São 5, um por bitola, e a descrição é quase idêntica à da versão
+analógica — daí a lista ser por código e não por padrão de texto.
+
+O 3" analógico está cadastrado como `ARAD IRT 3" ISO16 EV 100L`, **sem a palavra
+MEDIDOR**. Buscar por família nunca o acharia.
+
+Ainda **a conferir**, porque existem e ninguém decidiu:
+
+| linha | bitolas |
+|---|---|
+| ARAD IRT (variantes 100L e 10M3) | 3", 8", 10" |
+| **DOROT MEDIDOR IRT ISO16 PUL** | 2", 3", 4", 6", 8", 10" |
+| ARAD WSTSB | 12" |
+
+A linha DOROT é uma família completa e paralela à ARAD. E **acima de 10" não há
+IRT**: em 12" só existe a WSTSB, e em 14" não há medidor nenhum.
+
+**Borboleta com alavanca.** A casa usa alavanca; o catálogo tem quase tudo com
+volante. A busca passa a preferir o acionamento pedido — alavanca primeiro, quem
+não declara depois, volante por último. Mas:
+
+> **A versão com alavanca só existe em 4"** (`71660-000951`). Os projetos pedem
+> `Valvula Borboleta 3" c/ Alavanca` e `8" c/ Alavanca`, e nenhum dos dois está
+> cadastrado — só as versões com volante.
+
 ### 7.4 Ventosa: colar de tomada ou saída na peça
 
 A ventosa entra de duas maneiras, conforme o material do trecho:

@@ -23,8 +23,11 @@ class Catalogo:
             for dn in set(item["dn"]):
                 self._indice[(item["familia"], dn)].append(item)
 
+    # A casa usa borboleta com alavanca; volante entra so se nao houver.
+    ACIONAMENTO_PREFERIDO = {"VALVULA_BORBOLETA": "ALAVANCA"}
+
     def buscar(self, familia, dn, norma=None, angulo=None, material="ACO_ZINCADO",
-               comprimento_mm=None, dn_saida=None):
+               comprimento_mm=None, dn_saida=None, acionamento=None):
         """Candidatos ordenados do mais simples (menos ressalvas) ao mais exotico."""
         cand = []
         for item in self._indice.get((familia, dn), []):
@@ -38,13 +41,27 @@ class Catalogo:
                 continue
             if comprimento_mm is not None and item["comprimento_mm"] != comprimento_mm:
                 continue
+            if acionamento and item.get("acionamento") != acionamento:
+                continue
             cand.append(item)
         # Preferencia, nesta ordem:
         #  1. peca homogenea - todas as pontas na norma pedida (evita puxar um
         #     tubo com ponta K10 quando a linha inteira e flangeada NBR PN16);
         #  2. menos acessorios soldados (luvas, escapes);
         #  3. descricao mais curta = peca mais "limpa".
+        preferido = self.ACIONAMENTO_PREFERIDO.get(familia)
+
         def ranking(item):
+            # acionamento: o pedido primeiro, depois o que nao declara, e por
+            # ultimo o outro acionamento
+            if not preferido:
+                ordem_acionamento = 0
+            elif item.get("acionamento") == preferido:
+                ordem_acionamento = 0
+            elif not item.get("acionamento"):
+                ordem_acionamento = 1
+            else:
+                ordem_acionamento = 2
             # engate K nao e usado nas montagens: peca com ponta K so entra se
             # nao houver outra
             tem_k = any(c["tipo"] == "ENGATE_K" for c in item["conexoes"])
@@ -53,7 +70,8 @@ class Catalogo:
                 fora = sum(1 for c in conexoes if c["norma"] != norma)
             else:
                 fora = 0
-            return (tem_k, fora, len(item["derivacoes"]), len(item["descricao"]))
+            return (ordem_acionamento, tem_k, fora, len(item["derivacoes"]),
+                    len(item["descricao"]))
 
         cand.sort(key=ranking)
         return cand

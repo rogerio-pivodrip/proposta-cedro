@@ -26,6 +26,7 @@ LINHAS = [
     ("crivo", "CRIVO", {}),
     ("valvula de retencao", "VALVULA_RETENCAO", {}),
     ("valvula borboleta", "VALVULA_BORBOLETA", {}),
+    ("borboleta c/ alavanca", "VALVULA_BORBOLETA", {"acionamento": "ALAVANCA"}),
     ("valvula gaveta", "VALVULA_GAVETA", {}),
     ("tubo 1 m", "TUBO", {"comprimento_mm": 1000}),
     ("tubo 3 m", "TUBO", {"comprimento_mm": 3000}),
@@ -37,7 +38,7 @@ LINHAS = [
     ("flange cega", "FLANGE_CEGA", {}),
     ("junta plana", "JUNTA_PLANA", {}),
     ("manifold", "MANIFOLD", {}),
-    ("medidor", "MEDIDOR", {}),
+
     ("articulador 30", "ARTICULADOR", {}),
 ]
 
@@ -63,6 +64,26 @@ def matriz_pecas(catalogo):
     for rotulo, familia, extra in LINHAS:
         celulas = [marca(catalogo, familia, float(d), extra) for d in BITOLAS]
         print(f"{rotulo:22s}" + "".join(f"{c:>5}" for c in celulas))
+
+
+def matriz_medidores():
+    """O medidor nao sai de busca por familia: e lista fechada por codigo."""
+    from motor.hidraulica import medidor, medidores_por_situacao
+    print("\n== medidor: lista fechada ==\n")
+    for dn in BITOLAS:
+        reg = medidor(dn)
+        marca = f'{reg["sap"]}  {reg["descricao"]}' if reg else "-"
+        print(f'  {str(dn) + chr(34):>5}  {marca}')
+    fora = medidores_por_situacao("nao_usar")
+    conferir = medidores_por_situacao("conferir")
+    print(f'\n  {len(fora)} marcados nao_usar (ARAD IRT ER, digital, '
+          "depende do cabo 70220-030000)")
+    print(f'  {len(conferir)} a conferir:')
+    linhas = {}
+    for r in conferir:
+        linhas.setdefault(r["linha"], []).append(r["dn_pol"] + '"')
+    for linha, dns in linhas.items():
+        print(f'      {linha:12s} {", ".join(dns)}')
 
 
 def matriz_reducoes(catalogo):
@@ -110,6 +131,7 @@ def matriz_template(catalogo):
 def main():
     catalogo = Catalogo()
     matriz_pecas(catalogo)
+    matriz_medidores()
     matriz_reducoes(catalogo)
     matriz_template(catalogo)
 
