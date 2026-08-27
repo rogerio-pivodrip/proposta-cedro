@@ -40,6 +40,9 @@ class Peca:
                 "comprimento_mm"
         if self.familia in ("MANIFOLD", "ARTICULADOR"):
             return self.familia, "", "comprimento_mm"
+        if self.familia == "VALVULA_HIDRAULICA":
+            # a cota do corpo sai da serie do fabricante, nao do codigo
+            return self.familia, self.item.get("serie") or "", "face_a_face_mm"
         if self.familia == "VALVULA_BORBOLETA":
             # a ficha separa alavanca de caixa redutora: o corpo tambem muda
             return self.familia, self.item.get("acionamento") or "", "face_a_face_mm"

@@ -539,6 +539,19 @@ existem de 4" para cima. O motor aponta os dois.
 
 Duas peças em que buscar pela família traz a coisa errada.
 
+**Válvula hidráulica: a cota sai da série, não do código.** A tabela da seção A
+do catálogo Dorot mede o corpo por série e bitola — L de face a face, H de
+altura — e as séries 47, 77 e 87 partilham a mesma tabela. Por isso
+`normalizar.py` passou a extrair `serie` da descrição (o `47` de
+`DOROT VALV MET 47-8" BASICA`): 35 das 69 hidráulicas têm série legível. As
+Bermad não têm — a nomenclatura delas põe o modelo depois da bitola
+(`BERMAD VALV MET IR 3" 405`), e a série ali é `405`, que essa tabela não cobre.
+
+A tabela também **fecha o caso do 47-14"**. O corpo não está na LM, mas
+aparecia em dois acessórios (`71680-008300` e `71680-008995`) — e agora
+aparece no catálogo do fabricante, com cota: **L = 580 mm, H = 495 mm**. A
+válvula existe na linha; o que falta é o código.
+
 **Medidor** (`data/medidores.csv`). Usar só a linha **ARAD IRT analógica de
 pulso**, que já vem com cabo:
 

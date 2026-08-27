@@ -127,6 +127,7 @@ CONEXOES = [
 # Derivacoes auxiliares: LG 2" = luva galvanizada, LV = luva, L2 = luva 2"
 RX_DERIV = re.compile(r"\b(?:C/\s*)?(\d)?\s*(LG|LV|L)\s*(\d+(?:\s?\d/\d)?)\s*\"?", re.I)
 # "C/ESC.2"" e o escape de 2 polegadas da curva, por onde entra a ventosa
+RX_SERIE = re.compile(r"\b(\d{2,3})[A-Z]?\s?-\s?\d{1,2}(?:[.,]\d)?\s?[\"']")
 RX_ESCAPE = re.compile(r"C/\s*ESC\.?\s*(\d+(?:\s?\d/\d)?)\s*\"?", re.I)
 # O lookbehind impede ler o denominador de uma fracao como diametro: em
 # 'QC 3/4"' o que vale e 3/4, nao 4.
@@ -226,6 +227,7 @@ def normalizar_item(item):
     peca["manifold"] = None
     peca["saida_pol"] = None
     peca["acionamento"] = None
+    peca["serie"] = None
     peca["confianca"] = 0.0
 
     fam = detectar(FAMILIAS, desc)
@@ -292,6 +294,13 @@ def normalizar_item(item):
         peca["acionamento"] = "CAIXA"      # caixa redutora, o "gear"
     elif re.search(r"CABECOTE", desc):
         peca["acionamento"] = "CABECOTE"
+
+    # Serie da valvula hidraulica: o "47" de "DOROT VALV MET 47-8" BASICA".
+    # E parametro, nao nome - a cota do corpo sai da serie, nao do codigo.
+    if peca["familia"] in ("VALVULA_HIDRAULICA", "PECA_REPOSICAO", "PILOTO"):
+        m = RX_SERIE.search(desc)
+        if m:
+            peca["serie"] = m.group(1)
 
     peca["conexoes"] = extrair_conexoes(desc, dns_pos)
 
