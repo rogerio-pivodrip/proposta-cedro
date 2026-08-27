@@ -174,7 +174,7 @@ def giro(x, perna, angulo, dn_pol, sentido=1, y=0.0, gomos=4):
         elementos.append(_p(f"M{fora[i][0]:.1f} {fora[i][1]:.1f} "
                             f"L{dentro[i][0]:.1f} {dentro[i][1]:.1f}", "solda"))
     return (elementos, (fim[0], fim[1], -angulo * sentido), (centro, raio),
-            centro_linha)
+            centro_linha, (fora, dentro))
 
 
 def _cruzamento(r1, r2):
@@ -276,8 +276,8 @@ def curva(dn_pol, angulo=90, sentido=1, gomos=None):
     perna, fonte = _cota("CURVA", dn_pol, str(angulo), "perna_mm")
     perna = perna or DE_TUBO.get(dn_pol, 100) * 1.5
     gomos = gomos or (4 if angulo >= 90 else 3 if angulo >= 45 else 2)
-    el, (sx, sy, direcao), _, eixo_linha = giro(0, perna, angulo, dn_pol,
-                                                sentido, gomos=gomos)
+    el, (sx, sy, direcao), _, eixo_linha, _paredes = giro(
+        0, perna, angulo, dn_pol, sentido, gomos=gomos)
     el += placa(0, dn_pol)
     bocal = placa(sx, dn_pol, sy, lado="saida")
     for e in bocal:
@@ -585,16 +585,26 @@ def curva_saida(dn_pol, angulo=90, dn_saida=2, sentido=1, gomos=4):
     if perna is None:
         perna, fonte = _cota("CURVA", dn_pol, str(angulo), "perna_mm")
     perna = perna or DE_TUBO.get(dn_pol, 100) * 1.5
-    el, (sx, sy, direcao), (centro, raio), eixo_linha = giro(
+    el, (sx, sy, direcao), (centro, raio), eixo_linha, paredes = giro(
         0, perna, angulo, dn_pol, sentido, gomos=gomos)
     r = DE_TUBO.get(dn_pol, 100) / 2
     rs = DE_TUBO.get(dn_saida, 60) / 2
     # O bocal sai PARALELO a perna de entrada, na parede externa do ultimo
     # gomo. Montada como o catalogo desenha - entrando por baixo e saindo de
     # lado - a saida aponta para cima, e a ventosa fica em pe sobre a curva.
-    fora = sentido                            # parede externa do giro
-    ultima = eixo_linha[-2]
-    base = (ultima[0], ultima[1] + r * fora)
+    # o eixo do bocal e o proprio eixo da perna de entrada, esticado: a
+    # ventosa sobe na mesma linha por onde a agua entrou. O bocal nasce onde
+    # essa linha atravessa a parede externa do giro.
+    parede_fora = paredes[0]
+    base = None
+    for i in range(len(parede_fora) - 1):
+        (ax, ay), (bx, by) = parede_fora[i], parede_fora[i + 1]
+        if ay * by <= 0 and abs(by - ay) > 1e-9:      # cruza o eixo de entrada
+            t = -ay / (by - ay)
+            base = (ax + t * (bx - ax), 0.0)
+            break
+    if base is None:
+        base = (eixo_linha[-2][0], 0.0)
     haste = DE_TUBO.get(dn_saida, 60) * 2.2
     topo = (base[0] + haste, base[1])
     el.append(_p(f"M{base[0]:.1f} {base[1] - rs:.1f} H{topo[0]:.1f}"))
