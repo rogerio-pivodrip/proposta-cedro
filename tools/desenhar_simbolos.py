@@ -101,48 +101,47 @@ def celula(simbolo):
               f'aria-label="{simbolo.rotulo}">',
               f'<g class="geo" transform="translate({dx:.2f} {dy:.2f}) '
               f'scale({escala:.5f})">{corpo}</g>']
+    # A cota fica dentro da peca, so o texto. Peca de duas bitolas leva a
+    # medida em cada flange - a reducao diz 8" numa ponta e 6" na outra - e o
+    # comprimento no meio do corpo.
+    import motor.simbolos as ms
     medida = cota_escrita(simbolo)
-    y_base = dy + (y0 + alt) * escala
-    y_cota = min(y_base + 16, ALTURA - 38)
+    pontas = [p for p in simbolo.portas if p.papel in ms.ENTRADA + ms.SAIDA]
+    bitolas = {p.dn_pol for p in pontas}
+    partes.append('<g class="anota">')
+    if len(bitolas) > 1:
+        for porta in pontas:
+            # a bitola vai acima da flange: nunca esbarra no corpo nem no eixo
+            px = dx + porta.x * escala
+            py = dy + porta.y * escala
+            meia = ms.flange(porta.dn_pol)["externo"] / 2 * escala
+            partes.append(f'<text class="marca" x="{px:.1f}" '
+                          f'y="{py - meia - 4:.1f}">{porta.dn_pol:g}"</text>')
     if medida:
-        def acha(papel):
-            return next((p for p in simbolo.portas if p.papel == papel), None)
-        pa = acha("entrada") or acha("maior") or simbolo.portas[0]
-        pb = acha("saida") or acha("menor")
-        xa = dx + pa.x * escala
-        xb = dx + pb.x * escala
-        letra = LETRA.get(simbolo.familia, "")
-        partes.append(
-            f'<g class="anota">'
-            f'<path class="chamada" d="M{xa:.1f} {y_base + 3:.1f} V{y_cota+4:.1f} '
-            f'M{xb:.1f} {y_base + 3:.1f} V{y_cota+4:.1f}"/>'
-            f'<path class="linha-cota" d="M{xa:.1f} {y_cota:.1f} H{xb:.1f}"/>'
-            + seta(xa, y_cota, 1) + seta(xb, y_cota, -1) +
-            f'<text class="cota" x="{(xa+xb)/2:.1f}" y="{y_cota-5:.1f}">'
-            f'<tspan class="letra">{letra}</tspan> {medida}</text>'
-            f'</g>')
+        pa = pontas[0] if pontas else simbolo.portas[0]
+        pb = pontas[-1] if pontas else pa
+        xm = dx + (pa.x + pb.x) / 2 * escala
+        ym = dy + (pa.y + pb.y) / 2 * escala
+        raio = ms.DE_TUBO.get(pa.dn_pol, 100) / 2 * escala
+        recuo = max(min(raio * 0.62, 13), 7)
+        rotulo = medida if len(bitolas) > 1 else f'{pa.dn_pol:g}"  {medida}'
+        partes.append(f'<text class="marca" x="{xm:.1f}" '
+                      f'y="{ym - recuo:.1f}">{rotulo}</text>')
+    partes.append("</g>")
     if furos:
         partes.append(f'<text class="furos" x="{LARGURA-MARGEM}" y="{MARGEM+4}">'
                       f'{furos["n"]}×⌀{furos["furo"]:g}</text>')
-    # cota vertical: o diametro externo da flange de entrada
+    # o diametro, so o texto, na margem
     entrada = next((p for p in simbolo.portas if p.papel == "entrada"),
                    None) or next((p for p in simbolo.portas
                                   if p.papel in ("maior", "saida")), None)
     if entrada:
         import motor.simbolos as ms
         de = ms.flange(entrada.dn_pol)["externo"]
-        xv = 12          # sempre na margem, nunca em cima do desenho
-        ya = dy + (entrada.y - de / 2) * escala
-        yb = dy + (entrada.y + de / 2) * escala
-        if yb - ya > 26:
-            partes.append(
-                f'<g class="anota">'
-                f'<path class="linha-cota" d="M{xv:.1f} {ya:.1f} V{yb:.1f}"/>'
-                + seta(xv, ya, 1, 4.2, vertical=True)
-                + seta(xv, yb, -1, 4.2, vertical=True) +
-                f'<text class="cota vertical" transform="rotate(-90 {xv-4:.1f} '
-                f'{(ya+yb)/2:.1f})" x="{xv-4:.1f}" y="{(ya+yb)/2:.1f}">'
-                f'<tspan class="letra">⌀</tspan>{de:g}</text></g>')
+        ym = dy + entrada.y * escala
+        partes.append(f'<g class="anota"><text class="cota vertical" '
+                      f'transform="rotate(-90 12 {ym:.1f})" x="12" '
+                      f'y="{ym:.1f}">⌀{de:g}</text></g>')
     partes.append(f'<text class="rotulo" x="{LARGURA/2:.0f}" y="{ALTURA-14}">'
                   f'{simbolo.rotulo}</text>')
     partes.append(f'<text class="fonte" x="{LARGURA/2:.0f}" y="{ALTURA-2}">'

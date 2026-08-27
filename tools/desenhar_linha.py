@@ -26,8 +26,8 @@ def succao(dn, menor):
 
 
 def recalque(dn, menor):
-    return [s.reducao(dn, menor, "CONCENTRICA", crescente=True),
-            s.tubo(dn, 1000),
+    # a reducao entra sem dizer o sentido: orientar() vira sozinho
+    return [s.reducao(dn, menor, "CONCENTRICA"), s.tubo(dn, 1000),
             s.valvula_borboleta(dn, "ALAVANCA" if dn <= 6 else "CAIXA"),
             s.tubo(dn, 500), s.medidor(dn), s.tubo(dn, 1500),
             s.valvula_hidraulica(dn, "47"), s.tubo(dn, 1000), s.curva(dn, 90, -1)]
@@ -73,7 +73,37 @@ def desenhar_linha(pecas, largura=940):
         else:
             ruins.append((p, motivo))
     partes.append("</g>")
+    # cada peca leva a bitola e a medida, em cinza claro, fora da escala
     partes.append('<g class="anota">')
+    for p in postos:
+        entrada, saida = s.porta(p.simbolo, s.ENTRADA), s.porta(p.simbolo, s.SAIDA)
+        if entrada is None or saida is None:
+            entrada = entrada or saida
+            saida = saida or entrada
+        comp = ((saida.x - entrada.x) ** 2 + (saida.y - entrada.y) ** 2) ** 0.5
+        vao = comp * escala
+        if vao < 44:                 # peca curta: a cota nao cabe dentro dela
+            continue
+        mx = MARGEM + ((p.entrada[0] + p.saida[0]) / 2 - minx) * escala
+        my = MARGEM + ((p.entrada[1] + p.saida[1]) / 2 - miny) * escala
+        # a cota fica DENTRO da peca, na metade de cima, longe do eixo
+        raio = s.DE_TUBO.get(entrada.dn_pol, 100) / 2 * escala
+        recuo = max(min(raio * 0.62, 12), 6)   # longe do eixo vermelho
+        vertical = abs(p.saida[1] - p.entrada[1]) > abs(p.saida[0] - p.entrada[0])
+        gira = f' transform="rotate(-90 {mx:.1f} {my:.1f})"' if vertical else ""
+        duas = abs((entrada.dn_pol or 0) - (saida.dn_pol or 0)) > 0.01
+        rotulo = (f"{comp:.0f}" if duas
+                  else f'{(entrada.dn_pol or 0):g}"  {comp:.0f}')
+        partes.append(f'<text class="marca" x="{mx:.1f}" y="{my - recuo:.1f}"{gira}>'
+                      f'{rotulo}</text>')
+        if duas:
+            # a bitola de cada flange, na sua ponta
+            for porta, ponto in ((entrada, p.entrada), (saida, p.saida)):
+                meia = s.flange(porta.dn_pol)["externo"] / 2 * escala
+                px = MARGEM + (ponto[0] - minx) * escala
+                py = MARGEM + (ponto[1] - miny) * escala - meia - 4
+                partes.append(f'<text class="marca" x="{px:.1f}" y="{py:.1f}">'
+                              f'{porta.dn_pol:g}"</text>')
     for p, motivo in ruins:
         px = MARGEM + (p.saida[0] - minx) * escala
         py = MARGEM + (p.saida[1] - miny) * escala

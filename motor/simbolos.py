@@ -20,7 +20,8 @@ from . import cotas
 DADOS = os.path.join(os.path.dirname(__file__), "..", "data")
 
 Porta = namedtuple("Porta", "papel x y direcao dn_pol")
-Simbolo = namedtuple("Simbolo", "familia rotulo elementos portas caixa fonte")
+Simbolo = namedtuple("Simbolo",
+                     "familia rotulo elementos portas caixa fonte params")
 
 # Diametro externo do tubo AZ, do caderno de desenhos Netafim (coluna D)
 DE_TUBO = {2: 48, 2.5: 60, 3: 76, 4: 102, 5: 133, 6: 152, 8: 203, 10: 261,
@@ -228,8 +229,9 @@ def limites(elementos):
     return (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
 
 
-def _montar(familia, rotulo, elementos, portas, fonte=None):
-    return Simbolo(familia, rotulo, elementos, portas, limites(elementos), fonte)
+def _montar(familia, rotulo, elementos, portas, fonte=None, params=None):
+    return Simbolo(familia, rotulo, elementos, portas, limites(elementos),
+                   fonte, params or {})
 
 
 def _cota(familia, dn, variante="", significado="face_a_face_mm", menor=None):
@@ -297,7 +299,9 @@ def reducao(dn_maior, dn_menor, tipo="CONCENTRICA", lado_plano="topo",
               Porta("saida", comp, desloca, 0, b)]
     curto = "conc" if tipo == "CONCENTRICA" else "exc"
     rot = f'{"aumento" if crescente else "redução"} {curto} {a:g}"×{b:g}"'
-    return _montar(familia, rot, el, portas, fonte)
+    return _montar(familia, rot, el, portas, fonte,
+                   {"dn_maior": dn_maior, "dn_menor": dn_menor, "tipo": tipo,
+                    "lado_plano": lado_plano, "crescente": crescente})
 
 
 def te(dn_pol, dn_derivacao=None):
@@ -541,6 +545,38 @@ def porta(simbolo, papeis):
     return next((p for p in simbolo.portas if p.papel in papeis), None)
 
 
+def orientar(lista):
+    """Vira as reducoes para o lado certo, olhando os vizinhos.
+
+    Virar a porta nao basta: a peca tem que ser redesenhada espelhada, e quem
+    sabe fazer isso e ela propria. Entao a reducao e refeita com crescente
+    ligado ou desligado, conforme a bitola que chega e a que sai.
+
+    Sem isso da para ligar a reducao do lado errado sem o desenho reclamar - o
+    cone apontando contra o fluxo, ou a peca crescendo para tras.
+    """
+    saida = list(lista)
+    for i, simbolo in enumerate(saida):
+        if not simbolo.familia.startswith("REDUCAO") or not simbolo.params:
+            continue
+        antes = [p.dn_pol for p in saida[i - 1].portas
+                 if p.papel in SAIDA] if i else []
+        depois = [p.dn_pol for p in saida[i + 1].portas
+                  if p.papel in ENTRADA] if i + 1 < len(saida) else []
+        maior, menor = simbolo.params["dn_maior"], simbolo.params["dn_menor"]
+        crescente = None
+        if antes:
+            crescente = abs(antes[0] - menor) < 0.01
+        elif depois:
+            crescente = abs(depois[0] - maior) < 0.01
+        if crescente is None or crescente == simbolo.params["crescente"]:
+            continue
+        p = dict(simbolo.params, crescente=crescente)
+        saida[i] = reducao(p["dn_maior"], p["dn_menor"], p["tipo"],
+                           p["lado_plano"], p["crescente"])
+    return saida
+
+
 def montar(lista):
     """Encadeia simbolos: a saida de um vira a entrada do proximo.
 
@@ -554,6 +590,7 @@ def montar(lista):
 
     Devolve os postos ja colocados e o ponto onde a linha termina.
     """
+    lista = orientar(lista)
     x = y = 0.0
     direcao = 0.0
     postos = []
