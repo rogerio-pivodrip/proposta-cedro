@@ -229,7 +229,6 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
    O tubulo NUNCA tem traco: a parede ja esta desenhada por cima dele, e um
    contorno a mais engrossaria a linha do desenho. */
 .geo .tubulo{fill:none;stroke:none}
-.geo .revolucao{fill:none;stroke:none}
 
 .modo-metal .geo .tubulo{fill:url(#aco);stroke:none}
 .modo-metal .geo rect.corpo,
@@ -243,11 +242,7 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 /* as exclusoes nao sao decoracao: cada `:not` sobe a especificidade desta
    regra, e sem elas ela passa por cima da cor do eixo e da junta - que sao
    vermelhas por convencao, em qualquer modo */
-.modo-metal .geo *:not(.alvo):not(.revolucao):not(.centro):not(.junta){
-  stroke:#3c424a}
-/* a hachura de revolucao: as geratrizes do cilindro. Nao e cor propria, e
-   sombra - por isso vai em preto transparente e serve a qualquer librea */
-.modo-metal .geo .revolucao{stroke:rgba(0,0,0,.15);stroke-width:.5;fill:none}
+.modo-metal .geo *:not(.alvo):not(.centro):not(.junta){stroke:#3c424a}
 .modo-metal .geo .malha,.modo-metal .geo .furo,.modo-metal .geo .solda{
   stroke:#6f757d}
 /* o furo e um vazio na chapa: pintado de branco ele volta a ser buraco, e
@@ -295,14 +290,8 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .modo-metal .peca[data-cor="pead"] .flange{fill:url(#chapa)}
 
 /* peca escura pede traco claro, senao o contorno some dentro dela */
-.modo-metal .peca[data-cor="escuro"] *:not(.alvo):not(.centro):not(.revolucao){
-  stroke:#9aa1a9}
-.modo-metal .peca[data-cor="pead"] *:not(.alvo):not(.centro):not(.revolucao){
-  stroke:#98a0a8}
-/* em peca escura a sombra some: ali a geratriz vira luz */
-.modo-metal .peca[data-cor="escuro"] .revolucao,
-.modo-metal .peca[data-cor="pead"] .revolucao{stroke:rgba(255,255,255,.16)}
-.modo-metal .peca[data-cor="azul"] .revolucao{stroke:rgba(0,0,0,.20)}
+.modo-metal .peca[data-cor="escuro"] *:not(.alvo):not(.centro){stroke:#9aa1a9}
+.modo-metal .peca[data-cor="pead"] *:not(.alvo):not(.centro){stroke:#98a0a8}
 .modo-metal .peca[data-cor="azul"] *:not(.alvo):not(.centro){stroke:#0f2c4c}
 
 .modo-pb .geo *:not(.alvo){stroke:#000}

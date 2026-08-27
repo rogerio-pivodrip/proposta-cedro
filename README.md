@@ -85,11 +85,11 @@ reconhece o par de paredes de cada peça e fecha a região — uma vez, para as
 traço e some nos outros dois modos; e fica fora do DXF, que é desenho de
 linha.
 
-No metal o tubo ainda ganha a **hachura de revolução**: um tubo é um sólido
-de revolução, e a geratriz que está no ângulo θ aparece a `r·sen(θ)` do eixo —
-então passos iguais de ângulo dão espaçamentos desiguais na folha, apertando
-perto da silhueta e abrindo no meio. É isso que faz o desenho parecer redondo
-em vez de chato. A mesma conta das aletas do motor.
+O degradê corre **no sentido do eixo**: as faixas de luz e sombra são
+paralelas ao eixo da peça, claras em cima e escuras embaixo, que é o desenho
+de luz de um tubo redondo iluminado de cima. E ele vive dentro do grupo que
+gira — numa linha de pé o brilho gira junto e continua correndo ao longo do
+tubo.
 
 O SVG exportado sai no modo em que você está vendo. O DXF não tem modo: lá a
 cor é da camada, e quem abre no CAD escolhe a pena — e nem a região nem a

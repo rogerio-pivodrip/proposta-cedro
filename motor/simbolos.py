@@ -121,43 +121,14 @@ def tubulo(pontos):
                  + " Z"}
 
 
-def revolucao(a, b, passos=6):
-    """As geratrizes do cilindro - a hachura de uma superficie de revolucao.
-
-    O tubo e um solido de revolucao: girando a geratriz em torno do eixo ela
-    varre a parede inteira. Visto de lado, a geratriz que esta no angulo teta
-    aparece a `r * sen(teta)` do eixo - entao passos IGUAIS de angulo dao
-    espacamentos DESIGUAIS na folha, apertando perto da silhueta e abrindo no
-    meio. E isso que faz o desenho parecer redondo em vez de chato: a mesma
-    conta das aletas do motor.
-
-    Recebe as duas paredes e interpola entre elas, ponto a ponto - por isso
-    serve ao tubo (duas retas), ao cone (duas inclinadas) e a curva de gomos
-    (duas polilinhas), sem saber qual e qual.
-    """
-    if len(a) != len(b) or len(a) < 2:
-        return []
-    linhas = []
-    for k in range(1, passos + 1):
-        seno = math.sin(math.radians(90 * k / (passos + 1)))
-        for sinal in (-1, 1):
-            # t=0 e a parede a, t=1 e a parede b, t=0.5 e o eixo
-            t = (1 + sinal * seno) / 2
-            pontos = [(pa[0] + (pb[0] - pa[0]) * t,
-                       pa[1] + (pb[1] - pa[1]) * t) for pa, pb in zip(a, b)]
-            linhas.append({"tipo": "path", "classe": "revolucao",
-                           "d": "M" + " L".join(f"{p[0]:.1f} {p[1]:.1f}"
-                                                for p in pontos)})
-    return linhas
-
-
 def corpo_de(a, b):
-    """A regiao entre duas paredes, mais a hachura de revolucao dentro dela.
+    """A regiao entre duas paredes, fechada, para receber o degrade.
 
-    As duas coisas andam juntas e por isso saem juntas: quem tem duas paredes
-    tem um cilindro, e um cilindro tem preenchimento e tem geratriz.
+    Recebe as duas paredes e as costura numa figura so: parede de cima na ida,
+    parede de baixo na volta. Serve ao tubo (duas retas), ao cone (duas
+    inclinadas) e a curva de gomos (duas polilinhas), sem saber qual e qual.
     """
-    return [tubulo(list(a) + list(reversed(b)))] + revolucao(a, b)
+    return [tubulo(list(a) + list(reversed(b)))]
 
 
 def eixo(x, comprimento, dn_pol, y=0.0):
