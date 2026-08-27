@@ -26,7 +26,7 @@ DO_IRRIGAFOUR = {
     "CURVA":                 [("C", "CURVA", None, "perna_mm")],
     "CURVA_SAIDA":           [("C", "CURVA_SAIDA", None, "perna_mm")],
     "CURVA_DUPLA":           [("C", "CURVA_DUPLA", None, "face_a_face_mm")],
-    "CRIVO":                 [("C", "CRIVO", "cesto", "comprimento_mm")],
+    "CRIVO":                 [("C", "CRIVO", "", "comprimento_mm")],
     "TE":                    [("E", "TE", "", "face_a_face_mm"),
                               ("F", "TE", "", "derivacao_mm")],
     "TE_45":                 [("C", "TE_45", "", "face_a_face_mm"),
@@ -55,8 +55,6 @@ DO_NETAFIM = {
     "TE":       [("TE", "perna_mm")],
     "ADAPTADOR": [("ADAPTADOR", "face_a_face_mm")],
 }
-# o caderno Netafim so desenha o crivo conico
-VARIANTE_NETAFIM = {"CRIVO": "cone"}
 # o angulo sai da variante do catalogo: "90/4gomos" -> "90". Gomo nao muda cota.
 def angulo(variante):
     return variante.split("/")[0] if variante else ""
@@ -94,7 +92,7 @@ def main():
     # ---- Netafim: alternativa declarada
     for r in csv.DictReader(open(NETAFIM, encoding="utf-8")):
         for familia, significado in DO_NETAFIM.get(r["familia"], []):
-            var = VARIANTE_NETAFIM.get(r["familia"], r["variante"])
+            var = r["variante"]
             linhas.append(["NETAFIM", familia, var, f"{float(r['dn_pol']):g}", "",
                            significado, f"{float(r['cota_mm']):g}",
                            r["amostras"], r["divergentes"]])

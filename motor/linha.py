@@ -35,9 +35,7 @@ class Peca:
         if self.familia == "CURVA" and self.angulo:
             return "CURVA", str(self.angulo), "perna_mm"
         if self.familia == "CRIVO":
-            # a Netafim so faz o conico, o Irrigafour so o cesto
-            return "CRIVO", ("cesto" if self.fonte == "IRRIGAFOUR" else "cone"), \
-                "comprimento_mm"
+            return "CRIVO", "", "comprimento_mm"
         if self.familia in ("MANIFOLD", "ARTICULADOR"):
             return self.familia, "", "comprimento_mm"
         if self.familia == "VALVULA_HIDRAULICA":

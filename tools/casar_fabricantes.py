@@ -43,13 +43,11 @@ BASE = {
     "REDUCAO_EXCENTRICA": "mesma tabela da concentrica nos dois fabricantes",
     "CURVA": "R do caderno x C do catalogo, os dois a perna da curva "
              "(desenho 01523 e pagina 13)",
-    "CRIVO": "altura do corpo nos dois",
+    "CRIVO": "comprimento do cesto nos dois - mesma peca, tamanho diferente",
     "TE": "2R do caderno (corpo corrido) x E do catalogo",
 }
 # mesmo nome, peca diferente - a comparacao de numero nao quer dizer nada
 DIFERENTES = {
-    "CRIVO": "Netafim e cone e cresce com a bitola; Irrigafour e cesto "
-             "cilindrico de 300mm fixo",
     "TE": "te compacto (2R) contra derivado de corpo corrido de 1m - "
           "nao sao a mesma peca",
 }

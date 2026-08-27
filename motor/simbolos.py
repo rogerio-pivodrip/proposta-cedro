@@ -83,17 +83,22 @@ def cone(x, comprimento, dn_maior, dn_menor, alinhamento="centro", y=0.0):
             _p(f"M{x:.1f} {y+ra:.1f} L{x+comprimento:.1f} {base_b:.1f}")]
 
 
-def placa(x, dn_pol, y=0.0, direcao=0.0, norma="NBR PN16"):
-    """Flange de lado: a placa, e os furos na posicao real do circulo."""
+def placa(x, dn_pol, y=0.0, direcao=0.0, norma="NBR PN16", lado="entrada"):
+    """Flange de lado, com a face no ponto de encaixe.
+
+    A chapa fica inteira DENTRO da peca: na entrada ela cresce para dentro, na
+    saida tambem. Duas pecas ligadas mostram duas chapas encostadas - face a
+    face, que e como a junta flangeada e - e nao uma sobreposta na outra.
+    """
     f = flange(dn_pol, norma)
     metade, esp = f["externo"] / 2, f["espessura"]
-    x0 = x - esp / 2
+    x0 = x if lado == "entrada" else (x - esp if lado == "saida" else x - esp / 2)
     saida = [{"tipo": "rect", "x": x0, "y": y - metade, "w": esp,
               "h": f["externo"], "classe": "flange"}]
     # cada furo aparece como um traco na altura do circulo de furacao
     passo = f["circulo"] / 2
-    for lado in (-1, 1):
-        saida.append(_p(f"M{x0:.1f} {y+lado*passo:.1f} h{esp:.1f}", "furo"))
+    for sinal in (-1, 1):
+        saida.append(_p(f"M{x0:.1f} {y+sinal*passo:.1f} h{esp:.1f}", "furo"))
     saida.append({"tipo": "texto_furos", "x": x, "y": y, "n": f["furos"],
                   "furo": f["furo"]})
     if direcao:
@@ -234,7 +239,7 @@ def _cota(familia, dn, variante="", significado="face_a_face_mm", menor=None):
 # ------------------------------------------------------------------ familias
 def tubo(dn_pol, comprimento_mm=1000):
     el = eixo(0, comprimento_mm, dn_pol)
-    el += placa(0, dn_pol) + placa(comprimento_mm, dn_pol)
+    el += placa(0, dn_pol) + placa(comprimento_mm, dn_pol, lado="saida")
     el.append(_p(f"M-60 0 H{comprimento_mm + 60:.0f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol),
               Porta("saida", comprimento_mm, 0, 0, dn_pol)]
@@ -248,7 +253,7 @@ def curva(dn_pol, angulo=90, sentido=1, gomos=None):
     gomos = gomos or (4 if angulo >= 90 else 3 if angulo >= 45 else 2)
     el, (sx, sy, direcao) = giro(0, perna, angulo, dn_pol, sentido, gomos=gomos)
     el += placa(0, dn_pol)
-    bocal = placa(sx, dn_pol, sy)
+    bocal = placa(sx, dn_pol, sy, lado="saida")
     for e in bocal:
         e["girar"] = (direcao, sx, sy)
     el += bocal
@@ -261,21 +266,37 @@ def curva(dn_pol, angulo=90, sentido=1, gomos=None):
                    el, portas, fonte)
 
 
-def reducao(dn_maior, dn_menor, tipo="CONCENTRICA", lado_plano="topo"):
+def reducao(dn_maior, dn_menor, tipo="CONCENTRICA", lado_plano="topo",
+            crescente=False):
+    """Cone entre duas bitolas.
+
+    crescente=True desenha o menor na entrada e o maior na saida - e o que o
+    catalogo Irrigafour chama de AUMENTO, e o que a linha faz no recalque, onde
+    a bomba entrega pequeno e a adutora segue grande. A peca e a mesma; o que
+    muda e por que ponta a linha entra.
+    """
     familia = f"REDUCAO_{tipo}"
     comp, fonte = _cota(familia, dn_maior, "", "face_a_face_mm", dn_menor)
     comp = comp or 150
     alinhamento = "centro" if tipo == "CONCENTRICA" else lado_plano
-    el = cone(0, comp, dn_maior, dn_menor, alinhamento)
-    el += placa(0, dn_maior)
-    ra, rb = DE_TUBO.get(dn_maior, 100) / 2, DE_TUBO.get(dn_menor, 60) / 2
-    desloca = 0 if alinhamento == "centro" else (ra - rb) * (1 if alinhamento == "fundo" else -1)
-    el += placa(comp, dn_menor, desloca)
+    a, b = (dn_menor, dn_maior) if crescente else (dn_maior, dn_menor)
+    ra, rb = DE_TUBO.get(a, 100) / 2, DE_TUBO.get(b, 60) / 2
+    if alinhamento == "centro":
+        topo_b, base_b = -rb, rb
+    elif alinhamento == "fundo":
+        topo_b, base_b = (ra - 2 * rb), ra
+    else:
+        topo_b, base_b = -ra, (-ra + 2 * rb)
+    el = [_p(f"M0 {-ra:.1f} L{comp:.1f} {topo_b:.1f}"),
+          _p(f"M0 {ra:.1f} L{comp:.1f} {base_b:.1f}")]
+    desloca = (topo_b + base_b) / 2
+    el += placa(0, a) + placa(comp, b, desloca, lado="saida")
     el.append(_p(f"M-60 0 H{comp*0.55:.0f}", "centro"))
     el.append(_p(f"M{comp*0.45:.0f} {desloca:.0f} H{comp + 60:.0f}", "centro"))
-    portas = [Porta("maior", 0, 0, 180, dn_maior),
-              Porta("menor", comp, desloca, 0, dn_menor)]
-    rot = f'redução {"conc" if tipo == "CONCENTRICA" else "exc"} {dn_maior:g}"×{dn_menor:g}"'
+    portas = [Porta("entrada", 0, 0, 180, a),
+              Porta("saida", comp, desloca, 0, b)]
+    curto = "conc" if tipo == "CONCENTRICA" else "exc"
+    rot = f'{"aumento" if crescente else "redução"} {curto} {a:g}"×{b:g}"'
     return _montar(familia, rot, el, portas, fonte)
 
 
@@ -291,8 +312,8 @@ def te(dn_pol, dn_derivacao=None):
     el = eixo(0, comp, dn_pol)
     el += [_p(f"M{meio-rd:.1f} {-r:.1f} V{-alt:.1f}"),
            _p(f"M{meio+rd:.1f} {-r:.1f} V{-alt:.1f}")]
-    el += placa(0, dn_pol) + placa(comp, dn_pol)
-    bocal = placa(meio, dn_derivacao, -alt)
+    el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
+    bocal = placa(meio, dn_derivacao, -alt, lado="saida")
     for e in bocal:
         e["girar"] = (-90, meio, -alt)
     el += bocal
@@ -304,29 +325,32 @@ def te(dn_pol, dn_derivacao=None):
     return _montar("TE", f'tê {dn_pol:g}"×{dn_derivacao:g}"', el, portas, fonte)
 
 
-def crivo(dn_pol, variante="cesto"):
+def crivo(dn_pol, variante=""):
+    """Cesto cilindrico de chapa perfurada, flange em cima e chapa lisa no fundo.
+
+    O caderno Netafim (desenho 01523, vista inferior) e o catalogo Irrigafour
+    desenham a mesma peca. O que muda e o comprimento: a Netafim cresce com a
+    bitola, 100 mm em 3" e 495 em 14"; a Irrigafour e 300 fixo ate 20".
+    """
     comp, fonte = _cota("CRIVO", dn_pol, variante, "comprimento_mm")
     comp = comp or 300
     r = DE_TUBO.get(dn_pol, 100) / 2
-    if variante == "cone":
-        el = [_p(f"M{comp:.1f} {-r:.1f} L0 0 L{comp:.1f} {r:.1f}")]
-        malha = [_p(f"M{comp*(0.25+0.2*i):.1f} {-r*(0.3+0.22*i):.1f} "
-                    f"V{r*(0.3+0.22*i):.1f}", "malha") for i in range(4)]
-    else:
-        el = [_p(f"M0 {-r:.1f} H{comp:.1f} V{r:.1f} H0 Z")]
-        malha = [_p(f"M{comp*(0.12+0.12*i):.1f} {-r:.1f} V{r:.1f}", "malha")
-                 for i in range(7)]
-    el += malha + placa(comp, dn_pol)
+    el = [_p(f"M0 {-r:.1f} H{comp:.1f}"), _p(f"M0 {r:.1f} H{comp:.1f}"),
+          _p(f"M0 {-r:.1f} V{2*r:.1f}", "chapa_lisa")]     # o fundo e fechado
+    passo = max(comp / 9, 12)
+    n = max(int(comp / passo) - 1, 3)
+    el += [_p(f"M{passo*(i+1):.1f} {-r:.1f} v{2*r:.1f}", "malha") for i in range(n)]
+    el += placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-40 0 H{comp+60:.0f}", "centro"))
     portas = [Porta("saida", comp, 0, 0, dn_pol)]
-    return _montar("CRIVO", f'crivo {variante} {dn_pol:g}"', el, portas, fonte)
+    return _montar("CRIVO", f'crivo {dn_pol:g}"', el, portas, fonte)
 
 
 def flange_cega(dn_pol):
     """Fecha a linha: a placa cega e o toco de tubo que morre nela."""
     f = flange(dn_pol)
     toco = f["externo"] * 0.5
-    el = eixo(-toco, toco, dn_pol) + placa(0, dn_pol)
+    el = eixo(-toco, toco, dn_pol) + placa(0, dn_pol, lado="entrada")
     r = DE_TUBO.get(dn_pol, 100) / 2
     el += [_p(f"M{-toco*0.75 + i*toco*0.2:.1f} {-r:.1f} l{-toco*0.16:.1f} "
               f"{2*r:.1f}", "malha") for i in range(4)]
@@ -434,20 +458,27 @@ def valvula_hidraulica(dn_pol, serie="47"):
     alt, _ = _cota("VALVULA_HIDRAULICA", dn_pol, serie, "altura_total_mm")
     r = DE_TUBO.get(dn_pol, 100) / 2
     alt = alt or r * 3
-    el = caixa(0, comp, r * 1.1, r * 1.1)
     meio = comp / 2
-    # castelo com diafragma, e o piloto do lado
-    el += caixa(meio - comp*0.26, comp*0.52, alt*0.72, -r*1.1)
-    el.append(_p(f"M{meio - comp*0.26:.1f} {-alt*0.42:.1f} h{comp*0.52:.1f}",
-                 "obturador"))
-    el.append(_p(f"M{meio:.1f} {-alt*0.45:.1f} V{r*0.4:.1f}", "haste"))
-    el.append(_p(f"M{meio - r*0.5:.1f} {r*0.4:.1f} h{r:.1f}", "obturador"))
-    # o piloto e o tubinho que o liga ao castelo - sempre listado junto
-    el.append(_p(f"M{meio + comp*0.26:.1f} {-alt*0.58:.1f} h{comp*0.3:.1f} "
-                 f"v{alt*0.26:.1f} h{-comp*0.1:.1f}", "piloto"))
-    el.append({"tipo": "circulo", "cx": meio + comp*0.56, "cy": -alt*0.46,
-               "r": comp*0.06, "classe": "piloto"})
-    el += placa(0, dn_pol) + placa(comp, dn_pol)
+    el = caixa(0, comp, r * 1.1, r * 1.1)
+    # castelo: a tampa abaulada que guarda o diafragma
+    castelo, topo = comp * 0.62, -alt * 0.78
+    el.append(_p(f"M{meio - castelo/2:.1f} {-r*1.1:.1f} V{topo + castelo*0.18:.1f} "
+                 f"Q{meio - castelo/2:.1f} {topo:.1f} {meio - castelo*0.3:.1f} {topo:.1f} "
+                 f"H{meio + castelo*0.3:.1f} "
+                 f"Q{meio + castelo/2:.1f} {topo:.1f} {meio + castelo/2:.1f} "
+                 f"{topo + castelo*0.18:.1f} V{-r*1.1:.1f}"))
+    # o diafragma, e a haste que desce ate o obturador
+    el.append(_p(f"M{meio - castelo*0.46:.1f} {topo + castelo*0.42:.1f} "
+                 f"h{castelo*0.92:.1f}", "obturador"))
+    el.append(_p(f"M{meio:.1f} {topo + castelo*0.42:.1f} V{r*0.35:.1f}", "haste"))
+    el.append(_p(f"M{meio - r*0.62:.1f} {r*0.35:.1f} h{r*1.24:.1f}", "obturador"))
+    # piloto: corpo pequeno ligado ao castelo por tubinho - sempre listado junto
+    px, py = meio + comp * 0.42, topo + castelo * 0.25
+    el.append(_p(f"M{meio + castelo/2:.1f} {topo + castelo*0.55:.1f} "
+                 f"H{px:.1f} V{py + comp*0.09:.1f}", "piloto"))
+    el += caixa(px - comp*0.07, comp*0.14, -py + comp*0.05, py + comp*0.09,
+                classe="piloto")
+    el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
     return _montar("VALVULA_HIDRAULICA", f'hidráulica {serie}-{dn_pol:g}"',
@@ -462,14 +493,19 @@ def medidor(dn_pol):
     r = DE_TUBO.get(dn_pol, 100) / 2
     baixo = baixo or r
     alt = alt or r * 3
-    el = caixa(0, comp, r, r)
     meio = comp / 2
-    el += caixa(meio - comp*0.28, comp*0.56, alt - baixo, -r)
-    el.append({"tipo": "circulo", "cx": meio, "cy": -(alt - baixo) + comp*0.16,
-               "r": comp*0.15, "classe": "mostrador"})
-    el.append(_p(f"M{meio:.1f} {-(alt-baixo)+comp*0.16:.1f} v{-comp*0.11:.1f}",
+    el = caixa(0, comp, r, r)
+    torre = comp * 0.5
+    topo = -(alt - baixo)
+    el += caixa(meio - torre/2, torre, -topo, -r)
+    # o registrador: mostrador com ponteiro, virado para cima
+    cx, cy, rr = meio, topo + torre * 0.3, torre * 0.28
+    el.append({"tipo": "circulo", "cx": cx, "cy": cy, "r": rr,
+               "classe": "mostrador"})
+    el.append(_p(f"M{cx:.1f} {cy:.1f} L{cx + rr*0.62:.1f} {cy - rr*0.5:.1f}",
                  "mostrador"))
-    el += placa(0, dn_pol) + placa(comp, dn_pol)
+    el.append(_p(f"M{cx:.1f} {cy - rr:.1f} v{rr*0.28:.1f}", "mostrador"))
+    el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
     return _montar("MEDIDOR", f'medidor {dn_pol:g}"', el, portas, fonte)
@@ -488,7 +524,102 @@ def valvula_pe(dn_pol):
     el += caixa(-cesto, cesto, r * 0.95, r * 0.95)
     el += [_p(f"M{-cesto + cesto*0.15*(i+1):.1f} {-r*0.95:.1f} v{r*1.9:.1f}",
               "malha") for i in range(6)]
-    el += placa(corpo, dn_pol)
+    el += placa(corpo, dn_pol, lado="saida")
     el.append(_p(f"M{-cesto-40:.0f} 0 H{corpo+60:.0f}", "centro"))
     portas = [Porta("saida", corpo, 0, 0, dn_pol)]
     return _montar("VALVULA_PE", f'válvula de pé {dn_pol:g}"', el, portas, fonte)
+
+
+# ------------------------------------------------------------------- montagem
+Posto = namedtuple("Posto", "simbolo dx dy giro entrada saida")
+# a reducao chama as pontas de maior e menor; para a linha sao entrada e saida
+ENTRADA = ("entrada", "maior")
+SAIDA = ("saida", "menor")
+
+
+def porta(simbolo, papeis):
+    return next((p for p in simbolo.portas if p.papel in papeis), None)
+
+
+def montar(lista):
+    """Encadeia simbolos: a saida de um vira a entrada do proximo.
+
+    Cada peca e desenhada uma vez, na origem, olhando para +x. Encaixar e uma
+    transformacao rigida - girar pelo angulo corrente e transladar ate o ponto
+    corrente. Nenhuma peca tem posicao propria:
+
+        tamanho  vem da tabela de cotas, por bitola e fabricante
+        angulo   vem da peca (a curva e a unica que gira a linha)
+        rotacao  e acumulada: cada peca herda a direcao que a anterior deixou
+
+    Devolve os postos ja colocados e o ponto onde a linha termina.
+    """
+    x = y = 0.0
+    direcao = 0.0
+    postos = []
+    for simbolo in lista:
+        entrada = porta(simbolo, ENTRADA)
+        saida = porta(simbolo, SAIDA)
+        if entrada is None:                      # crivo, valvula de pe: comeca a linha
+            entrada = Porta("entrada", 0, 0, 180, saida.dn_pol if saida else None)
+        if saida is None:                        # flange cega: termina a linha
+            saida = entrada
+
+        rad = math.radians(direcao)
+        cos, sen = math.cos(rad), math.sin(rad)
+        # o ponto corrente e onde a entrada desta peca tem que cair
+        dx = x - (entrada.x * cos - entrada.y * sen)
+        dy = y - (entrada.x * sen + entrada.y * cos)
+        postos.append(Posto(simbolo, dx, dy, direcao,
+                            (x, y),
+                            (dx + saida.x * cos - saida.y * sen,
+                             dy + saida.x * sen + saida.y * cos)))
+        x, y = postos[-1].saida
+        direcao += saida.direcao if saida is not entrada else 0
+    return postos, (x, y, direcao)
+
+
+def encaixa(a, b):
+    """A saida de a serve em alguma ponta de b? Devolve (ok, motivo)."""
+    sa = porta(a, SAIDA)
+    if sa is None:
+        return False, "peça terminal"
+    pontas = [p for p in b.portas if p.papel in ENTRADA + SAIDA]
+    if not pontas:
+        return False, "peça terminal"
+    if any(abs((p.dn_pol or 0) - (sa.dn_pol or 0)) < 0.01 for p in pontas):
+        return True, ""
+    bitolas = " ou ".join(f'{p.dn_pol:g}"' for p in pontas)
+    return False, f'{sa.dn_pol:g}" contra {bitolas}'
+
+
+def junta_flangeada(x, y=0.0, direcao=0.0, dn_pol=8, norma="NBR PN16"):
+    """Os parafusos e a junta que fecham o encontro de duas flanges.
+
+    Nao pertencem a nenhuma das duas pecas - pertencem a juncao, do mesmo jeito
+    que na lista de materiais: quem puxa junta plana, parafuso, porca e arruela
+    e a junta flangeada, nao o tubo nem a curva.
+
+    O parafuso atravessa as duas chapas e sobra para as porcas dos dois lados;
+    aparece no circulo de furacao real, que e onde ele esta.
+    """
+    f = flange(dn_pol, norma)
+    esp = f["espessura"]
+    raio_furo = f["circulo"] / 2
+    d = f["furo"] * 0.85                      # a haste, nao o furo
+    porca = d * 1.6
+    comprimento = 2 * esp + 2 * porca * 0.75
+    x0 = x - esp - porca * 0.75
+    el = [_p(f"M{x:.1f} {y - f['externo']/2:.1f} V{y + f['externo']/2:.1f}",
+             "junta")]
+    for sinal in (-1, 1):
+        yy = y + sinal * raio_furo
+        el.append({"tipo": "rect", "x": x0, "y": yy - d / 2, "w": comprimento,
+                   "h": d, "classe": "parafuso"})
+        for xn in (x0, x0 + comprimento - porca * 0.75):
+            el.append({"tipo": "rect", "x": xn, "y": yy - porca / 2,
+                       "w": porca * 0.75, "h": porca, "classe": "porca"})
+    if direcao:
+        for e in el:
+            e["girar"] = (direcao, x, y)
+    return el

@@ -31,14 +31,14 @@ CURVA,45/3gomos,8,337,466,+129,8,TROCA_REDESENHA,o conjunto muda +129mm por peca
 CURVA,45/3gomos,10,400,461,+61,8,TROCA_REDESENHA,o conjunto muda +61mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
 CURVA,45/3gomos,12,460,512,+52,8,TROCA_REDESENHA,o conjunto muda +52mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
 CURVA,45/3gomos,14,460,489,+29,5,TROCA_REDESENHA,o conjunto muda +29mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
-CRIVO,,3,100,300,,1,PECA_DIFERENTE,Netafim e cone e cresce com a bitola; Irrigafour e cesto cilindrico de 300mm fixo,altura do corpo nos dois
-CRIVO,,4,130,300,,1,PECA_DIFERENTE,Netafim e cone e cresce com a bitola; Irrigafour e cesto cilindrico de 300mm fixo,altura do corpo nos dois
-CRIVO,,5,,300,,0,SO_IRRIGAFOUR,sem cota no caderno Netafim,altura do corpo nos dois
-CRIVO,,6,190,300,,1,PECA_DIFERENTE,Netafim e cone e cresce com a bitola; Irrigafour e cesto cilindrico de 300mm fixo,altura do corpo nos dois
-CRIVO,,8,250,300,,1,PECA_DIFERENTE,Netafim e cone e cresce com a bitola; Irrigafour e cesto cilindrico de 300mm fixo,altura do corpo nos dois
-CRIVO,,10,355,300,,1,PECA_DIFERENTE,Netafim e cone e cresce com a bitola; Irrigafour e cesto cilindrico de 300mm fixo,altura do corpo nos dois
-CRIVO,,12,425,300,,1,PECA_DIFERENTE,Netafim e cone e cresce com a bitola; Irrigafour e cesto cilindrico de 300mm fixo,altura do corpo nos dois
-CRIVO,,14,495,300,,2,PECA_DIFERENTE,Netafim e cone e cresce com a bitola; Irrigafour e cesto cilindrico de 300mm fixo,altura do corpo nos dois
+CRIVO,,3,100,300,+200,1,TROCA_REDESENHA,o conjunto muda +200mm por peca,"comprimento do cesto nos dois - mesma peca, tamanho diferente"
+CRIVO,,4,130,300,+170,1,TROCA_REDESENHA,o conjunto muda +170mm por peca,"comprimento do cesto nos dois - mesma peca, tamanho diferente"
+CRIVO,,5,,300,,0,SO_IRRIGAFOUR,sem cota no caderno Netafim,"comprimento do cesto nos dois - mesma peca, tamanho diferente"
+CRIVO,,6,190,300,+110,1,TROCA_REDESENHA,o conjunto muda +110mm por peca,"comprimento do cesto nos dois - mesma peca, tamanho diferente"
+CRIVO,,8,250,300,+50,1,TROCA_REDESENHA,o conjunto muda +50mm por peca,"comprimento do cesto nos dois - mesma peca, tamanho diferente"
+CRIVO,,10,355,300,-55,1,TROCA_REDESENHA,o conjunto muda -55mm por peca,"comprimento do cesto nos dois - mesma peca, tamanho diferente"
+CRIVO,,12,425,300,-125,1,TROCA_REDESENHA,o conjunto muda -125mm por peca,"comprimento do cesto nos dois - mesma peca, tamanho diferente"
+CRIVO,,14,495,300,-195,2,TROCA_REDESENHA,o conjunto muda -195mm por peca,"comprimento do cesto nos dois - mesma peca, tamanho diferente"
 TE,,3,304,1000,,1,PECA_DIFERENTE,te compacto (2R) contra derivado de corpo corrido de 1m - nao sao a mesma peca,2R do caderno (corpo corrido) x E do catalogo
 TE,,4,350,1000,,3,PECA_DIFERENTE,te compacto (2R) contra derivado de corpo corrido de 1m - nao sao a mesma peca,2R do caderno (corpo corrido) x E do catalogo
 TE,,5,,1000,,0,SO_IRRIGAFOUR,sem cota no caderno Netafim,2R do caderno (corpo corrido) x E do catalogo
