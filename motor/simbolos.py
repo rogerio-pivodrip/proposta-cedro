@@ -1406,7 +1406,7 @@ def tamanho_meganorm(nome):
     raise ValueError(f"nome de Meganorm nao reconhecido: {nome}")
 
 
-def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True):
+def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, recuar=False):
     """A parte hidraulica: bocal de succao, carcaca e pescoco da descarga.
 
     E a mesma nas duas linhas - Megabloc e Meganorm dividem a ponta molhada, e
@@ -1420,8 +1420,15 @@ def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True):
     r1 = DE_TUBO.get(dn1, 100) / 2
     r2 = DE_TUBO.get(dn2, 80) / 2
     rv = rotor / 2 * 1.15
-    largura = max(rotor * 0.42, 2 * r1 * 1.1)
-    x0, x1 = c - largura / 2, c + largura / 2
+    # a largura AXIAL do caracol e proporcao do rotor. Ja foi max(...) com o
+    # externo da succao, o que engordava a peca sem motivo: a boca de succao
+    # entra pela frente, nao ocupa comprimento de caracol.
+    largura = rotor * 0.42
+    # recuar: a face de tras do caracol fica NO eixo da descarga, que e onde o
+    # flange do motor aparafusa. E o caso da monobloco, e e o que faz o
+    # comprimento total fechar em a + l.
+    x0, x1 = ((c - largura, c) if recuar
+              else (c - largura / 2, c + largura / 2))
 
     el = list(placa(0, dn1, lado="entrada"))
     el += eixo(0, x0, dn1)
@@ -1554,12 +1561,15 @@ def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4, cv=None):
     dn2 = _pol(ficha["dn_recalque_pol"])
     rotor = float(ficha["tamanho"].split("-")[2].split(".")[0])
 
-    el, x0, x1, rv, largura = _corpo_bomba(a, b, c, rotor, dn1, dn2)
-    lanterna = h * 0.55
-    el.append({"tipo": "rect", "x": x1, "y": -h * 0.59, "w": lanterna,
-               "h": 2 * h * 0.59, "classe": "corpo"})
-    el += _eixo_da_bomba(x1, x1 + lanterna, h * 0.20)
-    x_motor = x1 + lanterna
+    el, x0, x1, rv, largura = _corpo_bomba(a, b, c, rotor, dn1, dn2,
+                                           recuar=True)
+    # monobloco nao tem lanterna: o flange do motor aparafusa na tampa de tras
+    # da voluta, e o eixo do motor E o eixo da bomba. O comprimento total sai
+    # de a + l, e e isso que o DXF da casa mede - 951 contra 949,7 na
+    # 150-250 de 50 CV. Eu tinha posto uma lanterna aqui, que e peca da
+    # mancalizada, e a bomba saia 240 mm mais longa do que e.
+    x_motor = x1
+    el += _eixo_da_bomba(x1 - largura * 0.3, x_motor, h * 0.20)
     motor, fim, ficha_m = _motor(x_motor, ficha["carcaca_motor"], base_y=b - 22)
     el += motor
     el.append({"tipo": "nota", "x": (x_motor + fim) / 2,
@@ -1681,7 +1691,11 @@ def bomba_meganorm(nome, cv=None, montagem="HORIZONTAL"):
     el += _eixo_da_bomba(x1, x_luva, d1 * 1.35)
     el += _ponta_de_eixo(x_luva, comp_ponta, d1,
                          float(ficha["u_mm"] or 8), float(ficha["t_mm"] or d1 + 3))
-    folga = max(comp_ponta * 2.1, carcaca * 0.40)
+    # a luva ocupa a ponta do eixo e mais um tanto: o total da mancalizada
+    # fecha em a + f + ponta + l(carcaca). No DXF da casa, a 200-150-315 de
+    # 100 CV mede 1799,5 e a soma da 1820 - 1,1% de diferenca, com todo termo
+    # saindo de folha.
+    folga = comp_ponta * 1.15
     el += [_p(f"M{x_luva:.1f} {-rv*0.44:.1f} H{x_luva+folga:.1f}", "malha"),
            _p(f"M{x_luva:.1f} {rv*0.44:.1f} H{x_luva+folga:.1f}", "malha"),
            _p(f"M{x_luva:.1f} {-rv*0.44:.1f} V{-rv*0.14:.1f}", "malha"),

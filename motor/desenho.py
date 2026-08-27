@@ -23,6 +23,13 @@ RX_CV = re.compile(r"(\d+(?:[,.]\d+)?)\s*CV")
 RX_MEGABLOC = re.compile(r"\bMETB\b")
 RX_MEGANORM = re.compile(r"\bMETN\b")
 
+# Tubo que vem em rolo nao e peca de linha - e material por metro. O FXN e
+# layflat: enrola, nao tem forma propria e nao entra em vista lateral.
+RX_ROLO = re.compile(r"\bFXN\b|LAYFLAT|\bCEGO\s+\d+\s*M\b", re.I)
+# A barra mais longa que a casa compra. Acima disso o cadastro esta errado:
+# 01503-000008 diz "TUBO AZ 20\"X4,75MMX2000M", que sao 2 metros e nao 2 km.
+BARRA_MAXIMA_MM = 12000
+
 
 class SemSimbolo(Exception):
     """A peca nao tem simbolo, e o motivo esta na mensagem."""
@@ -50,12 +57,31 @@ def _bomba(item):
             else s.bomba_meganorm(tamanho, cv=cv))
 
 
+def _tubo(item, dn_pol):
+    """O tubo, se for barra. Rolo e cadastro fora de faixa nao desenham.
+
+    Rolo nao e peca: entra na lista por metro e no desenho por trecho, nao por
+    bloco. E comprimento acima da barra maxima quase sempre e virgula errada
+    no cadastro, nao um tubo de dois quilometros.
+    """
+    if RX_ROLO.search(item["descricao"]):
+        raise SemSimbolo("tubo de rolo - material por metro")
+    comprimento = item.get("comprimento_mm") or 6000
+    if comprimento > BARRA_MAXIMA_MM:
+        raise SemSimbolo(f"comprimento de {comprimento/1000:.0f} m fora de "
+                         f"barra - conferir cadastro")
+    return s.tubo(dn_pol, comprimento)
+
+
 def _pead(item, familia, maior):
     if item["material"] == "PEAD" or familia == "COLAR_PEAD":
         if familia == "COLAR_PEAD":
             return s.colar_pead(maior)
         if familia == "TUBO":
-            return s.tubo_pead(maior, item.get("comprimento_mm") or 6000)
+            if RX_ROLO.search(item["descricao"]):
+                raise SemSimbolo("tubo de rolo - material por metro")
+            return s.tubo_pead(maior, min(item.get("comprimento_mm") or 6000,
+                                          BARRA_MAXIMA_MM))
     raise SemSimbolo(f"{familia} em mm sem simbolo")
 
 
@@ -80,8 +106,10 @@ def _desenhar(item):
     if item.get("unidade_dn") == "mm":
         return _pead(item, familia, maior)
 
+    if familia == "TUBO":
+        return _tubo(item, maior)
+
     despacho = {
-        "TUBO": lambda: s.tubo(maior, item.get("comprimento_mm") or 6000),
         "CURVA": lambda: s.curva(maior, angulo=int(item["angulo"] or 90)),
         "CURVA_SAIDA": lambda: s.curva_saida(maior, int(item["angulo"] or 90)),
         "REDUCAO_CONCENTRICA": lambda: s.reducao(maior, menor or maior / 2,

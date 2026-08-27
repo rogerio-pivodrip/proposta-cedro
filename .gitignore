@@ -3,3 +3,6 @@ __pycache__/
 
 # DXF gerado pelo motor - saida, nao fonte
 dxf/
+
+# DXF de referência da casa - grande, entra por upload
+data/cad/

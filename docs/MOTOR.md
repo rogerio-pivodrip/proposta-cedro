@@ -626,7 +626,7 @@ manual da Meganorm chegou. Estimativa não sobrevive à folha.
 
 `tools/conferir_cobertura.py` tenta desenhar cada código do catálogo:
 
-> **1.262 de 5.157 códigos saem desenhados** — eram 919 antes destas famílias.
+> **1.237 de 5.157 códigos saem desenhados** — eram 919 antes destas famílias.
 
 O que ainda não sai não é falha de símbolo: 1.764 códigos não têm DN na
 descrição, 611 não têm família, e o resto é PVC, filtro e quadro elétrico —
@@ -688,7 +688,7 @@ Isso obrigou a fechar uma ponte que estava só na ferramenta de conferência:
 código e a descrição nos `params`. É a mesma ponte que o contador de cobertura
 usa, agora numa casa só.
 
-`--catalogo` exporta a biblioteca inteira: **1.262 blocos, um por código**.
+`--catalogo` exporta a biblioteca inteira: **1.237 blocos, um por código**.
 `--dn 8` exporta os 175 códigos de 8". Peça que só existe no desenho — um tubo
 de 500 mm cortado na obra — não tem código, e cai no rótulo.
 
@@ -726,6 +726,76 @@ entraram como forma, sem tocar em nenhuma tabela.
 O que **não** dá para copiar são as bombas: os blocos delas são traçados do
 modelo 3D do fabricante — olhal de içamento, nervura, alívio de fundição. Isso
 não sai de parâmetro, e fingir que sai seria pior que a diferença.
+
+## 4.6 O DXF da casa como quarta fonte
+
+A casa mandou três arquivos: as bombas, a biblioteca de PVC/Plasson e a de
+PEAD soldável. As camadas confirmaram a convenção — `PEÇAS`, `eixo` em
+vermelho, `TEXTO`, `INTERNO` — e o resto virou medição.
+
+Os arquivos **não vêm em bloco**: as peças estão soltas no modelo, lado a
+lado, com o nome escrito perto de cada uma. Então medir é primeiro separar.
+`tools/medir_dxf.py` faz isso em três passos — caixa por entidade, união por
+vizinhança numa grade (o que se toca é a mesma peça), e o rótulo mais próximo
+na mesma coluna. Saem **135 peças medidas** de 45 metros de desenho, sem
+ninguém clicar em nada.
+
+Duas armadilhas apareceram e valem registro. A primeira: o rótulo fica
+**acima** da peça num arquivo e **abaixo** noutro, às vezes no mesmo — então a
+regra é a mais próxima na coluna, para qualquer lado. A segunda: ir *da peça
+para o texto* não funciona, porque peça larga rouba o rótulo da vizinha. Do
+texto para a peça funciona, porque cada texto tem uma peça só ao lado dele.
+
+E o **eixo entra no aglomerado mas não na medida** — é ele que costura a peça,
+mas sobra dos dois lados e sobra diferente em cada desenho. Sem tirá-lo, uma
+bomba de 950 mm parece 35% maior só por causa do traço-e-ponto.
+
+### O que a comparação encontrou
+
+`tools/conferir_cad.py` compara o corpo — sem eixo — peça a peça:
+
+| peça | motor | casa | Δ largura | Δ altura |
+|---|---|---|---|---|
+| METB 200-150-250 50cv | 989 × 655 | 949,7 × **655,0** | +4,1% | **0,0%** |
+| METN 200-150-315 100CV | 1877 × 715 | 1799,5 × 832,8 | +4,3% | −14,1% |
+
+A altura da METB fecha **exata**: 655 = h1 + h2 = 280 + 375, direto do
+folheto. Isso é o que dá confiança para levar a sério a diferença de largura,
+e a diferença apontou um erro real:
+
+> **O comprimento total da monobloco é `a + l`.** Na 150-250 de 50 CV isso dá
+> 160 + 791 = **951**, contra 949,7 medidos — 1,3 mm.
+
+Eu vinha desenhando uma **lanterna** entre a voluta e o motor. Monobloco não
+tem lanterna: o flange do motor aparafusa na tampa de trás da voluta e o eixo
+do motor **é** o eixo da bomba — é isso que a faz monobloco. A lanterna é peça
+da mancalizada, e com ela a bomba saía 240 mm mais longa do que é. Junto veio
+outro conserto: a largura axial do caracol estava saindo de
+`max(rotor × 0,42, externo_da_sucção × 1,1)`, e o segundo termo engordava a
+peça sem motivo — a boca de sucção entra pela frente, não ocupa comprimento de
+caracol.
+
+A altura da METN é a que sobra em aberto: −14%. A carcaça que a seção 15 lista
+para a 150-315 para em 225, e um motor de 100 CV é maior que isso — o conjunto
+da casa usa uma carcaça que aquela tabela não cobre. Fica anotado em vez de
+forçado.
+
+O DXF da casa é desenho de projeto, não folha de fabricante, e a casa avisou
+que alguma peça pode ter entrado fora de escala. Por isso **nada dele é
+importado**: o que sai é comparação. Onde diverge, a folha manda; o que a
+comparação faz é dizer onde olhar. Nesta rodada apontou certo.
+
+### Tubo de rolo não é peça
+
+A casa apontou os tubos de 100 m — FXN layflat — que o desenho tratava como
+peça e desenhava com 100 metros de comprimento. Não são peça: entram na lista
+por metro. A varredura pelo mesmo critério pegou de brinde um erro de
+cadastro: `01503-000008 TUBO AZ 20"X4,75MMX2000M` são 2 metros, não 2 km.
+
+A regra agora está em `motor/desenho.py`: tubo de rolo não desenha, e
+comprimento acima da barra máxima que a casa compra (12 m) não desenha e diz
+para conferir o cadastro. Custou 25 códigos na cobertura — **1.237** — e os 25
+não eram peça.
 
 ## 5. O que a peça puxa: um mecanismo só
 

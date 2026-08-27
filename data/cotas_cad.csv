@@ -1,0 +1,136 @@
+arquivo,nome,largura_mm,altura_mm,x_mm,y_mm,entidades,camadas,fonte
+pecas_CAD.dxf,KSB 200-150-315 100CV,1799.5,832.8,16316.1,-5232.3,4398,MOTOBOMBA,DXF da casa: pecas_CAD.dxf
+pecas_CAD.dxf,,582.0,1897.8,21516.4,-6457.2,21144,0,DXF da casa: pecas_CAD.dxf
+pecas_CAD.dxf,,519.9,2664.0,20737.6,-7269.7,15360,0,DXF da casa: pecas_CAD.dxf
+pecas_CAD.dxf,"4""",500.0,1160.3,19112.6,-5878.4,174,0 eixo,DXF da casa: pecas_CAD.dxf
+pecas_CAD.dxf,METB 200-150-250 50cv,949.7,655.0,14613.6,-5275.8,7796,MOTOBOMBA,DXF da casa: pecas_CAD.dxf
+pecas_CAD.dxf,,184.0,447.6,19287.3,-6501.0,312,0 PDF_Geometry,DXF da casa: pecas_CAD.dxf
+pecas_CAD.dxf,,582.5,1081.8,21515.9,-7606.0,10572,0,DXF da casa: pecas_CAD.dxf
+pecas_CAD.dxf,,582.0,543.5,21515.9,-8249.9,5286,0,DXF da casa: pecas_CAD.dxf
+pecas_CAD2.dxf,CURVA 45 PVC IRRI LF 150 MM,355.7,576.6,19149.5,6339.9,28,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,295.0,478.2,18248.8,6345.4,28,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,237.9,385.9,17462.4,6360.8,28,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,188.4,315.8,16721.9,6401.0,28,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,128.4,215.5,16212.1,6367.6,32,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,99.3,168.1,15760.3,6364.0,27,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,CURVA 90 PVC IRRI LF 150 MM,572.5,588.6,18885.1,5256.7,29,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,CURVA 90 PVC IRRI LF 125 MM,513.7,526.4,18057.9,5247.3,29,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,CURVA 90 PVC IRRI LF 100 MM,389.8,400.5,17334.4,5254.8,29,0,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,CURVA 90 PVC IRRI LF 75 MM,326.7,334.5,16706.9,5289.3,29,0,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,CURVA 90 PVC IRRI LF 50 MM,223.3,228.5,16185.8,5284.1,32,0,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,60.0,43.0,22844.4,4926.7,120,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,95.8,176.7,22556.7,4908.0,1818,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA RED PVC IRRI LF 150 X 125 MM,988.0,173.7,21140.2,4745.8,1746,0 PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,"TE RED PVC IRRI LF R TE RED PVC IRRI LF R TE RED PVC IRRI LF R TE RED PVC IRRI LF R 1 1 1 1 TE RED PVC IRRI LF R TE RED PVC IRRI LF R 100 X 2 "" 75 X 1 "" 75 X 2 "" 100 X 1 "" TE RED PVC IRRI LF R 2 2 2 2 3 1 TE RED PVC IRRI LF R 50 X "" 50 X 1"" 50 X 1 "" 4 2 35 X 1""",1313.7,149.2,20923.7,4497.6,5150,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA RED PVC IRRI LF 150 X 125 MM,167.9,170.0,18668.8,4820.1,261,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,"TE RED PVC IRRI LF R 1 100 X 2 "" 2",201.0,149.2,18609.1,4457.8,1009,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,167.9,170.0,18221.0,4826.8,286,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,"TE RED PVC IRRI LF R 1 100 X 1 "" 2",201.0,141.3,18109.1,4457.8,1014,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA RED PVC IRRI LF 125 X 100 MM,141.0,143.0,17639.1,4789.2,263,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,"TE RED PVC IRRI LF R 1 75 X 2 "" 2",170.5,122.5,17624.3,4457.3,325,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA RED PVC IRRI LF 100 X 50 MM,116.0,120.0,17151.6,4789.2,265,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,"TE RED PVC IRRI LF R 1 75 X 1 "" 2",143.0,114.5,17138.1,4457.3,159,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA RED PVC IRRI LF 100 X 75 MM,116.0,120.0,16651.6,4789.2,233,0 PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,"TE RED PVC IRRI LF R 1 50 X 1 "" 2",116.5,87.3,16651.3,4457.8,800,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA RED PVC IRRI LF 75 X 50 MM,95.8,93.0,16161.7,4789.2,205,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,"TE RED PVC IRRI LF R 50 X 1""",102.5,83.3,16158.3,4457.8,734,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,CURVA 90 PVC IRRI LF 35 MM,177.1,181.8,15739.2,5304.4,26,0,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,60.0,64.6,15679.6,4789.2,233,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,"TE RED PVC IRRI LF R 3 50 X "" 4",96.5,79.3,15661.3,4457.8,827,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,"TE RED PVC IRRI LF R 35 X 1""",96.5,72.3,15160.7,4457.7,282,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,ADAP. PVC PBS 100X90,102.0,80.0,14217.7,4433.9,8,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  PVC IRRI LF BS 150 MM,181.0,167.9,21984.3,3377.8,265,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  PVC IRRI LF BS 125 MM,153.0,142.9,21593.0,3379.5,233,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,120.0,118.0,21266.8,3431.1,831,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  PVC IRRI LF BS 35 MM LUVA  PVC IRRI LF BS 50 MM LUVA  PVC IRRI LF BS LUVA  PVC IRRI LF BS 75 MM 100 MM,89.0,90.0,21033.7,3455.8,147,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,213.5,74.6,20717.2,3489.0,894,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,TE  PVC IRRI LF BS 150 MM,1538.4,277.1,20698.9,3684.1,3603,0 PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,TE RED PVC IRRI LF BS TE RED PVC IRRI LF BS TE RED PVC IRRI LF BS TE RED PVC IRRI LF BS 75 X 50 MM 75 X 50 MM 100 X 75 MM 100 X 50 MM,1579.6,257.4,20680.9,4094.5,3210,0 PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,TE RED PVC IRRI LF BS 150 X 125 MM,340.0,257.4,18539.6,4078.5,388,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,TE  PVC IRRI LF BS 150 MM,372.1,277.1,18523.4,3513.7,413,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,TE  PVC IRRI LF BS 125 MM,322.0,232.4,18048.6,3520.2,356,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,TE RED PVC IRRI LF BS 150 X 100 MM,324.0,246.0,18047.6,4078.4,413,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,TE RED PVC IRRI LF BS 100 X 75 MM,229.5,163.5,17594.8,4079.4,1533,0 PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,TE  PVC IRRI LF BS 100 MM,229.5,173.8,17594.8,3549.4,1253,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,TE RED PVC IRRI LF BS 100 X 50 MM,229.5,147.8,17094.8,4079.4,45,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,TE RED PVC IRRI LF BS 75 X 50 MM,147.5,120.0,16635.8,4078.9,41,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,TE RED PVC IRRI LF BS 75 X 50 MM,117.0,88.6,16151.1,4079.4,790,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,TE  PVC IRRI LF BS 75 MM,174.0,132.0,16058.7,3563.4,227,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,TE  PVC IRRI LF BS 50 MM,122.5,92.8,15630.0,3576.9,1016,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,TE  PVC IRRI LF BS 35 MM,96.5,72.2,15157.6,3584.4,338,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,ADAP. PVC PBS 110X100,110.0,80.0,14216.0,4215.3,8,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,ADAP. PVC PBS 125X118,125.0,90.0,14212.0,3960.3,8,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,ADAP. PVC PBS 170X160,170.0,125.0,14191.8,3673.4,8,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  CORRER PVC 150 MM,196.0,175.1,21974.4,3039.4,249,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  CORRER PVC 125 MM,163.0,150.1,21612.6,3050.4,223,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,103.0,125.0,21320.7,3083.0,827,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  CORRER PVC 50 MM LUVA  CORRER PVC 75 MM LUVA  CORRER PVC 100 MM,101.0,102.0,21060.3,3106.0,143,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,93.7,105.4,20914.8,2493.2,291,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,94.0,75.0,20874.5,3141.3,669,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,JOELHO AZUL 90 - 50mm JOELHO AZUL JOELHO AZUL 90 - 35mm 90 - 75mm JOELHO AZUL 90 - 100mm,679.9,205.8,20761.4,2674.2,601,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  PVC IRRI LF BS 150 MM,181.0,167.9,18709.6,3076.3,265,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  CORRER PVC 150 MM,196.0,175.1,18709.6,2607.3,249,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  CORRER PVC 125 MM,163.0,150.1,18279.1,2614.3,223,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  PVC IRRI LF BS 125 MM,153.0,142.9,18209.6,3090.4,233,PEÇAS TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  PVC IRRI LF BS 100 MM,120.0,118.0,17709.6,3129.6,831,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  CORRER PVC 100 MM,103.0,125.0,17709.6,2650.8,827,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  PVC IRRI LF BS 75 MM,89.0,90.0,16145.7,3154.3,147,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  CORRER PVC 75 MM,101.0,102.0,16145.7,2673.8,143,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,66.0,60.0,15650.2,3187.5,673,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,LUVA  CORRER PVC 50 MM,94.0,75.0,15649.7,2709.1,669,0 INTERNO TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,54.0,48.0,15214.1,3200.5,221,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,"ADAP. BS x RM 100 x 4"" ADAP. BS x RM 75 x 3"" ADAP. BS x RM 50 x 2""",60.6,119.0,21362.9,1889.4,113,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,52.5,85.3,21162.7,1900.5,95,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,38.0,67.0,20974.5,1908.0,257,0 eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,JOELHO AZUL 90 - 100mm,172.7,172.7,17635.6,2148.4,184,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,JOELHO AZUL 90 - 75mm,132.4,132.4,17073.7,2128.0,117,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,JOELHO AZUL 90 - 50mm,93.7,93.3,16586.4,2178.8,151,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,JOELHO AZUL 90 - 35mm,72.4,72.4,16188.6,2165.0,149,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,,93.7,105.4,15686.7,2151.2,291,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD2.dxf,"ADAP. BS x RM 75 x 3"" ADAP. BS x RM 100 x 4"" ADAP. BS x RM 50 x 2""",343.7,119.0,15656.0,1344.5,814,0 TEXTO eixo,DXF da casa: pecas_CAD2.dxf
+pecas_CAD3.dxf,"VALV. VENTOSA 1"" PN10 BARAK BUCHA RED PVC 2"" X 1"" VALV. VENTOSA NAVC 1"" PN10 NETAFIM BUCHA RED PVC 11/2"" X 1"" VALV. ANTI-VACUO 2"" EMEK BUCHA RED PVC 1"" X 1/2""",483.6,518.0,19967.6,492.1,2616,0,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,70.0,116.9,19729.3,463.2,786,0 PEÇAS eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,"VALV. ANTI-VACUO 1"" EMEK VALV. ANTI-VACUO 2"" NETAFIM",76.4,286.0,19706.5,717.8,1154,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,58.6,125.0,19560.9,699.8,636,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,73.3,122.0,19542.9,446.2,370,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,"VALV. PLASTICA  DOROT 75X2""",198.0,121.5,19006.2,652.4,600,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,"1 "" VALV. PLASTICA  DOROT 75X1 2",188.0,121.5,19005.7,904.8,624,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,"VALV. PLASTICA  DOROT 75X3""",235.0,121.5,18989.5,389.4,766,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,TE PVC SOLDAVEL 225MM PLASSON/FIP,465.0,362.0,17695.1,563.1,42,0 Visible (ANSI) Visible Narrow (ANSI),DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,ADAPTADOR P/FL 225MM SOLDA,133.0,272.0,17427.6,556.1,34,0 Visible (ANSI) Visible Narrow (ANSI),DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,FL 225MM,32.0,353.0,16917.6,515.6,10,0 Visible (ANSI),DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,CURVA 90. SOLDA 225MM PLASSON/FIP,362.0,362.0,16144.1,491.3,32,0 Visible (ANSI),DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,CURVA 90. SOLDA 225MM PLASSON/FIP,363.0,363.0,15619.8,462.9,20,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,"ARI VALVULA ANTI-VACUO 1"" BARAK ARI VALVULA DE AR 1"" BARAK CINZA PN10 1/2""",340.2,401.0,19455.8,-55.2,2562,0 TEXTO eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,VALV. PLASTICA  DOROT 96-90,260.0,195.4,18982.7,-346.8,790,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,"VALV. PLASTICA  DOROT 75X3""S",258.0,156.2,18978.2,34.8,1624,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,TE PVC SOLDAVEL 160MM PLASSON/FIP,339.0,262.0,17758.1,100.1,42,0 Visible (ANSI) Visible Narrow (ANSI),DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,TE PVC SOLDAVEL 125MM PLASSON/FIP,339.0,262.0,17758.1,-399.9,42,0 Visible (ANSI) Visible Narrow (ANSI),DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,92.0,213.0,17427.6,85.6,34,0 Visible (ANSI) Visible Narrow (ANSI),DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,FL 160MM,30.0,289.0,16917.6,47.6,10,0 Visible (ANSI),DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,219.0,219.0,16307.5,-451.7,40,0,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,CURVA 90. SOLDA 125MM PLASSON/FIP,278.0,278.0,16285.4,75.0,28,0,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,VALV. PLASTICA  DOROT 96-110,278.0,203.2,18970.9,-732.3,712,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,VALV. PLASTICA  DOROT 96-160,360.0,260.0,18944.4,-1268.7,1114,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,TE PVC SOLDAVEL 90MM PLASSON/FIP,199.0,154.0,17828.1,-1361.9,42,0 Visible (ANSI) Visible Narrow (ANSI),DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,TE PVC SOLDAVEL 110MM PLASSON/FIP,239.0,184.5,17808.1,-872.4,42,0 Visible (ANSI) Visible Narrow (ANSI),DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,72.0,150.0,17427.6,-882.9,34,0,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,56.0,125.0,17427.6,-1370.4,34,0 Visible (ANSI) Visible Narrow (ANSI),DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,164.0,164.0,16341.7,-1417.8,20,0,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,203.0,203.0,16337.6,-919.3,20,0,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,186.0,186.0,15810.9,-912.8,32,0,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,52.0,90.0,15507.1,-1248.1,10,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,"PLASSON ADAP. PVC MACHO 75X63X2"" ADAP. PVC FEMEA 75X63X2"" PLASSON",80.0,80.0,15482.4,-921.3,230,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,62.0,110.0,15246.7,-1259.5,14,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,84.0,80.0,15228.4,-918.7,78,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,62.0,110.0,14913.7,-1254.1,22,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,"PLASSON ADAP. PVC MACHO 90X75X3""",101.0,95.0,14906.8,-934.8,214,0 eixo,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,TE PVC SOLDAVEL 75MM PLASSON/FIP,169.0,130.0,17843.2,-1852.9,42,0 Visible (ANSI) Visible Narrow (ANSI),DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,48.0,106.0,17427.6,-1860.9,34,0 Visible (ANSI) Visible Narrow (ANSI),DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,"REG. GAVETA 12""",388.4,984.1,16594.4,-3405.0,264,0,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,,140.0,140.0,16354.0,-1878.7,20,0,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,"REG. GAVETA 14""",440.6,1116.5,14999.6,-3411.9,264,0,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,"REG. GAVETA 4""",192.0,486.5,21543.2,-3285.9,264,0,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,"REG. GAVETA 6""",248.6,630.0,20547.7,-3362.1,264,0,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,"REG. GAVETA 8""",296.6,751.7,19237.6,-3389.3,264,0,DXF da casa: pecas_CAD3.dxf
+pecas_CAD3.dxf,"REG. GAVETA 10""",345.4,875.3,17949.4,-3417.8,264,0,DXF da casa: pecas_CAD3.dxf
