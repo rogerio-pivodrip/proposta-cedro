@@ -48,8 +48,18 @@ function pintarVista() {
   const svg = documento.vista && documento.vista.svg;
   alvo.innerHTML = svg || '<p class="nada">Nada para desenhar ainda.</p>';
   alvo.querySelectorAll("g.peca[data-id]").forEach((g) => {
-    if (g.dataset.id === escolhida) g.classList.add("escolhida");
-    g.addEventListener("click", () => escolher(g.dataset.id));
+    const id = g.dataset.id;
+    if (id === escolhida) g.classList.add("escolhida");
+    // o arrasto é estado DA TELA, como a seleção: cada repintura o reaplica.
+    // A tela repinta a cada comando - inclusive o `simular` do próprio
+    // arrasto - então guardar elemento em vez de id perderia o arrasto no
+    // meio dele. Foi o que aconteceu na primeira versão.
+    if (arrasto && id === arrasto.id) g.classList.add("arrastando");
+    if (arrasto && id === arrasto.sobre && id !== arrasto.id) {
+      g.classList.add(arrasto.recusa ? "recusa" : "recebe");
+    }
+    g.addEventListener("click", () => escolher(id));
+    g.addEventListener("pointerdown", (ev) => comecarArrasto(ev, id));
   });
   const recusadas = (documento.vista && documento.vista.recusadas) || [];
   if (recusadas.length) {
@@ -148,6 +158,121 @@ function posicaoDe(id) {
   return documento.pecas.findIndex((p) => p.id === id);
 }
 
+/* ------------------------------------------------------------- arrastar
+
+   Arrastar uma peça sobre outra a coloca na posição dela. E antes de soltar, a
+   tela PERGUNTA ao motor o que aconteceria - comando `simular`, que executa e
+   desfaz. A tela não sabe se duas peças encaixam, e não deve saber: a regra é
+   do motor, e um "validador" no navegador seria a mesma regra escrita duas
+   vezes, com duas chances de estar diferente. */
+let arrasto = null;
+
+function comecarArrasto(ev, id) {
+  if (ev.button !== 0) return;
+  arrasto = {id, x: ev.clientX, y: ev.clientY, sobre: null, recusa: null,
+             andou: false};
+  addEventListener("pointermove", moverArrasto);
+  addEventListener("pointerup", soltarArrasto, {once: true});
+}
+
+async function moverArrasto(ev) {
+  if (!arrasto) return;
+  if (!arrasto.andou) {
+    if (Math.abs(ev.clientX - arrasto.x) +
+        Math.abs(ev.clientY - arrasto.y) < 6) return;
+    arrasto.andou = true;
+    marcarArrasto();
+  }
+  const sob = alvoSob(ev.clientX, ev.clientY);
+  if (sob === arrasto.sobre) return;
+  arrasto.sobre = sob;
+  arrasto.recusa = null;
+  esconderPrevisao();
+  marcarArrasto();
+  if (!sob || sob === arrasto.id) return;
+  const pedido = arrasto.id + ">" + sob;
+  // pergunta ao MOTOR o que aconteceria. A tela não sabe se duas peças
+  // encaixam, e não deve saber: a regra é do motor, e uma segunda cópia dela
+  // aqui seria a mesma regra com duas chances de estar diferente
+  const resposta = await mandar({nome: "simular", comando: {
+    nome: "mover", alvo: arrasto.id, para: posicaoDe(sob)}});
+  if (!arrasto || arrasto.id + ">" + arrasto.sobre !== pedido) return;
+  arrasto.recusa = resposta.recusa || null;
+  marcarArrasto();
+  mostrarPrevisao(arrasto.recusa || veredicto(resposta.seria),
+                  Boolean(arrasto.recusa));
+}
+
+function marcarArrasto() {
+  limparArrasto();
+  if (!arrasto || !arrasto.andou) return;
+  const saindo = document.querySelector(`g.peca[data-id="${arrasto.id}"]`);
+  if (saindo) saindo.classList.add("arrastando");
+  if (!arrasto.sobre || arrasto.sobre === arrasto.id) return;
+  const recebendo = document.querySelector(
+    `g.peca[data-id="${arrasto.sobre}"]`);
+  if (recebendo) {
+    recebendo.classList.add(arrasto.recusa ? "recusa" : "recebe");
+  }
+}
+
+function limparArrasto() {
+  document.querySelectorAll("g.peca.recebe, g.peca.recusa, g.peca.arrastando")
+    .forEach((g) => g.classList.remove("recebe", "recusa", "arrastando"));
+}
+
+function veredicto(seria) {
+  if (!seria) return "";
+  const ruins = (seria.juncoes || []).filter((j) => j.acao !== "direta");
+  if (!ruins.length) return "encaixa direto em todas as junções";
+  return ruins.map((j) => `${j.acao} entre ${j.de} e ${j.para}`).join(" · ");
+}
+
+function alvoSob(x, y) {
+  // elementFromPoint em SVG cai no <rect class="alvo">, que é a área de
+  // clique que o motor desenha em cada peça
+  const el = document.elementFromPoint(x, y);
+  const g = el && el.closest ? el.closest("g.peca[data-id]") : null;
+  return g ? g.dataset.id : null;
+}
+
+function mostrarPrevisao(texto, ruim) {
+  const p = $("previsao");
+  p.textContent = texto;
+  p.className = ruim ? "previsao ruim" : "previsao";
+  p.hidden = !texto;
+}
+
+function esconderPrevisao() { $("previsao").hidden = true; }
+
+async function soltarArrasto() {
+  const atual = arrasto;
+  arrasto = null;
+  removeEventListener("pointermove", moverArrasto);
+  limparArrasto();
+  esconderPrevisao();
+  if (!atual || !atual.andou) return;
+  if (!atual.sobre || atual.sobre === atual.id) return;
+  await mandar({nome: "mover", alvo: atual.id, para: posicaoDe(atual.sobre)});
+}
+
+/* -------------------------------------------------------------- exportar */
+async function exportar(formato) {
+  const resposta = await mandar({nome: "exportar", formato});
+  if (!resposta.ok) return;
+  const dados = resposta.texto !== undefined
+    ? new Blob([resposta.texto], {type: resposta.mime})
+    : new Blob([Uint8Array.from(atob(resposta.base64), (c) => c.charCodeAt(0))],
+               {type: resposta.mime});
+  const url = URL.createObjectURL(dados);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = resposta.arquivo;
+  a.click();
+  URL.revokeObjectURL(url);
+  recado("");
+}
+
 function ligar() {
   $("succao").addEventListener("click", () => mandar({
     nome: "template", template: "SUCCAO", dn: Number($("bitola").value),
@@ -180,6 +305,8 @@ function ligar() {
       ev.preventDefault(); mandar({nome: "refazer"});
     }
   });
+  document.querySelectorAll("[data-exportar]").forEach((b) =>
+    b.addEventListener("click", () => exportar(b.dataset.exportar)));
   addEventListener("resize", avisarTamanho);
 }
 

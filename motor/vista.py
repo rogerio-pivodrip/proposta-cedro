@@ -34,6 +34,35 @@ def simbolos_da_linha(linha):
     return prontos, recusadas
 
 
+def postos_da_linha(linha, giro=0.0):
+    """Onde cada peca cai, ja encadeada pelas portas. (postos, recusadas)
+
+    E a mesma cadeia que o SVG usa, e de proposito: a vista da tela e o DXF de
+    exportacao tem de sair do mesmo encadeamento, senao o que se ve e o que se
+    entrega divergem.
+    """
+    prontos, recusadas = simbolos_da_linha(linha)
+    if not prontos:
+        return [], recusadas
+    postos, _fim = s.montar([sim for _, sim in prontos])
+    if giro:
+        postos = _girar_postos(postos, giro)
+    return postos, recusadas
+
+
+def _girar_postos(postos, giro):
+    rad = math.radians(giro)
+    cos, sen = math.cos(rad), math.sin(rad)
+
+    def vira(x, y):
+        return (x * cos - y * sen, x * sen + y * cos)
+
+    return [p._replace(dx=vira(p.dx, p.dy)[0], dy=vira(p.dx, p.dy)[1],
+                       giro=p.giro + giro, entrada=vira(*p.entrada),
+                       saida=vira(*p.saida))
+            for p in postos]
+
+
 def vista(linha, largura=940, altura_max=620, giro=0.0):
     """O SVG da linha, com cada peca marcada pelo id dela."""
     prontos, recusadas = simbolos_da_linha(linha)

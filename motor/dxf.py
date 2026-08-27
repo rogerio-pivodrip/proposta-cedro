@@ -185,11 +185,13 @@ def escrever_pecas(caminho, simbolos, passo=None):
     return doc
 
 
-def escrever_linha(caminho, postos, rotulo=None):
-    """A linha montada: um INSERT por peca, com a rotacao da corrente.
+def linha_em_dxf(postos, rotulo=None):
+    """O documento DXF da linha montada, sem gravar em disco.
 
-    A geometria nao e repetida - o bloco entra uma vez na tabela e a linha so
-    aponta para ele, do mesmo jeito que um DWG de projeto faz.
+    Existe separado de escrever_linha porque a exportacao do programa devolve
+    o CONTEUDO e nao um caminho: no navegador ele vira um download e no
+    Electron o processo pai escolhe onde salvar. Gravar aqui obrigaria a
+    inventar uma pasta.
     """
     doc = _documento()
     modelo = doc.modelspace()
@@ -201,5 +203,27 @@ def escrever_linha(caminho, postos, rotulo=None):
         texto = modelo.add_text(_sem_acento(rotulo), height=ALTURA_TEXTO * 2,
                                 dxfattribs={"layer": "COTA"})
         texto.set_placement((0, 0))
+    return doc
+
+
+def escrever_linha(caminho, postos, rotulo=None):
+    """A linha montada em disco: um INSERT por peca, com a rotacao da corrente.
+
+    A geometria nao e repetida - o bloco entra uma vez na tabela e a linha so
+    aponta para ele, do mesmo jeito que um DWG de projeto faz.
+    """
+    doc = linha_em_dxf(postos, rotulo)
     doc.saveas(caminho)
     return doc
+
+
+def texto_do_dxf(doc):
+    """O DXF como texto, para quem vai mandar e nao gravar.
+
+    A escala e 1:1 em milimetro, porque a geometria dos simbolos ja e em
+    milimetro real - o desenho da tela e que e escalado, o DXF nao.
+    """
+    import io
+    fluxo = io.StringIO()
+    doc.write(fluxo)
+    return fluxo.getvalue()

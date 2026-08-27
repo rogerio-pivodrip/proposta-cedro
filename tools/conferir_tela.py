@@ -88,6 +88,58 @@ async def rodar(porta):
         await pagina.wait_for_timeout(500)
         conferir("refazer volta ao posterior", await retrato(pagina) == depois)
 
+        print("\n== arrastar pergunta ao motor antes de soltar")
+        # remonta: o bloco anterior removeu e desfez, e o arrasto precisa de
+        # tres pecas para ter para onde ir
+        await pagina.click("#succao")
+        await pagina.wait_for_timeout(700)
+        pecas = await pagina.query_selector_all("g.peca[data-id]")
+        conferir("a linha tem peça para arrastar", len(pecas) >= 3,
+                 f"{len(pecas)}")
+        ordem = [await g.get_attribute("data-id") for g in pecas]
+        if len(pecas) >= 3:
+            origem = await pecas[0].bounding_box()
+            destino = await pecas[2].bounding_box()
+            await pagina.mouse.move(origem["x"] + origem["width"] / 2,
+                                    origem["y"] + origem["height"] / 2)
+            await pagina.mouse.down()
+            await pagina.mouse.move(destino["x"] + destino["width"] / 2,
+                                    destino["y"] + destino["height"] / 2,
+                                    steps=8)
+            await pagina.wait_for_timeout(700)
+            conferir("a previsão aparece antes de soltar",
+                     await pagina.is_visible("#previsao"))
+            conferir("a previsão veio do motor, não da tela",
+                     "junç" in (await pagina.inner_text("#previsao")).lower(),
+                     await pagina.inner_text("#previsao"))
+            conferir("a peça que recebe fica marcada",
+                     len(await pagina.query_selector_all(
+                         "g.peca.recebe, g.peca.recusa")) == 1)
+            await pagina.mouse.up()
+            await pagina.wait_for_timeout(700)
+            nova = await pagina.eval_on_selector_all(
+                "g.peca[data-id]", "gs => gs.map(g => g.dataset.id)")
+            esperada = ordem[1:3] + [ordem[0]] + ordem[3:]
+            conferir("soltar move a peça para a posição de quem recebeu",
+                     nova == esperada, f"{nova} contra {esperada}")
+            conferir("a previsão some depois de soltar",
+                     not await pagina.is_visible("#previsao"))
+
+        print("\n== exportar dá arquivo, e o DXF sai em milímetro")
+        for formato, esperado in (("dxf", ".dxf"), ("xlsx", ".xlsx")):
+            async with pagina.expect_download() as espera:
+                await pagina.click(f'[data-exportar="{formato}"]')
+            baixado = await espera.value
+            conferir(f"baixou o {formato}",
+                     baixado.suggested_filename.endswith(esperado),
+                     baixado.suggested_filename)
+            if formato == "dxf":
+                caminho = await baixado.path()
+                with open(caminho, encoding="utf-8", errors="replace") as fh:
+                    texto = fh.read()
+                conferir("o DXF tem os blocos e os inserts da linha",
+                         "INSERT" in texto and "BLOCK" in texto)
+
         print("\n== o console fica limpo")
         conferir("nenhum erro de JavaScript", not erros, " · ".join(erros[:3]))
         await navegador.close()

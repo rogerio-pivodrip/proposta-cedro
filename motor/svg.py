@@ -115,6 +115,10 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .trim{fill:var(--papel);stroke:none}
 /* a area de clique da peca na tela: invisivel no papel, alvo no programa */
 .alvo{fill:transparent;stroke:none;pointer-events:all}
+/* a anotacao nao e alvo de nada. Ela vive FORA da escala, por cima do
+   desenho, e a cota de cada peca cai bem no meio dela - entao sem isto a
+   propria cota come o clique da peca que ela cota */
+.anota{pointer-events:none}
 .lista{display:flex;gap:8px;align-items:baseline;margin:1px 0 3px;
   font:400 10.5px/1.4 "IBM Plex Mono",ui-monospace,monospace;
   color:var(--anota,#8a8f98)}

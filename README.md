@@ -33,9 +33,12 @@ echo '{"nome":"template","template":"SUCCAO","dn":8}' | python3 -m api.stdio
 ```
 
 Comandos: `inserir`, `remover`, `substituir`, `alterar`, `mover`, `desfazer`,
-`refazer`, `template`, `catalogo`, `documento`. Cada um devolve
-`{"ok": …, "documento": {…}}` com as duas projeções — peças, geometria,
+`refazer`, `template`, `catalogo`, `simular`, `exportar`, `documento`. Cada um
+devolve `{"ok": …, "documento": {…}}` com as duas projeções — peças, geometria,
 junções, lista de materiais e avisos.
+
+Exporta em **DXF 1:1 em milímetro** (um bloco por código SAP, nas camadas do
+desenho), **XLSX** nas colunas da aba Orçamento, SVG e CSV.
 
 ## Estrutura
 

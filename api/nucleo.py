@@ -12,7 +12,7 @@ essa a decisao que evitou a sincronizacao - ver docs/LOGICA.md 2.
 O erro tambem e resposta, e nao excecao: `{"ok": false, "erro": ...}`. A tela
 precisa mostrar o motivo, e nao um traceback.
 """
-from motor import templates, vista
+from motor import exportar as exportacao, templates, vista
 from motor.catalogo import Catalogo
 from motor.linha import Linha, Peca
 
@@ -243,6 +243,45 @@ def _simular(sessao, comando):
             else resposta.get("erro")}
 
 
+def _exportar(sessao, comando):
+    """O documento em DXF, SVG, XLSX ou CSV. Devolve o CONTEUDO.
+
+    Nao grava em disco: no navegador isto vira um download e no Electron o
+    processo pai escolhe onde salvar. O binario vai em base64 porque o
+    protocolo e JSON de uma linha.
+    """
+    import base64
+
+    formato = (comando.get("formato") or "dxf").lower()
+    ficha = exportacao.FORMATOS.get(formato)
+    if not ficha:
+        raise Erro(f"nao exporto {formato} - so "
+                   f'{", ".join(sorted(exportacao.FORMATOS))}')
+    if not sessao.linha.pecas:
+        raise Erro("a linha esta vazia")
+    tipo, extensao, mime = ficha
+    nome = comando.get("arquivo") or f"{sessao.linha.tipo.lower()}.{extensao}"
+    rotulo = comando.get("rotulo") or f"{sessao.linha.tipo} {sessao.linha.area}"
+    recusadas = []
+    if formato == "dxf":
+        conteudo, recusadas = exportacao.para_dxf(sessao.linha, rotulo)
+    elif formato == "svg":
+        conteudo, recusadas = exportacao.para_svg(sessao.linha)
+    elif formato == "csv":
+        conteudo, _ = exportacao.para_csv(sessao.linha)
+    else:
+        conteudo, _ = exportacao.para_xlsx(sessao.linha)
+    saida = {"formato": formato, "arquivo": nome, "mime": mime,
+             "recusadas": recusadas}
+    if tipo == "binario":
+        saida["base64"] = base64.b64encode(conteudo).decode("ascii")
+        saida["bytes"] = len(conteudo)
+    else:
+        saida["texto"] = conteudo
+        saida["bytes"] = len(conteudo.encode("utf-8"))
+    return saida
+
+
 def _estilo(sessao, comando):
     """O CSS do desenho, do motor. A tela pede uma vez e nao copia nada.
 
@@ -266,7 +305,7 @@ COMANDOS = {
     "alterar": _alterar, "mover": _mover,
     "desfazer": _desfazer, "refazer": _refazer,
     "template": _template, "catalogo": _catalogo, "janela": _janela,
-    "estilo": _estilo, "simular": _simular,
+    "estilo": _estilo, "simular": _simular, "exportar": _exportar,
     # ler nao muda nada, e por isso nao entra no historico
     "documento": lambda sessao, comando: {},
 }

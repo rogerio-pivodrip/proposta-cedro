@@ -64,6 +64,50 @@ botão devolve o desenho **e** a tabela, e o console fica limpo — erro de
 JavaScript não aparece no desenho, a tela só para de repintar e quem usa acha
 que o programa travou.
 
+### Arrastar pergunta antes de soltar
+
+Arrastar uma peça sobre outra a coloca na posição dela. E antes de soltar, a
+tela **pergunta ao motor o que aconteceria** — comando `simular`, que executa o
+comando de verdade e o desfaz.
+
+Não há segundo caminho de código, e é isso que importa: um "validador" no
+navegador seria a mesma regra escrita duas vezes, com duas chances de estar
+diferente. Dá para fazer assim porque desfazer é exato — `conferir_comandos.py`
+cobra que o documento volte idêntico nas duas projeções. Se não fosse, arrastar
+uma peça sujaria o desenho.
+
+O comando some das duas pilhas: sai dos feitos ao desfazer, e sai dos desfeitos
+à mão — senão apareceria um "refazer" de algo que ninguém fez.
+
+Duas coisas que só apareceram ao arrastar de verdade:
+
+**O arrasto é estado da tela, como a seleção.** A tela repinta a cada comando,
+inclusive o `simular` do próprio arrasto — então guardar o elemento em vez do
+id perdia o arrasto no meio dele. Cada repintura reaplica o estado.
+
+**A anotação não é alvo de nada.** A cota de cada peça cai bem no meio dela, e
+a camada de anotação fica por cima do desenho: sem `pointer-events:none`, a
+própria cota comia o clique da peça que ela cota.
+
+### O que sai: DXF em 1:1, planilha nas colunas do Orçamento
+
+`motor/exportar.py` devolve **conteúdo**, não caminho: no navegador vira um
+download, no Electron o processo pai escolhe onde salvar. Gravar no motor
+obrigaria a inventar uma pasta, e a pasta é de quem usa.
+
+O **DXF sai 1:1 em milímetro** — a geometria dos símbolos já é milímetro real,
+e é a vista da tela que é escalada dentro de um `<g transform="scale()">`.
+Exportar não converte nada. Cada peça vira um `BLOCK` com o **código SAP** no
+nome e um `INSERT` com a rotação da corrente, nas camadas da convenção do
+desenho: eixo vermelho traço-ponto numa camada só, corpo em preto, chapa e
+ferragem separadas — dá para apagar todos os eixos de uma vez, ou plotar só o
+corpo.
+
+A **planilha** sai nas colunas da aba Orçamento (Área, Cód. SAP, Descrição,
+Qtd, Origem), com os avisos numa aba própria — aviso é sobre o *pedido*
+("pedir a válvula em NBR PN16, 12 furos"), não sobre a quantidade, e misturar
+os dois faria o comercial somar o que é recado.
+
 ### A camada que expõe isso não decide nada
 
 `api/nucleo.py` é a única função que a tela precisa conhecer:
