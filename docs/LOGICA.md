@@ -693,7 +693,7 @@ outra norma; `-` não existe.
 crivo                     #    #    -    #    #    #    #    #
 valvula de retencao       #    #    -    #    #    #    #    #
 valvula borboleta         #    #    -    #    #    #    #    #
-valvula gaveta            #    #    -    -    -    -    -    -
+valvula gaveta            #    #    -    #    #    #    #    -
 tubo 1 / 3 / 6 m          #    #    -    #    #    #    #    #
 curva 90 / 45             #    #    o    #    #    #    #    #
 te                        #    #    -    #    #    #    #    #
@@ -709,8 +709,14 @@ tê nem manifold em 5" — só curva, flange e junta. E 125 mm aparece 104 vezes
 como bocal de bomba. O programa deve tratar 5" como diâmetro de transição, nunca
 como diâmetro de trecho.
 
-Fora isso, os buracos são pontuais: **válvula gaveta** só até 4", **articulador**
-não existe em 3", **medidor** não existe em 14".
+Fora isso, os buracos são pontuais: **válvula gaveta** vai até 12" (a borboleta
+chega a 16"), **articulador** não existe em 3", **medidor** não existe em 14".
+
+> **Correção.** Esta matriz já disse que a gaveta ia só até 4". Era erro do
+> interpretador: a gaveta flangeada da linha está cadastrada como
+> `GAER REG. GAVETA … ISO16 C/ VOLANTE`, com **REG. abreviado**, e o padrão
+> exigia "REGISTRO" por extenso. Mesma coisa em `VALV. GAVETA`, onde o ponto da
+> abreviação derrubava o casamento. Corrigido, são 13 itens de 1" a 12".
 
 **Reduções de degrau** — de uma bitola para a anterior, que é o caso da linha:
 

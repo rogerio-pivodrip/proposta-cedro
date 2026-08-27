@@ -51172,7 +51172,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "VALVULA_GAVETA",
   "material": null,
   "dn": [
    4.0
@@ -51185,7 +51185,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01560-125510",
@@ -98202,7 +98202,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_GAVETA",
   "material": null,
   "dn": [
    3.0
@@ -98215,7 +98215,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71660-000890",
@@ -98223,7 +98223,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_GAVETA",
   "material": null,
   "dn": [
    4.0
@@ -98236,7 +98236,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71660-000900",
@@ -98244,7 +98244,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_GAVETA",
   "material": null,
   "dn": [
    6.0
@@ -98257,7 +98257,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71660-000910",
@@ -98265,7 +98265,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_GAVETA",
   "material": null,
   "dn": [
    8.0
@@ -98278,7 +98278,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71660-000920",
@@ -98286,7 +98286,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_GAVETA",
   "material": null,
   "dn": [
    10.0
@@ -98299,7 +98299,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71660-000930",
@@ -98307,7 +98307,7 @@
   "un": "UN",
   "grupo": "VÁLVULAS",
   "procedencia": "IMPORTADO",
-  "familia": null,
+  "familia": "VALVULA_GAVETA",
   "material": null,
   "dn": [
    12.0
@@ -98320,7 +98320,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "71660-000940",

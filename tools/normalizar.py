@@ -56,7 +56,9 @@ FAMILIAS = [
     (r"VALV\w*\s*(?:DE\s*)?RETENCAO|VALV\.?\s*RETENCAO|\bUNIFLAP\b", "VALVULA_RETENCAO", None),
     (r"VALV\w*\s*(?:DE\s*)?PE\b", "VALVULA_PE", None),
     (r"VALV\w*\s*BORBOLETA|^BORBOLETA\b", "VALVULA_BORBOLETA", None),
-    (r"VALV\w*\s*GAVETA|^REGISTRO\s*GAVETA", "VALVULA_GAVETA", None),
+    # "REG. GAVETA" e "VALV. GAVETA" - o ponto da abreviacao ficava de fora, e
+    # era por isso que a gaveta flangeada da GAER nao entrava.
+    (r"VALV\w*\.?\s*GAVETA|REG(?:ISTRO|\.)?\s*GAVETA", "VALVULA_GAVETA", None),
 
 
     # Ordem importa: ventosa e alivio ganham da hidraulica, senao uma
