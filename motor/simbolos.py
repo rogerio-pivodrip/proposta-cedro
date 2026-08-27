@@ -637,6 +637,36 @@ def curva_saida(dn_pol, angulo=90, dn_saida=2, sentido=1, gomos=4):
                    el, portas, fonte)
 
 
+def valvula_retencao(dn_pol):
+    """Wafer de dupla portinhola: corpo estreito entre flanges, duas abas.
+
+    O face a face vem da ficha MP Valvulas (fig. 160/162), que ja estava em
+    data/valvulas_wafer.csv - e a mesma que o motor usa para contar barra
+    roscada e comprimento de parafuso.
+    """
+    from . import regras
+    ficha = regras.ficha_wafer(dn_pol)
+    comp = (ficha or {}).get("esp_corpo_mm") or DE_TUBO.get(dn_pol, 100) * 0.6
+    f = flange(dn_pol)
+    corpo = f["circulo"] * 0.94
+    bocal = DE_TUBO.get(dn_pol, 100)
+    meio = comp / 2
+    el = caixa(0, comp, corpo / 2, corpo / 2)
+    el.append(_p(f"M0 {-bocal/2:.1f} H{comp:.1f} M0 {bocal/2:.1f} H{comp:.1f}",
+                 "oculto"))
+    # as duas portinholas, encostadas no eixo e abrindo para a jusante
+    el.append(_p(f"M{meio:.1f} 0 L{comp*0.95:.1f} {-bocal*0.44:.1f}",
+                 "obturador"))
+    el.append(_p(f"M{meio:.1f} 0 L{comp*0.95:.1f} {bocal*0.44:.1f}",
+                 "obturador"))
+    el.append(_p(f"M{meio:.1f} {-bocal*0.1:.1f} v{bocal*0.2:.1f}", "haste"))
+    el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
+    el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
+    portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
+    return _montar("VALVULA_RETENCAO", f'retenção wafer {dn_pol:g}"', el, portas,
+                   "MP" if ficha else None)
+
+
 def valvula_pe(dn_pol):
     alt, fonte = _cota("VALVULA_PE", dn_pol, "COM_CRIVO", "altura_total_mm")
     alt = alt or 330

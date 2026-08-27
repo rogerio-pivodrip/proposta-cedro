@@ -9,6 +9,7 @@ e acumulada - a peca herda a direcao que a anterior deixou.
 Uso: python3 tools/desenhar_linha.py [--dn 8] > linha.html
 """
 import argparse
+import math
 import sys
 
 sys.path.insert(0, ".")
@@ -18,11 +19,31 @@ from tools.desenhar_simbolos import desenhar, seta  # noqa: E402
 MARGEM = 46
 
 
-def succao(dn, menor):
-    """A succao da casa: crivo, retencao, tubo, curva, reducao."""
-    return [s.crivo(dn), s.valvula_pe(dn), s.tubo(dn, 1000), s.curva(dn, 90),
-            s.tubo(dn, 3000), s.curva(dn, 45, -1), s.tubo(dn, 1500),
-            s.reducao(dn, menor, "EXCENTRICA", "topo")]
+# Bocal de entrada da bomba para cada bitola de linha, pela tabela KSB
+# Megabloc: uma linha de 6" entra numa bomba de 4" (tamanho 65-xxx) e uma de
+# 12" na maior do folheto, que tem sucção de 8" (150-xxx).
+BOCAL_BOMBA = {3: 2, 4: 3, 5: 4, 6: 4, 8: 6, 10: 6, 12: 8, 14: 8}
+
+
+def succao_vertical(dn):
+    """Bomba vertical: a linha sobe direto da água até o bocal.
+
+    Sem curva - o eixo da bomba é o eixo da sucção - e a redução é
+    concêntrica, porque não há lado de cima onde o ar possa ficar preso.
+    """
+    return [s.crivo(dn), s.valvula_retencao(dn), s.tubo(dn, 1000),
+            s.reducao(dn, BOCAL_BOMBA.get(dn, 2), "CONCENTRICA")]
+
+
+def succao_horizontal(dn):
+    """Bomba horizontal: a linha sobe, vira 90° e entra deitada.
+
+    A redução é excêntrica com o lado plano em cima: deitada, uma concêntrica
+    deixaria uma bolsa de ar no topo, bem na boca do rotor.
+    """
+    return [s.crivo(dn), s.valvula_retencao(dn), s.tubo(dn, 1000),
+            s.curva(dn, 90, -1), s.tubo(dn, 500),
+            s.reducao(dn, BOCAL_BOMBA.get(dn, 2), "EXCENTRICA", "topo")]
 
 
 def recalque(dn, menor):
@@ -33,11 +54,20 @@ def recalque(dn, menor):
             s.valvula_hidraulica(dn, "47"), s.tubo(dn, 1000), s.curva(dn, 90, -1)]
 
 
-def desenhar_linha(pecas, largura=940):
+def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620):
     postos, fim = s.montar(pecas)
+    if giro:
+        # a sucção nasce no poço e sobe: a linha inteira gira para ficar de pé
+        rad = math.radians(giro)
+        cos, sen = math.cos(rad), math.sin(rad)
+        vira = lambda x, y: (x * cos - y * sen, x * sen + y * cos)
+        postos = [p._replace(dx=vira(p.dx, p.dy)[0], dy=vira(p.dx, p.dy)[1],
+                             giro=p.giro + giro,
+                             entrada=vira(*p.entrada), saida=vira(*p.saida))
+                  for p in postos]
+        fim = (*vira(fim[0], fim[1]), fim[2] + giro)
     caixas = []
     for p in postos:
-        import math
         x0, y0, w, h = p.simbolo.caixa
         rad = math.radians(p.giro)
         cos, sen = math.cos(rad), math.sin(rad)
@@ -47,10 +77,15 @@ def desenhar_linha(pecas, largura=940):
     maxx = max(c[0] for c in caixas)
     miny = min(c[1] for c in caixas)
     maxy = max(c[1] for c in caixas)
-    escala = (largura - 2 * MARGEM) / max(maxx - minx, 1)
+    # cabe na largura E na altura: a sucção de bomba vertical é alta e
+    # estreita, e escalando só pela largura ela virava um poster
+    escala = min((largura - 2 * MARGEM) / max(maxx - minx, 1),
+                 (altura_max - 2 * MARGEM) / max(maxy - miny, 1))
+    largura = (maxx - minx) * escala + 2 * MARGEM
     altura = (maxy - miny) * escala + 2 * MARGEM
 
-    partes = [f'<svg viewBox="0 0 {largura:.0f} {altura:.0f}" role="img" '
+    partes = [f'<svg viewBox="0 0 {largura:.0f} {altura:.0f}" '
+              f'style="max-width:{largura:.0f}px" role="img" '
               f'aria-label="linha montada">',
               f'<g class="geo" transform="translate({MARGEM - minx*escala:.2f} '
               f'{MARGEM - miny*escala:.2f}) scale({escala:.5f})">']
@@ -117,9 +152,11 @@ def main():
     p.add_argument("--dn", type=float, default=8)
     args = p.parse_args()
     menor = {14: 12, 12: 10, 10: 8, 8: 6, 6: 4, 5: 4, 4: 3, 3: 2}.get(args.dn, 2)
-    for nome, pecas in (("sucção", succao(args.dn, menor)),
-                        ("recalque", recalque(args.dn, menor))):
-        svg, postos, fim = desenhar_linha(pecas)
+    linhas = [("sucção · bomba vertical", succao_vertical(args.dn), -90),
+              ("sucção · bomba horizontal", succao_horizontal(args.dn), -90),
+              ("recalque", recalque(args.dn, menor), 0)]
+    for nome, pecas, giro in linhas:
+        svg, postos, fim = desenhar_linha(pecas, giro=giro)
         print(f'<figure class="linha"><figcaption>{nome} {args.dn:g}" — '
               f'{len(postos)} peças, fecha em '
               f'{abs(fim[0])/1000:.2f} × {abs(fim[1])/1000:.2f} m</figcaption>'
