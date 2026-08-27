@@ -1764,6 +1764,27 @@ bloco próprio do relatório, com o par, para alguém olhar o bloco da casa.
 - **bolsa (PBA) em 3", 4" e 5"** — é outra norma e outra série de DN; a única
   fonte continua sendo o DXF da casa.
 
+## 4.18.1 O volante não cresce com a válvula
+
+A casa apontou o volante da caixa redutora grande demais numa borboleta de 14",
+e pediu que ficasse do mesmo tamanho em todas as bitolas. A folha da
+Saint-Gobain confirma, e melhor do que confirmar: ela **cota**.
+
+| bitola | alcance do acionamento |
+|---|---|
+| 8" | 185 mm |
+| 10", 12", 14" | 280 mm |
+
+Ou seja: o volante muda com o **modelo do redutor**, em degrau, e não com a
+bitola da válvula — o mesmo redutor serve uma faixa, e o volante dele não muda
+dentro dela. Nas bitolas em que a folha não cota (3" a 6") o desenho fazia
+`corpo × 1,4`, que dava 130 mm em 3" — como se existisse caixa redutora sob
+medida.
+
+Agora, onde a folha não cota, o desenho pega o **degrau vizinho** em vez de
+proporcionar: 185 mm de 3" a 8", 280 de 10" a 14". Duas medidas, que são as
+duas que a folha dá.
+
 ## 4.19 A folha passa a sair da lista, e não de peça inventada
 
 A casa foi direta: *"use apenas as peças que temos na LM com código"*. Está

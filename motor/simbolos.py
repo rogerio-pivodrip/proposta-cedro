@@ -1896,6 +1896,30 @@ def _corpo_valvula(dn_pol, comp, acima, abaixo):
     return el
 
 
+# as bitolas em que a folha cota o acionamento, para achar o degrau vizinho
+SERIE_BORBOLETA = (2, 2.5, 3, 4, 5, 6, 8, 10, 12, 14, 16, 20, 24)
+
+
+def _alcance_vizinho(dn_pol, acionamento):
+    """O alcance que a folha cota na bitola mais proxima que ela cota.
+
+    Acionamento e peca de catalogo do fabricante, nao peca sob medida: o mesmo
+    redutor serve uma faixa de bitolas, e o volante dele nao muda dentro da
+    faixa. Procurar o vizinho e dizer isso; proporcionar ao corpo seria dizer o
+    contrario.
+    """
+    achados = []
+    for outra in SERIE_BORBOLETA:
+        valor, _ = _cota("VALVULA_BORBOLETA", outra, acionamento,
+                         "alcance_acionamento_mm")
+        if valor:
+            achados.append((outra, valor))
+    if not achados:
+        return None
+    acima = [v for d, v in achados if d >= dn_pol]
+    return acima[0] if acima else achados[-1][1]
+
+
 def valvula_borboleta(dn_pol, acionamento="ALAVANCA"):
     """Wafer: corpo estreito entre flanges, disco na diagonal, e o acionamento.
 
@@ -1912,7 +1936,13 @@ def valvula_borboleta(dn_pol, acionamento="ALAVANCA"):
     disco = disco or DE_TUBO.get(dn_pol, 100) * 0.95
     corpo = min(disco * 1.22, f["circulo"] * 0.94)
     acima = acima or corpo * 0.9
-    alcance = alcance or corpo * 1.4
+    # O VOLANTE NAO CRESCE COM A VALVULA. A casa apontou, e a folha da
+    # Saint-Gobain confirma: o alcance da caixa redutora e 185 mm em 8" e 280
+    # de 10" a 14" - ele muda com o MODELO do redutor, em degrau, e nao com a
+    # bitola. Onde a folha nao cota, o certo e pegar o degrau vizinho e nao
+    # proporcionar ao corpo: proporcionar dava 130 mm em 3", como se existisse
+    # caixa redutora sob medida.
+    alcance = alcance or _alcance_vizinho(dn_pol, acionamento) or corpo * 1.4
     meio = comp / 2
     el = caixa(0, comp, corpo / 2, corpo / 2)
     # a boca: onde a agua passa

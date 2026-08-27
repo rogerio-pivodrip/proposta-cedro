@@ -206,6 +206,43 @@ def _catalogo(sessao, comando):
                       for i in achados[:comando.get("limite", 40)]]}
 
 
+def _simular(sessao, comando):
+    """Responde o que ACONTECERIA, sem deixar nada aplicado.
+
+    A simulacao e o comando de verdade, executado e desfeito. Nao ha segundo
+    caminho de codigo, e por isso nao ha como a previsao discordar do
+    resultado - que e o defeito classico de quem escreve um "validador" ao lado
+    do comando.
+
+    Da para fazer isso porque desfazer e exato: conferir_comandos.py cobra que
+    o documento volte identico nas duas projecoes. Se nao fosse, arrastar uma
+    peca sujaria o desenho.
+
+    O historico fica limpo nas duas pontas - o comando sai dos feitos ao
+    desfazer, e sai dos desfeitos aqui, para nao aparecer um "refazer" de algo
+    que a pessoa nunca fez.
+    """
+    dentro = dict(comando.get("comando") or {})
+    if not dentro.get("nome"):
+        raise Erro("simular precisa do comando a simular")
+    if dentro["nome"] in ("simular", "desfazer", "refazer", "template"):
+        raise Erro(f'nao da para simular {dentro["nome"]}')
+    antes = len(sessao.linha.feitos)
+    resposta = executar(sessao, dentro)
+    aplicou = len(sessao.linha.feitos) > antes
+    depois = None
+    if resposta.get("ok"):
+        depois = {"juncoes": resposta["documento"]["juncoes"],
+                  "trechos_retos": resposta["documento"]["trechos_retos"],
+                  "avisos": resposta["documento"]["avisos"],
+                  "pecas": [p["id"] for p in resposta["documento"]["pecas"]]}
+    if aplicou:
+        sessao.linha.desfazer()
+        sessao.linha.desfeitos.pop()          # nem no refazer isto aparece
+    return {"seria": depois, "recusa": None if resposta.get("ok")
+            else resposta.get("erro")}
+
+
 def _estilo(sessao, comando):
     """O CSS do desenho, do motor. A tela pede uma vez e nao copia nada.
 
@@ -229,7 +266,7 @@ COMANDOS = {
     "alterar": _alterar, "mover": _mover,
     "desfazer": _desfazer, "refazer": _refazer,
     "template": _template, "catalogo": _catalogo, "janela": _janela,
-    "estilo": _estilo,
+    "estilo": _estilo, "simular": _simular,
     # ler nao muda nada, e por isso nao entra no historico
     "documento": lambda sessao, comando: {},
 }
