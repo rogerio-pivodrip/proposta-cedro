@@ -260,6 +260,48 @@ manifold (44, variantes de derivação ainda não mapeadas), flange cega (23) e
 curva (11 — as sete de 30°, que o caderno não desenha, mais quatro sem ângulo
 na descrição).
 
+### A quarta chave: o fabricante
+
+O catálogo Irrigafour (43 páginas de tabela de cota, em `data/fichas/`) responde
+uma pergunta que o caderno Netafim sozinho não respondia: **a cota é da família
+ou do fabricante?**
+
+É das duas. A estrutura se confirma — a cota continua saindo de uma tabela por
+bitola, e não de código —, mas o valor muda de fábrica para fábrica:
+
+| peça | Netafim | Irrigafour |
+|---|---|---|
+| redução concêntrica 3"–8" | 250 a 300 mm | **150 mm em todas** |
+| curva 90° 8" | 297 mm | **335 mm** |
+| curva 90° 14" | 370 mm | **408 mm** |
+| crivo 8" | 250 mm | **300 mm** |
+
+O crivo explica o resto: o da Netafim é **cônico** e cresce com a bitola; o da
+Irrigafour é um **cesto cilíndrico** de 300 mm fixo de 2" a 20". Não é
+divergência de medida — são duas peças diferentes com o mesmo nome. O símbolo
+do crivo precisa de variante `cone | cesto`.
+
+Então a chave da cota é `(fabricante, família, variante, DN)`. Sem o fabricante,
+uma linha desenhada com peça Netafim e orçada com peça Irrigafour fecha 
+com quase 100 mm de erro por redução.
+
+**O que o gomo não é.** O catálogo separa curva de 2, 3 e 4 gomos — e as três
+dão **a mesma cota C em todas as 17 bitolas**. Gomo é processo de fabricação,
+não geometria: entra na descrição e no preço, nunca no desenho.
+
+### O que o Irrigafour homologou
+
+A furação que geramos da NBR 7675 nunca tinha sido conferida contra uma segunda
+fonte. Agora foi, contra o DIN 2533 PN16 do Irrigafour:
+
+> **10 bitolas de 2" a 14", 10 confirmadas, 0 divergentes.**
+
+E apareceu uma armadilha que nenhuma das duas tabelas anteriores mostrava: **em
+3" e em 8" a furação muda com a classe de pressão** — 3" PN10 tem 4 furos e
+PN16 tem 8; 8" PN10 tem 8 furos e PN16 tem 12. Nas outras bitolas da casa, PN10
+e PN16 furam igual. Como o parafuso e a porca saem da furação, especificar PN10
+onde a casa usa PN16 erra a ferragem de 8" em um terço.
+
 ### As três camadas do desenho
 
 O que separa "símbolo paramétrico" de "clipart" é que a geometria é real:
