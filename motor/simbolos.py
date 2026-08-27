@@ -593,21 +593,20 @@ def curva_saida(dn_pol, angulo=90, dn_saida=2, sentido=1, gomos=4):
         0, perna, angulo, dn_pol, sentido, gomos=gomos)
     r = DE_TUBO.get(dn_pol, 100) / 2
     rs = DE_TUBO.get(dn_saida, 60) / 2
-    # dorso: do centro do arco para o meio da curva
-    a = math.radians(angulo / 2) * sentido
-    ux, uy = math.sin(a) * sentido, math.cos(a) * sentido
-    base = (centro[0] + (raio + r) * ux, centro[1] + (raio + r) * uy)
-    haste = DE_TUBO.get(dn_saida, 60) * 1.6
-    topo = (base[0] + haste * ux, base[1] + haste * uy)
-    tx, ty = -uy, ux
-    el.append(_p(f"M{base[0] + tx*rs:.1f} {base[1] + ty*rs:.1f} "
-                 f"L{topo[0] + tx*rs:.1f} {topo[1] + ty*rs:.1f}"))
-    el.append(_p(f"M{base[0] - tx*rs:.1f} {base[1] - ty*rs:.1f} "
-                 f"L{topo[0] - tx*rs:.1f} {topo[1] - ty*rs:.1f}"))
-    graus = math.degrees(math.atan2(uy, ux))
+    # A saida e vertical, para cima: a ventosa fica em pe sobre a curva. Ela
+    # nasce no meio do giro, que e o ponto alto do corpo, e sobe reta - nao
+    # sai radial pelo dorso, senao a ventosa deitava.
+    # No comeco do giro, nao no meio: mais adiante o bocal bate na flange de
+    # saida, e a ventosa nao teria por onde subir.
+    inicio_giro = eixo_linha[1 + max((len(eixo_linha) - 3) // 3, 0)]
+    base = (inicio_giro[0], inicio_giro[1] - r)
+    haste = DE_TUBO.get(dn_saida, 60) * 2.4
+    topo = (base[0], base[1] - haste)
+    el.append(_p(f"M{base[0] - rs:.1f} {base[1]:.1f} V{topo[1]:.1f}"))
+    el.append(_p(f"M{base[0] + rs:.1f} {base[1]:.1f} V{topo[1]:.1f}"))
     bocal = placa(topo[0], dn_saida, topo[1], lado="saida")
     for e in bocal:
-        e["girar"] = (graus, topo[0], topo[1])
+        e["girar"] = (-90, topo[0], topo[1])
     el += bocal
     el += placa(0, dn_pol)
     saida_fl = placa(sx, dn_pol, sy, lado="saida")
@@ -615,11 +614,11 @@ def curva_saida(dn_pol, angulo=90, dn_saida=2, sentido=1, gomos=4):
         e["girar"] = (direcao, sx, sy)
     el += saida_fl
     el.append(_p(eixo_de(eixo_linha), "centro"))
-    el.append(_p(f"M{base[0] - ux*20:.1f} {base[1] - uy*20:.1f} "
-                 f"L{topo[0] + ux*30:.1f} {topo[1] + uy*30:.1f}", "centro"))
+    el.append(_p(f"M{base[0]:.1f} {base[1] + 25:.1f} V{topo[1] - 30:.1f}",
+                 "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol),
               Porta("saida", sx, sy, direcao, dn_pol),
-              Porta("derivacao", topo[0], topo[1], graus, dn_saida)]
+              Porta("derivacao", topo[0], topo[1], -90, dn_saida)]
     return _montar("CURVA_SAIDA",
                    f'curva {angulo}° {dn_pol:g}" c/ saída {dn_saida:g}"',
                    el, portas, fonte)
