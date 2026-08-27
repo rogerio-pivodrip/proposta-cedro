@@ -34,6 +34,40 @@ Comandos (única porta de escrita): `inserir`, `remover`, `substituir`,
 redesenha as duas views. Undo/redo é a pilha de comandos. O balão do desenho e a
 linha da tabela são a mesma peça, com o mesmo id.
 
+### A camada que expõe isso não decide nada
+
+`api/nucleo.py` é a única função que a tela precisa conhecer:
+`executar(sessao, comando) → {"ok", "documento"}`. Ela não tem regra nenhuma —
+traduz JSON em comando e as projeções em JSON. Qualquer regra que aparecer ali
+é regra no lugar errado, porque as duas telas teriam de repeti-la.
+
+**Devolve o documento inteiro a cada comando, e não um remendo.** Numa linha de
+sessenta peças são alguns kilobytes, e o que se ganha é que a tela nunca pode
+divergir do modelo: ela não acumula estado, só pinta o que chegou. É a mesma
+decisão da seção 2, levada até a interface.
+
+**Erro é resposta, não exceção** — `{"ok": false, "erro": …, "documento": …}`,
+com o documento intacto. A tela que pediu algo inválido continua mostrando o
+que existe, e a pessoa lê o motivo em vez de um traceback.
+
+Duas cascas sobre o mesmo núcleo, e as duas são descartáveis:
+
+| casca | para quem | por quê |
+|---|---|---|
+| `api/stdio.py` | o Electron | sem porta, sem firewall, sem outra coisa na máquina falando com o motor |
+| `api/http.py` | desenvolver a tela | dá para inspecionar no navegador; escuta só em 127.0.0.1 |
+
+`tools/conferir_api.py` cobra as três coisas que importam: o documento
+atravessa o JSON inteiro (sem tupla nem objeto perdido), desfazer pela API
+devolve o documento idêntico, e **a mesma sequência pelo núcleo e pelo processo
+filho dá exatamente os mesmos documentos** — que é a prova de que a casca não
+ganhou regra.
+
+Uma sutileza que o teste fixou: desfazer devolve as peças, a geometria e a
+lista ao que eram, mas **não** devolve `pode_refazer` — ele passa a ser
+verdadeiro justamente porque houve um desfazer. O desenho e a tabela voltam
+iguais; a barra de ferramentas não, e nem deveria.
+
 ### Os cinco existem, e o teste é sobre as projeções
 
 `motor/linha.py` implementa os cinco, com `desfazer()` e `refazer()`. Cada

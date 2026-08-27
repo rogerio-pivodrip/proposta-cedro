@@ -17,6 +17,26 @@ python3 tools/extrair_lista_pdf.py x.pdf     # lista de peças de um PDF do CAD
 python3 tools/casar_lista.py data/projetos/*.csv   # nome de desenho -> código SAP
 ```
 
+## O programa
+
+O motor é uma biblioteca: ele não sabe onde roda. Quem o expõe é a camada
+`api/`, que traduz JSON em comando e devolve o documento inteiro recalculado —
+e ela tem duas cascas sobre o mesmo núcleo:
+
+```bash
+python3 -m api.stdio            # um JSON por linha; é assim que o Electron fala
+python3 -m api.http --porta 8765  # o mesmo motor em 127.0.0.1, para a tela
+```
+
+```bash
+echo '{"nome":"template","template":"SUCCAO","dn":8}' | python3 -m api.stdio
+```
+
+Comandos: `inserir`, `remover`, `substituir`, `alterar`, `mover`, `desfazer`,
+`refazer`, `template`, `catalogo`, `documento`. Cada um devolve
+`{"ok": …, "documento": {…}}` com as duas projeções — peças, geometria,
+junções, lista de materiais e avisos.
+
 ## Estrutura
 
 | caminho | o que é |
@@ -30,3 +50,4 @@ python3 tools/casar_lista.py data/projetos/*.csv   # nome de desenho -> código 
 | `data/projetos/` | listas de peças extraídas de projetos reais (casos de teste) |
 | `tools/` | importação, normalização, extração de PDF, casamento, demonstração |
 | `motor/` | catálogo indexado, regras de montagem, corte, tradução, modelo da linha |
+| `api/` | camada fina: comando → documento. `nucleo.py` decide, `stdio.py` e `http.py` só transportam |
