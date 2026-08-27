@@ -273,6 +273,26 @@ def _caixa(elementos):
 RX_TOKEN = re.compile(r"([A-Za-z])|(-?\d+(?:\.\d+)?)")
 
 
+def _bezier2(p0, p1, p2, passos=10):
+    """A quadratica amostrada, sem o ponto de partida."""
+    return [tuple((1 - k / passos) ** 2 * p0[j]
+                  + 2 * (1 - k / passos) * (k / passos) * p1[j]
+                  + (k / passos) ** 2 * p2[j] for j in (0, 1))
+            for k in range(1, passos + 1)]
+
+
+def _bezier3(p0, p1, p2, p3, passos=12):
+    """A cubica amostrada, sem o ponto de partida."""
+    saida = []
+    for k in range(1, passos + 1):
+        u = k / passos
+        v = 1 - u
+        saida.append(tuple(v**3 * p0[j] + 3 * v * v * u * p1[j]
+                           + 3 * v * u * u * p2[j] + u**3 * p3[j]
+                           for j in (0, 1)))
+    return saida
+
+
 def pontos_do_path(d):
     """Le o path do simbolo e devolve as polilinhas em coordenada absoluta.
 
@@ -282,8 +302,12 @@ def pontos_do_path(d):
     caixa saia de zipar os numeros do path em pares x,y, o que erra em toda
     peca que usa H ou V - e quase toda peca usa.
 
-    Curva de Bezier aparece em duas pecas e vira reta ate o ponto final: em
-    vista lateral, na espessura de traco do desenho, ninguem ve a diferenca.
+    Curva de Bezier e AMOSTRADA, nao reduzida a reta ate o ponto final. Foi
+    esse atalho que fez a valvula hidraulica sair 26% mais baixa do que a
+    folha cota: a barriga dela e uma quadratica, e como a caixa lia so as
+    pontas, a barriga nao existia para o medidor de altura. O ponto de
+    controle tambem nao serve - ele fica bem fora da curva, e usa-lo daria
+    barriga de sobra em vez de barriga de menos.
     """
     itens = [(a or b) for a, b in RX_TOKEN.findall(d)]
     linhas, atual = [], []
@@ -312,11 +336,21 @@ def pontos_do_path(d):
         elif comando in "Vv":
             y = n(0) if comando == "V" else y + n(0)
             i += 1
-        elif comando in "QqTt":
-            x, y = n(2), n(3)
+        elif comando in "Qq":
+            cx, cy = (n(0), n(1)) if comando == "Q" else (x + n(0), y + n(1))
+            fx, fy = (n(2), n(3)) if comando == "Q" else (x + n(2), y + n(3))
+            atual += _bezier2((x, y), (cx, cy), (fx, fy))
+            x, y = fx, fy
             i += 4
+        elif comando in "Tt":
+            x, y = ((n(0), n(1)) if comando == "T" else (x + n(0), y + n(1)))
+            i += 2
         elif comando in "Cc":
-            x, y = n(4), n(5)
+            c1 = (n(0), n(1)) if comando == "C" else (x + n(0), y + n(1))
+            c2 = (n(2), n(3)) if comando == "C" else (x + n(2), y + n(3))
+            fx, fy = (n(4), n(5)) if comando == "C" else (x + n(4), y + n(5))
+            atual += _bezier3((x, y), c1, c2, (fx, fy))
+            x, y = fx, fy
             i += 6
         else:
             i += 1
@@ -1214,6 +1248,109 @@ def tubo_pvc(dn_mm, comprimento_mm=6000, ponta="BOLSA"):
                    {"material": "PVC", "dn_mm": dn_mm, "ponta": ponta})
 
 
+def cap_pvc(dn_mm, junta="BOLSA"):
+    """Cap: a bolsa de um lado e o fundo fechado do outro.
+
+    Nao tem cota medida - a casa nao desenhou cap solto no DXF. O que da para
+    afirmar e que o cap E meia luva: uma bolsa em vez de duas, mais o fundo.
+    Entao a profundidade sai da luva medida da mesma bitola e junta, e a fonte
+    na tarja diz "da luva" para ninguem confundir com cota de folha.
+    """
+    luva = _cota_casa("LUVA", dn_mm, junta, "comprimento_mm")
+    externo = _cota_casa("LUVA", dn_mm, junta, "d_externo_mm") or dn_mm * 1.18
+    fundo = max(dn_mm * 0.07, 5.0)
+    comp = (luva / 2 if luva else dn_mm * 0.6) + fundo
+    r = externo / 2 / CINTA
+    el = [_p(f"M0 {-r:.1f} H{comp:.1f}"), _p(f"M0 {r:.1f} H{comp:.1f}"),
+          _p(f"M0 {-r:.1f} V{r:.1f}"),
+          # o fundo: chapa cheia, e e o que faz do cap um cap
+          {"tipo": "rect", "x": comp - fundo, "y": -r, "w": fundo, "h": 2 * r,
+           "classe": "corpo"}]
+    if junta == "BOLSA":
+        el += bolsa(0, dn_mm, externo, "entrada")
+    else:
+        el += [_p(f"M0 {-dn_mm/2:.1f} H{comp - fundo:.1f}", "malha"),
+               _p(f"M0 {dn_mm/2:.1f} H{comp - fundo:.1f}", "malha")]
+    el.append(_p(f"M{-comp*0.3:.1f} 0 H{comp:.1f}", "centro"))
+    portas = [Porta("entrada", 0, 0, 180, _pvc_em_polegada(dn_mm))]
+    el += _dn_nas_pontas(portas, (dn_mm,), comp * 0.42, r * 0.5)
+    return _montar("CAP", f'cap {junta.lower()} DN{dn_mm:g}', el, portas,
+                   "da luva", {"dn_mm": dn_mm, "junta": junta})
+
+
+def colar_tomada(dn_mm, saida_pol, tipo="ROSCA", norma="NBR PN16"):
+    """Colar de tomada: a sela que abraca o tubo e a derivacao que sai dela.
+
+    E a unica peca da linha que nao entra em serie - ela monta EM CIMA do
+    tubo, sem cortar nada. Por isso o desenho mostra o tubo passando reto e a
+    peca por fora dele: quem olha tem de ver onde ela abraca.
+
+    A bitola da lista aqui e o DIAMETRO EXTERNO DO TUBO em milimetro - 326 mm
+    e o tubo de 12" de aco - e a saida vem em polegada, com o tipo dela na
+    descricao: flange com norma, ou rosca femea BSP.
+
+    Sem cota de folha. O que manda a forma e o tubo (que e medido) e a bitola
+    da saida (que e tabelada); o resto - comprimento da sela, altura do
+    pescoco - e proporcao, e a tarja diz isso.
+    """
+    r = dn_mm / 2
+    saida_de = DE_TUBO.get(saida_pol, 60)
+    rs = saida_de / 2
+    sela = saida_de * 2.6                       # o comprimento da sela
+    tubo_visto = sela * 1.9
+    alto = saida_de * 0.42                      # quanto a sela sobe do tubo
+    pescoco = saida_de * 0.9
+    x0, x1 = (tubo_visto - sela) / 2, (tubo_visto + sela) / 2
+    meio = tubo_visto / 2
+    topo = -(r + alto)
+
+    # o tubo passando reto, em traco de detalhe: ele nao e a peca
+    el = [_p(f"M0 {-r:.1f} H{tubo_visto:.1f}", "malha"),
+          _p(f"M0 {r:.1f} H{tubo_visto:.1f}", "malha")]
+    # a sela, com o ombro arredondado encostando no tubo
+    ombro = alto * 0.9
+    el += [_polilinha([(x0, -r), (x0, topo + ombro)]
+                      + arco(x0 + ombro, topo + ombro, ombro, 180, 270, 6)
+                      + [(x1 - ombro, topo)]
+                      + arco(x1 - ombro, topo + ombro, ombro, 270, 360, 6)
+                      + [(x1, -r)])]
+    # as duas cintas que passam por baixo do tubo - e o que prende
+    for x in (x0 + saida_de * 0.34, x1 - saida_de * 0.34):
+        el.append(_p(f"M{x:.1f} {topo + ombro:.1f} V{r * 1.22:.1f}",
+                     "parafuso"))
+        el.append(_p(f"M{x - saida_de*0.09:.1f} {r * 1.22:.1f} "
+                     f"h{saida_de*0.18:.1f}", "parafuso"))
+    # o pescoco da saida
+    boca = topo - pescoco
+    el += [_p(f"M{meio - rs:.1f} {topo:.1f} V{boca:.1f}"),
+           _p(f"M{meio + rs:.1f} {topo:.1f} V{boca:.1f}")]
+    if tipo == "FLANGE":
+        chapa = placa(meio, saida_pol, boca, norma=norma, lado="saida")
+        for e in chapa:
+            e["girar"] = (-90, meio, boca)
+        el += chapa
+    else:
+        # rosca femea: o filete e o que diz que a boca e rosqueada
+        el.append(_p(f"M{meio - rs:.1f} {boca:.1f} H{meio + rs:.1f}"))
+        passo = max(saida_de * 0.12, 4.0)
+        n = int(pescoco * 0.55 / passo)
+        for k in range(1, n + 1):
+            y = boca + k * passo
+            el.append(_p(f"M{meio - rs:.1f} {y:.1f} H{meio + rs:.1f}", "malha"))
+    el.append(_p(f"M{meio:.1f} {boca - pescoco*0.3:.1f} V{-r*0.4:.1f}",
+                 "centro"))
+    el.append(_p(f"M0 0 H{tubo_visto:.1f}", "centro"))
+    portas = [Porta("derivacao", meio, boca, -90, saida_pol)]
+    el.append({"tipo": "nota", "x": meio + rs + saida_de * 0.5,
+               "y": boca + pescoco * 0.5, "texto": f'{saida_pol:g}"'})
+    el.append({"tipo": "nota", "x": tubo_visto * 0.14, "y": -r * 0.42,
+               "texto": f"{dn_mm:g}"})
+    return _montar("COLAR_TOMADA",
+                   f'colar tomada {dn_mm:g} mm × {saida_pol:g}"', el, portas,
+                   "proporcao", {"dn_mm": dn_mm, "saida_pol": saida_pol,
+                                 "tipo": tipo, "norma": norma})
+
+
 def colar_pead(dn_mm, pn=10, norma="NBR PN16"):
     """Colar de flange PEAD com a flange solta ja enfiada.
 
@@ -1439,9 +1576,21 @@ def valvula_borboleta(dn_pol, acionamento="ALAVANCA"):
     topo = -corpo / 2 - comp * 0.16
     flangete = comp * 0.55
     el += caixa(meio - comp*0.7, comp*1.4, -topo + flangete, topo)
-    el.append(_p(f"M{meio:.1f} {topo - flangete:.1f} V{-acima + comp*0.8:.1f}",
-                 "haste"))
-    yl = -acima + comp * 0.8
+    # A folha da MP cota altura_acima_mm - do eixo ao alto do acionamento - e
+    # e a versao de ALAVANCA que ela cota. Entao a alavanca fecha na cota, e a
+    # haste sai da cota para tras em vez de a cota sair da haste: era isso que
+    # deixava a alavanca 10% baixa em toda bitola.
+    #
+    # A caixa redutora nao tem cota de folha nenhuma. Ela E mais alta que a
+    # alavanca - tem o redutor e o volante em cima - e aqui isso e dito de uma
+    # vez: 1,15 da altura da alavanca. Deixar o volante flutuar fazia a caixa
+    # crescer com a bitola sem regra, 25% acima da alavanca em 6".
+    alto_alavanca = acima
+    if acionamento == "ALAVANCA":
+        yl = -acima + comp * 0.45
+    else:
+        yl = -alto_alavanca * 1.15 - comp * 0.55 + alcance / 2
+    el.append(_p(f"M{meio:.1f} {topo - flangete:.1f} V{yl:.1f}", "haste"))
     if acionamento == "ALAVANCA":
         el += caixa(meio - comp*0.5, comp, -yl + comp*0.45, yl + comp*0.45,
                     classe="acionamento")
@@ -1518,8 +1667,14 @@ def valvula_gaveta(dn_pol):
     el.append({"tipo": "rect", "x": meio - comp*0.13, "y": y2 - comp*0.11,
                "w": comp*0.26, "h": comp*0.11, "classe": "corpo"})
 
-    # a haste e o volante de canto
-    yv = -alt + volante_d * 0.10
+    # a haste e o volante de canto.
+    #
+    # altura_total_mm e TOTAL: do fundo do corpo ao topo do volante, nao do
+    # eixo para cima. Tratar como se fosse do eixo somava o corpo por baixo e
+    # deixava a valvula 29% mais alta que a folha - erro que nao aparece
+    # olhando, porque a torre parece proporcional em qualquer bitola.
+    topo_volante = -(alt - r)
+    yv = topo_volante + volante_d * 0.10
     el.append(_p(f"M{meio:.1f} {y2 - comp*0.11:.1f} V{yv:.1f}", "haste"))
     el += volante_de_canto(meio, yv, volante_d, comp * 0.055)
 
@@ -1545,11 +1700,21 @@ def valvula_hidraulica(dn_pol, serie="47"):
     alt = alt or r * 3
     meio = comp / 2
     corpo = r * 1.1
+    # como na gaveta: a altura da folha e TOTAL, e o corpo desce abaixo do
+    # eixo. O que sobra para a tampa e o que fica acima da barriga.
+    #
+    # O fundo e o APICE da quadratica, nao o ponto de controle: para uma
+    # quadratica que sai e chega em corpo com controle em c, o apice fica em
+    # corpo/2 + c/2. Querendo apice em fundo, o controle vai em
+    # 2*fundo - corpo - e usar o controle como fundo deixava a valvula 13%
+    # baixa, porque a curva nunca chega la.
+    fundo = corpo * 1.45
+    controle = 2 * fundo - corpo
 
     # o corpo: reto em cima, abaulado embaixo - a barriga onde o obturador cai
     el = [_p(f"M0 {-corpo:.1f} H{comp:.1f}"),
           _p(f"M0 {corpo:.1f} L{comp*0.22:.1f} {corpo:.1f} "
-             f"Q{meio:.1f} {corpo*1.9:.1f} {comp*0.78:.1f} {corpo:.1f} "
+             f"Q{meio:.1f} {controle:.1f} {comp*0.78:.1f} {corpo:.1f} "
              f"H{comp:.1f}"),
           _p(f"M0 {-corpo:.1f} V{corpo:.1f}", "malha"),
           _p(f"M{comp:.1f} {-corpo:.1f} V{corpo:.1f}", "malha")]
@@ -1557,7 +1722,9 @@ def valvula_hidraulica(dn_pol, serie="47"):
     # a tampa chata, larga, com o parafuso nas pontas
     tampa = comp * 0.66
     esp = alt * 0.13
-    ytampa = -alt + esp
+    # -(alt - fundo) e nao -alt: o que a folha cota e a peca inteira, e a
+    # barriga desce abaixo do eixo
+    ytampa = -(alt - fundo) + esp
     el.append({"tipo": "rect", "x": meio - tampa/2, "y": ytampa - esp,
                "w": tampa, "h": esp, "rx": esp * 0.25, "classe": "corpo"})
     el.append({"tipo": "rect", "x": meio - tampa*0.42, "y": ytampa,
@@ -1580,7 +1747,7 @@ def valvula_hidraulica(dn_pol, serie="47"):
                 classe="piloto")
     el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
-    el.append(_p(f"M{meio:.1f} {-alt-40:.1f} V{corpo*1.9+40:.1f}", "centro"))
+    el.append(_p(f"M{meio:.1f} {ytampa-esp-40:.1f} V{fundo+40:.1f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
     return _montar("VALVULA_HIDRAULICA", f'hidráulica {serie}-{dn_pol:g}"',
                    el, portas, fonte)
@@ -1604,7 +1771,12 @@ def medidor(dn_pol):
     baixo = baixo or corpo / 2
     alt = alt or corpo * 2
     meio = comp / 2
+    # o Woltmann nao e simetrico no eixo: a folha da ARAD cota altura_total E
+    # altura_abaixo, e a diferenca entre as duas e justamente o que sobe. A
+    # camara de medicao desce mais do que o registrador sobe, e usar meia
+    # largura para os dois lados perdia isso - em 10" a peca saia 10% baixa
     r = corpo / 2
+    fundo = baixo
     bocal = DE_TUBO.get(dn_pol, 100)
     cintura = bocal * 0.5
 
@@ -1613,43 +1785,58 @@ def medidor(dn_pol):
              f"L{meio - comp*0.10:.1f} {-cintura:.1f} "
              f"H{meio + comp*0.10:.1f} L{comp*0.84:.1f} {-r:.1f} "
              f"L{comp:.1f} {-bocal/2:.1f}"),
-          _p(f"M0 {bocal/2:.1f} L{comp*0.16:.1f} {r:.1f} "
+          _p(f"M0 {bocal/2:.1f} L{comp*0.16:.1f} {fundo:.1f} "
              f"L{meio - comp*0.10:.1f} {cintura:.1f} "
-             f"H{meio + comp*0.10:.1f} L{comp*0.84:.1f} {r:.1f} "
+             f"H{meio + comp*0.10:.1f} L{comp*0.84:.1f} {fundo:.1f} "
              f"L{comp:.1f} {bocal/2:.1f}")]
     # o V do fundo, que e onde a sujeira nao para
-    el.append(_p(f"M{meio - comp*0.14:.1f} {cintura*0.9:.1f} "
-                 f"L{meio:.1f} {r*0.95:.1f} "
-                 f"L{meio + comp*0.14:.1f} {cintura*0.9:.1f}", "malha"))
+    # o V do fundo, que e onde a sujeira nao para
+    el.append(_p(f"M{meio - comp*0.14:.1f} {cintura*0.92:.1f} "
+                 f"L{meio:.1f} {cintura + (fundo-cintura)*0.5:.1f} "
+                 f"L{meio + comp*0.14:.1f} {cintura*0.92:.1f}", "malha"))
 
-    # a torre e o pedestal aparafusado do registrador
+    # A altura acima do eixo e REPARTIDA, nao empilhada: o registrador ocupa
+    # o terco de cima, os dois flanges o encosto dele, e a torre o que sobra
+    # ate a cintura do corpo. Empilhar cada parte com a sua propria proporcao
+    # estourava a cota - o medidor saia 70% mais alto que a folha em toda
+    # bitola, e ninguem via porque a torre parecia proporcional ao corpo.
     torre = comp * 0.34
     topo = -(alt - baixo)
-    el.append({"tipo": "rect", "x": meio - torre/2, "y": topo + torre*0.55,
-               "w": torre, "h": -cintura - (topo + torre*0.55),
-               "classe": "corpo"})
-    esp = torre * 0.16
-    for y in (topo + torre*0.55, topo + torre*0.55 - esp*1.7):
+    # A faixa livre e o que existe entre o topo do corpo e o topo cotado, e a
+    # reparticao sai dela - nao de uma proporcao do comprimento. Em 12" a
+    # camara desce 330 mm dos 505 de altura total, sobram 175 acima do eixo e
+    # o corpo ja ocupa 162 deles: uma espessura tirada do comprimento poe o
+    # flange do registrador 22 mm acima da cota.
+    livre = max(-topo - cintura, alt * 0.10)
+    esp = min(torre * 0.16, livre * 0.22)
+    caixa_h = livre * 0.46                      # o registrador
+    caixa_topo = topo
+    caixa_base = topo + caixa_h
+    # os dois flanges aparafusados, encostados sob o registrador
+    flange_base = caixa_base + esp * 2.7
+    el.append({"tipo": "rect", "x": meio - torre/2, "y": flange_base,
+               "w": torre, "h": -cintura - flange_base, "classe": "corpo"})
+    for y in (caixa_base + esp * 1.7, caixa_base):
         el.append({"tipo": "rect", "x": meio - torre*0.66, "y": y - esp,
                    "w": torre*1.32, "h": esp, "classe": "corpo"})
         el += parafusos_de_tampa(meio - torre*0.58, meio + torre*0.58,
                                  y - esp, esp*0.7)
     # o registrador, e a tampa levantada
-    caixa_y = topo + torre*0.55 - esp*1.7 - esp
-    caixa_h = -topo - (torre*0.55 - esp*1.7 - esp) - torre*0.2
-    el.append({"tipo": "rect", "x": meio - torre*0.72, "y": caixa_y - caixa_h,
-               "w": torre*1.44, "h": caixa_h, "rx": esp*0.5, "classe": "corpo"})
-    tampa_y = caixa_y - caixa_h
-    el.append(_p(f"M{meio - torre*0.72:.1f} {tampa_y:.1f} "
-                 f"L{meio + torre*1.05:.1f} {tampa_y - torre*0.62:.1f}",
+    el.append({"tipo": "rect", "x": meio - torre*0.72, "y": caixa_topo,
+               "w": torre*1.44, "h": caixa_h, "rx": esp*0.5,
+               "classe": "corpo"})
+    # a tampa articulada abre PARA DENTRO da altura cotada: ela levantada e o
+    # estado em que alguem le, e nao pode passar da peca
+    el.append(_p(f"M{meio - torre*0.72:.1f} {caixa_topo:.1f} "
+                 f"L{meio + torre*0.95:.1f} {caixa_topo + caixa_h*0.42:.1f}",
                  "acionamento"))
-    el.append(_p(f"M{meio - torre*0.72:.1f} {tampa_y + esp*0.5:.1f} "
-                 f"L{meio + torre*1.05:.1f} {tampa_y - torre*0.62 + esp*0.5:.1f}",
-                 "acionamento"))
+    el.append(_p(f"M{meio - torre*0.72:.1f} {caixa_topo + esp*0.5:.1f} "
+                 f"L{meio + torre*0.95:.1f} "
+                 f"{caixa_topo + caixa_h*0.42 + esp*0.5:.1f}", "acionamento"))
 
     el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
-    el.append(_p(f"M{meio:.1f} {topo - torre*0.9:.1f} V{baixo+40:.1f}", "centro"))
+    el.append(_p(f"M{meio:.1f} {topo - 40:.1f} V{baixo+40:.1f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
     return _montar("MEDIDOR", f'medidor {dn_pol:g}"', el, portas, fonte)
 

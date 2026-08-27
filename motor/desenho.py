@@ -131,6 +131,20 @@ def _pead(item, familia, maior):
         if not menor:
             raise SemSimbolo("bucha sem a bitola menor na descricao")
         return s.bucha_reducao(maior, menor)
+    if familia == "CAP":
+        return s.cap_pvc(maior, junta)
+    if familia == "COLAR_TOMADA":
+        return _colar_tomada(item, maior)
+    if familia == "FLANGE":
+        return _flange_em_mm(item, maior)
+    if familia == "VALVULA_HIDRAULICA":
+        # a Dorot de plastico e a mesma valvula da linha de aco em outra
+        # carcaca: DN90 e a de 3". Sem equivalencia nao ha furacao, e sem
+        # furacao a flange dela sairia inventada
+        pol = s.PEAD_POL.get(maior)
+        if not pol:
+            raise SemSimbolo(f"DN{maior:g} sem equivalência de polegada")
+        return s.valvula_hidraulica(pol, item.get("serie") or "47")
     if familia == "ADAPTADOR":
         if "FL" in descricao.upper() and "P/" in descricao.upper():
             return s.adaptador_flange(maior)
@@ -138,6 +152,41 @@ def _pead(item, familia, maior):
             return s.luva_reducao(maior, menor, junta)
         return s.luva_pvc(maior, junta)
     raise SemSimbolo(f"{familia} em mm sem simbolo")
+
+
+def _colar_tomada(item, dn_mm):
+    """O colar de tomada, que a lista descreve por inteiro.
+
+    A descricao ja traz as tres coisas que a peca precisa: o diametro externo
+    do tubo em milimetro, a bitola da saida em polegada, e o tipo da saida -
+    flange com norma ou rosca femea. Nada aqui e chute.
+    """
+    saida = item.get("saida_pol")
+    if not saida:
+        raise SemSimbolo("colar sem a bitola da saída na descrição")
+    flangeada = next((c for c in (item.get("conexoes") or [])
+                      if c.get("tipo") == "FLANGE"), None)
+    return s.colar_tomada(dn_mm, saida,
+                          "FLANGE" if flangeada else "ROSCA",
+                          (flangeada or {}).get("norma") or "NBR PN16")
+
+
+def _flange_em_mm(item, dn_mm):
+    """A flange que a lista cadastra em milimetro.
+
+    Sao duas peças com o mesmo nome de familia. A de colar de PEAD e a mesma
+    chapa de aco da linha, solta, furada na norma que a descricao diz - entao
+    ela sai pela tabela de furacao, na bitola equivalente. A de PVC ISO 2536
+    tem outra furacao, que nao esta em tabela nenhuma aqui, e essa nao sai.
+    """
+    if "2536" in item["descricao"]:
+        raise SemSimbolo("flange de PVC ISO 2536 - furação fora de tabela")
+    pol = s.PEAD_POL.get(dn_mm)
+    if not pol:
+        raise SemSimbolo(f"DN{dn_mm:g} sem equivalência de polegada")
+    norma = next((c.get("norma") for c in (item.get("conexoes") or [])
+                  if c.get("norma")), None)
+    return s.flange_avulsa(pol, "SOLTA")
 
 
 def de_item(item):

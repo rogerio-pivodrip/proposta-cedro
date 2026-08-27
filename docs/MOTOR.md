@@ -928,6 +928,88 @@ PVC entrou junto: `JEI` e `PB` têm bolsa num lado, `PP` é lisa dos dois — es
 na descrição, não precisa de tabela. São 37 símbolos por bitola, todos com
 bloco de DXF conferido, e a cobertura foi de **1.237 para 1.487** códigos.
 
+## 4.8 A parte que sobe: onde o desenho escapava sem ninguém ver
+
+A casa olhou a folha em 3" e disse: *a parte que sobe, nos tamanhos menores,
+está muito grande.* Estava — e não só nos menores.
+
+A peça de tubulação é fácil de conferir: começa numa flange, acaba na outra, e
+a caixa dela **é** a cota. O equipamento não. Ele tem uma parte que sobe —
+volante, caixa redutora, tampa, registrador — que não entra em face a face,
+entra em altura total. E é ali que o desenho escapa, porque **o olho compara a
+torre com o corpo, não com a cota**: numa bitola grande a torre parece
+proporcional, e na pequena ela come a peça.
+
+`tools/conferir_equipamento.py` mede o que a folha mede, e o primeiro
+resultado foi este:
+
+| peça | desenhado | folha | Δ |
+|---|---|---|---|
+| medidor 3" | 452 | 259 | **+74,7%** |
+| medidor 8" | 630 | 377 | +67,1% |
+| gaveta 14" | 1117 | 867 | +28,8% |
+| hidráulica 3" | — | 203 | −18,5% |
+
+### A raiz: `altura_total_mm` é total
+
+Três símbolos tratavam a altura da folha como se fosse **do eixo para cima**, e
+depois somavam o corpo por baixo. A folha da ARAD prova qual é a leitura certa
+sem precisar de opinião: ela cota `altura_total_mm` **e** `altura_abaixo_mm`
+para o mesmo medidor. Se a total fosse do eixo para cima, a de abaixo seria
+informação sobrando.
+
+E a de abaixo abriu outra coisa: no medidor de 12" a câmara desce 330 dos 505
+mm, sobram 175 acima do eixo — o Woltmann **não é simétrico no eixo**. Meia
+largura para os dois lados perdia isso e deixava a peça 10% baixa em 10" e 12"
+ao mesmo tempo que a torre a deixava alta.
+
+### O bug embaixo do bug: a curva nunca era medida
+
+Corrigida a altura, a hidráulica ficou 26% **baixa**. A barriga dela é uma
+quadrática, e o `pontos_do_path` reduzia Bézier ao ponto final — como diz o
+próprio docstring de então, *"em vista lateral ninguém vê a diferença"*. Ninguém
+vê no traço; **o medidor de caixa vê**, e para ele a barriga não existia.
+
+Agora a Bézier é amostrada. E com ela veio a regra que faltava: o fundo é o
+**ápice** da curva, não o ponto de controle. Para uma quadrática que sai e chega
+em `corpo` com controle em `c`, o ápice fica em `corpo/2 + c/2` — usar o
+controle como fundo dava barriga de sobra, usar a ponta dava barriga nenhuma.
+
+É o mesmo tipo de erro do `H`/`V` da 4.4: uma peça do parser que ninguém
+conferia, errando em toda caixa de uma vez.
+
+### O que a folha não cota, a conferência não cobra
+
+Duas coisas ficaram de fora da comparação de altura, e as duas por serem
+verdade:
+
+**A flange.** Uma hidráulica de 3" tem 203 mm de altura total e 200 mm de disco
+de flange — o disco quase preenche a peça, e passa da altura cotada em bitola
+pequena. É real. Cobrar isso da folha seria pedir uma medida que ela não deu.
+
+**O volante da gaveta.** São 500 mm de volante numa válvula de 290 de face a
+face. Ele passa dos dois lados de propósito, então na gaveta o comprimento sai
+da comparação e fica só a altura.
+
+### O que não tem folha, tem regra dita
+
+A MP cota `altura_acima_mm` da borboleta de **alavanca**. Da caixa redutora,
+nada — e a caixa é mais alta, tem o redutor e o volante em cima. Antes o
+volante flutuava e a caixa crescia sem regra: +25% sobre a alavanca em 6" e
++2% em 3". Agora está dito de uma vez — **1,15 da alavanca** — e a conferência
+confere contra isso, não contra a MP.
+
+### Onde isso chegou
+
+    50 cotas comparadas · 0 peças fora de 3%
+    |Δ| médio  0.14%  ·  pior  1.90%
+
+E a gaveta da casa merece nota. O bloco dela mede, nas seis bitolas de 4" a
+14", uma razão altura/face de **2,53 exatos** — sem variar um décimo. Isso é um
+desenho só, escalado seis vezes, e confirma o que a casa já tinha avisado. A
+folha da RAN (Fig. 37) e a da MP concordam entre si nas nove bitolas, e é delas
+que a cota sai. Do bloco da casa aproveita-se a forma; a medida, não.
+
 ## 5. O que a peça puxa: um mecanismo só
 
 Hoje as derivações estão em quatro lugares diferentes. São todas o mesmo padrão

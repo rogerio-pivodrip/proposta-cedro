@@ -140,6 +140,7 @@ RX_DN_MM = re.compile(
 # um desses - evita ler "CL 10" ou "PN 10" como diametro.
 SERIE_MM = {20, 25, 32, 40, 50, 63, 75, 90, 100, 110, 125, 140, 160, 180, 200,
             225, 250, 280, 300, 315, 350, 355, 400, 450, 500, 600}
+RX_PAR_MM = re.compile(r"\b(\d{2,3})\s*X\s*(\d{2,3})\s*MM\b")
 RX_MNFD = re.compile(r"\bD\s?(\d{2})\b")
 RX_GEOM = re.compile(
     r"(\d+\s?\d/\d|\d+)\s*\"?\s*X\s*([\d,.]+)\s*(?:MM)?\s*X\s*([\d,.]+)\s*(MM|M)\b"
@@ -274,6 +275,15 @@ def normalizar_item(item):
         m = re.search(r"[-\s](\d+(?:[.,]\d+)?)\s*M\b", desc)
         if m:
             peca["comprimento_mm"] = round(para_float(m.group(1)) * 1000)
+
+    # Par em milimetro com a unidade dita uma vez so no fim: 'BUCHA RED CURTA
+    # PVC S 32 X 25 MM' sao duas bitolas, 32 e 25, e nao so a 25. Sem isto a
+    # reducao perde a bitola maior - que e justamente a que da o tamanho dela.
+    if peca["unidade_dn"] == "mm":
+        m = RX_PAR_MM.search(desc)
+        if m:
+            peca["dn"] = [int(m.group(1)), int(m.group(2))]
+            dns_pos = [(v, m.start()) for v in peca["dn"]]
 
     # Colar de tomada: '160X2"' e '125 X 2"' sao tubo em milimetro e saida em
     # polegada. Sem isso o 160 se perde e o colar fica sem diametro de tubo.
