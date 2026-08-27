@@ -813,6 +813,50 @@ def manifold(dn_pol, derivacao_pol=None, derivacoes=2, ponta="FLANGE"):
 
 
 # ------------------------------------------------------- familias de equipamento
+def volante(cx, cy, diametro, raios=3, classe="acionamento"):
+    """Volante visto de frente: aro, cubo e os raios.
+
+    O bloco da casa desenha o volante da borboleta de frente e o da gaveta de
+    canto - sao dois volantes diferentes na mesma folha, e cada um mostra o
+    que importa. De frente da para contar os raios; de canto da para ver que
+    ele e chato.
+    """
+    r = diametro / 2
+    el = [{"tipo": "circulo", "cx": cx, "cy": cy, "r": r, "classe": classe},
+          {"tipo": "circulo", "cx": cx, "cy": cy, "r": r * 0.86,
+           "classe": classe},
+          {"tipo": "circulo", "cx": cx, "cy": cy, "r": r * 0.20,
+           "classe": classe}]
+    for k in range(raios):
+        ang = math.radians(90 + k * 360 / raios)
+        el.append(_p(f"M{cx + r*0.20*math.cos(ang):.1f} "
+                     f"{cy - r*0.20*math.sin(ang):.1f} "
+                     f"L{cx + r*0.86*math.cos(ang):.1f} "
+                     f"{cy - r*0.86*math.sin(ang):.1f}", classe))
+    return el
+
+
+def volante_de_canto(cx, cy, diametro, espessura, classe="acionamento"):
+    """Volante visto de canto: chato, com o aro nas pontas e a porca em cima."""
+    r = diametro / 2
+    return [{"tipo": "rect", "x": cx - r, "y": cy - espessura * 0.35,
+             "w": diametro, "h": espessura * 0.7, "rx": espessura * 0.3,
+             "classe": classe},
+            _p(f"M{cx - r:.1f} {cy - espessura:.1f} v{2*espessura:.1f}", classe),
+            _p(f"M{cx + r:.1f} {cy - espessura:.1f} v{2*espessura:.1f}", classe),
+            {"tipo": "rect", "x": cx - espessura * 0.9, "y": cy - espessura * 2.1,
+             "w": espessura * 1.8, "h": espessura * 1.4, "classe": classe}]
+
+
+def parafusos_de_tampa(x0, x1, y, cabeca, classe="parafuso"):
+    """As cabecas de parafuso nas duas pontas de uma tampa aparafusada."""
+    el = []
+    for x in (x0, x1):
+        el.append({"tipo": "rect", "x": x - cabeca * 0.5, "y": y - cabeca,
+                   "w": cabeca, "h": cabeca, "classe": classe})
+    return el
+
+
 def _corpo_valvula(dn_pol, comp, acima, abaixo):
     """Corpo com flange nas duas pontas: a base de toda valvula flangeada."""
     el = caixa(0, comp, acima, abaixo)
@@ -846,8 +890,13 @@ def valvula_borboleta(dn_pol, acionamento="ALAVANCA"):
     # disco fechado, na diagonal
     el.append(_p(f"M{meio - comp*0.34:.1f} {disco*0.47:.1f} "
                  f"L{meio + comp*0.34:.1f} {-disco*0.47:.1f}", "obturador"))
+    # as duas orelhas do wafer, onde a barra roscada passa
+    for sinal in (-1, 1):
+        el.append({"tipo": "rect", "x": meio - comp*0.34, "y": sinal*corpo/2
+                   - (comp*0.16 if sinal > 0 else 0),
+                   "w": comp*0.68, "h": comp*0.16, "classe": "corpo"})
     # flange do atuador em cima do corpo, e a haste
-    topo = -corpo / 2
+    topo = -corpo / 2 - comp * 0.16
     flangete = comp * 0.55
     el += caixa(meio - comp*0.7, comp*1.4, -topo + flangete, topo)
     el.append(_p(f"M{meio:.1f} {topo - flangete:.1f} V{-acima + comp*0.8:.1f}",
@@ -859,19 +908,19 @@ def valvula_borboleta(dn_pol, acionamento="ALAVANCA"):
         el.append(_p(f"M{meio:.1f} {yl:.1f} h{alcance:.1f}", "acionamento"))
         el.append(_p(f"M{meio + alcance*0.15:.1f} {yl - comp*0.22:.1f} "
                      f"h{alcance*0.75:.1f}", "acionamento"))
-        el.append(_p(f"M{meio:.1f} {yl:.1f} l{alcance*0.71:.1f} {-alcance*0.71:.1f}",
-                     "acionamento fantasma"))
     else:
+        # caixa redutora, e o volante de FRENTE ao lado dela - e assim que o
+        # bloco da casa desenha: de frente da para contar os raios
         el += caixa(meio - comp*0.9, comp*1.8, -yl, yl + comp*1.3,
                     classe="acionamento")
-        ex = meio + comp * 1.7
-        yv = yl + comp * 0.55
-        el.append(_p(f"M{meio + comp*0.9:.1f} {yv:.1f} H{ex:.1f}", "acionamento"))
-        el.append(_p(f"M{ex:.1f} {yv - alcance/2:.1f} v{alcance:.1f}",
+        el.append({"tipo": "rect", "x": meio - comp*0.45, "y": yl - comp*0.34,
+                   "w": comp*0.9, "h": comp*0.34, "rx": comp*0.12,
+                   "classe": "acionamento"})
+        cx = meio + comp * 0.9 + alcance / 2
+        cy = yl + comp * 0.55
+        el.append(_p(f"M{meio + comp*0.9:.1f} {cy:.1f} H{cx - alcance/2:.1f}",
                      "acionamento"))
-        el.append(_p(f"M{ex - comp*0.3:.1f} {yv - alcance/2:.1f} h{comp*0.6:.1f} "
-                     f"M{ex - comp*0.3:.1f} {yv + alcance/2:.1f} h{comp*0.6:.1f}",
-                     "acionamento"))
+        el += volante(cx, cy, alcance)
     el.append(_p(f"M-40 0 H{comp+40:.0f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
     rot = f'borboleta {dn_pol:g}" {"alavanca" if acionamento == "ALAVANCA" else "caixa"}'
@@ -879,83 +928,132 @@ def valvula_borboleta(dn_pol, acionamento="ALAVANCA"):
 
 
 def valvula_gaveta(dn_pol):
-    """Corpo curto, castelo aparafusado, cunha emborrachada e volante fixo."""
+    """Corpo de fundo abaulado, castelo aparafusado, sobreposta e volante chato.
+
+    Desenhada como o bloco da casa desenha: o volante de canto - chato, com o
+    aro nas pontas e a porca da haste em cima; a sobreposta acima da flange do
+    castelo; e o corpo com o fundo redondo, que e onde a cunha desce.
+    """
     comp, fonte = _cota("VALVULA_GAVETA", dn_pol)
     comp = comp or 230
     alt, _ = _cota("VALVULA_GAVETA", dn_pol, "", "altura_total_mm")
-    volante, _ = _cota("VALVULA_GAVETA", dn_pol, "", "volante_mm")
+    volante_d, _ = _cota("VALVULA_GAVETA", dn_pol, "", "volante_mm")
     corpo, _ = _cota("VALVULA_GAVETA", dn_pol, "", "d_corpo_mm")
     f = flange(dn_pol)
     corpo = corpo or f["externo"] * 0.62
     alt = alt or corpo * 2.4
-    volante = volante or corpo
+    volante_d = volante_d or corpo
     meio = comp / 2
     bocal = DE_TUBO.get(dn_pol, 100)
-    el = [_p(f"M0 {-bocal/2:.1f} L{comp*0.24:.1f} {-corpo/2:.1f} "
-             f"H{comp*0.76:.1f} L{comp:.1f} {-bocal/2:.1f}"),
-          _p(f"M0 {bocal/2:.1f} L{comp*0.24:.1f} {corpo/2:.1f} "
-             f"H{comp*0.76:.1f} L{comp:.1f} {bocal/2:.1f}")]
-    # castelo: flange do corpo e a tampa
-    castelo = comp * 0.5
-    topo = -alt * 0.46
-    el += caixa(meio - castelo/2, castelo, -topo, topo + corpo/2)
-    el.append(_p(f"M{meio - castelo*0.62:.1f} {-corpo*0.5:.1f} h{castelo*1.24:.1f}",
-                 "obturador"))
-    el.append(_p(f"M{meio - castelo*0.56:.1f} {topo:.1f} h{castelo*1.12:.1f}",
-                 "obturador"))
-    # cunha, tracejada dentro do corpo
-    el.append(_p(f"M{meio - bocal*0.3:.1f} {-corpo*0.42:.1f} h{bocal*0.6:.1f} "
-                 f"v{corpo*0.72:.1f} l{-bocal*0.3:.1f} {corpo*0.12:.1f} "
-                 f"l{-bocal*0.3:.1f} {-corpo*0.12:.1f} Z", "oculto"))
-    el.append(_p(f"M{meio:.1f} {topo:.1f} V{-alt + comp*0.06:.1f}", "haste"))
-    yv = -alt + comp * 0.06
-    el.append(_p(f"M{meio - volante/2:.1f} {yv:.1f} h{volante:.1f}", "acionamento"))
-    el.append(_p(f"M{meio - volante/2:.1f} {yv - comp*0.05:.1f} v{comp*0.1:.1f} "
-                 f"M{meio + volante/2:.1f} {yv - comp*0.05:.1f} v{comp*0.1:.1f}",
-                 "acionamento"))
-    el.append(_p(f"M{meio - comp*0.09:.1f} {yv + comp*0.02:.1f} h{comp*0.18:.1f} "
-                 f"v{comp*0.09:.1f} h{-comp*0.18:.1f} Z", "acionamento"))
+    r = corpo / 2
+
+    # o corpo: parede reta e fundo abaulado
+    el = [_p(f"M0 {-bocal/2:.1f} L{comp*0.22:.1f} {-r:.1f} H{comp*0.78:.1f} "
+             f"L{comp:.1f} {-bocal/2:.1f}"),
+          _p(f"M0 {bocal/2:.1f} L{comp*0.22:.1f} {r*0.55:.1f} "
+             f"Q{comp*0.22:.1f} {r:.1f} {meio:.1f} {r:.1f} "
+             f"Q{comp*0.78:.1f} {r:.1f} {comp*0.78:.1f} {r*0.55:.1f} "
+             f"L{comp:.1f} {bocal/2:.1f}")]
+    # a cunha, tracejada dentro do corpo
+    el.append(_p(f"M{meio - bocal*0.3:.1f} {-r*0.42:.1f} h{bocal*0.6:.1f} "
+                 f"v{r*0.86:.1f} l{-bocal*0.3:.1f} {r*0.14:.1f} "
+                 f"l{-bocal*0.3:.1f} {-r*0.14:.1f} Z", "oculto"))
+
+    # a flange do castelo, com a junta, e a sobreposta em cima dela
+    esp = comp * 0.07
+    yf = -r
+    largura_flange = comp * 0.72
+    el.append({"tipo": "rect", "x": meio - largura_flange/2, "y": yf - esp,
+               "w": largura_flange, "h": esp, "classe": "corpo"})
+    el.append(_p(f"M{meio - largura_flange/2:.1f} {yf:.1f} h{largura_flange:.1f}",
+                 "junta"))
+    # sobreposta: dois degraus estreitando, e a caixa de gaxeta no topo
+    y1 = yf - esp
+    passo = (alt * 0.44 - esp)
+    el.append({"tipo": "rect", "x": meio - comp*0.24, "y": y1 - passo*0.55,
+               "w": comp*0.48, "h": passo*0.55, "classe": "corpo"})
+    el.append({"tipo": "rect", "x": meio - comp*0.17, "y": y1 - passo,
+               "w": comp*0.34, "h": passo*0.45, "classe": "corpo"})
+    y2 = y1 - passo
+    el.append({"tipo": "rect", "x": meio - comp*0.13, "y": y2 - comp*0.11,
+               "w": comp*0.26, "h": comp*0.11, "classe": "corpo"})
+
+    # a haste e o volante de canto
+    yv = -alt + volante_d * 0.10
+    el.append(_p(f"M{meio:.1f} {y2 - comp*0.11:.1f} V{yv:.1f}", "haste"))
+    el += volante_de_canto(meio, yv, volante_d, comp * 0.055)
+
     el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
+    el.append(_p(f"M{meio:.1f} {-alt-40:.1f} V{r+40:.1f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
     return _montar("VALVULA_GAVETA", f'gaveta {dn_pol:g}"', el, portas, fonte)
 
 
 def valvula_hidraulica(dn_pol, serie="47"):
+    """Corpo abaulado por baixo e tampa chata aparafusada em cima.
+
+    O bloco da casa nao desenha a tampa como calota: desenha uma tampa CHATA
+    e larga, com a cabeca do parafuso aparecendo nas duas pontas - que e o que
+    se ve de lado numa valvula de diafragma. Dentro dela o diafragma, e a
+    haste descendo ate o obturador.
+    """
     comp, fonte = _cota("VALVULA_HIDRAULICA", dn_pol, serie)
     comp = comp or 462
     alt, _ = _cota("VALVULA_HIDRAULICA", dn_pol, serie, "altura_total_mm")
     r = DE_TUBO.get(dn_pol, 100) / 2
     alt = alt or r * 3
     meio = comp / 2
-    el = caixa(0, comp, r * 1.1, r * 1.1)
-    # castelo: a tampa abaulada que guarda o diafragma
-    castelo, topo = comp * 0.62, -alt * 0.78
-    el.append(_p(f"M{meio - castelo/2:.1f} {-r*1.1:.1f} V{topo + castelo*0.18:.1f} "
-                 f"Q{meio - castelo/2:.1f} {topo:.1f} {meio - castelo*0.3:.1f} {topo:.1f} "
-                 f"H{meio + castelo*0.3:.1f} "
-                 f"Q{meio + castelo/2:.1f} {topo:.1f} {meio + castelo/2:.1f} "
-                 f"{topo + castelo*0.18:.1f} V{-r*1.1:.1f}"))
-    # o diafragma, e a haste que desce ate o obturador
-    el.append(_p(f"M{meio - castelo*0.46:.1f} {topo + castelo*0.42:.1f} "
-                 f"h{castelo*0.92:.1f}", "obturador"))
-    el.append(_p(f"M{meio:.1f} {topo + castelo*0.42:.1f} V{r*0.35:.1f}", "haste"))
-    el.append(_p(f"M{meio - r*0.62:.1f} {r*0.35:.1f} h{r*1.24:.1f}", "obturador"))
-    # piloto: corpo pequeno ligado ao castelo por tubinho - sempre listado junto
-    px, py = meio + comp * 0.42, topo + castelo * 0.25
-    el.append(_p(f"M{meio + castelo/2:.1f} {topo + castelo*0.55:.1f} "
-                 f"H{px:.1f} V{py + comp*0.09:.1f}", "piloto"))
+    corpo = r * 1.1
+
+    # o corpo: reto em cima, abaulado embaixo - a barriga onde o obturador cai
+    el = [_p(f"M0 {-corpo:.1f} H{comp:.1f}"),
+          _p(f"M0 {corpo:.1f} L{comp*0.22:.1f} {corpo:.1f} "
+             f"Q{meio:.1f} {corpo*1.9:.1f} {comp*0.78:.1f} {corpo:.1f} "
+             f"H{comp:.1f}"),
+          _p(f"M0 {-corpo:.1f} V{corpo:.1f}", "malha"),
+          _p(f"M{comp:.1f} {-corpo:.1f} V{corpo:.1f}", "malha")]
+
+    # a tampa chata, larga, com o parafuso nas pontas
+    tampa = comp * 0.66
+    esp = alt * 0.13
+    ytampa = -alt + esp
+    el.append({"tipo": "rect", "x": meio - tampa/2, "y": ytampa - esp,
+               "w": tampa, "h": esp, "rx": esp * 0.25, "classe": "corpo"})
+    el.append({"tipo": "rect", "x": meio - tampa*0.42, "y": ytampa,
+               "w": tampa*0.84, "h": -ytampa - corpo, "classe": "corpo"})
+    el += parafusos_de_tampa(meio - tampa*0.45, meio + tampa*0.45,
+                             ytampa - esp, esp * 0.62)
+    # o diafragma, e a haste descendo ate o obturador
+    el.append(_p(f"M{meio - tampa*0.40:.1f} {ytampa + esp*0.55:.1f} "
+                 f"h{tampa*0.80:.1f}", "obturador"))
+    el.append(_p(f"M{meio:.1f} {ytampa + esp*0.55:.1f} V{corpo*0.35:.1f}",
+                 "haste"))
+    el.append(_p(f"M{meio - r*0.62:.1f} {corpo*0.35:.1f} h{r*1.24:.1f}",
+                 "obturador"))
+    # piloto: corpo pequeno ligado a tampa por tubinho - sempre listado junto
+    px = meio + comp * 0.40
+    py = ytampa + esp * 1.6
+    el.append(_p(f"M{meio + tampa*0.42:.1f} {ytampa + esp*0.4:.1f} "
+                 f"H{px:.1f} V{py:.1f}", "piloto"))
     el += caixa(px - comp*0.07, comp*0.14, -py + comp*0.05, py + comp*0.09,
                 classe="piloto")
     el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
+    el.append(_p(f"M{meio:.1f} {-alt-40:.1f} V{corpo*1.9+40:.1f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
     return _montar("VALVULA_HIDRAULICA", f'hidráulica {serie}-{dn_pol:g}"',
                    el, portas, fonte)
 
 
 def medidor(dn_pol):
-    """Woltmann: corpo entre flanges, torre do registrador e o mostrador."""
+    """Woltmann: corpo em ampulheta, torre e o registrador de tampa articulada.
+
+    O bloco da casa desenha o corpo estreitando para o meio - largo na flange,
+    apertado no eixo do rotor - e o registrador com a tampa levantada, que e
+    como ele fica quando alguem le. A tampa levantada tambem diz de que lado
+    se le, o que importa quando o medidor entra encostado numa parede.
+    """
     comp, fonte = _cota("MEDIDOR", dn_pol)
     comp = comp or 350
     alt, _ = _cota("MEDIDOR", dn_pol, "", "altura_total_mm")
@@ -966,24 +1064,52 @@ def medidor(dn_pol):
     baixo = baixo or corpo / 2
     alt = alt or corpo * 2
     meio = comp / 2
+    r = corpo / 2
     bocal = DE_TUBO.get(dn_pol, 100)
-    el = [_p(f"M0 {-bocal/2:.1f} L{comp*0.2:.1f} {-corpo/2:.1f} "
-             f"H{comp*0.8:.1f} L{comp:.1f} {-bocal/2:.1f}"),
-          _p(f"M0 {bocal/2:.1f} L{comp*0.2:.1f} {corpo/2:.1f} "
-             f"H{comp*0.8:.1f} L{comp:.1f} {bocal/2:.1f}")]
-    torre = comp * 0.44
+    cintura = bocal * 0.5
+
+    # ampulheta: da flange para o meio o corpo aperta
+    el = [_p(f"M0 {-bocal/2:.1f} L{comp*0.16:.1f} {-r:.1f} "
+             f"L{meio - comp*0.10:.1f} {-cintura:.1f} "
+             f"H{meio + comp*0.10:.1f} L{comp*0.84:.1f} {-r:.1f} "
+             f"L{comp:.1f} {-bocal/2:.1f}"),
+          _p(f"M0 {bocal/2:.1f} L{comp*0.16:.1f} {r:.1f} "
+             f"L{meio - comp*0.10:.1f} {cintura:.1f} "
+             f"H{meio + comp*0.10:.1f} L{comp*0.84:.1f} {r:.1f} "
+             f"L{comp:.1f} {bocal/2:.1f}")]
+    # o V do fundo, que e onde a sujeira nao para
+    el.append(_p(f"M{meio - comp*0.14:.1f} {cintura*0.9:.1f} "
+                 f"L{meio:.1f} {r*0.95:.1f} "
+                 f"L{meio + comp*0.14:.1f} {cintura*0.9:.1f}", "malha"))
+
+    # a torre e o pedestal aparafusado do registrador
+    torre = comp * 0.34
     topo = -(alt - baixo)
-    el += caixa(meio - torre/2, torre, -topo, topo + corpo/2)
-    # o registrador, com o mostrador virado para cima
-    el += caixa(meio - torre*0.62, torre*1.24, -topo + torre*0.34, topo)
-    cx, cy, rr = meio, topo - torre * 0.17, torre * 0.24
-    el.append({"tipo": "circulo", "cx": cx, "cy": cy, "r": rr, "classe": "mostrador"})
-    el.append(_p(f"M{cx:.1f} {cy:.1f} L{cx + rr*0.6:.1f} {cy - rr*0.52:.1f}",
-                 "mostrador"))
-    el.append(_p(f"M{cx:.1f} {cy - rr:.1f} v{rr*0.3:.1f} M{cx + rr:.1f} {cy:.1f} "
-                 f"h{-rr*0.3:.1f}", "mostrador"))
+    el.append({"tipo": "rect", "x": meio - torre/2, "y": topo + torre*0.55,
+               "w": torre, "h": -cintura - (topo + torre*0.55),
+               "classe": "corpo"})
+    esp = torre * 0.16
+    for y in (topo + torre*0.55, topo + torre*0.55 - esp*1.7):
+        el.append({"tipo": "rect", "x": meio - torre*0.66, "y": y - esp,
+                   "w": torre*1.32, "h": esp, "classe": "corpo"})
+        el += parafusos_de_tampa(meio - torre*0.58, meio + torre*0.58,
+                                 y - esp, esp*0.7)
+    # o registrador, e a tampa levantada
+    caixa_y = topo + torre*0.55 - esp*1.7 - esp
+    caixa_h = -topo - (torre*0.55 - esp*1.7 - esp) - torre*0.2
+    el.append({"tipo": "rect", "x": meio - torre*0.72, "y": caixa_y - caixa_h,
+               "w": torre*1.44, "h": caixa_h, "rx": esp*0.5, "classe": "corpo"})
+    tampa_y = caixa_y - caixa_h
+    el.append(_p(f"M{meio - torre*0.72:.1f} {tampa_y:.1f} "
+                 f"L{meio + torre*1.05:.1f} {tampa_y - torre*0.62:.1f}",
+                 "acionamento"))
+    el.append(_p(f"M{meio - torre*0.72:.1f} {tampa_y + esp*0.5:.1f} "
+                 f"L{meio + torre*1.05:.1f} {tampa_y - torre*0.62 + esp*0.5:.1f}",
+                 "acionamento"))
+
     el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
+    el.append(_p(f"M{meio:.1f} {topo - torre*0.9:.1f} V{baixo+40:.1f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
     return _montar("MEDIDOR", f'medidor {dn_pol:g}"', el, portas, fonte)
 
@@ -1039,11 +1165,14 @@ def curva_saida(dn_pol, angulo=90, dn_saida=2, sentido=1, gomos=4):
 
 
 def valvula_retencao(dn_pol):
-    """Wafer de dupla portinhola: corpo estreito entre flanges, duas abas.
+    """Wafer de dupla portinhola: corpo estreito, as duas abas e o bujao.
 
     O face a face vem da ficha MP Valvulas (fig. 160/162), que ja estava em
     data/valvulas_wafer.csv - e a mesma que o motor usa para contar barra
     roscada e comprimento de parafuso.
+
+    O bloco da casa desenha o bujao da mola em cima, e e a unica coisa que
+    diferencia a retencao de um anel espacador quando se olha de lado. Fica.
     """
     from . import regras
     ficha = regras.ficha_wafer(dn_pol) or {}
@@ -1054,15 +1183,22 @@ def valvula_retencao(dn_pol):
     corpo = ficha.get("d_externo_mm") or f["circulo"] * 0.94
     bocal = ficha.get("d_interno_mm") or DE_TUBO.get(dn_pol, 100)
     meio = comp / 2
-    el = caixa(0, comp, corpo / 2, corpo / 2)
+    r = corpo / 2
+    el = caixa(0, comp, r, r)
     el.append(_p(f"M0 {-bocal/2:.1f} H{comp:.1f} M0 {bocal/2:.1f} H{comp:.1f}",
-                 "oculto"))
+                 "malha"))
     # as duas portinholas, encostadas no eixo e abrindo para a jusante
-    el.append(_p(f"M{meio:.1f} 0 L{comp*0.95:.1f} {-bocal*0.44:.1f}",
+    el.append(_p(f"M{meio:.1f} 0 L{comp*0.88:.1f} {-bocal*0.42:.1f}",
                  "obturador"))
-    el.append(_p(f"M{meio:.1f} 0 L{comp*0.95:.1f} {bocal*0.44:.1f}",
+    el.append(_p(f"M{meio:.1f} 0 L{comp*0.88:.1f} {bocal*0.42:.1f}",
                  "obturador"))
-    el.append(_p(f"M{meio:.1f} {-bocal*0.1:.1f} v{bocal*0.2:.1f}", "haste"))
+    el.append(_p(f"M{meio:.1f} {-bocal*0.08:.1f} v{bocal*0.16:.1f}", "haste"))
+    # o bujao da mola, no topo
+    bujao = comp * 0.5
+    el.append({"tipo": "rect", "x": meio - bujao/2, "y": -r - bujao*0.55,
+               "w": bujao, "h": bujao*0.55, "classe": "corpo"})
+    el.append({"tipo": "rect", "x": meio - bujao*0.32, "y": -r - bujao*0.85,
+               "w": bujao*0.64, "h": bujao*0.30, "classe": "corpo"})
     el.append(_p(f"M-40 0 H{comp+40:.0f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
     # wafer nao tem flange: ela e abracada pelas flanges das duas pecas

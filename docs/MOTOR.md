@@ -674,6 +674,24 @@ diferente — a mesma bomba com dois motores — colidiam num bloco só. O bloco
 agora só é reaproveitado quando a geometria é a mesma; quando não é, o nome
 ganha o que as distingue (`..._180M`).
 
+### O bloco sai nomeado como a lista nomeia
+
+O CAD mostra dois campos na janela de bloco: o **nome** e a **Description**.
+A lista da Netafim usa exatamente essa divisão — o código identifica, a
+descrição explica. Então o bloco sai assim:
+
+    nome          01523-054000
+    Description   CRIVO AZ 8" FL NBR PN16 P/ VALV PE
+
+Isso obrigou a fechar uma ponte que estava só na ferramenta de conferência:
+`motor/desenho.py` leva um item do catálogo até o símbolo dele, e injeta o
+código e a descrição nos `params`. É a mesma ponte que o contador de cobertura
+usa, agora numa casa só.
+
+`--catalogo` exporta a biblioteca inteira: **1.262 blocos, um por código**.
+`--dn 8` exporta os 175 códigos de 8". Peça que só existe no desenho — um tubo
+de 500 mm cortado na obra — não tem código, e cai no rótulo.
+
 ### Ler o DXF da casa
 
 `tools/ler_dxf.py` faz o caminho inverso: inventaria um arquivo — quais
@@ -682,6 +700,32 @@ casa interessa: de um bloco de projeto o que importa não é o desenho, é a
 medida. Se o bloco da gaveta de 3" mede 190 mm de face a face, isso é uma
 quarta fonte independente para conferir contra a tabela de cotas, ao lado do
 Irrigafour, da Netafim e do fabricante da válvula.
+
+## 4.5 Os blocos da casa como referência de traço
+
+A casa mandou os blocos que já usa. Duas coisas saíram dali.
+
+A primeira é uma confirmação: **as curvas dela e as do motor são o mesmo
+desenho** — gomos mitrados, eixo vermelho traço-ponto, a peça em pé entrando
+por baixo, a bitola escrita dentro. Cheguei nisso por outro caminho e caiu
+igual, o que quer dizer que a convenção está certa.
+
+A segunda é uma lista de correções de traço, todas nos equipamentos:
+
+| peça | o que o bloco da casa mostra e o motor não mostrava |
+|---|---|
+| gaveta | volante **de canto** — chato, aro nas pontas, porca da haste em cima; sobreposta em dois degraus com a caixa de gaxeta; corpo de **fundo abaulado** |
+| borboleta | volante **de frente**, com os raios contáveis, ao lado da caixa redutora; as duas orelhas do wafer |
+| hidráulica | tampa **chata e larga** com a cabeça do parafuso nas pontas — não é calota; corpo abaulado só por baixo |
+| medidor | corpo em **ampulheta** (largo na flange, apertado no eixo do rotor); registrador com a **tampa levantada**, que também diz de que lado se lê |
+| retenção | o **bujão da mola** em cima — de lado, é a única coisa que separa a retenção de um anel espaçador |
+
+Nenhuma dessas é cota: são convenções de como a casa desenha. Por isso
+entraram como forma, sem tocar em nenhuma tabela.
+
+O que **não** dá para copiar são as bombas: os blocos delas são traçados do
+modelo 3D do fabricante — olhal de içamento, nervura, alívio de fundição. Isso
+não sai de parâmetro, e fingir que sai seria pior que a diferença.
 
 ## 5. O que a peça puxa: um mecanismo só
 

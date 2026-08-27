@@ -73,6 +73,16 @@ def _sem_acento(texto):
     return "".join(c for c in normal if not unicodedata.combining(c))
 
 
+def nome_do_bloco(simbolo):
+    """O nome do bloco: o codigo SAP quando a peca veio do catalogo.
+
+    E como a lista da Netafim nomeia - o codigo identifica, a descricao
+    explica. Peca montada a mao (um tubo de 500 mm que so existe no desenho)
+    nao tem codigo, e cai no rotulo.
+    """
+    return _nome_de_bloco(simbolo.params.get("sap") or simbolo.rotulo)
+
+
 def _nome_de_bloco(rotulo):
     """Nome de bloco valido: sem acento, sem espaco, maiusculo."""
     limpo = _sem_acento(rotulo).upper()
@@ -136,7 +146,7 @@ def bloco(doc, simbolo, nome=None):
     doc.__dict__.setdefault("_assinaturas", {})
     assinaturas = doc.__dict__["_assinaturas"]
     marca = _assinatura(simbolo)
-    base = nome or _nome_de_bloco(simbolo.rotulo)
+    base = nome or nome_do_bloco(simbolo)
     nome = base
     for tentativa in [base] + ([f"{base}_{_variante(simbolo)}"]
                                if _variante(simbolo) else []) \
@@ -148,6 +158,9 @@ def bloco(doc, simbolo, nome=None):
             break
     assinaturas[nome] = marca
     definicao = doc.blocks.new(name=nome)
+    # a descricao e o campo Description do CAD, o mesmo texto da lista
+    definicao.block.dxf.description = _sem_acento(
+        simbolo.params.get("descricao") or simbolo.rotulo)[:255]
     for elemento in simbolo.elementos:
         if elemento["tipo"] != "texto_furos":
             _desenhar(definicao, elemento)
