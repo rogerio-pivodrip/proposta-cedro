@@ -49,6 +49,7 @@ def main():
             print(f"  saida {saida:>3}mm  regra diz {nossa}   KSB diz {ksb}   DIVERGE")
             diverge += 1
     print(f"  -> {bate} confirmadas, {diverge} divergentes, {falta} sem regra")
+    nome_x_recalque()
 
     faixa = [r for r in csv.DictReader(open(TABELA, encoding="utf-8"))
              if r["polos"] == "4" and float(r["dn_succao_pol"]) >= 3]
@@ -60,6 +61,36 @@ def main():
               f"{r['dn_recalque_pol']+chr(34):>9} {r['b_mm']:>8} "
               f"{r['a_mm']:>5} {r['c_mm']:>5}  {r['norma_flange']}")
     casar_com_a_lista()
+
+
+def nome_x_recalque():
+    """O primeiro numero do nome e o DN de recalque em milimetro.
+
+    EN 733 nomeia a bomba por (DN de descarga) x (rotor nominal): 32-200 e
+    descarga DN32 com rotor de 200. Se isso vale, o primeiro numero do nome
+    tem que reproduzir a coluna DN2 do folheto sem consultar nada.
+    """
+    print("\n== nome da bomba x DN de recalque")
+    bate = diverge = fora = 0
+    ruins = []
+    for r in csv.DictReader(open(TABELA, encoding="utf-8")):
+        nome = int(r["tamanho"].split("-")[0])
+        dn2 = mm(float(r["dn_recalque_pol"]))
+        if dn2 is None:
+            # 1", 1.1/4" e 1.1/2" nao estao na tabela de DN da casa - a casa
+            # nao usa esse tamanho de bomba, e nao ha o que conferir
+            fora += 1
+        elif dn2 == nome:
+            bate += 1
+        else:
+            diverge += 1
+            ruins.append(f'{r["tamanho"]} diz {nome} mm, folheto diz {dn2}')
+    print(f"  {bate} de {bate + diverge} confirmam: o nome da bomba E o DN2")
+    for ruim in ruins:
+        print(f"    {ruim}")
+    print(f"  {fora} tamanhos com recalque abaixo de 2\" ficam fora - a tabela "
+          f"de DN da casa\n  comeca em 2\" e a casa nao usa bomba desse porte.")
+    print("  A succao sobe uma ou duas bitolas e nao tem regra - fica a tabela.")
 
 
 def casar_com_a_lista():

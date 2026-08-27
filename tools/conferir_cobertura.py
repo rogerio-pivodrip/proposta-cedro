@@ -9,6 +9,7 @@ Uso: python3 tools/conferir_cobertura.py
 """
 import collections
 import json
+import re
 import sys
 
 sys.path.insert(0, ".")
@@ -19,8 +20,29 @@ CATALOGO = "data/catalogo.json"
 PEAD_DN = {v for v in POLEGADA_MM.values()}
 
 
+# METB 150-125-200 -> o tamanho 125-200 do folheto, com succao de 150.
+# O nome da lista tem tres grupos e o do catalogo dois: a succao fica implicita.
+RX_METB = re.compile(r"(\d{2,3})-(\d{2,3})-(\d{2,4})")
+RX_METB_CURTO = re.compile(r"(\d{2,3})-(\d{2,4})(?!\d)")
+
+
+def tamanho_metb(descricao):
+    m = RX_METB.search(descricao)
+    if m:
+        return f"{int(m.group(2))}-{int(m.group(3))}"
+    m = RX_METB_CURTO.search(descricao)
+    return f"{int(m.group(1))}-{int(m.group(2))}" if m else None
+
+
 def desenhar(item):
     familia = item["familia"]
+    if familia == "BOMBA":
+        if not re.search(r"\bMETB\b", item["descricao"]):
+            raise ValueError("bomba fora da Megabloc")
+        tamanho = tamanho_metb(item["descricao"])
+        if not tamanho:
+            raise ValueError("nome sem tamanho legivel")
+        return s.bomba_megabloc(tamanho)
     bitolas = [d for d in (item["dn"] or []) if isinstance(d, (int, float))]
     if not bitolas:
         raise ValueError("sem DN na descricao")

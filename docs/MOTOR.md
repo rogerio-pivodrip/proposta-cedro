@@ -437,11 +437,67 @@ Página 14. O que faz um crivo não ser um tubo furado está tudo lá: furo de
 parede. Um crivo de 14" tem mais de dois mil furos; o desenho mostra o trecho
 junto ao fundo e anota o resto, que é a convenção de elemento repetido.
 
+## 4.2 A bomba: a âncora do desenho
+
+A Megabloc é o único item da casa de bombas que **não é tubulação e ainda assim
+manda na geometria**: tudo se posiciona em relação a ela, e a altura do eixo
+decide onde a sucção entra. Três cotas do folheto colocam os dois bocais, e é
+só isso que a tubulação precisa:
+
+| letra | o que mede |
+|---|---|
+| **a** | do eixo da bomba à **face** do flange de descarga — vertical |
+| **b** | da base ao eixo — a altura do eixo |
+| **c** | da face da sucção ao **eixo** da descarga — horizontal |
+
+A folha de II pólos (3.500 rpm) desenha a bomba **sem o motor** e chama de
+`a₁` o que a folha de IV pólos chama de `a`; traz também `a` (20 mm acima da
+face) e `b₁` (eixo ao pé do próprio corpo). O que a casa compra é IV pólos, e
+é essa folha que entrou.
+
+O corpo em volta das três cotas sai de duas coisas, e as duas estão declaradas
+como proporção e não como cota de folha: **no nome `32-200` o 200 é o diâmetro
+nominal do rotor**, e a carcaça mede cerca de 1,15 rotor de meia altura; e `h`
+é a carcaça IEC do motor (90, 100, 112 … 225), que dá o corpo do motor.
+
+**Vista de lado a voluta não é um círculo.** O caracol está no plano
+perpendicular ao eixo, então de lado aparece de canto: estreito em x, alto em
+y. O círculo grande é a terceira vista do folheto, olhando pelo eixo. Errei
+isso na primeira tentativa e o desenho engoliu a flange de sucção.
+
+### Vertical e horizontal são a mesma peça
+
+A Megabloc montada na vertical é a **mesma fundição de pé** — motor em cima,
+sucção entrando por baixo. Então não há duas peças e não há dois conjuntos de
+cota: há uma peça e duas poses, exatamente como a curva, que a folha desenha
+em pé e a montagem usa deitada.
+
+E na linha a montagem **sai sozinha**, sem parâmetro nenhum: a direção chega
+acumulada pela corrente. Na sucção vertical a linha sobe reta e a bomba recebe
+por baixo; na horizontal há uma curva de 90° antes, e a bomba recebe deitada.
+O `montagem="VERTICAL"` só existe para a folha de símbolos poder mostrar as
+duas poses lado a lado.
+
+### O que o folheto homologou
+
+- **o nome da bomba É o DN de recalque**: EN 733 nomeia por (DN de descarga) ×
+  (rotor), e o primeiro número do nome reproduz a coluna DN2 do folheto em
+  **27 de 27** tamanhos dentro da faixa da casa. A sucção sobe uma ou duas
+  bitolas e não tem regra — fica a tabela.
+- **a regra do bocal**, que tinha saído de medir a lista da Netafim, confirma
+  em 6 de 6 saídas.
+- flange **ANSI B16.1 125# FF**, exceto os tamanhos marcados (1), que são
+  250# FF. É a razão de a redução da sucção ter uma norma em cada ponta: NBR
+  do lado da linha, ANSI do lado da bomba.
+- **até o tamanho 65-200 o bocal pode vir rosqueado BSP** em vez de flangeado
+  (nota da folha de II pólos). Gravado na coluna `rosca_possivel`, porque é o
+  resolvedor de junção que precisa saber.
+
 ### Onde isso chegou
 
 `tools/conferir_cobertura.py` tenta desenhar cada código do catálogo:
 
-> **1.164 de 5.157 códigos saem desenhados** — eram 919 antes destas famílias.
+> **1.212 de 5.157 códigos saem desenhados** — eram 919 antes destas famílias.
 
 O que ainda não sai não é falha de símbolo: 1.764 códigos não têm DN na
 descrição, 611 não têm família, e o resto é PVC, filtro e quadro elétrico —

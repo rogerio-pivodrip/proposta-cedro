@@ -1066,6 +1066,123 @@ ENTRADA = ("entrada", "maior")
 SAIDA = ("saida", "menor")
 
 
+# ----------------------------------------------------------------- bomba
+_bombas = None
+
+
+def ficha_bomba(tamanho, polos=4):
+    """A linha da bomba na tabela de dimensoes da KSB."""
+    global _bombas
+    if _bombas is None:
+        _bombas = {}
+        with open(f"{DADOS}/bombas_ksb_megabloc.csv", encoding="utf-8") as fh:
+            for r in csv.DictReader(fh):
+                _bombas[(r["tamanho"], int(r["polos"]))] = r
+    return _bombas.get((tamanho, polos))
+
+
+def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4):
+    """A KSB Megabloc, vista de lado - a ancora do desenho.
+
+    Tres cotas do folheto colocam os dois bocais, e sao elas que a tubulacao
+    precisa: a (do eixo a face do flange de descarga), b (da base ao eixo) e
+    c (da face da succao ao eixo da descarga). O corpo em volta sai da
+    nomenclatura: no nome 32-200 o 200 e o diametro nominal do rotor, e a
+    voluta mede cerca de 1,3 rotor. O motor sai da carcaca IEC h.
+
+    A peca e a MESMA nas duas montagens - o que muda e a pose. Montada na
+    vertical, a bomba e a mesma fundicao de pe: o motor em cima, a succao
+    entrando por baixo. Aqui a vertical e so girada -90, do mesmo jeito que a
+    folha desenha a curva em pe; na linha a montagem sai sozinha de onde a
+    bomba cai na corrente, porque a direcao chega acumulada.
+    """
+    ficha = ficha_bomba(tamanho, polos)
+    if not ficha or not ficha["a_mm"]:
+        raise ValueError(f"{tamanho} nao tem dimensao no folheto IV polos")
+    a = float(ficha["a_mm"])
+    b = float(ficha["b_mm"])
+    c = float(ficha["c_mm"])
+    h = float(ficha["h_mm"])
+    comp = float(ficha["l_mm"])
+    dn1 = float(ficha["dn_succao_pol"])
+    dn2 = float(ficha["dn_recalque_pol"])
+    rotor = float(tamanho.split("-")[1].split(".")[0])
+    r1 = DE_TUBO.get(dn1, 100) / 2
+    r2 = DE_TUBO.get(dn2, 80) / 2
+    # a voluta vista de lado e estreita e alta: o caracol esta no plano
+    # perpendicular ao eixo, entao de lado aparece de canto. O circulo grande
+    # e a terceira vista do folheto, olhando pelo eixo - nao esta.
+    rv = rotor / 2 * 1.15              # meia altura da carcaca: proporcao
+    largura = max(rotor * 0.42, 2 * r1 * 1.1)
+    x_voluta = c - largura / 2
+    x_tras = c + largura / 2
+    hm = h * 0.95                      # meia altura do corpo do motor
+    lanterna = h * 0.55                # o suporte que liga a voluta ao motor
+
+    el = list(placa(0, dn1, lado="entrada"))
+    el += eixo(0, x_voluta, dn1)
+    # a carcaca: caixa alta e estreita, com a tampa de succao na frente
+    el += [_p(f"M{x_voluta:.1f} {-rv:.1f} H{x_tras:.1f}"),
+           _p(f"M{x_voluta:.1f} {rv:.1f} H{x_tras:.1f}"),
+           _p(f"M{x_voluta:.1f} {-rv:.1f} V{-r1:.1f}"),
+           _p(f"M{x_voluta:.1f} {r1:.1f} V{rv:.1f}"),
+           _p(f"M{x_tras:.1f} {-rv:.1f} V{rv:.1f}"),
+           _p(f"M{x_voluta + largura*0.28:.1f} {-rv:.1f} V{rv:.1f}", "malha")]
+    # o pescoco da descarga, subindo da carcaca ate a face do flange
+    el += [_p(f"M{c-r2:.1f} {-a:.1f} V{-rv:.1f}"),
+           _p(f"M{c+r2:.1f} {-a:.1f} V{-rv:.1f}")]
+    el += placa(c, dn2, y=-a, direcao=-90, lado="saida")
+    # a lanterna e o motor, com as aletas e a tampa do ventilador
+    el.append({"tipo": "rect", "x": x_tras, "y": -hm * 0.62, "w": lanterna,
+               "h": 2 * hm * 0.62, "classe": "corpo"})
+    x_motor = x_tras + lanterna
+    corpo = max(comp - x_motor - h * 0.18, h * 0.6)
+    el.append({"tipo": "rect", "x": x_motor, "y": -hm, "w": corpo, "h": 2 * hm,
+               "classe": "corpo"})
+    for k in range(1, 9):
+        xa = x_motor + corpo * k / 9
+        el.append(_p(f"M{xa:.1f} {-hm:.1f} v{2*hm:.1f}", "malha"))
+    el.append({"tipo": "rect", "x": x_motor + corpo, "y": -hm * 0.72,
+               "w": h * 0.18, "h": 2 * hm * 0.72, "classe": "corpo"})
+    # a base e os dois pes, no nivel que a cota b manda
+    fim = x_motor + corpo + h * 0.18
+    el.append(_p(f"M{x_voluta:.1f} {b:.1f} H{fim:.1f}"))
+    for x0, larg in ((x_voluta, largura), (fim - h * 1.1, h * 0.7)):
+        el.append({"tipo": "rect", "x": x0, "y": b - 18, "w": larg, "h": 18,
+                   "classe": "corpo"})
+    el.append(_p(f"M-70 0 H{fim+40:.0f}", "centro"))
+    el.append(_p(f"M{c:.1f} {-a-40:.1f} V{rv+30:.1f}", "centro"))
+
+    portas = [Porta("entrada", 0, 0, 180, dn1),
+              Porta("saida", c, -a, -90, dn2)]
+    simbolo = _montar("BOMBA", f'KSB Megabloc {tamanho} {dn1:g}"×{dn2:g}"',
+                      el, portas, "KSB",
+                      {"tamanho": tamanho, "montagem": montagem,
+                       "eixo_mm": b, "norma_flange": ficha["norma_flange"],
+                       "rosca_possivel": ficha["rosca_possivel"] == "1"})
+    if montagem == "VERTICAL":
+        simbolo = girado(simbolo, -90)
+        simbolo = simbolo._replace(
+            rotulo=f'KSB Megabloc {tamanho} vertical {dn1:g}"×{dn2:g}"')
+    return simbolo
+
+
+def bomba_para_linha(dn_succao_pol, polos=4):
+    """A menor Megabloc cuja succao e a bitola pedida.
+
+    A casa dimensiona a bomba pela vazao, nao pelo tubo - isso aqui e so para
+    o desenho ter uma bomba plausivel quando ninguem escolheu o modelo.
+    """
+    global _bombas
+    ficha_bomba("32-200")               # garante a tabela carregada
+    candidatas = [r for (t, p), r in _bombas.items()
+                  if p == polos and r["a_mm"]
+                  and abs(float(r["dn_succao_pol"]) - dn_succao_pol) < 0.01]
+    if not candidatas:
+        return None
+    return min(candidatas, key=lambda r: float(r["l_mm"]))["tamanho"]
+
+
 def porta(simbolo, papeis):
     return next((p for p in simbolo.portas if p.papel in papeis), None)
 

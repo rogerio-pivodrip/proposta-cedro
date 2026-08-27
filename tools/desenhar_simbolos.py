@@ -20,7 +20,7 @@ MARGEM = 16
 LETRA = {"CURVA": "C", "REDUCAO_CONCENTRICA": "E", "REDUCAO_EXCENTRICA": "E",
          "TE": "E", "MANIFOLD": "C", "CRIVO": "C", "ADAPTADOR": "C",
          "TUBO": "L", "VALVULA_BORBOLETA": "A", "VALVULA_GAVETA": "L",
-         "VALVULA_HIDRAULICA": "L", "MEDIDOR": "L", "VALVULA_PE": "H"}
+         "VALVULA_HIDRAULICA": "L", "MEDIDOR": "L", "VALVULA_PE": "H", "BOMBA": "c"}
 
 
 def elenco(dn):
@@ -53,7 +53,16 @@ def elenco(dn):
         # o PEAD entra pela equivalencia da casa: 8" de aco vira DN225
         s.tubo_pead(_pead(dn), 6000),
         s.colar_pead(_pead(dn)),
+        # a bomba: a mesma peça nas duas poses, como a curva
+        s.bomba_megabloc(_megabloc(dn)),
+        s.bomba_megabloc(_megabloc(dn), "VERTICAL"),
     ]
+
+
+def _megabloc(dn_linha):
+    """A Megabloc cujo bocal de sucção casa com a redução que sai da linha."""
+    bocal = {14: 8, 12: 8, 10: 6, 8: 6, 6: 4, 5: 4, 4: 3, 3: 2}.get(dn_linha, 2)
+    return s.bomba_para_linha(bocal) or "80-250"
 
 
 def _pead(dn_pol):

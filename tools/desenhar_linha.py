@@ -25,14 +25,26 @@ MARGEM = 46
 BOCAL_BOMBA = {3: 2, 4: 3, 5: 4, 6: 4, 8: 6, 10: 6, 12: 8, 14: 8}
 
 
+def _bomba(bocal_pol):
+    """A Megabloc cuja sucção tem a bitola que a redução entrega.
+
+    A peça é a mesma nas duas montagens: a direção chega acumulada pela
+    corrente, então na sucção vertical ela recebe por baixo e na horizontal
+    recebe deitada, sem parâmetro nenhum dizendo isso.
+    """
+    tamanho = s.bomba_para_linha(bocal_pol)
+    return s.bomba_megabloc(tamanho) if tamanho else None
+
+
 def succao_vertical(dn):
     """Bomba vertical: a linha sobe direto da água até o bocal.
 
     Sem curva - o eixo da bomba é o eixo da sucção - e a redução é
     concêntrica, porque não há lado de cima onde o ar possa ficar preso.
     """
+    bocal = BOCAL_BOMBA.get(dn, 2)
     return [s.crivo(dn), s.valvula_retencao(dn), s.tubo(dn, 1000),
-            s.reducao(dn, BOCAL_BOMBA.get(dn, 2), "CONCENTRICA")]
+            s.reducao(dn, bocal, "CONCENTRICA"), _bomba(bocal)]
 
 
 def succao_horizontal(dn):
@@ -41,9 +53,10 @@ def succao_horizontal(dn):
     A redução é excêntrica com o lado plano em cima: deitada, uma concêntrica
     deixaria uma bolsa de ar no topo, bem na boca do rotor.
     """
+    bocal = BOCAL_BOMBA.get(dn, 2)
     return [s.crivo(dn), s.valvula_retencao(dn), s.tubo(dn, 1000),
             s.curva(dn, 90, -1), s.tubo(dn, 500),
-            s.reducao(dn, BOCAL_BOMBA.get(dn, 2), "EXCENTRICA", "topo")]
+            s.reducao(dn, bocal, "EXCENTRICA", "topo"), _bomba(bocal)]
 
 
 def recalque(dn, menor):
