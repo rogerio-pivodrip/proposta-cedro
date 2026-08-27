@@ -1320,15 +1320,23 @@ A ponta molhada é a mesma peça das duas KSB, e por isso a GSD reusa
 | `f1` | face da sucção → face do flange de trás | — |
 | `f2` | face da sucção → eixo da descarga | — |
 
-### As linhas de cota da folha 1 corrigem uma leitura minha
+### A elevação cotada corrige uma leitura minha
 
 Eu tinha lido `f1` e `f2` como cotas medidas **do flange do motor**, e por isso
-inferi que a face de sucção até o eixo da descarga fosse `f1 − f2`. A folha 1
-— a elevação cotada, com as linhas de `f1`, `f2`, `L1`, `L2`, `C`, `B`, `BB`,
-`m1`, `m2` e `ØDN1` — mostra as duas nascendo na **face de sucção**: a linha do
-`f2` morre no eixo da descarga, a do `f1` na face do flange de trás. Então a
-cota que eu queria é **o `f2` sozinho**, e eu tinha derivado o que estava
-cotado.
+inferi que a face de sucção até o eixo da descarga fosse `f1 − f2`. A elevação
+cotada que a casa mandou — com as linhas de `f1`, `f2`, `L1`, `L2`, `C`, `B`,
+`BB`, `m1`, `m2` e `ØDN1` — mostra as duas nascendo na **face de sucção**: a
+linha do `f2` morre no eixo da descarga, a do `f1` na face do flange de trás.
+Então a cota que eu queria é **o `f2` sozinho**, e eu tinha derivado o que
+estava cotado.
+
+Uma correção sobre a correção, para o registro: eu escrevi aqui que essas
+linhas de cota estavam na *folha 1 do desenho 406.1*. Não estão. O PDF 406.1
+tem duas páginas e nenhuma delas é a elevação da bomba: a folha 1 é o desenho
+do **motor** em quatro vistas e a folha 2 é só tabela. A elevação que resolveu
+o `f2` é a imagem que a casa mandou. O que a folha 1 confirma é outra coisa, e
+ela confirma bem: `AC` e `AD` são cotas **radiais**, medidas do eixo para cima
+na vista de topo do motor — é por isso que `AC` fica sempre perto de `H`.
 
 Isso amarra o caracol inteiro sem chute nenhum: ele é centrado no eixo da
 descarga (`f2`) e a face de trás dele cai em `f1`, logo
@@ -1384,10 +1392,9 @@ suporte, não com a letra.
 ### Dá para extrair as formas?
 
 Dá para **medir**, e foi o que fizemos. A folha 406.1 é vetorial — 2841 linhas
-e 3600 curvas, nenhuma imagem — e está desenhada em escala exata de **1:9**: a
-linha de cota do `f2` mede 31,5 pt e a tabela diz 100 mm, o que dá 3,175 mm/pt
-redondo. Por isso as linhas de cota resolvem as letras: não é interpretação de
-figura, é medição.
+e 3600 curvas, nenhuma imagem — e o carimbo dela diz a escala: `ESCALA:1:9`,
+`UNID.: Milímetro (mm)`, `Montagem referente a motor WEG`. Não é interpretação
+de figura, é medição com a régua que a própria folha declara.
 
 O limite é o traço automático do perfil, e ele é do arquivo, não do método: o
 PDF não expõe camada por entidade. Linha de cota, hachura, quadro do desenho e
@@ -1447,6 +1454,112 @@ Três modelos do catálogo não estão nesta folha (100-200, 150-400L, 150-500).
 Esses recusam com o motivo dito, em vez de sair estimados. A base viga da GS
 está extraída em `data/bases_gs.csv` — 105 combinações de bomba e potência — e
 ainda não é usada: ela é da GS mancalizada, e a GSD é monobloco.
+
+## 4.15 O motor: a peça que ninguém conferia
+
+O motor era a peça menos conferida do caderno, e por um motivo estrutural: ele
+não tem flange, então a conferência de face a face não o alcança, e não tem
+torre, então a de altura total não o alcança também. Passou meses desenhado com
+uma medida errada sem que nenhum teste tivesse como reclamar.
+
+### O corpo estava desenhado com uma medida de largura
+
+Eu usava o `r1` do manual da Megabloc como diâmetro do corpo. Cruzando o manual
+com o dimensional da EBARA, `r1` bate **exato** com o `A` do IEC e `n5` com o
+`AB`, nas seis carcaças que as duas folhas compartilham:
+
+| quadro | `r1` (KSB) | `A` (EBARA) | `n5` (KSB) | `AB` (EBARA) |
+|---|---|---|---|---|
+| 90 | 140 | 140 | 164 | 164 |
+| 100 | 160 | 160 | 188 | 188 |
+| 112 | 190 | 190 | 220 | 220 |
+| 132 | 216 | 216 | 248 | 248 |
+| 200 | 318 | 318 | 385 | 385 |
+| 225 | 356 | 356 | 436 | 436 |
+
+`A` e `AB` são medidas de **largura** — vão entre os furos dos pés e largura
+sobre os pés. As duas se veem de **frente**, e o caderno é de lado. Numa
+carcaça 90 o `r1` dá 140 onde o corpo tem 180. Isso também encerra a pergunta
+que ficou registrada em `tools/motores_iec.py` — "n5 é maior que r1 e não dá
+para dizer o que é" — com a resposta vindo de fora: é o `AB`.
+
+### O DXF resolve o que o PDF não deixava
+
+Eu tinha escrito aqui que o traçado automático do perfil da 406.1 vinha com as
+linhas de cota dentro do contorno, porque o PDF não expõe camada por entidade.
+Os DXF da W22 que a casa mandou — 16 desenhos, 10 a 250 CV, 4 polos — **têm
+camada**:
+
+| camada | o que tem |
+|---|---|
+| `MOTOR` | contorno, aletas, caixa de ligação, olhais, pés |
+| `EIXO` | ponta de eixo e chaveta |
+| `COTAS` | `L`, `E`, `C`, `B`, `H`, `HD`, `ØAC`, `ØD`, com o valor medido |
+| `DETALHE` | os eixos dos furos do pé |
+| `EIXO_CENTRO` | a linha de centro |
+
+Então o motor deixou de ser proporcionado e passou a ser **transcrito**.
+`tools/extrair_weg.py` lê a forma e `data/motores_weg.csv` guarda ela, e cada
+desenho se confere contra as próprias cotas dele antes de entrar: raio × 2 =
+`ØAC`, plano do pé = `H`, primeiro furo a `C` da face, vão dos furos = `B`, fim
+do corpo = `L`, topo da caixa + `H` = `HD`, face do corpo = `E`. **16 de 16
+passam nas sete.**
+
+### Cinco coisas que só o desenho contava
+
+**O corpo tem o raio da altura do eixo.** `AC/2 ÷ H` fica em 0,985 nas doze
+carcaças. Motor IEC não tem perna — a carcaça quase encosta no chão. E quando o
+raio passa do plano do pé (quadro 132: raio 136 com eixo 132) a fundição é
+achatada na diferença. É por isso que existe uma banda embaixo do corpo: ela é
+**relevo** quando o raio passa e **calço** quando o raio não chega.
+
+**As aletas são radiais, e o passo delas é angular** — 15,1° nas dezesseis
+folhas. No perfil elas caem em `R·sen(k·15,1°)`, que aperta perto do topo.
+Espaçar igual era o que fazia o corpo parecer um radiador — e as minhas estavam
+não só espaçadas igual, estavam **na vertical**, quando aleta longitudinal se
+vê de lado como linha horizontal.
+
+**A carcaça tem três juntas fundidas**: a tampa dianteira, o fim das aletas e a
+tampa traseira. Só depois delas vem o defletor, que afina nos últimos 6% do
+comprimento, de `R` para 0,72 `R`.
+
+**A caixa de ligação tem chanfro na frente**, tampa e flange de assento, e dois
+**olhais de suspensão**, um de cada lado dela, cada um no seu pedestal.
+
+**Os pés são dois calços** no vão `B`, e o primeiro furo fica a `C` da face do
+corpo — o que responde de onde o `C` do IEC é medido: da face, e não da ponta
+do eixo. Os dois ficam simétricos em relação ao centro da carcaça.
+
+### O comprimento é do manual da bomba, a forma é do desenho do motor
+
+O `l` do manual da Megabloc e o `L` do DXF da W22 ficam a 3 a 6% um do outro
+nas oito carcaças que compartilham. Não é erro de leitura: são dois motores
+parecidos, não o mesmo motor. E `l` é o **total com a ponta de eixo**, não o
+corpo — usá-lo como corpo era o que deixava a bomba 80 a 140 mm longa demais.
+
+Daí a regra, em três degraus:
+
+1. a folha da bomba, quando ela cota o motor dela — a GSD cota `L2`;
+2. o manual da bomba, quando cota o motor inteiro — o corpo é `l − E`;
+3. o próprio DXF, que é `L − E`.
+
+E `L2` da EBARA bate com `L − E` da WEG em **cinco carcaças** (132M 409/410,
+132M/L 434/435, 225 745/746, 250 825/825, 280 931/931). Duas folhas de
+fabricantes diferentes chegando no mesmo número é o que confirma que as duas
+medem a mesma coisa.
+
+### O que mudou no papel
+
+`tools/conferir_motor.py` fecha em **64 de 64 cotas a +0,0%** contra o DXF, e a
+comparação com o bloco de CAD da própria casa saiu de **+10,8% para −0,8%** na
+largura da METB 200-150-250, com a altura **exata** — antes o motor era baixo
+demais porque o corpo tinha o diâmetro de uma medida de frente.
+
+Uma divergência fica registrada e não escondida: no quadro **225**, o
+dimensional da EBARA dá raio 228 e o DXF da W22 dá 201,5. A W22 monta a 225S/M
+num casco quase igual ao da 200 (`ØAC` 403 contra 402), e o dimensional da
+EBARA é de um motor IEC genérico. As duas folhas discordam de verdade; quem
+decide é a casa, e o teste mostra o par.
 
 ## 5. O que a peça puxa: um mecanismo só
 

@@ -12,16 +12,30 @@ MOTOR. Um l so por carcaca, em 22 de 22 carcacas, nas duas rotacoes. E isso
 resolve o que o desenho nao tinha: um motor de 60 CV e uma carcaca 225 com
 880 mm de comprimento, um de 3 CV e uma 90L com 399. A diferenca aparece.
 
-Tres letras bastam para desenhar o motor, e as tres se confirmam entre si:
+Duas letras bastam para o tamanho do motor:
 
   h   altura do eixo do motor - e o proprio numero da carcaca IEC
   l   comprimento do motor
-  r1  diametro do corpo. h - r1/2 da a altura do pe do motor, e ela sobe de
-      20 mm na carcaca 90 para 47 na 225 - que e como motor IEC e mesmo.
 
-n5 e maior que r1 em toda a tabela e fica gravado, mas nao entra no desenho:
-sem a figura em resolucao maior nao da para dizer se e a largura com aletas,
-com caixa de ligacao, ou outra coisa.
+**r1 e n5 nao sao o corpo.** Eu li o r1 como diametro do corpo e desenhei
+motor com ele por um tempo. Errado: cruzando esta tabela com a folha da EBARA,
+r1 bate EXATO com o A do IEC e n5 com o AB, nos seis quadros que as duas
+compartilham (90, 100, 112, 200, 225 e o 132 pela vizinha):
+
+  quadro   r1 (KSB)   A (EBARA)      n5 (KSB)   AB (EBARA)
+  90         140        140            164        164
+  100        160        160            188        188
+  112        190        190            220        220
+  200        318        318            385        385
+  225        356        356            436        436
+
+A e AB sao medidas de LARGURA - vao entre os furos dos pes e largura sobre os
+pes. Elas se veem de FRENTE, e o desenho da casa e de lado. Numa carcaca 90 o
+r1 da 140 onde o corpo tem 180.
+
+O diametro do corpo e o OAC, e ele nao esta neste manual. Ele esta no DXF da
+W22 que a casa mandou: ver tools/extrair_weg.py e data/motores_weg.csv. Por
+isso as colunas aqui tem o nome do que elas medem, e nao "corpo".
 
 A Meganorm nao repete essas medidas - a secao 15 dela so diz QUAL carcaca
 monta em cada bomba. Como a carcaca IEC e a mesma peca nas duas linhas, esta
@@ -43,30 +57,28 @@ def main():
         carcaca = r["carcaca_motor"]
         ficha = motores.setdefault(carcaca, {
             "carcaca": carcaca, "eixo_mm": r["h_mm"], "comprimento_mm": r["l_mm"],
-            "corpo_mm": r["r1_mm"], "n5_mm": r["n5_mm"], "cv": set(),
-            "fonte": FONTE})
+            "largura_pes_mm": r["r1_mm"], "largura_total_mm": r["n5_mm"],
+            "cv": set(), "fonte": FONTE})
         ficha["cv"].add(float(r["cv"]))
         for campo, coluna in (("eixo_mm", "h_mm"), ("comprimento_mm", "l_mm"),
-                              ("corpo_mm", "r1_mm")):
+                              ("largura_pes_mm", "r1_mm")):
             if r[coluna] and ficha[campo] != r[coluna]:
                 print(f"# {carcaca}: {coluna} tem dois valores "
                       f"({ficha[campo]} e {r[coluna]})", file=sys.stderr)
 
-    campos = ["carcaca", "quadro", "eixo_mm", "comprimento_mm", "corpo_mm",
-              "pe_mm", "n5_mm", "cv_min", "cv_max", "fonte"]
+    campos = ["carcaca", "quadro", "eixo_mm", "comprimento_mm",
+              "largura_pes_mm", "largura_total_mm", "cv_min", "cv_max", "fonte"]
     escritor = csv.DictWriter(sys.stdout, campos)
     escritor.writeheader()
     for ficha in sorted(motores.values(),
                         key=lambda f: (float(f["eixo_mm"]), f["carcaca"])):
-        eixo, corpo = float(ficha["eixo_mm"]), float(ficha["corpo_mm"])
         escritor.writerow({
             "carcaca": ficha["carcaca"],
             "quadro": int(float(ficha["eixo_mm"])),
             "eixo_mm": ficha["eixo_mm"],
             "comprimento_mm": ficha["comprimento_mm"],
-            "corpo_mm": ficha["corpo_mm"],
-            "pe_mm": round(eixo - corpo / 2, 1),
-            "n5_mm": ficha["n5_mm"],
+            "largura_pes_mm": ficha["largura_pes_mm"],
+            "largura_total_mm": ficha["largura_total_mm"],
             "cv_min": f'{min(ficha["cv"]):g}', "cv_max": f'{max(ficha["cv"]):g}',
             "fonte": ficha["fonte"]})
     print(f"# {len(motores)} carcacas", file=sys.stderr)
