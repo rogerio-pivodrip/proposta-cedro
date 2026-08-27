@@ -119,9 +119,15 @@ def giro(x, perna, angulo, dn_pol, sentido=1, y=0.0, gomos=4):
     """
     r = DE_TUBO.get(dn_pol, 100) / 2
     t = math.radians(angulo)
-    raio = max(perna * 0.5, r * 1.15)
-    recuo = min(raio * math.tan(t / 2), perna * 0.85)
-    raio = recuo / math.tan(t / 2)
+    # O gomo ocupa quase toda a perna: sobra so um toco reto para a flange.
+    # Com raio pequeno as pernas retas comiam os gomos das pontas e a curva
+    # saia com dois gomos largos no meio e dois fiapos nas beiras.
+    recuo = perna * 0.86
+    raio = max(recuo / math.tan(t / 2), r * 1.05)
+    recuo = raio * math.tan(t / 2)
+    if recuo > perna * 0.92:
+        recuo = perna * 0.92
+        raio = recuo / math.tan(t / 2)
 
     vx, vy = x + perna, y
     # cortes: as pontas viram metade do gomo do meio
@@ -148,7 +154,10 @@ def giro(x, perna, angulo, dn_pol, sentido=1, y=0.0, gomos=4):
     dsx, dsy = math.cos(-t * sentido), math.sin(-t * sentido)
     fim = (vx + perna * dsx, vy + perna * dsy)
     t2 = (vx + recuo * dsx, vy + recuo * dsy)
-    centro_linha = [inicio, t1] + pontos[1:-1] + [t2, fim]
+    # pontos ja contem os dois pontos de tangencia (corte 0 e corte final):
+    # repeti-los criava dois segmentos a mais e a curva de 4 gomos aparecia
+    # com 6. A linha e: perna de entrada, os N gomos, perna de saida.
+    centro_linha = [inicio] + pontos + [fim]
 
     def normal(a, b):
         dx, dy = b[0] - a[0], b[1] - a[1]
@@ -173,8 +182,9 @@ def giro(x, perna, angulo, dn_pol, sentido=1, y=0.0, gomos=4):
     fora, dentro = parede(1 * sentido), parede(-1 * sentido)
     caminho = lambda pts: "M" + " L".join(f"{p[0]:.1f} {p[1]:.1f}" for p in pts)
     elementos = [_p(caminho(fora)), _p(caminho(dentro))]
-    # a solda de cada gomo, so nas juntas do meio
-    for i in range(1, len(fora) - 1):
+    # solda so entre gomo e gomo: N gomos dao N-1 soldas. As juntas com as
+    # pernas nao aparecem, que e onde o tubo continua reto.
+    for i in range(2, len(fora) - 2):
         elementos.append(_p(f"M{fora[i][0]:.1f} {fora[i][1]:.1f} "
                             f"L{dentro[i][0]:.1f} {dentro[i][1]:.1f}", "solda"))
     return elementos, (fim[0], fim[1], -angulo * sentido), (centro, raio)
