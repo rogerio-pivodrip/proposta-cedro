@@ -522,6 +522,44 @@ sem inventar nada:
 - **o sentido do fluxo**, que entra pelo eixo e sai por cima — é a informação
   que decide de que lado a redução excêntrica leva o lado plano.
 
+### O motor é dimensionado, e a tabela já dizia isso
+
+O desenho tinha um motor de tamanho proporcional ao resto — o que é errado
+duas vezes: um motor de 60 CV é muito maior que um de 3 CV, e a diferença não
+é proporcional a nada da bomba.
+
+A resposta estava na própria tabela do A2744, e apareceu ao separar as colunas
+**por quem as faz variar**. Elas se partem em duas metades limpas, e nenhuma
+coluna fica no meio:
+
+| dependem do **tamanho da bomba** | dependem da **carcaça do motor** |
+|---|---|
+| h1 h2 a b m1 m2 n1 n2 n3 s1 | h **l** m3 m4 n4 n5 r1 s2 t1 w |
+
+Ou seja: **o `l` do manual não é o comprimento do conjunto — é o comprimento
+do motor.** Um `l` só por carcaça, em **22 de 22 carcaças**, nas duas
+rotações. Eu vinha lendo `l` como o total e desenhando o motor no que sobrava
+depois da voluta, o que fazia o motor encolher quando a bomba crescia — o
+oposto do certo.
+
+Três letras bastam, e as três se confirmam entre si:
+
+| letra | o que é | prova |
+|---|---|---|
+| **h** | altura do eixo do motor | é o próprio número da carcaça IEC |
+| **l** | comprimento do motor | 374 na 90S, 880 na 225S/M — magnitude de motor |
+| **r1** | diâmetro do corpo | `h − r1/2` dá o pé do motor: sobe de 20 mm na 90 para 47 na 225, que é como motor IEC é mesmo |
+
+`data/motores_iec.csv` guarda as doze carcaças. A Meganorm não repete essas
+medidas: a seção 15 dela só diz **qual** carcaça monta em cada bomba — e como
+a carcaça IEC é a mesma peça nas duas linhas, a tabela serve às duas.
+
+No papel a diferença aparece: a mesma 125-200 com 20 CV e com 30 CV são dois
+desenhos visivelmente diferentes, e o que muda entre eles é só o motor.
+
+E a quina do motor ficou arredondada, porque carcaça de motor é fundida e não
+dobrada — o único canto vivo dela é o da caixa de ligação.
+
 ### Vertical e horizontal são a mesma peça
 
 A bomba montada na vertical é a **mesma fundição de pé** — motor em cima,

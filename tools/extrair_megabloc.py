@@ -8,10 +8,15 @@ mesmas da Meganorm, o que liga as duas linhas sem tradutor:
 
   h1  do eixo a base            h2  do eixo a face do flange de descarga
   a   da face da succao ao eixo da descarga
-  h   carcaca IEC do motor      l   comprimento total do conjunto
+  h   carcaca IEC do motor      l   comprimento do MOTOR
 
 O folheto antigo chamava essas tres de a, b e c. Que sao a mesma coisa esta
 conferido em 26 dos 28 tamanhos comuns - ver tools/conferir_bomba_ksb.py.
+
+E o l NAO e o comprimento do conjunto, como parece: e o do motor. As colunas
+da tabela se partem em duas metades pelo que as faz variar - umas dependem so
+do tamanho da bomba, outras so da carcaca do motor - e l esta na segunda, com
+um valor so por carcaca em 22 de 22. Ver tools/motores_iec.py.
 
 O nome do tamanho aqui vem nos tres grupos da lista (050-032-200 = succao 50,
 recalque 32, rotor 200), e nao nos dois do folheto antigo (32-200). Grava os

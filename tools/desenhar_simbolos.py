@@ -81,8 +81,11 @@ def elenco(dn):
         # o PEAD entra pela equivalencia da casa: 8" de aco vira DN225
         ("PEAD", [s.tubo_pead(_pead(dn), 6000), s.colar_pead(_pead(dn))]),
         ("Bomba", [
-            # a bomba e a mesma peca nas duas poses, como a curva
+            # a mesma bomba na menor e na maior potencia do folheto: o que
+            # muda de uma para a outra e o motor, e a diferenca e de folha
             s.bomba_megabloc(_megabloc(dn)),
+            s.bomba_megabloc(_megabloc(dn), cv=_maior_cv(_megabloc(dn))),
+            # a bomba e a mesma peca nas duas poses, como a curva
             s.bomba_megabloc(_megabloc(dn), "VERTICAL"),
             # a mancalizada: mesma ponta molhada, mancal e motor sobre a base
             s.bomba_meganorm(_meganorm(dn)),
@@ -101,6 +104,13 @@ def _megabloc(dn_linha):
 
 def _meganorm(dn_linha):
     return s.meganorm_para_linha(_bocal(dn_linha)) or "100-315"
+
+
+def _maior_cv(tamanho):
+    """A maior potência que o folheto lista para essa bomba."""
+    s.ficha_bomba(tamanho)
+    linhas = s._bombas.get((tamanho, 4)) or []
+    return max((float(r["cv"]) for r in linhas), default=None)
 
 
 def _pead(dn_pol):
@@ -123,9 +133,11 @@ def desenhar(elemento):
     if elemento["tipo"] == "path":
         corpo = f'<path class="{classe}" d="{elemento["d"]}"/>'
     elif elemento["tipo"] == "rect":
+        # a quina arredondada e da carcaça fundida do motor
+        raio = (f' rx="{elemento["rx"]:.1f}"' if elemento.get("rx") else "")
         corpo = (f'<rect class="{classe}" x="{elemento["x"]:.1f}" '
                  f'y="{elemento["y"]:.1f}" width="{elemento["w"]:.1f}" '
-                 f'height="{elemento["h"]:.1f}"/>')
+                 f'height="{elemento["h"]:.1f}"{raio}/>')
     elif elemento["tipo"] == "circulo":
         corpo = (f'<circle class="{classe}" cx="{elemento["cx"]:.1f}" '
                  f'cy="{elemento["cy"]:.1f}" r="{elemento["r"]:.1f}"/>')

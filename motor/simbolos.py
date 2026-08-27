@@ -1121,6 +1121,44 @@ def carcaca_do_motor(cv):
     return CARCACA_POR_CV[-1][1]
 
 
+_motores = None
+
+
+def ficha_motor(carcaca):
+    """As tres medidas do motor da carcaca: eixo, comprimento e corpo.
+
+    A tabela sai de dentro do manual da Megabloc - as colunas que dependem so
+    da carcaca sao do motor, e a carcaca IEC e a mesma peca nas duas linhas.
+    Ver tools/motores_iec.py.
+
+    Carcaca sem letra (a Meganorm lista '160' e nao '160M') cai na mais curta
+    daquele quadro - e a escolha conservadora, porque o motor mais longo e o
+    que estoura a base.
+    """
+    global _motores
+    if _motores is None:
+        _motores = {}
+        with open(f"{DADOS}/motores_iec.csv", encoding="utf-8") as fh:
+            for r in csv.DictReader(fh):
+                _motores[r["carcaca"]] = r
+    if carcaca in _motores:
+        return _motores[carcaca]
+    quadro = "".join(c for c in str(carcaca) if c.isdigit())
+    if not quadro:
+        return None
+    mesmos = [f for f in _motores.values() if f["quadro"] == quadro]
+    if mesmos:
+        return min(mesmos, key=lambda f: float(f["comprimento_mm"]))
+    # fora da tabela: o motor cresce com o quadro na mesma proporcao medida
+    maior = max(_motores.values(), key=lambda f: float(f["eixo_mm"]))
+    fator = float(quadro) / float(maior["eixo_mm"])
+    return {"carcaca": str(carcaca), "quadro": quadro, "eixo_mm": quadro,
+            "comprimento_mm": f'{float(maior["comprimento_mm"]) * fator:.0f}',
+            "corpo_mm": f'{float(maior["corpo_mm"]) * fator:.0f}',
+            "pe_mm": f'{float(maior["pe_mm"]) * fator:.0f}',
+            "extrapolado": True}
+
+
 _meganorm = None
 _conjunto = None
 
@@ -1255,23 +1293,49 @@ def _ponta_de_eixo(x, comprimento, d1, u, t):
              "classe": "corpo"}]
 
 
-def _motor(x, comp, carcaca, com_pes=False, base_y=None):
-    """O bloco do motor: corpo com aletas, tampa do ventilador e, na
-    mancalizada, os proprios pes ate a base."""
-    hm = carcaca * 0.95
-    tampa = carcaca * 0.18
-    corpo = max(comp - tampa, carcaca * 0.6)
-    el = [{"tipo": "rect", "x": x, "y": -hm, "w": corpo, "h": 2 * hm,
-           "classe": "corpo"}]
-    for k in range(1, 9):
-        el.append(_p(f"M{x + corpo*k/9:.1f} {-hm:.1f} v{2*hm:.1f}", "malha"))
-    el.append({"tipo": "rect", "x": x + corpo, "y": -hm * 0.72, "w": tampa,
-               "h": 2 * hm * 0.72, "classe": "corpo"})
-    if com_pes and base_y is not None:
-        for xp in (x + corpo * 0.14, x + corpo * 0.72):
-            el.append({"tipo": "rect", "x": xp, "y": hm, "w": corpo * 0.14,
-                       "h": base_y - hm, "classe": "corpo"})
-    return el, x + corpo + tampa
+def _motor(x, carcaca, base_y=None):
+    """O motor IEC visto de lado, na medida da carcaca.
+
+    O que faz um motor de 60 CV parecer um motor de 60 CV nao e proporcao: e
+    a carcaca. A 225 tem 880 mm de corpo e 356 de diametro; a 90L tem 399 e
+    140. Sao numeros da folha, e a diferenca aparece no papel.
+
+    Quina arredondada porque carcaca de motor e fundida, nao dobrada - e o
+    unico canto vivo dela e o da caixa de ligacao.
+
+    Devolve (elementos, x do fim, ficha da carcaca).
+    """
+    ficha = ficha_motor(carcaca) or {}
+    comp = float(ficha.get("comprimento_mm") or 400)
+    corpo = float(ficha.get("corpo_mm") or 160)
+    eixo = float(ficha.get("eixo_mm") or 100)
+    r = corpo / 2
+    raio = corpo * 0.09                 # a quina da carcaca
+    tampa = comp * 0.13                 # a tampa do ventilador
+    caixa = corpo * 0.30                # a caixa de ligacao, em cima
+
+    el = [{"tipo": "rect", "x": x, "y": -r, "w": comp - tampa, "h": corpo,
+           "rx": raio, "classe": "corpo"}]
+    # as aletas de refrigeracao, ao longo do corpo
+    for k in range(1, 10):
+        xa = x + (comp - tampa) * k / 10
+        el.append(_p(f"M{xa:.1f} {-r + raio*0.5:.1f} v{corpo - raio:.1f}",
+                     "malha"))
+    # a caixa de ligacao e a tampa do ventilador
+    el.append({"tipo": "rect", "x": x + (comp - tampa) * 0.30, "y": -r - caixa * 0.55,
+               "w": caixa * 1.5, "h": caixa * 0.55, "rx": raio * 0.5,
+               "classe": "corpo"})
+    el.append({"tipo": "rect", "x": x + comp - tampa, "y": -r * 0.74,
+               "w": tampa, "h": corpo * 0.74, "rx": raio * 0.6,
+               "classe": "corpo"})
+    if base_y is not None:
+        # os pes: do corpo ate a base, na altura que a carcaca manda
+        altura = base_y - r
+        for xp in (x + (comp - tampa) * 0.16, x + (comp - tampa) * 0.68):
+            el.append({"tipo": "rect", "x": xp, "y": r,
+                       "w": (comp - tampa) * 0.16, "h": max(altura, 1),
+                       "classe": "corpo"})
+    return el, x + comp, ficha
 
 
 def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4, cv=None):
@@ -1297,7 +1361,6 @@ def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4, cv=None):
     a = float(ficha["h2_mm"])           # eixo -> face do flange de descarga
     b = float(ficha["h1_mm"])           # eixo -> base
     h = float(ficha["h_mm"])            # carcaca IEC do motor
-    comp = float(ficha["l_mm"])         # comprimento total do conjunto
     dn1 = _pol(ficha["dn_succao_pol"])
     dn2 = _pol(ficha["dn_recalque_pol"])
     rotor = float(ficha["tamanho"].split("-")[2].split(".")[0])
@@ -1308,17 +1371,18 @@ def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4, cv=None):
                "h": 2 * h * 0.59, "classe": "corpo"})
     el += _eixo_da_bomba(x1, x1 + lanterna, h * 0.20)
     x_motor = x1 + lanterna
-    motor, fim = _motor(x_motor, comp - x_motor, h)
+    motor, fim, ficha_m = _motor(x_motor, ficha["carcaca_motor"], base_y=b - 22)
     el += motor
-    el.append({"tipo": "nota", "x": (x_motor + fim) / 2, "y": -h * 1.18,
-               "texto": f'carcaça {ficha["carcaca_motor"]}'})
-    # o pe da voluta e o do motor, descendo ate a base no nivel que b manda
+    el.append({"tipo": "nota", "x": (x_motor + fim) / 2,
+               "y": -float(ficha_m.get("corpo_mm") or h * 2) / 2 - h * 0.40,
+               "texto": f'carcaça {ficha["carcaca_motor"]} · '
+                        f'{float(ficha["cv"]):g} CV'})
+    # o pe da voluta e a base, no nivel que b manda. Os pes do motor ja vem
+    # do proprio motor, na altura da carcaca
     el.append({"tipo": "rect", "x": x0 + largura * 0.2, "y": rv,
                "w": largura * 0.6, "h": b - rv - 22, "classe": "corpo"})
-    el.append({"tipo": "rect", "x": fim - h * 1.35, "y": h * 0.95,
-               "w": h * 0.6, "h": b - h * 0.95 - 22, "classe": "corpo"})
-    el.append({"tipo": "rect", "x": x0, "y": b - 22, "w": fim - x0, "h": 22,
-               "classe": "corpo"})
+    el.append({"tipo": "rect", "x": x0, "y": b - 22, "w": fim - x0 + 20,
+               "h": 22, "classe": "corpo"})
     el.append(_p(f"M-70 0 H{fim+40:.0f}", "centro"))
     el.append(_p(f"M{c:.1f} {-a-40:.1f} V{rv+30:.1f}", "centro"))
     el += _letras_bomba(a, b, c, rv, x0, x_direita=x1 + h * 0.30)
@@ -1395,7 +1459,8 @@ def bomba_meganorm(nome, cv=None, montagem="HORIZONTAL"):
     carcaca, linha_conjunto = _escolher_carcaca(tamanho, cv)
     proporcao = carcaca is None
     if proporcao:
-        carcaca = max(80.0, b * 0.8)    # sem a secao 15: so o bloco e proporcao
+        # sem a secao 15 nao ha carcaca listada: cai na que a potencia pede
+        carcaca = float(carcaca_do_motor(cv or 50))
 
     el, x0, x1, rv, largura = _corpo_bomba(a, b, c, rotor, dn1, dn2)
     # o mancal: do fim da voluta ate o f do folheto, escalonado
@@ -1434,13 +1499,16 @@ def bomba_meganorm(nome, cv=None, montagem="HORIZONTAL"):
            _p(f"M{x_luva+folga:.1f} {-rv*0.44:.1f} V{-rv*0.14:.1f}", "malha")]
     # o motor: a carcaca sai do folheto, o comprimento e proporcao dela
     x_motor = x_luva + folga
-    motor, fim = _motor(x_motor, carcaca * 2.4, carcaca,
-                        com_pes=True, base_y=b - 24)
+    nome_carcaca = (linha_conjunto or {}).get("carcaca_motor") or f"{carcaca:g}"
+    motor, fim, ficha_m = _motor(x_motor, nome_carcaca, base_y=b - 24)
     el += motor
-    if linha_conjunto:
-        el.append({"tipo": "nota", "x": (x_motor + fim) / 2,
-                   "y": -carcaca * 1.18,
-                   "texto": f'carcaça {linha_conjunto["carcaca_motor"]}'})
+    rotulo_motor = f"carcaça {nome_carcaca}"
+    if cv:
+        rotulo_motor += f" · {cv:g} CV"
+    el.append({"tipo": "nota", "x": (x_motor + fim) / 2,
+               "y": -float(ficha_m.get("corpo_mm") or carcaca * 2) / 2
+                    - carcaca * 0.40,
+               "texto": rotulo_motor})
     el.append({"tipo": "rect", "x": x0 - 30, "y": b - 24,
                "w": fim - x0 + 70, "h": 24, "classe": "corpo"})
     el.append(_p(f"M-70 0 H{fim+60:.0f}", "centro"))
