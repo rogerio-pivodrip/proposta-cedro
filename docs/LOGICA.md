@@ -722,17 +722,60 @@ cujo bocal de entrada é a bitola anterior, nas duas orientações:
 Em 14" o catálogo não tem bomba com entrada de 12", então o caso não se testa
 por aí — as peças de 14" existem, o que falta é a bomba.
 
+## 7.9 O caderno de desenhos e o manual
+
+Duas fontes oficiais entraram na base
+(`data/fichas/NETAFIM_desenhos_tubos_conexoes_aco_PN16_rev20.pdf` e
+`NETAFIM_manual_projeto_2025_rev1.pdf`). O caderno de desenhos é a peça que
+faltava para a vista lateral: cada página traz a tabela paramétrica de uma peça,
+com **cota face a face, espessura, tipo das duas pontas e o código** — que a
+descrição do item não tem.
+
+`tools/extrair_desenhos.py` converte as 42 páginas em
+`data/desenhos_netafim.csv`: **360 posições**.
+
+### O que o manual confirmou
+
+| assunto | manual |
+|---|---|
+| flange | *"seguem a norma NBR 7675"* — confirma a tabela de furação |
+| espessura por DN | 2,00 mm até 8"; 2,65 mm em 10" e 12"; 3,00 e 4,75 mm de 14" para cima |
+| velocidade na sucção | **menor que 1,5 m/s**, com NPSH disponível conferido contra o requerido |
+| kit da flange PVC | `ADFL = ADAPTADOR P/FL + FL PVC ISO 2536 PN16 + JUNTA PLANA + PARAFUSO + ARRUELA + PORCA` |
+
+O último confirma a contra-flange e **estende o kit**: além do adaptador, entram
+junta plana e ferragem. O motor hoje puxa só a contra-flange.
+
+### As duas fontes não concordam
+
+| | |
+|---|---|
+| códigos citados no caderno | 173 |
+| desses, na LM Canal | 141 |
+| **fora da LM Canal** | **32** |
+| posições marcadas `CADASTRAR` pela própria Netafim | **101** |
+| dessas, dentro de 3" a 14" | **55** |
+
+`tools/conferir_desenhos.py` roda os dois sentidos. É a mesma checagem que achou
+o 47-14" faltando, agora em escala — e a marcação `CADASTRAR` é da própria
+Netafim, não minha inferência.
+
+Ainda faltam 77 posições cujo código o PDF corta na extração; as páginas estão
+listadas no relatório para conferência à mão.
+
 ## 8. Decisões em aberto
 
-1. **Por que 3 colares de tomada para 2 ventosas?** Aparece igual em dois
-   projetos. O terceiro é de manômetro?
-2. **Norma do flange de cada família de bomba** (`data/bombas_norma.csv`). É o
-   que falta para o motor escolher a redução sozinho, sem perguntar.
-3. **Comprimento do prisioneiro em NBR.** A ficha mede a versão ASME 150, cujo
-   flange é mais grosso — o tirante em NBR sai um pouco mais curto. Mantive o
-   número da ficha, que erra para mais.
-4. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
-   ainda são norma escrita — e são justamente as do lado da bomba.
+1. **Engate K10: o manual diz que é usado.** *"Para as tubulações adutoras, são
+   empregados tubos AZ com acoplamento K10"* — e vocês me disseram que não usam.
+   Entendo que a diferença é o trecho: K10 na adutora, flange na casa de
+   máquinas. O motor hoje recusa K em qualquer lugar. Confirma?
+2. **O kit da flange PVC leva junta e ferragem**, segundo o manual. Hoje o motor
+   puxa só a contra-flange.
+3. **32 códigos do caderno de desenhos não estão na LM**, e a Netafim marcou
+   **101 posições como CADASTRAR** — 55 delas entre 3" e 14". Vale abrir com o
+   cadastro?
+4. **Norma do flange de cada família de bomba** (`data/bombas_norma.csv`).
+5. **Por que 3 colares de tomada para 2 ventosas?**
 
 ## 9. Estado do código
 
@@ -751,6 +794,8 @@ tools/demo_template.py        template de sucção conferido contra os dois proj
 tools/matriz_bitolas.py       cobertura de peças e reduções de 3" a 14"
 tools/matriz_tubos.py         comprimento de tubo AZ por bitola
 tools/conferir_serie_valvula.py  faixa de cada série de válvula
+tools/extrair_desenhos.py     caderno de desenhos -> tabela de cotas e códigos
+tools/conferir_desenhos.py    caderno de desenhos x LM Canal
 motor/templates.py            receitas padrão resolvidas contra o catálogo
 motor/talude.py               travessia do talude e o giro das curvas de 90
 motor/ventosa.py              colar de tomada ou peça de aço com saída de 2"
