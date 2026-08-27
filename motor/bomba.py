@@ -13,6 +13,7 @@ O TIPO da reducao de succao depende de como a bomba esta montada, nao do modelo:
 os dois projetos usam METB, um deitado e outro em pe. Por isso a orientacao e
 atributo da bomba no desenho, escolhido por quem monta.
 """
+from . import bitola
 import re
 
 # So o hifen separa grupos. A barra e outra coisa: em "ETA 125-33/50" o /50 e
@@ -24,10 +25,10 @@ RX_DOIS = re.compile(r"\b(\d{2,3})-(\d{2,4})(?:\.\d)?\b")
 RX_NAO_BOMBA = re.compile(r"\bJG\s?JUNTAS?\b|\bKIT\b|\bJUNTA\b|\bREPARO\b",
                           re.I)
 
-# Bocal em milimetro -> polegada comercial
-MM_PARA_POLEGADA = {25: 1, 32: 1.25, 40: 1.5, 50: 2, 65: 2.5, 80: 3, 100: 4,
-                    125: 5, 150: 6, 200: 8, 250: 10, 300: 12, 350: 14,
-                    400: 16, 450: 18, 500: 20}
+# Bocal em DN nominal -> polegada comercial. Sai de motor/bitola.py: o bocal da
+# bomba e nomeado em DN NOMINAL (a 150-125-315 tem sucao DN150 e descarga
+# DN125), e nao em diametro externo como o plastico.
+MM_PARA_POLEGADA = dict(bitola.POLEGADA)
 
 # Familias de bomba centrifuga que usam essa nomenclatura
 RX_FAMILIA = re.compile(

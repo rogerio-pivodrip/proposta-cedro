@@ -12,6 +12,7 @@ As tabelas ficam em data/*.csv para serem editadas sem mexer em codigo.
 import csv
 import os
 
+from . import bitola
 from .traducao import POLEGADA_MM
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -99,15 +100,12 @@ def barras_da_valvula(familia, ficha, dn=None, unidade="in", norma="NBR PN16"):
 FIGURA_PADRAO = "162"
 BARRA_MM = 1000
 
+# As tres tabelas de conversao sao projecoes de motor/bitola.py, que e a unica
+# do programa. Ficam com o nome antigo porque quem chama nao precisa saber que
+# elas mudaram de casa - o que mudou e que agora ha uma so.
 MM_PARA_POLEGADA = {mm: pol for pol, mm in POLEGADA_MM.items()}
-
-# DN nominal (mm) de cada medida. Duas series entram na mesma tabela de furacao:
-# o aco em polegada e o PVC pelo diametro externo.
-POLEGADA_PARA_DN = {2: 50, 2.5: 65, 3: 80, 4: 100, 5: 125, 6: 150, 8: 200,
-                    10: 250, 12: 300, 14: 350, 16: 400, 18: 450, 20: 500,
-                    24: 600}
-PVC_PARA_DN = {63: 50, 75: 65, 90: 80, 110: 100, 140: 125, 160: 150, 225: 200,
-               280: 250, 315: 300, 355: 350}
+POLEGADA_PARA_DN = dict(bitola.NOMINAL)
+PVC_PARA_DN = {externo: dn for dn, externo in bitola.METRICO.items()}
 
 # Aperto do tirante: arruela, porca e folga somadas as duas espessuras de flange
 ESP_ARRUELA_MM = 3.0
@@ -204,21 +202,17 @@ def contra_flange_de(item):
 
 
 def dn_em_polegada(dn, unidade="in"):
-    """225 mm de Plasson usa a mesma flange de 8". A conversao comercial
-    polegada/milimetro serve para as duas tabelas."""
-    if unidade == "mm":
-        return MM_PARA_POLEGADA.get(dn)
-    return dn
+    """225 mm de Plasson usa a mesma flange de 8".
+
+    Delega em motor/bitola.py: a conversao e uma so no programa, e a prova de
+    que 225 e 8" sao a mesma bitola e justamente esta tabela de furacao.
+    """
+    return bitola.em_polegada(dn, unidade)
 
 
 def dn_nominal(dn, unidade="in"):
     """Medida do desenho -> DN nominal em mm, que e a chave da furacao."""
-    if unidade == "mm":
-        if dn in PVC_PARA_DN:
-            return PVC_PARA_DN[dn]
-        pol = MM_PARA_POLEGADA.get(dn)
-        return POLEGADA_PARA_DN.get(pol) if pol else None
-    return POLEGADA_PARA_DN.get(dn)
+    return bitola.nominal(dn, unidade)
 
 
 # A regra do Plasson vale so quando o flange Plasson encontra outro flange

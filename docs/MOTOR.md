@@ -56,16 +56,66 @@ Três bugs desta semana vieram de tratar bitola como número:
 - `225 mm` e `8"` tratados como coisas diferentes, quando são **a mesma flange
   de 12 furos**.
 
-Bitola precisa ser um objeto com **DN nominal em milímetro como identidade**, e
-as representações como apresentação:
+Bitola é um objeto com **DN nominal em milímetro como identidade**, e as
+representações como apresentação — `motor/bitola.py`:
 
 ```python
 class Bitola:
-    dn_nominal_mm        # 200 - a identidade
+    dn_mm                # 200 - a identidade
     def em_polegada()    # 8"    - como o aço se chama
     def em_mm_externo()  # 225   - como o PVC se chama
+    def em_serie(serie)  # o número dela naquela série, ou None
     def __eq__(outro)    # compara dn_nominal, nunca o número exibido
 ```
+
+**Por que o DN nominal e não a polegada:** é ele a chave da tabela de furação,
+e furação é a prova *física* de que duas bitolas são a mesma. 225 mm de Plasson
+e 8" de aço tomam a mesma flange, com os mesmos 12 furos ⌀22 no mesmo círculo
+de 295. `tools/conferir_bitola.py` confere isso indo buscar na tabela de
+furação — não perguntando à `Bitola` se ela concorda consigo mesma.
+
+**Comparar com número dá `False`**, não um acerto por acidente: é o bug do 90
+de PVC contra 90 de grau, fechado no `__eq__`.
+
+### A tabela era quatro, e virou uma
+
+A conversão estava copiada em quatro lugares — `traducao.POLEGADA_MM`,
+`regras.POLEGADA_PARA_DN`, `regras.PVC_PARA_DN` e `simbolos.PEAD_POL` — e
+`bomba.MM_PARA_POLEGADA` era a inversa de uma delas. Os quatro nomes continuam
+de pé, porque quem chama não precisa saber que mudaram de casa; o que mudou é
+que agora **são projeções de uma tabela só**, e o teste cobra que as quatro
+digam o mesmo que a `Bitola`.
+
+### O catálogo tem três séries de milímetro, não uma
+
+Passar as 3.555 medidas do catálogo pela `Bitola` mostrou que "milímetro" na
+lista é três coisas diferentes:
+
+| série | norma | como aparece | exemplo |
+|---|---|---|---|
+| métrica | ISO 161-1 | PEAD e Plasson | DN225 = 8" |
+| DEFOFO | NBR 7665 | PVC de ponta e bolsa grande | 170, 222, 274, 326, 378 |
+| externo de aço | — | dentro do nome da flange | `FL 8" (203MM)` |
+
+O mesmo DN150 é **160 mm** na métrica e **170 mm** no DEFOFO. Comprar por uma
+tabela e receber da outra não encaixa, e antes disso o programa não tinha como
+saber de qual das três o número vinha.
+
+### E encontrou leitura errada da descrição
+
+Três medidas não são bitola nenhuma, são texto lido como diâmetro:
+
+```
+01542-000319   304 mm    VALV. RET. VERT. 1/2 BSP PN16 INOX 304
+30500-001000   2000.75"  REG. PRESSAO 2000 3/4"X 1 - 06MCA
+```
+
+O `304` é do aço inox, o `2000` é o modelo do regulador. Ficam nomeados no
+relatório em vez de virarem uma bitola de 2 metros. As 117 medidas que sobram
+sem série são gotejamento e microtubo — 16, 17, 22 mm — que não são tubulação
+de casa de bomba.
+
+
 
 A conversão é **tabelada e depende do material**, não é aritmética. E as séries
 não são a mesma coisa:

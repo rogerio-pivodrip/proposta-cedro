@@ -16,7 +16,7 @@ import os
 import re
 from collections import namedtuple
 
-from . import cotas
+from . import bitola, cotas
 
 DADOS = os.path.join(os.path.dirname(__file__), "..", "data")
 
@@ -1396,8 +1396,9 @@ def bucha_reducao(dn_maior, dn_menor):
 SDR_POR_PN = {6: 26, 8: 21, 10: 17, 12.5: 13.6, 16: 11, 20: 9, 25: 7.4}
 # A equivalencia que a casa pratica entre a linha de aco e a de PEAD, a mesma
 # de motor/traducao.POLEGADA_MM lida ao contrario.
-PEAD_POL = {63: 2, 75: 2.5, 90: 3, 110: 4, 140: 5, 160: 6, 225: 8, 280: 10,
-            315: 12, 355: 14}
+PEAD_POL = {externo: bitola.POLEGADA[dn]
+            for dn, externo in bitola.METRICO.items()
+            if dn in bitola.POLEGADA}
 
 
 def _pead_em_polegada(dn_mm):
