@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+
+# DXF gerado pelo motor - saida, nao fonte
+dxf/

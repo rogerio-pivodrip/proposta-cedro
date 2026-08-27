@@ -632,6 +632,57 @@ O que ainda não sai não é falha de símbolo: 1.764 códigos não têm DN na
 descrição, 611 não têm família, e o resto é PVC, filtro e quadro elétrico —
 fora do escopo de sucção e recalque.
 
+## 4.4 DXF: o motor produz a biblioteca de bloco, não concorre com ela
+
+A casa já tem biblioteca de bloco em DWG — bomba, válvula, curva, tudo
+desenhado à mão, um bloco por peça por bitola. Isso parecia estar em tensão
+com o motor paramétrico. Não está, e a saída é simples: **o motor gera o
+mesmo tipo de coisa**.
+
+`motor/dxf.py` escreve cada símbolo como um `BLOCK` com o nome da peça, e a
+linha montada como um `INSERT` por peça, com a rotação acumulada da corrente.
+A geometria não é repetida — o bloco entra uma vez na tabela e a linha aponta
+para ele, do mesmo jeito que um DWG de projeto faz. A cota sai em milímetro
+real e o arquivo declara `$INSUNITS = 4`, então abre no CAD já na escala
+certa.
+
+As camadas seguem a convenção do desenho: `EIXO` vermelho traço-ponto,
+`CORPO` preto, `FLANGE`, `MALHA`, `PARAFUSO`, `PORCA`, `JUNTA`, `COTA`
+separadas. Dá para apagar todos os eixos de uma vez, ou plotar só o corpo.
+
+A diferença que fica é de cobertura: a biblioteca à mão tem as bitolas que
+alguém já precisou; a gerada tem **1.262 peças**, todas com a cota do
+fabricante.
+
+### O bug que a exportação encontrou
+
+`tools/conferir_dxf.py` exporta e lê de volta, e compara a caixa de cada bloco
+com a caixa do símbolo que o gerou. Na primeira rodada: **7 de 28**.
+
+A culpa não era do exportador. O `limites()` do símbolo montava a caixa
+zipando os números do path em pares x,y — o que erra em toda peça que usa `H`
+ou `V`, e quase toda peça usa. O crivo dizia 290 mm e media 350. Como o
+`limites()` é quem dá a escala da célula na folha, as peças vinham sendo
+enquadradas com a caixa errada esse tempo todo.
+
+O conserto foi unificar: um parser de path só, em `simbolos.pontos_do_path()`,
+usado pela caixa **e** pelo exportador. Agora são **28 de 28**, e a folha
+enquadra melhor.
+
+Um segundo achado do mesmo conferidor: duas peças de mesmo rótulo e geometria
+diferente — a mesma bomba com dois motores — colidiam num bloco só. O bloco
+agora só é reaproveitado quando a geometria é a mesma; quando não é, o nome
+ganha o que as distingue (`..._180M`).
+
+### Ler o DXF da casa
+
+`tools/ler_dxf.py` faz o caminho inverso: inventaria um arquivo — quais
+blocos, em que camada, e **quanto cada um mede**. É por isso que o DXF da
+casa interessa: de um bloco de projeto o que importa não é o desenho, é a
+medida. Se o bloco da gaveta de 3" mede 190 mm de face a face, isso é uma
+quarta fonte independente para conferir contra a tabela de cotas, ao lado do
+Irrigafour, da Netafim e do fabricante da válvula.
+
 ## 5. O que a peça puxa: um mecanismo só
 
 Hoje as derivações estão em quatro lugares diferentes. São todas o mesmo padrão

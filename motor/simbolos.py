@@ -270,9 +270,61 @@ def _caixa(elementos):
     return xs, ys
 
 
-def _numeros(d):
-    import re
-    return [float(x) for x in re.findall(r"-?\d+\.?\d*", d)]
+RX_TOKEN = re.compile(r"([A-Za-z])|(-?\d+(?:\.\d+)?)")
+
+
+def pontos_do_path(d):
+    """Le o path do simbolo e devolve as polilinhas em coordenada absoluta.
+
+    O desenho usa um subconjunto pequeno de SVG - M, L, H, V, os relativos e
+    Z. Ter um parser de verdade aqui importa por dois motivos: e ele que da a
+    caixa certa da peca, e e ele que o exportador de DXF usa. Antes disso a
+    caixa saia de zipar os numeros do path em pares x,y, o que erra em toda
+    peca que usa H ou V - e quase toda peca usa.
+
+    Curva de Bezier aparece em duas pecas e vira reta ate o ponto final: em
+    vista lateral, na espessura de traco do desenho, ninguem ve a diferenca.
+    """
+    itens = [(a or b) for a, b in RX_TOKEN.findall(d)]
+    linhas, atual = [], []
+    x = y = 0.0
+    i, comando = 0, "M"
+    while i < len(itens):
+        if itens[i].isalpha():
+            comando = itens[i]
+            i += 1
+            continue
+        n = lambda k: float(itens[i + k])
+        if comando in "Mm":
+            x, y = ((n(0), n(1)) if comando == "M" else (x + n(0), y + n(1)))
+            if len(atual) > 1:
+                linhas.append(atual)
+            atual = [(x, y)]
+            i += 2
+            comando = "L" if comando == "M" else "l"
+            continue
+        if comando in "Ll":
+            x, y = ((n(0), n(1)) if comando == "L" else (x + n(0), y + n(1)))
+            i += 2
+        elif comando in "Hh":
+            x = n(0) if comando == "H" else x + n(0)
+            i += 1
+        elif comando in "Vv":
+            y = n(0) if comando == "V" else y + n(0)
+            i += 1
+        elif comando in "QqTt":
+            x, y = n(2), n(3)
+            i += 4
+        elif comando in "Cc":
+            x, y = n(4), n(5)
+            i += 6
+        else:
+            i += 1
+            continue
+        atual.append((x, y))
+    if len(atual) > 1:
+        linhas.append(atual)
+    return linhas
 
 
 def limites(elementos):
@@ -282,10 +334,10 @@ def limites(elementos):
         pontos = []
         if e["tipo"] == "rect":
             pontos = [(e["x"], e["y"]), (e["x"] + e["w"], e["y"]),
-                      (e["x"], e["y"] + e["h"]), (e["x"] + e["w"], e["y"] + e["h"])]
+                      (e["x"], e["y"] + e["h"]),
+                      (e["x"] + e["w"], e["y"] + e["h"])]
         elif e["tipo"] == "path":
-            n = _numeros(e["d"])
-            pontos = list(zip(n[0::2][:24], n[1::2][:24]))
+            pontos = [p for linha in pontos_do_path(e["d"]) for p in linha]
         elif e["tipo"] == "circulo":
             pontos = [(e["cx"] - e["r"], e["cy"] - e["r"]),
                       (e["cx"] + e["r"], e["cy"] + e["r"])]
@@ -294,7 +346,8 @@ def limites(elementos):
             ang = math.radians(ang_graus)
             cos, sen = math.cos(ang), math.sin(ang)
             pontos = [(cx + (px - cx) * cos - (py - cy) * sen,
-                       cy + (px - cx) * sen + (py - cy) * cos) for px, py in pontos]
+                       cy + (px - cx) * sen + (py - cy) * cos)
+                      for px, py in pontos]
         xs += [p[0] for p in pontos]
         ys += [p[1] for p in pontos]
     if not xs:
