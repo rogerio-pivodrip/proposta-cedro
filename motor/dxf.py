@@ -18,9 +18,18 @@ import math
 import re
 import unicodedata
 
-import ezdxf
-
 from .simbolos import pontos_do_path
+
+
+def _ezdxf():
+    """A biblioteca de CAD, carregada so quando alguem exporta.
+
+    Importar no topo obrigaria a instalar ezdxf para DESENHAR, e desenhar nao
+    precisa dela: a geometria e nossa, em milimetro, e o ezdxf so escreve o
+    arquivo. Quem quer so abrir o programa e montar uma linha nao instala nada.
+    """
+    import ezdxf
+    return ezdxf
 
 # camada -> (cor ACI, tipo de linha). A cor 1 e vermelho, 7 preto/branco,
 # 8 cinza escuro, 9 cinza claro - as cores basicas do AutoCAD.
@@ -110,11 +119,13 @@ def _desenhar(alvo, elemento):
         texto = alvo.add_text(_sem_acento(elemento["texto"]),
                               height=ALTURA_TEXTO,
                               dxfattribs={"layer": "COTA"})
-        texto.set_placement((cx, cy), align=ezdxf.enums.TextEntityAlignment.CENTER)
+        texto.set_placement(
+            (cx, cy),
+            align=_ezdxf().enums.TextEntityAlignment.CENTER)
 
 
 def _documento():
-    doc = ezdxf.new("R2010", setup=True)
+    doc = _ezdxf().new("R2010", setup=True)
     doc.header["$INSUNITS"] = 4        # milimetro
     for nome, (cor, tipo) in CAMADAS.items():
         if nome not in doc.layers:

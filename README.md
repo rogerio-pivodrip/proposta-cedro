@@ -6,7 +6,15 @@ materiais a partir de um único modelo.
 
 A lógica completa está em [`docs/LOGICA.md`](docs/LOGICA.md).
 
-## Rodar
+## Conferir e regerar
+
+```bash
+python3 tools/conferir_tela.py     # o programa inteiro, num navegador de verdade
+python3 tools/conferir_comandos.py # desfazer devolve o documento exato
+python3 tools/conferir_bitola.py   # os três bugs de bitola, e o catálogo inteiro
+python3 tools/conferir_pvc.py      # o desenho contra a folha da Plasson
+python3 tools/conferir_motor.py    # o motor contra o DXF da W22
+```
 
 ```bash
 pip install openpyxl pypdf
@@ -17,7 +25,35 @@ python3 tools/extrair_lista_pdf.py x.pdf     # lista de peças de um PDF do CAD
 python3 tools/casar_lista.py data/projetos/*.csv   # nome de desenho -> código SAP
 ```
 
-## O programa
+## Rodar o programa
+
+**Não precisa instalar nada.** O desenho, a lista e a tela são Python puro —
+só a exportação precisa de biblioteca, e só na hora de exportar.
+
+```bash
+git clone -b claude/netafim-pecas-memorias-x9ayop \
+    https://github.com/rogerio-pivodrip/proposta-cedro
+cd proposta-cedro
+python3 -m api.http --abrir          # abre o navegador no programa
+```
+
+Se aparecer "porta em uso", troque: `--porta 8770`.
+
+Na tela: escolha a bitola, **montar sucção**, e daí em diante clique numa peça
+(no desenho ou na lista), acrescente pela família, **arraste uma peça sobre
+outra** para mudar a ordem — antes de soltar, o programa diz o que aconteceria.
+Ctrl+Z e Ctrl+Y desfazem e refazem.
+
+Para exportar DXF e planilha:
+
+```bash
+pip install -r requirements.txt      # ezdxf e openpyxl, só para exportar
+```
+
+Sem elas o programa roda igual e os botões de DXF e planilha dizem o que
+falta instalar.
+
+## O motor por fora
 
 O motor é uma biblioteca: ele não sabe onde roda. Quem o expõe é a camada
 `api/`, que traduz JSON em comando e devolve o documento inteiro recalculado —

@@ -1,0 +1,4 @@
+# Rodar o programa nao precisa de nada: o desenho, a lista e a tela sao
+# Python puro. Estas duas so entram na EXPORTACAO, e so quando alguem exporta.
+ezdxf>=1.1        # exportar DXF
+openpyxl>=3.1     # exportar a planilha (e importar o catalogo da LM)

@@ -263,14 +263,22 @@ def _exportar(sessao, comando):
     nome = comando.get("arquivo") or f"{sessao.linha.tipo.lower()}.{extensao}"
     rotulo = comando.get("rotulo") or f"{sessao.linha.tipo} {sessao.linha.area}"
     recusadas = []
-    if formato == "dxf":
-        conteudo, recusadas = exportacao.para_dxf(sessao.linha, rotulo)
-    elif formato == "svg":
-        conteudo, recusadas = exportacao.para_svg(sessao.linha)
-    elif formato == "csv":
-        conteudo, _ = exportacao.para_csv(sessao.linha)
-    else:
-        conteudo, _ = exportacao.para_xlsx(sessao.linha)
+    # desenhar nao precisa de biblioteca nenhuma; exportar precisa, e so na
+    # hora. Quem so quer montar e ver a linha nao instala nada - e quando
+    # precisar, a recusa diz o que instalar em vez de estourar um traceback
+    try:
+        if formato == "dxf":
+            conteudo, recusadas = exportacao.para_dxf(sessao.linha, rotulo)
+        elif formato == "svg":
+            conteudo, recusadas = exportacao.para_svg(sessao.linha)
+        elif formato == "csv":
+            conteudo, _ = exportacao.para_csv(sessao.linha)
+        else:
+            conteudo, _ = exportacao.para_xlsx(sessao.linha)
+    except ImportError as erro:
+        pacote = {"dxf": "ezdxf", "xlsx": "openpyxl"}.get(formato, "?")
+        raise Erro(f"para exportar {formato} falta a biblioteca {pacote} - "
+                   f"instale com: pip install {pacote}") from erro
     saida = {"formato": formato, "arquivo": nome, "mime": mime,
              "recusadas": recusadas}
     if tipo == "binario":

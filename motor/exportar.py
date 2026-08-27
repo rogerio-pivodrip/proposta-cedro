@@ -18,13 +18,14 @@ e o programa entrega os dois.
 import csv
 import io
 
-from . import dxf, vista
+from . import vista
 
 CABECALHO_ORCAMENTO = ("Area", "Cod. SAP", "Descricao", "Qtd", "Origem")
 
 
 def para_dxf(linha, rotulo=None):
     """A linha montada em DXF, 1:1 em milimetro. (texto, recusadas)"""
+    from . import dxf                  # so quem exporta DXF precisa do ezdxf
     postos, recusadas = vista.postos_da_linha(linha)
     doc = dxf.linha_em_dxf(postos, rotulo)
     return dxf.texto_do_dxf(doc), recusadas

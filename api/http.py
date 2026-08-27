@@ -77,12 +77,19 @@ def main(argv=None):
     p = argparse.ArgumentParser()
     p.add_argument("--porta", type=int, default=8765)
     p.add_argument("--web", default=os.path.join(RAIZ, "web"))
+    p.add_argument("--abrir", action="store_true",
+                   help="abre o navegador no endereco do programa")
     args = p.parse_args(argv)
     Punho.sessao = Sessao()
     Punho.pasta_web = os.path.abspath(args.web)
     servidor = ThreadingHTTPServer(("127.0.0.1", args.porta), Punho)
-    print(f"# motor em http://127.0.0.1:{args.porta}", file=sys.stderr,
-          flush=True)
+    endereco = f"http://127.0.0.1:{args.porta}"
+    print(f"# o programa esta em {endereco}  (ctrl+c para parar)",
+          file=sys.stderr, flush=True)
+    if args.abrir:
+        import threading
+        import webbrowser
+        threading.Timer(0.6, webbrowser.open, [endereco]).start()
     try:
         servidor.serve_forever()
     except KeyboardInterrupt:
