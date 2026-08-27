@@ -8,6 +8,8 @@ Tres camadas, como diz docs/MOTOR.md 4: a geometria sai em milimetro real
 dentro de um <g transform="scale(...)">, o traco nao engorda
 (vector-effect), e a anotacao vive fora da escala, em pixel fixo.
 """
+import math
+
 
 
 def desenhar(elemento):
@@ -26,6 +28,9 @@ def desenhar(elemento):
         abre += f'<g transform="rotate({girar[0]:g} {girar[1]:.1f} {girar[2]:.1f})">'
         fecha = "</g>" + fecha
     classe = elemento.get("classe", "corpo")
+    # o estilo e posto pelo desenhista da linha, e nao pelo simbolo: e por
+    # ele que um gomo recebe o degrade do proprio eixo
+    estilo = f' style="{elemento["estilo"]}"' if elemento.get("estilo") else ""
     if elemento["tipo"] == "path":
         # caminho FECHADO ganha uma segunda classe. E o que permite pintar a
         # carcaca do motor, que e um poligono com os cantos chanfrados e nao
@@ -33,15 +38,16 @@ def desenhar(elemento):
         # pintada. Caminho aberto continua sem preenchimento: fechar um traco
         # solto por dentro faria o SVG inventar uma reta e pintar um triangulo
         fechado = " fechado" if "Z" in elemento["d"].upper() else ""
-        corpo = f'<path class="{classe}{fechado}" d="{elemento["d"]}"/>'
+        corpo = (f'<path class="{classe}{fechado}"{estilo} '
+                 f'd="{elemento["d"]}"/>')
     elif elemento["tipo"] == "rect":
         # a quina arredondada e da carcaça fundida do motor
         raio = (f' rx="{elemento["rx"]:.1f}"' if elemento.get("rx") else "")
-        corpo = (f'<rect class="{classe}" x="{elemento["x"]:.1f}" '
+        corpo = (f'<rect class="{classe}"{estilo} x="{elemento["x"]:.1f}" '
                  f'y="{elemento["y"]:.1f}" width="{elemento["w"]:.1f}" '
                  f'height="{elemento["h"]:.1f}"{raio}/>')
     elif elemento["tipo"] == "circulo":
-        corpo = (f'<circle class="{classe}" cx="{elemento["cx"]:.1f}" '
+        corpo = (f'<circle class="{classe}"{estilo} cx="{elemento["cx"]:.1f}" '
                  f'cy="{elemento["cy"]:.1f}" r="{elemento["r"]:.1f}"/>')
     else:
         return ""
@@ -138,6 +144,93 @@ LIVREA_FAMILIA = {"VALVULA_RETENCAO": "azul", "VALVULA_BORBOLETA": "azul",
 LIVREA_MATERIAL = {"PVC": "pvc", "PEAD": "pead"}
 
 
+def luz_de(cor, giro=0.0, espelhado=False):
+    """O degrade desta peca, com a luz sempre do lado de cima da folha.
+
+    Devolve (estilo, defs): o estilo entra no grupo da peca como variavel CSS,
+    e os defs sao os gradientes novos que ele precisou.
+
+    O degrade e TRANSVERSAL ao eixo - claro na geratriz de cima, escuro na de
+    baixo - e ele vive dentro do grupo que gira, entao ele acompanha a peca.
+    Isso e certo: numa linha de pe o brilho tem de continuar correndo ao longo
+    do tubo, e nao atravessado nele.
+
+    O que estava errado era o SENTIDO. Girar a peca 180 graus, ou espelha-la,
+    poe o lado claro do degrade para baixo - a peca fica iluminada por debaixo,
+    o que nao acontece em lugar nenhum. Entao a conta e uma so: para onde
+    aponta, na folha, o "para baixo" da peca?
+
+        para_baixo = m * cos(giro),  m = -1 se espelhada
+
+    Positivo, esta em pe; negativo, esta de cabeca para baixo e o degrade sai
+    invertido. Em 90 graus o cosseno e zero: a peca esta deitada, nao ha lado
+    de cima, e tanto faz.
+
+    As variantes herdam as PARADAS do gradiente base por `href` - o que muda e
+    so o sentido, e as cores continuam declaradas num lugar so.
+    """
+    corpo = cor or "aco"
+    # a chapa segue a peca, menos no PEAD: a flange solta do colar e de aco
+    chapa = "chapa" if cor in (None, "pead") else cor
+    m = -1.0 if espelhado else 1.0
+    if m * math.cos(math.radians(float(giro))) >= -1e-9:
+        return f"--luz:url(#{corpo});--luz-chapa:url(#{chapa})", {}
+    defs = {}
+    for base in {corpo, chapa}:
+        defs[f"{base}-v"] = (
+            f'<linearGradient id="{base}-v" href="#{base}" '
+            f'xlink:href="#{base}" gradientTransform="translate(0 1) '
+            f'scale(1 -1)"/>')
+    return f"--luz:url(#{corpo}-v);--luz-chapa:url(#{chapa}-v)", defs
+
+
+def luz_local(cor, luz, giro=0.0, espelhado=False):
+    """O degrade de UMA regiao que tem eixo proprio - o gomo da curva.
+
+    Aqui o gradiente sai em coordenada da peca (`userSpaceOnUse`), e nao na
+    caixa dela: o gomo e uma faixa inclinada, e a caixa dele nao diz nada
+    sobre para onde ele aponta. O vetor vem pronto do simbolo, do meio de uma
+    parede ao meio da outra.
+
+    O sentido e conferido do mesmo jeito de sempre: o vetor tem de apontar
+    para BAIXO na folha depois do giro e do espelho da peca. Se apontar para
+    cima, troca-se ponta por ponta.
+    """
+    base = cor or "aco"
+    x1, y1, x2, y2 = luz
+    rad = math.radians(float(giro))
+    m = -1.0 if espelhado else 1.0
+    dx, dy = x2 - x1, m * (y2 - y1)
+    if dx * math.sin(rad) + dy * math.cos(rad) < 0:      # aponta para cima
+        x1, y1, x2, y2 = x2, y2, x1, y1
+    eixo = (f"{x1:g}_{y1:g}_{x2:g}_{y2:g}"
+            .replace(".", "p").replace("-", "n"))
+    nome = f"{base}-l{eixo}"
+    return (f"--luz:url(#{nome})",
+            {nome: f'<linearGradient id="{nome}" href="#{base}" '
+                   f'xlink:href="#{base}" gradientUnits="userSpaceOnUse" '
+                   f'x1="{x1:g}" y1="{y1:g}" x2="{x2:g}" y2="{y2:g}"/>'})
+
+
+def desenhar_peca(elementos, cor=None, giro=0.0, espelhado=False, defs=None):
+    """Desenha os elementos de uma peca, dando a cada gomo o brilho do eixo dele.
+
+    Quase todo elemento herda o `--luz` do grupo da peca. So quem declara eixo
+    proprio - o gomo da curva - ganha um degrade so dele, e e aqui que ele e
+    resolvido: o simbolo diz a direcao em milimetro, a librea diz a cor, e o
+    giro da peca diz para que lado e "para baixo".
+    """
+    saida = []
+    for elemento in elementos:
+        if elemento.get("luz"):
+            estilo, novos = luz_local(cor, elemento["luz"], giro, espelhado)
+            if defs is not None:
+                defs.update(novos)
+            elemento = dict(elemento, estilo=estilo)
+        saida.append(desenhar(elemento))
+    return "".join(saida)
+
+
 def cor_de(simbolo):
     """A cor da peca no modo metalizado, ou None - e ai ela sai em aco.
 
@@ -230,15 +323,26 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
    contorno a mais engrossaria a linha do desenho. */
 .geo .tubulo{fill:none;stroke:none}
 
-.modo-metal .geo .tubulo{fill:url(#aco);stroke:none}
+/* A COR VEM EM VARIAVEL, e nao em regra por peca.
+
+   Quem escolhe a cor e o motor (svg.cor_de) e quem a vira para a luz e
+   svg.luz_de - os dois poem o resultado em `--luz` no grupo da peca. A folha
+   so diz QUE PARTE recebe o corpo e que parte recebe a chapa. Antes disso
+   havia um bloco de quatro seletores para cada librea, e cada cor nova pedia
+   mais quatro. */
+.modo-metal .geo .tubulo{fill:var(--luz,url(#aco));stroke:none}
 .modo-metal .geo rect.corpo,
-.modo-metal .geo path.corpo.fechado{fill:url(#aco)}
-.modo-metal .geo .flange,.modo-metal .geo .chapa_lisa{fill:url(#chapa)}
+.modo-metal .geo path.corpo.fechado,
+/* acionamento e haste: o volante, a caixa redutora, a barra do registro de
+   gaveta. Sao peca de metal como o resto, e sem isto ficavam brancas ao lado
+   do corpo pintado */
+.modo-metal .geo rect.acionamento,
+.modo-metal .geo path.acionamento.fechado,
+.modo-metal .geo rect.haste,
+.modo-metal .geo path.haste.fechado{fill:var(--luz,url(#aco))}
+.modo-metal .geo .flange,
+.modo-metal .geo .chapa_lisa{fill:var(--luz-chapa,url(#chapa))}
 .modo-metal .geo .parafuso,.modo-metal .geo .porca{fill:url(#ferragem)}
-/* traco mais escuro e mais fino: com o corpo pintado, a linha nao precisa
-   mais carregar sozinha a forma da peca */
-/* `:not(.alvo)` porque o alvo e a area de clique, e nao geometria: sem isto
-   o modo pinta o retangulo invisivel de cada peca e ele aparece na folha */
 /* as exclusoes nao sao decoracao: cada `:not` sobe a especificidade desta
    regra, e sem elas ela passa por cima da cor do eixo e da junta - que sao
    vermelhas por convencao, em qualquer modo */
@@ -252,42 +356,6 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .modo-metal .geo .centro{stroke:var(--eixo)}
 .modo-metal .geo .junta{stroke:var(--eixo)}
 .modo-metal .geo .fluxo{fill:#6f757d;stroke:none}
-
-/* o equipamento pintado. A tubulacao fica aco; a valvula e a bomba saem na
-   cor do fabricante, que e como se ve numa casa de bomba de verdade. A
-   ferragem da juncao nao entra: ela e desenhada FORA do grupo da peca, e
-   parafuso zincado nao vai junto na pintura */
-.modo-metal .peca[data-cor="azul"] .tubulo,
-.modo-metal .peca[data-cor="azul"] rect.corpo,
-.modo-metal .peca[data-cor="azul"] path.corpo.fechado,
-.modo-metal .peca[data-cor="azul"] .flange,
-.modo-metal .peca[data-cor="azul"] .chapa_lisa{fill:url(#azul)}
-.modo-metal .peca[data-cor="azul_medio"] .tubulo,
-.modo-metal .peca[data-cor="azul_medio"] rect.corpo,
-.modo-metal .peca[data-cor="azul_medio"] path.corpo.fechado,
-.modo-metal .peca[data-cor="azul_medio"] .flange,
-.modo-metal .peca[data-cor="azul_medio"] .chapa_lisa{fill:url(#azul_medio)}
-.modo-metal .peca[data-cor="escuro"] .tubulo,
-.modo-metal .peca[data-cor="escuro"] rect.corpo,
-.modo-metal .peca[data-cor="escuro"] path.corpo.fechado,
-.modo-metal .peca[data-cor="escuro"] .flange,
-.modo-metal .peca[data-cor="escuro"] .chapa_lisa{fill:url(#escuro)}
-.modo-metal .peca[data-cor="claro"] .tubulo,
-.modo-metal .peca[data-cor="claro"] rect.corpo,
-.modo-metal .peca[data-cor="claro"] path.corpo.fechado,
-.modo-metal .peca[data-cor="claro"] .flange,
-.modo-metal .peca[data-cor="claro"] .chapa_lisa{fill:url(#claro)}
-.modo-metal .peca[data-cor="pvc"] .tubulo,
-.modo-metal .peca[data-cor="pvc"] rect.corpo,
-.modo-metal .peca[data-cor="pvc"] path.corpo.fechado,
-.modo-metal .peca[data-cor="pvc"] .flange,
-.modo-metal .peca[data-cor="pvc"] .chapa_lisa{fill:url(#pvc)}
-.modo-metal .peca[data-cor="pead"] .tubulo,
-.modo-metal .peca[data-cor="pead"] rect.corpo,
-.modo-metal .peca[data-cor="pead"] path.corpo.fechado,
-.modo-metal .peca[data-cor="pead"] .chapa_lisa{fill:url(#pead)}
-/* a flange do colar de PEAD e de ACO solta: ela nao e pintada de preto */
-.modo-metal .peca[data-cor="pead"] .flange{fill:url(#chapa)}
 
 /* peca escura pede traco claro, senao o contorno some dentro dela */
 .modo-metal .peca[data-cor="escuro"] *:not(.alvo):not(.centro){stroke:#9aa1a9}

@@ -12,7 +12,7 @@ import math
 
 from . import desenho, simbolos as s
 from .svg import (DEFS, ESTILO, ESTILO_LINHA, cor_de,  # noqa: F401
-                  desenhar, texto_no_eixo)
+                  desenhar, desenhar_peca, luz_de, texto_no_eixo)
 
 MODOS = ("traco", "pb", "metal")
 
@@ -175,14 +175,20 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
     # milimetro real, e as tres leituras saem da mesma folha de estilo
     if modo not in MODOS:
         modo = "traco"
+    # um degrade por (cor, angulo) que a linha realmente usa - nao por peca:
+    # vinte tubos deitados na mesma cor compartilham o mesmo
+    degrades = {}
     partes = [f'<svg class="modo-{modo}" viewBox="0 0 {largura:.0f} '
               f'{altura:.0f}" style="max-width:{largura:.0f}px" role="img" '
-              f'aria-label="linha montada">', DEFS,
+              f'aria-label="linha montada">', DEFS, "@DEGRADES@",
               f'<g class="geo" transform="translate({MARGEM - minx*escala:.2f} '
               f'{MARGEM - miny*escala:.2f}) scale({escala:.5f})">']
     for i, p in enumerate(postos):
-        corpo = "".join(desenhar(e) for e in p.simbolo.elementos
-                        if e["tipo"] != "texto_furos")
+        cor = cor_de(p.simbolo)
+        espelhada = bool(p.simbolo.params.get("espelhado"))
+        corpo = desenhar_peca([e for e in p.simbolo.elementos
+                               if e["tipo"] != "texto_furos"],
+                              cor, p.giro, espelhada, degrades)
         marca = (f' data-id="{ids[i]}"'
                  if ids and i < len(ids) and ids[i] else "")
         if marca:
@@ -196,10 +202,17 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
         # a librea vai no GRUPO da peca, e nao no traco: quem decide a cor e
         # o motor (svg.cor_de), e a folha so aplica. Assim a valvula azul e
         # azul no programa, no SVG exportado e em qualquer lugar que abra
-        cor = cor_de(p.simbolo)
+        # a librea vai no GRUPO da peca, e nao no traco: quem decide a cor e
+        # o motor (svg.cor_de), a folha so aplica. E `luz_de` pre-gira o
+        # degrade do tanto contrario ao giro da peca, para a luz continuar
+        # vindo de cima da FOLHA - senao numa linha de pe o tubo fica claro de
+        # um lado e escuro do outro, como se a luz viesse da parede
         pintura = f' data-cor="{cor}"' if cor else ""
+        estilo, novos = luz_de(cor, p.giro, espelhada)
+        degrades.update(novos)
         partes.append(f'<g class="peca"{marca}{pintura}'
-                      f' data-familia="{p.simbolo.familia}" '
+                      f' data-familia="{p.simbolo.familia}"'
+                      f' style="{estilo}" '
                       f'transform="translate({p.dx:.1f} {p.dy:.1f}) '
                       f'rotate({p.giro:g})">{corpo}</g>')
     # cada ligacao tem duas flanges encostadas e os parafusos que as fecham -
@@ -276,4 +289,7 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
         py = MARGEM + (p.saida[1] - miny) * escala
         partes.append(f'<circle class="juncao ruim" cx="{px:.1f}" cy="{py:.1f}" r="4"/>')
     partes.append("</g></svg>")
-    return "".join(partes), postos, fim
+    saida = "".join(partes)
+    return (saida.replace("@DEGRADES@",
+                          f'<defs>{"".join(degrades.values())}</defs>'
+                          if degrades else ""), postos, fim)

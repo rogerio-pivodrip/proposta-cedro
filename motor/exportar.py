@@ -42,8 +42,11 @@ def para_svg(linha, largura=1600, altura_max=1000, modo="traco"):
                             modo=modo)
     if not desenhada["svg"]:
         return "", desenhada["recusadas"]
+    # o xlink entra por causa dos degrades: cada variante de angulo herda as
+    # paradas da base por href, e fora do navegador quem le isso e o xlink
     corpo = desenhada["svg"].replace(
-        "<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ', 1)
+        "<svg ", '<svg xmlns="http://www.w3.org/2000/svg" '
+                 'xmlns:xlink="http://www.w3.org/1999/xlink" ', 1)
     estilo = f"<style>{vista.ESTILO}{vista.ESTILO_LINHA}</style>"
     corpo = corpo.replace(">", ">" + estilo, 1)
     return corpo, desenhada["recusadas"]

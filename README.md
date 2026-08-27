@@ -87,9 +87,15 @@ linha.
 
 O degradê corre **no sentido do eixo**: as faixas de luz e sombra são
 paralelas ao eixo da peça, claras em cima e escuras embaixo, que é o desenho
-de luz de um tubo redondo iluminado de cima. E ele vive dentro do grupo que
-gira — numa linha de pé o brilho gira junto e continua correndo ao longo do
-tubo.
+de luz de um tubo redondo iluminado de cima. E o **reflexo acompanha a peça**
+quando ela vira — numa linha de pé ele corre ao longo do tubo, e numa curva
+de gomos cada gomo é um cilindro reto com o brilho no eixo dele, de modo que
+o reflexo dá a volta em vez de atravessá-la.
+
+O que **não** acompanha é o sentido: girar 180° ou espelhar poria o lado claro
+para baixo, e peça nenhuma é iluminada por debaixo. A conta é uma só — para
+onde aponta, na folha, o "para baixo" da peça — e quando ela aponta para cima
+o degradê sai invertido de volta.
 
 O SVG exportado sai no modo em que você está vendo. O DXF não tem modo: lá a
 cor é da camada, e quem abre no CAD escolhe a pena — e nem a região nem a

@@ -102,7 +102,7 @@ def _p(d, classe="corpo"):
     return {"tipo": "path", "d": d, "classe": classe}
 
 
-def tubulo(pontos):
+def tubulo(pontos, luz=None):
     """A REGIAO entre as duas paredes, fechada, so para receber preenchimento.
 
     O desenho de tubulacao e feito de linhas: a parede de cima e a de baixo sao
@@ -116,9 +116,15 @@ def tubulo(pontos):
     desenho de linha - um contorno a mais ali viraria geometria duplicada em
     cima da parede.
     """
-    return {"tipo": "path", "classe": "tubulo",
-            "d": "M" + " L".join(f"{p[0]:.1f} {p[1]:.1f}" for p in pontos)
-                 + " Z"}
+    elemento = {"tipo": "path", "classe": "tubulo",
+                "d": "M" + " L".join(f"{p[0]:.1f} {p[1]:.1f}" for p in pontos)
+                     + " Z"}
+    if luz:
+        # o eixo do brilho NESTA regiao, em milimetro da peca. Existe para o
+        # gomo da curva: cada gomo e um cilindro reto com direcao propria, e
+        # sem isto a curva inteira recebe um brilho so, atravessado na volta
+        elemento["luz"] = tuple(round(v, 1) for v in luz)
+    return elemento
 
 
 def corpo_de(a, b):
@@ -243,8 +249,17 @@ def giro(x, perna, angulo, dn_pol, sentido=1, y=0.0, gomos=4):
 
     fora, dentro = parede(1 * sentido), parede(-1 * sentido)
     caminho = lambda pts: "M" + " L".join(f"{p[0]:.1f} {p[1]:.1f}" for p in pts)
-    elementos = corpo_de(fora, dentro) + [_p(caminho(fora)),
-                                          _p(caminho(dentro))]
+    # um corpo POR GOMO, e nao um so para a curva inteira: cada gomo e um
+    # cilindro reto, e o brilho dele corre no eixo dele. Assim o reflexo
+    # acompanha a volta da peca em vez de atravessa-la
+    elementos = []
+    for i in range(len(fora) - 1):
+        a, b = fora[i], fora[i + 1]
+        c, d = dentro[i], dentro[i + 1]
+        elementos.append(tubulo([a, b, d, c],
+                                luz=((a[0] + b[0]) / 2, (a[1] + b[1]) / 2,
+                                     (c[0] + d[0]) / 2, (c[1] + d[1]) / 2)))
+    elementos += [_p(caminho(fora)), _p(caminho(dentro))]
     for i in range(1, len(fora) - 1):
         elementos.append(_p(f"M{fora[i][0]:.1f} {fora[i][1]:.1f} "
                             f"L{dentro[i][0]:.1f} {dentro[i][1]:.1f}", "solda"))
@@ -1381,7 +1396,14 @@ def curva_pvc(dn_mm, angulo=90, junta="BOLSA", sentido=1):
     # as duas paredes da curva nao percorrem o mesmo trecho - a de fora e mais
     # longa que a de dentro - entao o reconhecedor de _corpo_tubular nao as
     # casa. Aqui elas estao na mao, e a regiao sai exata
-    el = corpo_de(fora, dentro) + [_polilinha(fora), _polilinha(dentro)]
+    el = []
+    for i in range(min(len(fora), len(dentro)) - 1):
+        a, b = fora[i], fora[i + 1]
+        c, d = dentro[i], dentro[i + 1]
+        el.append(tubulo([a, b, d, c],
+                         luz=((a[0] + b[0]) / 2, (a[1] + b[1]) / 2,
+                              (c[0] + d[0]) / 2, (c[1] + d[1]) / 2)))
+    el += [_polilinha(fora), _polilinha(dentro)]
     fim = centro[-1]
     # o eixo morre na face da peca: numa linha montada a sobra de uma curva
     # entra dentro da vizinha
@@ -1995,6 +2017,30 @@ def manifold(dn_pol, bocais=(), luvas=((2, 2.0),), comprimento_mm=None,
 
 
 # ------------------------------------------------------- familias de equipamento
+def _arco_de_circulo(cx, cy, r, sentido=1):
+    """Um circulo em dois arcos - da para fechar e da para furar.
+
+    Dois arcos de meia volta porque um arco de volta inteira em SVG tem os
+    dois extremos no mesmo ponto, e ai o desenhista nao sabe por onde ir.
+    """
+    return (f"M{cx - r:.1f} {cy:.1f}"
+            f"A{r:.1f} {r:.1f} 0 1 {sentido} {cx + r:.1f} {cy:.1f}"
+            f"A{r:.1f} {r:.1f} 0 1 {sentido} {cx - r:.1f} {cy:.1f}Z")
+
+
+def _disco(cx, cy, r):
+    return {"tipo": "path", "classe": "tubulo",
+            "d": _arco_de_circulo(cx, cy, r)}
+
+
+def _anel(cx, cy, r, ri):
+    """Coroa: circulo de fora numa mao, o de dentro na outra, e o meio fica
+    vazado - e a regra de enrolamento do SVG que abre o furo."""
+    return {"tipo": "path", "classe": "tubulo",
+            "d": _arco_de_circulo(cx, cy, r, 1)
+                 + _arco_de_circulo(cx, cy, ri, 0)}
+
+
 def volante(cx, cy, diametro, raios=3, classe="acionamento"):
     """Volante visto de frente: aro, cubo e os raios.
 
@@ -2004,7 +2050,12 @@ def volante(cx, cy, diametro, raios=3, classe="acionamento"):
     ele e chato.
     """
     r = diametro / 2
-    el = [{"tipo": "circulo", "cx": cx, "cy": cy, "r": r, "classe": classe},
+    # o aro e um ANEL, e nao um disco: a regiao que recebe cor e a coroa entre
+    # os dois circulos, com o vazio no meio por onde se ve a folha. Sai como
+    # `tubulo` - a mesma classe que ja significa "regiao so para preencher,
+    # sem traco proprio, fora do DXF" - e o traco continua sendo os circulos
+    el = [_anel(cx, cy, r, r * 0.86), _disco(cx, cy, r * 0.20),
+          {"tipo": "circulo", "cx": cx, "cy": cy, "r": r, "classe": classe},
           {"tipo": "circulo", "cx": cx, "cy": cy, "r": r * 0.86,
            "classe": classe},
           {"tipo": "circulo", "cx": cx, "cy": cy, "r": r * 0.20,

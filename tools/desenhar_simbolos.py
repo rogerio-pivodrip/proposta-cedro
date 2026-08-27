@@ -23,7 +23,7 @@ import sys
 sys.path.insert(0, ".")
 from motor import simbolos as s  # noqa: E402
 from motor.svg import (DEFS, ESTILO, cor_de, desenhar,  # noqa: E402,F401
-                       texto_no_eixo)
+                       desenhar_peca, luz_de, texto_no_eixo)
 from motor.vista import MODOS  # noqa: E402
 
 LARGURA = 320          # px da celula
@@ -379,6 +379,11 @@ def colunas(simbolo, minimo=1):
     return max(minimo, 2 if larg / max(alt, 1) > DEITADA else 1)
 
 
+# os degrades de eixo proprio (o gomo da curva) que a folha encontrar pelo
+# caminho. Sao emitidos de uma vez no <defs> do topo da pagina
+DEGRADES = {}
+
+
 def celula(simbolo, altura=DESENHO, minimo=1):
     """O desenho de uma peca, com o eixo na altura padrao da secao."""
     x0, y0, larg, alt = simbolo.caixa
@@ -392,20 +397,25 @@ def celula(simbolo, altura=DESENHO, minimo=1):
     dy = MARGEM + util * EIXO
     dy = min(max(dy, MARGEM - y0 * escala),
              altura - MARGEM - (y0 + alt) * escala)
-    corpo = "".join(desenhar(e) for e in simbolo.elementos
-                    if e["tipo"] not in ("texto_furos", "nota"))
+    cor = cor_de(simbolo)
+    corpo = desenhar_peca([e for e in simbolo.elementos
+                           if e["tipo"] not in ("texto_furos", "nota")],
+                          cor, defs=DEGRADES)
     notas = [e for e in simbolo.elementos if e["tipo"] == "nota"]
 
     # o mesmo grupo `peca` da vista montada, com a mesma librea: a folha e a
     # linha tem de mostrar a valvula da mesma cor, senao a folha vira uma
     # segunda opiniao sobre como a peca e
-    cor = cor_de(simbolo)
     pintura = f' data-cor="{cor}"' if cor else ""
+    # a peca da folha nao gira, entao `luz_de` devolve os degrades base e
+    # nenhum def novo - a folha herda os do topo da pagina
+    estilo, _novos = luz_de(cor)
     partes = [f'<svg viewBox="0 0 {largura} {altura}" role="img" '
               f'aria-label="{simbolo.rotulo}">',
               f'<g class="geo" transform="translate({dx:.2f} {dy:.2f}) '
               f'scale({escala:.5f})"><g class="peca"{pintura} '
-              f'data-familia="{simbolo.familia}">{corpo}</g></g>',
+              f'data-familia="{simbolo.familia}" style="{estilo}">'
+              f'{corpo}</g></g>',
               '<g class="anota">']
     # A cota fica dentro da peca, so o texto - e so quando a peca nao escreve
     # a sua propria, como a bomba faz com as letras do folheto.
@@ -512,7 +522,8 @@ def main():
     corpo = [texto]
     # os degrades ficam num <svg> escondido no topo: gradiente tem de morar
     # dentro de um SVG, e uma vez na pagina serve a todas as celulas
-    defs = f'<svg width="0" height="0" style="position:absolute">{DEFS}</svg>'
+    defs = (f'<svg width="0" height="0" style="position:absolute">{DEFS}'
+            f'<defs>{"".join(DEGRADES.values())}</defs></svg>')
     if args.fragmento:
         print(defs + "\n".join(corpo))
     else:
