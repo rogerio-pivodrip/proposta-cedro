@@ -140,20 +140,26 @@ BORBOLETA_MP = [
     (24,   614,   154, 500,   '2.1/4"'),
 ]
 # ---- valvula de pe com crivo MP Fig. 114, fundo de poco ------------------
-# H = altura total do conjunto. E outra peca que o crivo conico do caderno
-# Netafim e que o cesto do Irrigafour: aqui a retencao vem junto.
+# H = altura total do conjunto, R = diametro do corpo. E outra peca que o
+# crivo do caderno Netafim e que o cesto do Irrigafour: aqui a retencao vem
+# junto, e o cesto e so a parte de baixo.
 VALVULA_PE = [
-    # dn_mm, H
-    (50, 152), (65, 167), (75, 195), (80, 195), (100, 206), (125, 237),
-    (150, 328), (200, 330), (250, 382), (300, 417), (350, 435), (400, 686),
+    # dn_mm,  H,   R corpo
+    (50,  152,  99), (65,  167, 122), (75,  195, 127), (80,  195, 132),
+    (100, 206, 156), (125, 237, 188), (150, 328, 211), (200, 330, 266),
+    (250, 382, 319), (300, 417, 370), (350, 435, 429), (400, 686, 480),
 ]
-# ---- gaveta MP Fig. 153: o que faltava era altura e volante --------------
+# ---- gaveta MP Fig. 153 --------------------------------------------------
 # L (face a face) ja estava em data/valvulas_gaveta.csv e bate com o RAN.
+# V = diametro do volante. R = diametro do corpo, entre o furo e a flange -
+# e ele que da a silhueta da valvula, e faltava.
+# A ficha 153 nao traz altura total: essa vem do RAN Fig. 37.
 GAVETA_MP = [
-    # dn_mm,  L,   V volante
-    (50,  150, 200), (65,  170, 200), (75,  180, 200), (100, 190, 200),
-    (125, 200, 250), (150, 210, 300), (200, 230, 350), (250, 250, 350),
-    (300, 270, 400), (350, 290, 500), (400, 310, 500),
+    # dn_mm,  L,   V volante,  R corpo
+    (50,  150, 200,  98), (65,  170, 200, 122), (75,  180, 200, 127),
+    (100, 190, 200, 153), (125, 200, 250, 188), (150, 210, 300, 209),
+    (200, 230, 350, 264), (250, 250, 350, 319), (300, 270, 400, 367),
+    (350, 290, 500, 427), (400, 310, 500, 477),
 ]
 FONTE_MP = "MP Valvulas fichas T.140, T.114 e T.153"
 FONTE_RAN = "RAN Valvulas Fig. 37 (gaveta) e Fig. 39 (retencao)"
@@ -222,13 +228,17 @@ def main():
         escritor.writerow(["MP", "VALVULA_BORBOLETA", "", f"{dn_pol:g}", "",
                            "tirante_conferir_pol", tirante, FONTE_MP])
         n += 1
-    for dn_mm, altura in VALVULA_PE:
-        escritor.writerow(["MP", "VALVULA_PE", "COM_CRIVO", f"{POLEGADA[dn_mm]:g}",
-                           dn_mm, "altura_total_mm", altura, FONTE_MP])
-        n += 1
-    for dn_mm, comp, volante in GAVETA_MP:
+    for dn_mm, altura, corpo in VALVULA_PE:
+        for significado, valor in (("altura_total_mm", altura),
+                                   ("d_corpo_mm", corpo)):
+            escritor.writerow(["MP", "VALVULA_PE", "COM_CRIVO",
+                               f"{POLEGADA[dn_mm]:g}", dn_mm, significado,
+                               valor, FONTE_MP])
+            n += 1
+    for dn_mm, comp, volante, corpo in GAVETA_MP:
         for significado, valor in (("face_a_face_mm", comp),
-                                   ("volante_mm", volante)):
+                                   ("volante_mm", volante),
+                                   ("d_corpo_mm", corpo)):
             escritor.writerow(["MP", "VALVULA_GAVETA", "", f"{POLEGADA[dn_mm]:g}",
                                dn_mm, significado, f"{valor:g}", FONTE_MP])
             n += 1

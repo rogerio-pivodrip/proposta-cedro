@@ -367,18 +367,30 @@ def te(dn_pol, dn_derivacao=None):
 def crivo(dn_pol, variante=""):
     """Cesto cilindrico de chapa perfurada, flange em cima e chapa lisa no fundo.
 
-    O caderno Netafim (desenho 01523, vista inferior) e o catalogo Irrigafour
-    desenham a mesma peca. O que muda e o comprimento: a Netafim cresce com a
-    bitola, 100 mm em 3" e 495 em 14"; a Irrigafour e 300 fixo ate 20".
+    O caderno Netafim (desenho 01523) manda furo de 6 mm com espacamento de
+    3 mm, e a vista inferior diz CHAPA LISA - o fundo e fechado. O Irrigafour
+    desenha a mesma peca; muda o comprimento, que na Netafim cresce com a
+    bitola e no Irrigafour e 300 fixo.
     """
     comp, fonte = _cota("CRIVO", dn_pol, variante, "comprimento_mm")
     comp = comp or 300
     r = DE_TUBO.get(dn_pol, 100) / 2
     el = [_p(f"M0 {-r:.1f} H{comp:.1f}"), _p(f"M0 {r:.1f} H{comp:.1f}"),
-          _p(f"M0 {-r:.1f} V{2*r:.1f}", "chapa_lisa")]     # o fundo e fechado
-    passo = max(comp / 9, 12)
-    n = max(int(comp / passo) - 1, 3)
-    el += [_p(f"M{passo*(i+1):.1f} {-r:.1f} v{2*r:.1f}", "malha") for i in range(n)]
+          _p(f"M0 {-r:.1f} V{2*r:.1f}", "chapa_lisa")]
+    # a furacao: 6 mm de furo a cada 9 mm de passo, como o caderno pede.
+    # Em bitola grande sao centenas de furos - o desenho mostra o padrao,
+    # nao a contagem, entao o passo cresce para o furo continuar legivel.
+    passo = max(9.0, comp / 22)
+    furo = passo / 3
+    linhas = int((comp - passo) / passo)
+    fileiras = int((2 * r - passo) / passo)
+    for i in range(linhas):
+        x = passo * (i + 1)
+        for j in range(fileiras):
+            yy = -r + passo * (j + 1) + (passo / 2 if i % 2 else 0)
+            if abs(yy) < r - furo:
+                el.append({"tipo": "circulo", "cx": x, "cy": yy, "r": furo / 2,
+                           "classe": "malha"})
     el += placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-40 0 H{comp+60:.0f}", "centro"))
     portas = [Porta("saida", comp, 0, 0, dn_pol)]
@@ -483,8 +495,9 @@ def valvula_gaveta(dn_pol):
     comp = comp or 230
     alt, _ = _cota("VALVULA_GAVETA", dn_pol, "", "altura_total_mm")
     volante, _ = _cota("VALVULA_GAVETA", dn_pol, "", "volante_mm")
+    corpo, _ = _cota("VALVULA_GAVETA", dn_pol, "", "d_corpo_mm")
     f = flange(dn_pol)
-    corpo = f["externo"] * 0.62
+    corpo = corpo or f["externo"] * 0.62
     alt = alt or corpo * 2.4
     volante = volante or corpo
     meio = comp / 2
@@ -644,11 +657,13 @@ def valvula_retencao(dn_pol):
     roscada e comprimento de parafuso.
     """
     from . import regras
-    ficha = regras.ficha_wafer(dn_pol)
-    comp = (ficha or {}).get("esp_corpo_mm") or DE_TUBO.get(dn_pol, 100) * 0.6
+    ficha = regras.ficha_wafer(dn_pol) or {}
+    comp = ficha.get("esp_corpo_mm") or DE_TUBO.get(dn_pol, 100) * 0.6
     f = flange(dn_pol)
-    corpo = f["circulo"] * 0.94
-    bocal = DE_TUBO.get(dn_pol, 100)
+    # A e B saem da ficha: o corpo cabe dentro do circulo de furacao, e o
+    # furo dele e maior que o do tubo - a valvula nao estrangula a linha
+    corpo = ficha.get("d_externo_mm") or f["circulo"] * 0.94
+    bocal = ficha.get("d_interno_mm") or DE_TUBO.get(dn_pol, 100)
     meio = comp / 2
     el = caixa(0, comp, corpo / 2, corpo / 2)
     el.append(_p(f"M0 {-bocal/2:.1f} H{comp:.1f} M0 {bocal/2:.1f} H{comp:.1f}",
@@ -668,25 +683,48 @@ def valvula_retencao(dn_pol):
 
 
 def valvula_pe(dn_pol):
+    """Retencao de pe com crivo, MP fig. 114 - fundo de poco.
+
+    E uma peca so: o corpo com o obturador em cima e o cesto perfurado
+    embaixo. Nao confundir com o crivo AZ, que e so o cesto e vai antes de uma
+    retencao separada.
+    """
     alt, fonte = _cota("VALVULA_PE", dn_pol, "COM_CRIVO", "altura_total_mm")
+    corpo_d, _ = _cota("VALVULA_PE", dn_pol, "COM_CRIVO", "d_corpo_mm")
     alt = alt or 330
     r = DE_TUBO.get(dn_pol, 100) / 2
-    corpo = alt * 0.40
+    raio_corpo = (corpo_d or DE_TUBO.get(dn_pol, 100) * 1.3) / 2
+    corpo = alt * 0.42
     cesto = alt - corpo
-    el = caixa(0, corpo, r * 1.3, r * 1.3)
-    el.append(_p(f"M{corpo*0.18:.1f} {-r*0.85:.1f} L{corpo*0.8:.1f} {r*0.25:.1f}",
-                 "obturador"))
-    el.append(_p(f"M{corpo*0.15:.1f} {-r*0.95:.1f} h{corpo*0.12:.1f}", "obturador"))
-    el += caixa(-cesto, cesto, r * 0.95, r * 0.95)
-    el += [_p(f"M{-cesto + cesto*0.15*(i+1):.1f} {-r*0.95:.1f} v{r*1.9:.1f}",
-              "malha") for i in range(6)]
+    # corpo abaulado: sai do cesto, engorda ate o diametro da ficha e fecha
+    # na flange
+    el = [_p(f"M0 {-r*0.95:.1f} C{corpo*0.3:.1f} {-raio_corpo:.1f} "
+             f"{corpo*0.7:.1f} {-raio_corpo:.1f} {corpo:.1f} {-raio_corpo*0.72:.1f}"),
+          _p(f"M0 {r*0.95:.1f} C{corpo*0.3:.1f} {raio_corpo:.1f} "
+             f"{corpo*0.7:.1f} {raio_corpo:.1f} {corpo:.1f} {raio_corpo*0.72:.1f}")]
+    # obturador com haste guiada, fechando contra a sede
+    el.append(_p(f"M{corpo*0.34:.1f} {-r*0.62:.1f} L{corpo*0.78:.1f} "
+                 f"{-r*0.22:.1f} L{corpo*0.78:.1f} {r*0.22:.1f} "
+                 f"L{corpo*0.34:.1f} {r*0.62:.1f}", "obturador"))
+    el.append(_p(f"M{corpo*0.78:.1f} 0 H{corpo:.1f}", "haste"))
+    # cesto perfurado embaixo, com a chapa lisa no fundo
+    el += [_p(f"M{-cesto:.1f} {-r*0.95:.1f} H0"),
+           _p(f"M{-cesto:.1f} {r*0.95:.1f} H0"),
+           _p(f"M{-cesto:.1f} {-r*0.95:.1f} V{r*1.9:.1f}", "chapa_lisa")]
+    passo = max(9.0, cesto / 14)
+    for i in range(int((cesto - passo) / passo)):
+        x = -cesto + passo * (i + 1)
+        for j in range(int((1.9 * r - passo) / passo)):
+            yy = -r * 0.95 + passo * (j + 1) + (passo / 2 if i % 2 else 0)
+            if abs(yy) < r * 0.95 - passo / 6:
+                el.append({"tipo": "circulo", "cx": x, "cy": yy,
+                           "r": passo / 6, "classe": "malha"})
     el += placa(corpo, dn_pol, lado="saida")
     el.append(_p(f"M{-cesto-40:.0f} 0 H{corpo+60:.0f}", "centro"))
     portas = [Porta("saida", corpo, 0, 0, dn_pol)]
     return _montar("VALVULA_PE", f'válvula de pé {dn_pol:g}"', el, portas, fonte)
 
 
-# ------------------------------------------------------------------- montagem
 Posto = namedtuple("Posto", "simbolo dx dy giro entrada saida")
 # a reducao chama as pontas de maior e menor; para a linha sao entrada e saida
 ENTRADA = ("entrada", "maior")

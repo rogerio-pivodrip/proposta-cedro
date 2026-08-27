@@ -170,6 +170,10 @@ def _tabela_wafer():
             "bitola_pol": reg["bitola_pol"],
             "comp_parafuso_mm": float(reg["comp_parafuso_mm"]),
             "comp_prisioneiro_mm": float(reg["comp_prisioneiro_mm"]),
+            # A e B da ficha: o corpo tem que caber dentro do circulo de
+            # furacao da flange, e e o desenho que precisa saber disso
+            "d_externo_mm": float(reg["d_externo_mm"]) if reg.get("d_externo_mm") else None,
+            "d_interno_mm": float(reg["d_interno_mm"]) if reg.get("d_interno_mm") else None,
         }
     return tabela
 
