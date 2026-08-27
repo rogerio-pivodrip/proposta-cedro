@@ -62,6 +62,11 @@ documento, entra no desfazer e sai junto no DXF.
 O zoom é da tela, e não do motor: o desenho continua saindo em milímetro real,
 e ampliar mostra mais peça em vez de traço mais gordo.
 
+A **única marca no desenho é a peça selecionada**, e ela é o traço da própria
+peça em azul — nenhum retângulo, nenhum contorno, nenhuma tarja por cima. O
+eixo fica de fora: ele é vermelho por convenção e sai um pouco para além da
+peça. O que a interface precisa dizer, ela diz no painel ao lado.
+
 Para exportar DXF e planilha:
 
 ```bash

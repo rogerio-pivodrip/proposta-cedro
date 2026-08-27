@@ -64,12 +64,6 @@ main{display:grid; grid-template-columns:1fr 330px; gap:0; align-items:start}
 .vista .geo .malha,.vista .geo .furo,.vista .geo .solda{stroke-width:.7}
 .vista .geo .centro{stroke-width:.75}
 
-/* o contorno de cada peça: é o que responde "onde uma peça acaba e a outra
-   começa" numa linha em que tudo é flange encostada em flange */
-.vista.contornos g.peca rect.alvo{stroke:#c3c8d0; stroke-width:.9;
-  stroke-dasharray:5 4}
-.vista.contornos g.peca:hover rect.alvo{stroke:var(--marca); stroke-dasharray:none}
-
 .zoom{position:absolute; right:10px; bottom:10px; display:flex; gap:4px;
   background:rgba(255,255,255,.92); border:1px solid #e0e2e6; border-radius:7px;
   padding:3px; box-shadow:0 1px 3px rgba(0,0,0,.06)}
@@ -80,23 +74,23 @@ main{display:grid; grid-template-columns:1fr 330px; gap:0; align-items:start}
 #zoom_texto{font:400 11px/1.4 "IBM Plex Mono",ui-monospace,monospace;
   min-width:46px}
 
-/* o nome da peça sob o cursor: sem isto a única forma de saber o que é cada
-   traço é clicar nele */
-.etiqueta{position:absolute; pointer-events:none; z-index:3;
-  background:#16181d; color:#f2f3f5; font-size:11px; line-height:1.4;
-  padding:3px 7px; border-radius:4px; max-width:280px; white-space:nowrap;
-  overflow:hidden; text-overflow:ellipsis}
 .dica{margin:8px 0 0; font-size:11px; color:var(--anota)}
 aside{padding:18px 20px 60px; border-left:1px solid var(--linha);
   background:var(--papel); min-height:calc(100vh - 52px)}
 
-/* a peça do desenho e a linha da tabela são a mesma peça, com o mesmo id */
+/* a peça do desenho e a linha da tabela são a mesma peça, com o mesmo id.
+
+   A ÚNICA marca no desenho é a seleção, e ela é o traço da própria peça em
+   azul - nenhum retângulo, nenhum contorno, nenhuma tarja. O desenho é o
+   desenho; o que a interface precisa dizer, ela diz no painel ao lado.
+
+   O rect.alvo continua ali, e continua invisível: ele é a área de clique, não
+   uma marca. Traço de 1 px não é alvo - quem quer selecionar o tubo aponta
+   para o meio dele, que é vazio. */
 .vista g.peca{cursor:pointer}
-.vista g.peca:hover rect.alvo{fill:rgba(47,111,208,.07)}
-.vista g.peca.escolhida rect.alvo{fill:rgba(47,111,208,.11);
-  stroke:var(--marca); stroke-width:1.2; stroke-dasharray:none}
-.vista g.peca.escolhida path,
-.vista g.peca.escolhida rect:not(.alvo){stroke:var(--marca)}
+/* o eixo fica de fora: ele é vermelho por convenção de CAD e sai um pouco
+   para além da peça, então pintá-lo deixava um rabo azul solto no desenho */
+.vista g.peca.escolhida *:not(.alvo):not(.centro){stroke:var(--marca)}
 
 table{width:100%; border-collapse:collapse; font-size:12px}
 td{padding:5px 6px; border-bottom:1px solid var(--linha); vertical-align:top}
@@ -146,10 +140,11 @@ tr.derivada td{color:var(--anota)}
 .separa{width:1px; height:20px; background:var(--linha)}
 
 /* arrastar: a peca que sai fica esmaecida, a que recebe acende, e o
-   veredicto vem do motor - a tela nao decide se encaixa */
-.vista g.peca.arrastando{opacity:.35}
-.vista g.peca.recebe rect.alvo{fill:rgba(47,111,208,.16)}
-.vista g.peca.recusa rect.alvo{fill:rgba(178,59,50,.16)}
+   veredicto vem do motor - a tela nao decide se encaixa. Aqui tambem a marca
+   e o traco da peca, e nao um retangulo por cima dela */
+.vista g.peca.arrastando{opacity:.3}
+.vista g.peca.recebe *:not(.alvo):not(.centro){stroke:var(--marca)}
+.vista g.peca.recusa *:not(.alvo):not(.centro){stroke:var(--perigo)}
 .previsao{margin:10px 0 0; padding:7px 11px; border-radius:6px;
   font-size:12.5px; background:var(--realce); color:var(--titulo);
   border:1px solid var(--linha)}

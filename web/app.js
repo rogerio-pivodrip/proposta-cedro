@@ -71,8 +71,6 @@ function pintarVista() {
     }
     g.addEventListener("click", () => escolher(id));
     g.addEventListener("pointerdown", (ev) => comecarArrasto(ev, id));
-    g.addEventListener("pointerenter", () => mostrarEtiqueta(id));
-    g.addEventListener("pointerleave", esconderEtiqueta);
   });
   aplicarZoom();
   const recusadas = (documento.vista && documento.vista.recusadas) || [];
@@ -132,7 +130,7 @@ function pintarAvisos() {
   if (pontas.length) recado(pontas.map((p) => p.motivo).join(" · "));
 }
 
-/* ------------------------------------------------- zoom, pan e etiqueta
+/* ------------------------------------------------------ zoom e pan
 
    O motor desenha em milímetro real, já escalado para caber na janela. O zoom
    é da TELA: uma transformação no palco, sem ida ao motor. Duas consequências
@@ -141,7 +139,12 @@ function pintarAvisos() {
    grossa, que é o que se espera de um CAD.
 
    Como a seleção e o arrasto, isto é estado DA TELA: o documento não sabe em
-   que zoom alguém está olhando, e não deve saber. */
+   que zoom alguém está olhando, e não deve saber.
+
+   E o zoom não desenha nada por cima: a única marca no desenho é a peça
+   selecionada, no traço dela. Contorno, retângulo de alvo e etiqueta saíram -
+   o desenho é o desenho, e o que a interface precisa dizer ela diz no painel
+   ao lado. */
 let zoom = 1;
 let pan = {x: 0, y: 0};
 const ZOOM_MIN = 0.2, ZOOM_MAX = 40;
@@ -174,26 +177,6 @@ function ampliar(fator, alvoX, alvoY) {
   aplicarZoom();
 }
 
-function mostrarEtiqueta(id) {
-  if (arrasto || folha) return;
-  const peca = (documento.pecas || []).find((p) => p.id === id);
-  if (!peca) return;
-  const et = $("etiqueta");
-  et.textContent = `${peca.descricao}  ·  ${Math.round(peca.comprimento_mm)} mm`;
-  et.hidden = false;
-}
-
-function esconderEtiqueta() { $("etiqueta").hidden = true; }
-
-function seguirEtiqueta(ev) {
-  const et = $("etiqueta");
-  if (et.hidden) return;
-  const caixa = $("vista").getBoundingClientRect();
-  et.style.left = Math.min(ev.clientX - caixa.left + 14,
-                           caixa.width - et.offsetWidth - 6) + "px";
-  et.style.top = (ev.clientY - caixa.top + 16) + "px";
-}
-
 /* ------------------------------------------------------- mover a folha
 
    Arrastar o FUNDO move a folha; arrastar uma PEÇA a reposiciona na sequência.
@@ -206,7 +189,6 @@ function comecarFolha(ev) {
   if (ev.button !== 0 && ev.button !== 1) return;
   ev.preventDefault();
   folha = {x: ev.clientX, y: ev.clientY, px: pan.x, py: pan.y};
-  esconderEtiqueta();
   $("vista").classList.add("arrastando_folha");
   addEventListener("pointermove", moverFolha);
   addEventListener("pointerup", soltarFolha, {once: true});
@@ -493,16 +475,10 @@ function ligar() {
     ampliar(Math.exp(-ev.deltaY * 0.0015), ev.clientX, ev.clientY);
   }, {passive: false});
   vista.addEventListener("pointerdown", comecarFolha);
-  vista.addEventListener("pointermove", seguirEtiqueta);
-  vista.addEventListener("pointerleave", esconderEtiqueta);
   vista.addEventListener("dblclick", () => ajustar());
   $("mais").addEventListener("click", () => ampliar(1.35));
   $("menos").addEventListener("click", () => ampliar(1 / 1.35));
   $("zoom_texto").addEventListener("click", ajustar);
-  $("contorno").addEventListener("click", () => {
-    const ligado = vista.classList.toggle("contornos");
-    $("contorno").classList.toggle("ligado", ligado);
-  });
 
   addEventListener("keydown", (ev) => {
     const digitando = /^(INPUT|SELECT|TEXTAREA)$/.test(ev.target.tagName);
