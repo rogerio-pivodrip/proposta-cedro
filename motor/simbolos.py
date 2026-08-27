@@ -1884,7 +1884,11 @@ def valvula_hidraulica(dn_pol, serie="47"):
 
     # a tampa chata, larga, com o parafuso nas pontas
     tampa = comp * 0.66
-    esp = alt * 0.13
+    # A TAMPA e uma chapa, nao um bloco: o que e alto na peca de diafragma e a
+    # TORRE embaixo dela - a camara onde o diafragma trabalha. Com a tampa em
+    # 13% da altura ela virava um bloco e a torre ficava esmagada entre ela e o
+    # corpo; a casa pediu a torre subindo ate em cima
+    esp = alt * 0.07
     # -(alt - fundo) e nao -alt: o que a folha cota e a peca inteira, e a
     # barriga desce abaixo do eixo
     ytampa = -(alt - fundo) + esp
@@ -1902,9 +1906,11 @@ def valvula_hidraulica(dn_pol, serie="47"):
     el.append(_p(f"M{meio - r*0.52:.1f} {pico - corpo*0.22:.1f} "
                  f"h{r*1.04:.1f}", "obturador"))
     # piloto: corpo pequeno ligado a tampa por tubinho - sempre listado junto
-    px = meio + comp * 0.40
-    py = ytampa + esp * 1.6
-    el.append(_p(f"M{meio + tampa*0.42:.1f} {ytampa + esp*0.4:.1f} "
+    # o piloto fica FORA da torre, nao por cima dela: e peca pendurada na
+    # tampa por um tubinho, e sobreposta a torre ele lia como parte do corpo
+    px = min(meio + tampa * 0.5 + comp * 0.14, comp - comp * 0.06)
+    py = ytampa + esp * 2.6
+    el.append(_p(f"M{meio + tampa*0.5:.1f} {ytampa + esp*0.4:.1f} "
                  f"H{px:.1f} V{py:.1f}", "piloto"))
     el += caixa(px - comp*0.07, comp*0.14, -py + comp*0.05, py + comp*0.09,
                 classe="piloto")
@@ -2333,21 +2339,30 @@ def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, recuar=False):
     r1 = DE_TUBO.get(dn1, 100) / 2
     r2 = DE_TUBO.get(dn2, 80) / 2
     rv = rotor / 2 * 1.15
-    # a largura AXIAL do caracol e proporcao do rotor. Ja foi max(...) com o
-    # externo da succao, o que engordava a peca sem motivo: a boca de succao
-    # entra pela frente, nao ocupa comprimento de caracol.
-    largura = rotor * 0.42
+    # A largura AXIAL do caracol. Em 0,42 do rotor ela saia desproporcional -
+    # um caracol de 105 mm carregando uma boca de 152 de furo, com o pescoco
+    # mais largo que a peca que o sustenta. O piso agora e a propria boca: o
+    # caracol nao pode ser mais estreito do que ela pede. E o teto e o vao
+    # ate a face de succao, senao o caracol engole o bocal de entrada.
+    largura = min(max(rotor * 0.55, 2 * r2 * 0.62), c * 0.85)
     # recuar: a face de tras do caracol fica NO eixo da descarga, que e onde o
     # flange do motor aparafusa. E o caso da monobloco, e e o que faz o
     # comprimento total fechar em a + l.
     x0, x1 = ((c - largura, c) if recuar
               else (c - largura / 2, c + largura / 2))
-    # A BOCA DA DESCARGA fica sobre a voluta, no meio dela - nao em c. Na
-    # monobloco a voluta e recuada para a face de tras dela cair em c, que e
-    # onde o flange do motor aparafusa; deixar a boca em c punha o pescoco
-    # pendurado na quina de tras do caracol, com uma parede quase vertical e a
-    # outra atravessando o motor. O rotor gira no mesmo plano da boca.
-    xd = (x0 + x1) / 2
+    # A BOCA DA DESCARGA fica em c, que e onde o folheto a coloca, e nao no
+    # meio do caracol. Duas medidas mandam nisso e as duas conferem:
+    #
+    #   c + l bate com o bloco da casa em 0,1% (951 contra 949,7), o que fixa a
+    #   face de tras do caracol em c - e ali que o flange do motor aparafusa;
+    #   com a boca em c a flange dela cai em 20..300 e nao avanca da face de
+    #   succao, o que e o que o proprio c de 160 mm implica.
+    #
+    # Entao o caracol e assimetrico de proposito: a face de tras e chata,
+    # porque e o flange do motor, e a boca sobe da parte da frente. Tentar
+    # centrar a boca no caracol fazia a flange dela recuar 45 mm atras da face
+    # de succao, o que nenhuma bomba faz.
+    xd = c
 
     el = list(placa(0, dn1, lado="entrada"))
     el += eixo(0, x0, dn1)
@@ -2377,7 +2392,12 @@ def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, recuar=False):
                    "w": largura * 0.20, "h": rv * 0.10, "classe": "corpo"})
     # o sentido do fluxo: entra pelo eixo, sai por cima. E a informacao que
     # decide de que lado a reducao excentrica leva o lado plano.
-    el.append(_seta(x0 * 0.45, 0, 0, r1 * 0.42))
+    # A seta da succao vai DENTRO da carcaca, nao no toco de entrada. Num
+    # monobloco o toco e curto - a flange aparafusa quase direto na tampa - e
+    # com o caracol na largura certa nao sobra tubo para a seta: ela acabava
+    # atras da face de succao, do lado de fora da peca.
+    el.append(_seta(x0 + largura * 0.30, 0, 0, min(r1 * 0.38,
+                                                   largura * 0.22)))
     el.append(_seta(xd, -(rv + a) / 2, -90, r2 * 0.42))
     return el, x0, x1, rv, largura, xd
 

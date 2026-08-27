@@ -21,7 +21,10 @@ sys.path.insert(0, ".")
 from motor import simbolos as s  # noqa: E402
 
 MEDIDAS = "data/cotas_cad.csv"
-SEM_CORPO = {"centro"}
+# o eixo e a seta de fluxo nao sao material: os dois dizem algo SOBRE a peca,
+# como a cota diz, e nenhum dos dois tem chapa. A seta ja foi o que fez a bomba
+# parecer 32 mm mais larga do que e.
+SEM_CORPO = {"centro", "fluxo"}
 # o que da para casar: o nome no DXF -> como pedir a peca ao motor
 RX_METB = re.compile(r"\bMETB\s+(\d{2,3})-(\d{2,3})-(\d{2,4})\D+(\d+)\s*cv", re.I)
 RX_METN = re.compile(r"\bKSB\s+(\d{2,3})-(\d{2,3})-(\d{2,4})\D+(\d+)\s*cv", re.I)

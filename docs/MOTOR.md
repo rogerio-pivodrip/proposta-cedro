@@ -1149,10 +1149,33 @@ de saída saem todos de `xd = (x0 + x1) / 2`. Com duas paredes verticais isso
 nunca apareceu — a geometria errada estava escondida atrás de um traço que não
 a exercitava.
 
-O custo é honesto e está no relatório: contra o bloco da casa a largura da METB
-foi de +4,1% para **+5,9%**, porque a flange da descarga agora avança 4,5 mm
-além da face de sucção. Isso é o que a geometria dá quando a boca está no lugar
-certo; o bloco da casa é desenho de projeto, e aqui quem manda é a folha.
+### E a medida resolveu, não o argumento
+
+Centrar a boca no caracol piorou a largura contra o bloco da casa — de +4,1%
+para +5,9% — porque a flange da descarga passou a avançar atrás da face de
+sucção. Isso levantou a pergunta certa: **onde a boca fica de verdade?** Duas
+medidas responderam, e as duas apontam para o mesmo lugar:
+
+`c + l` bate com o bloco da casa em **0,1%** (951 contra 949,7 medidos), o que
+fixa a face de trás do caracol em `c` — é ali que o flange do motor aparafusa. E
+com a boca *em* `c`, a flange dela cai em 20..300 mm e não avança da face de
+sucção, que é exatamente o que um `c` de 160 mm implica.
+
+Então o caracol é **assimétrico de propósito**: a face de trás é chata, porque é
+o flange do motor, e a boca sobe da parte da frente. Foi o pedido de traço da
+casa — "aumentar a voluta para não ficar desproporcional" — que forçou a
+pergunta, e as duas cotas do folheto a responderam sem precisar de opinião.
+
+A largura do caracol passou a ter piso e teto, os dois com motivo: não pode ser
+mais estreita que a boca que ela sustenta (era um caracol de 105 mm carregando
+uma boca de 152 de furo), nem mais larga que o vão até a face de sucção, senão
+engole o bocal de entrada. Contra o bloco da casa: **+2,2%**, melhor que os
++4,1% de onde isso começou.
+
+E de brinde, uma coisa que a seta escondia: a **seta de fluxo** da sucção
+acabava atrás da face de sucção, e o comparador a contava como corpo — a bomba
+parecia 32 mm mais larga do que é. Seta e eixo dizem algo *sobre* a peça, como
+a cota diz; nenhum dos dois tem chapa, e agora nenhum dos dois entra na medida.
 
 **Os furos da válvula de pé iguais aos do crivo.** É a mesma chapa perfurada na
 obra, e na folha o furo de uma estava no dobro do da outra. Agora as duas saem
