@@ -14,6 +14,7 @@ python3 tools/conferir_comandos.py # desfazer devolve o documento exato
 python3 tools/conferir_bitola.py   # os três bugs de bitola, e o catálogo inteiro
 python3 tools/conferir_pvc.py      # o desenho contra a folha da Plasson
 python3 tools/conferir_motor.py    # o motor contra o DXF da W22
+python3 tools/conferir_flanges.py  # a chapa da flange contra a folha Netafim
 ```
 
 ```bash

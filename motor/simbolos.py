@@ -32,36 +32,64 @@ _flanges = None
 
 
 def flange(dn_pol, norma="NBR PN16"):
-    """Diametro externo, circulo de furacao, quantidade e diametro do furo."""
+    """A chapa da flange: externo, circulo de furacao, furos, espessura.
+
+    Tres fontes, nesta ordem - e a mesma ordem que vale para toda cota no
+    programa: folha de fabricante > norma > estimativa.
+
+      1. A FOLHA NETAFIM (data/flanges_netafim.csv) manda no que ela cota:
+         externo, ressalto e espessura da chapa. E o catalogo de onde a casa
+         compra, e a chapa que chega na obra e a dela.
+      2. A TABELA DE FURACAO (data/regras_furacao.csv) da o circulo, a
+         quantidade e o diametro do furo, na norma pedida.
+      3. O CATALOGO IRRIGAFOUR completa o externo onde a folha nao tem.
+
+    O `cache` e por NORMA. Antes era um so, montado com a norma da PRIMEIRA
+    chamada: quem pedisse uma flange ANSI antes de qualquer outra envenenava a
+    tabela, e todas as NBR seguintes saiam com a furacao ANSI. Nao aparecia
+    olhando - o desenho fica plausivel, so o parafuso e que nao entra.
+
+    A ficha traz `fonte`, que e de onde veio o externo. tools/conferir_flanges.py
+    usa isso para dizer o que e folha e o que e estimativa.
+    """
     global _flanges
     if _flanges is None:
         _flanges = {}
+    if norma not in _flanges:
+        tabela = {}
         with open(f"{DADOS}/flanges_irrigafour.csv", encoding="utf-8") as fh:
             for r in csv.DictReader(fh):
                 if r["norma"] == "DIN 2533 PN 16":
-                    _flanges.setdefault(float(r["dn_pol"]), {})["externo"] = \
-                        float(r["d_externo_mm"])
+                    tabela.setdefault(float(r["dn_pol"]), {}).update(
+                        externo=float(r["d_externo_mm"]), fonte="irrigafour")
         with open(f"{DADOS}/regras_furacao.csv", encoding="utf-8") as fh:
             for r in (x for x in csv.DictReader(
                     l for l in fh if not l.startswith("#")) if x["dn_pol"]):
                 if r["norma"] != norma:
                     continue
-                d = _flanges.setdefault(float(r["dn_pol"]), {})
+                d = tabela.setdefault(float(r["dn_pol"]), {})
                 d.update(circulo=float(r["circulo_mm"]), furos=int(r["furos"]),
-                         furo=float(r["furo_mm"]), espessura=float(r["esp_flange_mm"]))
-    ficha = dict(_flanges.get(float(dn_pol), {}))
+                         furo=float(r["furo_mm"]),
+                         espessura=float(r["esp_flange_mm"]))
+        _flanges[norma] = tabela
+    ficha = dict(_flanges[norma].get(float(dn_pol), {}))
+    folha = flange_netafim(dn_pol)
+    if folha:
+        # a folha do fabricante manda: alem do ressalto e da espessura, que a
+        # tabela de furacao nem tem, ela corrige o EXTERNO. No 14" o catalogo
+        # Irrigafour traz 533 sob o rotulo DIN 2533 PN16, e 533,4 e o externo
+        # ASME B16.5 Classe 150 de NPS 14 - a cota americana com nome europeu.
+        # A folha, a DIN e a EN dizem 520, e as tres concordam
+        ficha.update(externo=folha["d_externo_mm"],
+                     ressalto=folha["d_ressalto_mm"],
+                     espessura=folha["esp_mm"], fonte="netafim")
     ficha.setdefault("externo", (DE_TUBO.get(dn_pol, 100) * 1.7))
     ficha.setdefault("circulo", ficha["externo"] * 0.85)
     ficha.setdefault("furos", 8)
     ficha.setdefault("furo", 22.0)
     ficha.setdefault("espessura", 20.0)
     ficha.setdefault("ressalto", ficha["externo"] * 0.78)
-    folha = flange_netafim(dn_pol)
-    if folha:
-        # a folha do caderno tem duas cotas que a tabela de furacao nao tem:
-        # o ressalto, que e onde a junta assenta, e a espessura da chapa
-        ficha["ressalto"] = folha["d_ressalto_mm"]
-        ficha["espessura"] = folha["esp_mm"]
+    ficha.setdefault("fonte", "estimativa")
     return ficha
 
 
