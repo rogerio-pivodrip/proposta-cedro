@@ -62,6 +62,44 @@ def corpo(simbolo):
     return s.limites(uteis)
 
 
+def cobertura():
+    """Quantas pecas da FOLHA saem de medida, e quantas saem de estimativa.
+
+    Este relatorio existe porque a comparacao acima nao alcanca o problema
+    dela: ela so compara o que a casa mediu, entao fechar 100% nao quer dizer
+    que a folha esteja medida - quer dizer que o que foi medido bate. A peca
+    que cai na estimativa nao aparece ali de jeito nenhum.
+
+    A tarja de cada peca ja diz a fonte desde que _fonte_mm existe. Aqui a
+    conta e somada, por bitola, para ninguem precisar olhar peca a peca.
+    """
+    from tools import desenhar_simbolos as ds
+    print("\n== de onde vem a cota de cada peça da folha (seção PVC e Plasson)\n")
+    print(f'{"bitola":8}{"DN":>6}{"junta":>8}{"medida":>8}{"outra junta":>12}'
+          f'{"estimada":>10}   as estimadas')
+    total = collections.Counter()
+    for dn in (3, 4, 5, 6, 8, 10, 12, 14):
+        pecas = dict(ds.elenco(dn)).get("PVC e Plasson") or []
+        if not pecas:
+            print(f'{dn:g}"{"":5}{"—":>6}{"—":>8}{"—":>8}{"—":>12}{"—":>10}   '
+                  f"a linha Plasson acaba em DN225")
+            continue
+        medidas = [p for p in pecas if p.fonte == "casa"]
+        outra = [p for p in pecas if p.fonte == "casa (outra junta)"]
+        estimadas = [p for p in pecas if p.fonte not in
+                     ("casa", "casa (outra junta)", "netafim", "irrigafour",
+                      "descricao")]
+        total["medidas"] += len(medidas)
+        total["outra"] += len(outra)
+        total["estimadas"] += len(estimadas)
+        print(f'{dn:g}"{"":5}{ds._plasson(dn):>6}{ds._junta_pvc(dn):>8}'
+              f'{len(medidas):>8}{len(outra):>12}{len(estimadas):>10}   '
+              + ", ".join(p.rotulo.split(" DN")[0] for p in estimadas))
+    print(f'\n{total["medidas"]} peças medidas · '
+          f'{total["outra"]} medidas na outra junta · '
+          f'{total["estimadas"]} estimadas')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limite", type=float, default=2.0,
@@ -131,6 +169,7 @@ def main():
               f"pior {max(piores):5.2f}%  ·  "
               f"{sum(1 for d in piores if d <= arg.limite)} dentro de "
               f"{arg.limite:g}%")
+    cobertura()
     if falhas:
         print(f"\n== não montou")
         for chave, erro in falhas:

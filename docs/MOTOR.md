@@ -1613,6 +1613,51 @@ aparafusa na linha de aço. Num trecho os dois colares olham para **fora**, e eu
 desenhava os dois iguais — o da esquerda ficava de costas. `colar_pead` ganhou
 `lado`, e o da ponta de entrada é o mesmo desenho espelhado.
 
+## 4.17 O Plasson: onde a cota é medida e onde ela é chute
+
+A casa perguntou se as peças Plasson estão com as medidas certas. A resposta
+curta é sim onde a casa mediu — `conferir_pvc.py` fecha em **102 de 102 cotas a
+0,00%**. A resposta honesta é mais longa, e ela mostra dois problemas que o
+próprio teste não conseguia ver.
+
+### O teste não alcançava o problema dele
+
+`conferir_pvc.py` compara o desenho contra o DXF da casa, então ele só olha as
+peças que a casa mediu. Fechar 100% não quer dizer que a folha esteja medida —
+quer dizer que **o que foi medido bate**. A peça que cai na estimativa não
+aparecia ali de jeito nenhum.
+
+E a folha estimava muito: das peças da seção PVC e Plasson, só **11 saem de
+medida**, 2 saem da medida da outra junta, e **27 são estimativa**.
+
+### Pior: a tarja dizia CASA em todas elas
+
+Todas as peças em milímetro carregavam `fonte="casa"` **fixo no código**. O
+desenho carimbava a fonte que não tinha — exatamente o que este projeto trata
+como pecado capital, porque a tarja existe para dizer de onde a cota veio.
+
+`_ou()` e `_fonte_mm()` corrigem: a peça anota quais cotas foram medidas e
+quais foram estimadas, e a tarja diz `casa`, `casa em parte` ou `estimativa`.
+A curva tem um terceiro caso, porque a casa mediu a bolsa e a soldável em
+séries de DN diferentes (bolsa em 35/50/75/100/125/150, soldável em
+75/90/110/125/160/225): quando só a outra junta tem a bitola, o envelope dela
+serve de reserva e a tarja diz **`casa (outra junta)`**.
+
+### A folha desenhava 27 peças que a lista não tem
+
+A seção PVC ia até 14", usando a equivalência do PEAD — 10"→DN280, 12"→DN315,
+14"→DN355. Mas a linha **Plasson do catálogo existe em 25, 32, 40, 50, 63, 75,
+90, 110, 125, 140, 160 e 225, e acaba aí**. O PEAD sobe até 355; o Plasson não.
+Eram 27 peças de três bitolas que não existem para comprar.
+
+A seção agora para em DN225 e, nas bitolas acima, sai vazia **dizendo por quê** —
+seção que some sem explicação faz o leitor supor que faltou desenhar.
+
+É o mesmo erro do manifold, na mesma semana, e a mesma lição: a série do
+milímetro não é uma série só, e tratar bitola como número é o que faz o
+programa desenhar peça que não existe. É por isso que a `Bitola` da seção 2 é o
+item 1 da ordem de implementação.
+
 ## 5. O que a peça puxa: um mecanismo só
 
 Hoje as derivações estão em quatro lugares diferentes. São todas o mesmo padrão

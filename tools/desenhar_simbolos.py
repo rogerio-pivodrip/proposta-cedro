@@ -49,6 +49,14 @@ SECOES = {
 }
 
 
+# por que uma secao pode sair vazia nesta bitola
+VAZIA = {
+    "PVC e Plasson": "A linha Plasson do catálogo acaba em DN225 — nesta "
+                     "bitola a lista não tem a peça. Acima disso a linha "
+                     "segue em aço ou em PEAD.",
+}
+
+
 def elenco(dn):
     """Um simbolo por familia, na bitola pedida, agrupado por secao."""
     menor = {14: 12, 12: 10, 10: 8, 8: 6, 6: 4, 5: 4, 4: 3, 3: 2}.get(dn, 2)
@@ -92,16 +100,18 @@ def elenco(dn):
         # A junta vem da bitola porque e assim que a casa compra: a bolsa da
         # linha de irrigacao para em DN150, acima dela a peca e soldavel
         ("PVC e Plasson", [
-            s.tubo_pvc(_pead(dn), 6000, _ponta_pvc(dn)),
-            s.luva_pvc(_pead(dn), _junta_pvc(dn)),
-            s.luva_reducao(_pead(dn), _pead(menor), _junta_pvc(dn)),
-            s.girado(s.curva_pvc(_pead(dn), 90, _junta_pvc(dn), -1), -90),
-            s.girado(s.curva_pvc(_pead(dn), 45, _junta_pvc(dn), -1), -90),
-            s.te_pvc(_pead(dn), junta=_junta_pvc(dn)),
-            s.te_pvc(_pead(dn), _pead(menor), _junta_pvc(dn)),
-            s.adaptador_flange(_pead(dn)),
-            s.bucha_reducao(_pead(dn), _pead(menor)),
-        ]),
+            s.tubo_pvc(mm, 6000, _ponta_pvc(dn)),
+            s.luva_pvc(mm, _junta_pvc(dn)),
+            s.luva_reducao(mm, _plasson(menor) or _abaixo_plasson(mm),
+                           _junta_pvc(dn)),
+            s.girado(s.curva_pvc(mm, 90, _junta_pvc(dn), -1), -90),
+            s.girado(s.curva_pvc(mm, 45, _junta_pvc(dn), -1), -90),
+            s.te_pvc(mm, junta=_junta_pvc(dn)),
+            s.te_pvc(mm, _plasson(menor) or _abaixo_plasson(mm),
+                     _junta_pvc(dn)),
+            s.adaptador_flange(mm),
+            s.bucha_reducao(mm, _plasson(menor) or _abaixo_plasson(mm)),
+        ] if (mm := _plasson(dn)) else []),
         # a bitola pequena nao acompanha a da linha: ela e derivacao, e a
         # ventosa e o manometro entram em 1/2" a 2" em qualquer casa de bomba
         ("Rosca e bitola pequena", [
@@ -183,6 +193,13 @@ def _em_pol(peca, dn_pol, menor=None):
                                "ISO 65", "ROSCA")
 
 
+def _abaixo_plasson(mm):
+    """A bitola Plasson imediatamente abaixo - quando a menor da linha de aco
+    nao tem correspondente na serie do Plasson."""
+    menores = [d for d in PLASSON if d < mm]
+    return menores[-1] if menores else mm
+
+
 def _ponta_pvc(dn_pol):
     """A barra da linha de irrigação vem com bolsa; a soldável, lisa."""
     return "BOLSA" if _junta_pvc(dn_pol) == "BOLSA" else "LISA"
@@ -196,6 +213,19 @@ def _junta_pvc(dn_pol):
 def _pead(dn_pol):
     from motor.traducao import POLEGADA_MM
     return POLEGADA_MM.get(dn_pol) or 225
+
+
+# A linha Plasson do catalogo existe em 25, 32, 40, 50, 63, 75, 90, 110, 125,
+# 140, 160 e 225 - e acaba ai. Acima de 225 a folha desenhava luva, curva, te
+# e bucha de DN280, 315 e 355, que sao 27 pecas que a lista nao tem: o PEAD
+# sobe ate 355, o PVC/Plasson nao. Peca que nao existe nao entra na folha.
+PLASSON = (25, 32, 40, 50, 63, 75, 90, 110, 125, 140, 160, 225)
+
+
+def _plasson(dn_pol):
+    """O DN da linha Plasson para essa bitola, ou None se ela nao vai ate la."""
+    mm = _pead(dn_pol)
+    return mm if mm in PLASSON else None
 
 
 # ------------------------------------------------------------------ desenho
@@ -411,6 +441,8 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .marca{font-size:9px;text-anchor:middle}
 /* o trim: a cota nao foge do eixo, o eixo abre para ela */
 .trim{fill:var(--papel);stroke:none}
+.vazia{font:italic 12px/1.5 "Source Sans 3",system-ui,sans-serif;
+  color:var(--anota,#8a8f98);margin:2px 0 22px;max-width:58ch}
 """
 
 LEGENDA = [
@@ -457,6 +489,11 @@ def fragmento(dn):
     for titulo, pecas in grupos:
         detalhe, altura, minimo = SECOES.get(titulo, ("", DESENHO, 1))
         corpo.append(f'<h2>{titulo}<em>{detalhe}</em></h2>')
+        if not pecas:
+            # secao vazia diz POR QUE esta vazia: some sem explicacao e o
+            # leitor supoe que faltou desenhar
+            corpo.append(f'<p class="vazia">{VAZIA.get(titulo, "")}</p>')
+            continue
         corpo.append('<div class="folha">'
                      + "".join(figura(peca, altura, minimo) for peca in pecas)
                      + "</div>")

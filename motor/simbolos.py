@@ -794,6 +794,27 @@ def _cota_casa(familia, dn_mm, variante, significado, dn_menor=None):
     return cotas.cota_da_casa(familia, dn_mm, variante, significado, dn_menor)
 
 
+def _ou(registro, medido, estimado):
+    """A cota medida quando existe, a estimativa quando nao - e anota qual foi.
+
+    Existe porque a tarja diz de onde a cota veio, e ela nao pode dizer "casa"
+    numa bitola que a casa nao mediu. O DXF da casa tem a serie de bolsa ate
+    DN150 e a soldavel ate DN225; fora disso a peca sai estimada, e o desenho
+    tem de dizer isso em vez de carimbar CASA em tudo.
+    """
+    registro.append(medido is not None)
+    return medido if medido is not None else estimado
+
+
+def _fonte_mm(registro):
+    """De onde veio a cota da peca em milimetro, para a tarja."""
+    if registro and all(registro):
+        return "casa"
+    if any(registro):
+        return "casa em parte"
+    return "estimativa"
+
+
 def arco(cx, cy, raio, a0, a1, passos=14):
     """Pontos de um arco, em grau. O desenho nao usa o A do SVG: o parser de
     path do motor le reta, e reta amostrada e o que o DXF da casa tambem tem."""
@@ -892,8 +913,11 @@ def luva_pvc(dn_mm, junta="BOLSA"):
     A casa escreve o DN nas duas pontas mesmo sendo o mesmo numero - e o que
     diz que a peca nao e reducao.
     """
-    comp = _cota_casa("LUVA", dn_mm, junta, "comprimento_mm") or dn_mm * 1.2
-    externo = _cota_casa("LUVA", dn_mm, junta, "d_externo_mm") or dn_mm * 1.18
+    medidas = []
+    comp = _ou(medidas, _cota_casa("LUVA", dn_mm, junta, "comprimento_mm"),
+               dn_mm * 1.2)
+    externo = _ou(medidas, _cota_casa("LUVA", dn_mm, junta, "d_externo_mm"),
+                  dn_mm * 1.18)
     r = externo / 2 / CINTA
     el = [_p(f"M0 {-r:.1f} H{comp:.1f}"), _p(f"M0 {r:.1f} H{comp:.1f}"),
           _p(f"M0 {-r:.1f} V{r:.1f}"), _p(f"M{comp:.1f} {-r:.1f} V{r:.1f}")]
@@ -913,7 +937,7 @@ def luva_pvc(dn_mm, junta="BOLSA"):
               Porta("saida", comp, 0, 0, dn_pol)]
     el += _dn_nas_pontas(portas, (dn_mm, dn_mm), comp * 0.30, r * 0.5)
     return _montar("LUVA", f'luva {junta.lower()} DN{dn_mm:g}', el, portas,
-                   "casa", {"dn_mm": dn_mm, "junta": junta})
+                   _fonte_mm(medidas), {"dn_mm": dn_mm, "junta": junta})
 
 
 def luva_reducao(dn_maior, dn_menor, junta="BOLSA"):
@@ -923,14 +947,19 @@ def luva_reducao(dn_maior, dn_menor, junta="BOLSA"):
     escreve a bitola de cada lado - 100 embaixo, 50 em cima. E isso que evita
     ligar do lado errado.
     """
-    comp = (_cota_casa("LUVA_REDUCAO", dn_maior, junta, "comprimento_mm",
-                       dn_menor)
-            or _cota_casa("LUVA_REDUCAO", dn_maior, junta, "comprimento_mm")
-            or dn_maior * 1.2)
-    externo = (_cota_casa("LUVA_REDUCAO", dn_maior, junta, "d_externo_mm",
+    medidas = []
+    comp = _ou(medidas,
+               _cota_casa("LUVA_REDUCAO", dn_maior, junta, "comprimento_mm",
                           dn_menor)
-               or _cota_casa("LUVA_REDUCAO", dn_maior, junta, "d_externo_mm")
-               or dn_maior * 1.18)
+               or _cota_casa("LUVA_REDUCAO", dn_maior, junta,
+                             "comprimento_mm"),
+               dn_maior * 1.2)
+    externo = _ou(medidas,
+                  _cota_casa("LUVA_REDUCAO", dn_maior, junta, "d_externo_mm",
+                             dn_menor)
+                  or _cota_casa("LUVA_REDUCAO", dn_maior, junta,
+                                "d_externo_mm"),
+                  dn_maior * 1.18)
     ra = externo / 2 / CINTA
     rb = ra * dn_menor / dn_maior
     a, meio, b = comp * 0.42, comp * 0.20, comp * 0.38
@@ -954,7 +983,8 @@ def luva_reducao(dn_maior, dn_menor, junta="BOLSA"):
               Porta("menor", comp, 0, 0, _pvc_em_polegada(dn_menor))]
     el += _dn_nas_pontas(portas, (dn_maior, dn_menor), comp * 0.26, rb * 0.5)
     return _montar("LUVA_REDUCAO",
-                   f'luva red DN{dn_maior:g}×{dn_menor:g}', el, portas, "casa",
+                   f'luva red DN{dn_maior:g}×{dn_menor:g}', el, portas,
+                   _fonte_mm(medidas),
                    {"dn_mm": dn_maior, "dn_menor_mm": dn_menor, "junta": junta})
 
 
@@ -1028,15 +1058,18 @@ def curva_pvc(dn_mm, angulo=90, junta="BOLSA", sentido=1):
     trocas de eixo sao tentadas e fica a que fecha melhor.
     """
     variantes = (f"{angulo}/{junta}", f"{angulo}/SOLDA", f"{angulo}/BOLSA")
+    emprestadas = []
 
     def medida(significado):
         for variante in variantes:
             valor = _cota_casa("CURVA", dn_mm, variante, significado)
             if valor:
+                emprestadas.append(variante != variantes[0])
                 return valor
         return None
 
     env_x, env_y = medida("envelope_x_mm"), medida("envelope_y_mm")
+    medidas = [env_x is not None, env_y is not None]
     r = dn_mm / 2
     externo = dn_mm * 1.16
     raio = r * RAIO_CURVA
@@ -1106,7 +1139,8 @@ def curva_pvc(dn_mm, angulo=90, junta="BOLSA", sentido=1):
     el += _dn_nas_pontas(portas, (dn_mm, dn_mm),
                          max(entrada * 0.5, r * 1.3), r * 0.5)
     return _montar("CURVA", f'curva {angulo}° {junta.lower()} DN{dn_mm:g}',
-                   el, portas, "casa",
+                   el, portas, ("casa (outra junta)" if all(medidas) and any(emprestadas)
+                    else _fonte_mm(medidas)),
                    {"dn_mm": dn_mm, "junta": junta, "angulo": angulo,
                     "envelope_mm": envelope})
 
@@ -1120,12 +1154,15 @@ def te_pvc(dn_mm, dn_derivacao=None, junta="BOLSA"):
     """
     familia = "TE_REDUZIDO" if dn_derivacao and dn_derivacao != dn_mm else "TE"
     menor = dn_derivacao if familia == "TE_REDUZIDO" else None
-    comp = (_cota_casa(familia, dn_mm, junta, "face_a_face_mm", menor)
-            or _cota_casa("TE", dn_mm, junta, "face_a_face_mm")
-            or dn_mm * 2.3)
-    alto = (_cota_casa(familia, dn_mm, junta, "altura_total_mm", menor)
-            or _cota_casa("TE", dn_mm, junta, "altura_total_mm")
-            or dn_mm * 1.7)
+    medidas = []
+    comp = _ou(medidas,
+               _cota_casa(familia, dn_mm, junta, "face_a_face_mm", menor)
+               or _cota_casa("TE", dn_mm, junta, "face_a_face_mm"),
+               dn_mm * 2.3)
+    alto = _ou(medidas,
+               _cota_casa(familia, dn_mm, junta, "altura_total_mm", menor)
+               or _cota_casa("TE", dn_mm, junta, "altura_total_mm"),
+               dn_mm * 1.7)
     dn_der = dn_derivacao or dn_mm
     r, rd = dn_mm / 2, dn_der / 2
     externo = dn_mm * 1.18       # o diametro da cinta
@@ -1170,7 +1207,7 @@ def te_pvc(dn_mm, dn_derivacao=None, junta="BOLSA"):
                "texto": f"{dn_der:g}"})
     rot = (f'tê DN{dn_mm:g}' if dn_der == dn_mm
            else f'tê red DN{dn_mm:g}×{dn_der:g}')
-    return _montar(familia, f'{rot} {junta.lower()}', el, portas, "casa",
+    return _montar(familia, f'{rot} {junta.lower()}', el, portas, _fonte_mm(medidas),
                    {"dn_mm": dn_mm, "dn_derivacao_mm": dn_der, "junta": junta})
 
 
@@ -1181,9 +1218,13 @@ def adaptador_flange(dn_mm):
     pescoco solda por encaixe em vez de topo a topo. O ressalto continua sendo
     o que prende a flange solta.
     """
-    comp = _cota_casa("ADAPTADOR_FLANGE", dn_mm, "", "comprimento_mm") or dn_mm
-    externo = (_cota_casa("ADAPTADOR_FLANGE", dn_mm, "", "d_externo_mm")
-               or dn_mm * 1.35)
+    medidas = []
+    comp = _ou(medidas,
+               _cota_casa("ADAPTADOR_FLANGE", dn_mm, "", "comprimento_mm"),
+               dn_mm)
+    externo = _ou(medidas,
+                  _cota_casa("ADAPTADOR_FLANGE", dn_mm, "", "d_externo_mm"),
+                  dn_mm * 1.35)
     r, rr = dn_mm / 2, externo / 2
     esp = max(comp * 0.22, 10.0)
     el = [_p(f"M0 {-r:.1f} H{comp - esp:.1f}"),
@@ -1200,7 +1241,7 @@ def adaptador_flange(dn_mm):
     # outra. Do lado da flange quem manda e a furacao, nao o DN do tubo
     el += _dn_nas_pontas(portas[:1], (dn_mm,), comp * 0.45, r * 0.45)
     return _montar("ADAPTADOR_FLANGE", f'adaptador p/ flange DN{dn_mm:g}',
-                   el, portas, "casa", {"dn_mm": dn_mm})
+                   el, portas, _fonte_mm(medidas), {"dn_mm": dn_mm})
 
 
 def bucha_reducao(dn_maior, dn_menor):
@@ -1209,14 +1250,18 @@ def bucha_reducao(dn_maior, dn_menor):
     O bloco da casa desenha um corpo curto escalonado, sem cinta - bucha nao
     tem bolsa para fora, ela E a bolsa.
     """
-    comp = (_cota_casa("BUCHA_REDUCAO", dn_maior, "SOLDA", "comprimento_mm",
-                       dn_menor)
-            or _cota_casa("BUCHA_REDUCAO", dn_maior, "", "comprimento_mm")
-            or dn_maior * 0.6)
-    externo = (_cota_casa("BUCHA_REDUCAO", dn_maior, "SOLDA", "d_externo_mm",
-                          dn_menor)
-               or _cota_casa("BUCHA_REDUCAO", dn_maior, "", "d_externo_mm")
-               or dn_maior)
+    medidas = []
+    comp = _ou(medidas,
+               _cota_casa("BUCHA_REDUCAO", dn_maior, "SOLDA",
+                          "comprimento_mm", dn_menor)
+               or _cota_casa("BUCHA_REDUCAO", dn_maior, "", "comprimento_mm"),
+               dn_maior * 0.6)
+    externo = _ou(medidas,
+                  _cota_casa("BUCHA_REDUCAO", dn_maior, "SOLDA",
+                             "d_externo_mm", dn_menor)
+                  or _cota_casa("BUCHA_REDUCAO", dn_maior, "",
+                                "d_externo_mm"),
+                  dn_maior)
     ra = externo / 2
     rb = dn_menor / 2
     # O bloco da casa desenha a bucha como um retangulo simples: ela nao tem
@@ -1237,7 +1282,7 @@ def bucha_reducao(dn_maior, dn_menor):
            {"tipo": "nota", "x": comp / 2, "y": rb * 0.62,
             "texto": f"{dn_menor:g}"}]
     return _montar("BUCHA_REDUCAO", f'bucha red DN{dn_maior:g}×{dn_menor:g}',
-                   el, portas, "casa",
+                   el, portas, _fonte_mm(medidas),
                    {"dn_mm": dn_maior, "dn_menor_mm": dn_menor})
 
 
