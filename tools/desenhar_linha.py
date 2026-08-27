@@ -106,6 +106,16 @@ def manifold_ventosas(dn, derivacao=None):
     return [s.manifold(dn, menor), s.flange_cega(dn, 2)]
 
 
+def _os_dois_pead(a, b):
+    """A juncao e soldada quando as duas pontas que se encontram sao de PEAD.
+
+    O colar conta: ele solda no tubo por termofusao e leva a flange do outro
+    lado - a flange dele nao esta nesta juncao, esta na ponta que vai para o
+    aco.
+    """
+    return all(p.params.get("material") == "PEAD" for p in (a, b))
+
+
 def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620):
     postos, fim = s.montar(pecas)
     if giro:
@@ -159,8 +169,17 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620):
         saida = s.porta(p.simbolo, s.SAIDA)
         if ok and saida is not None:
             direcao = p.giro + (saida.direcao if saida.papel != "entrada" else 0)
-            ferragem = s.junta_flangeada(p.saida[0], p.saida[1], direcao,
-                                         saida.dn_pol)
+            vizinho = postos[i + 1].simbolo
+            # PEAD com PEAD e SOLDA e nao flange: nenhuma das duas pontas tem
+            # chapa, e o que sobra na juncao e o cordao de termofusao. A flange
+            # do PEAD aparece so onde o colar casa com a linha de aco
+            if _os_dois_pead(p.simbolo, vizinho):
+                ferragem = s.solda_de_topo(
+                    p.saida[0], p.saida[1], direcao,
+                    p.simbolo.params.get("dn_mm") or 225)
+            else:
+                ferragem = s.junta_flangeada(p.saida[0], p.saida[1], direcao,
+                                             saida.dn_pol)
             partes.append("".join(desenhar(e) for e in ferragem))
         else:
             ruins.append((p, motivo))

@@ -118,6 +118,9 @@ def elenco(dn):
             s.bomba_megabloc(_megabloc(dn), "VERTICAL"),
             # a mancalizada: mesma ponta molhada, mancal e motor sobre a base
             s.bomba_meganorm(_meganorm(dn)),
+            # a terceira linha: EBARA GSD, monobloco de outra fabricante. A
+            # ponta molhada e a mesma peca; o que muda sao as letras da folha
+            s.bomba_gsd(_gsd(dn), cv=_cv_gsd(_gsd(dn))),
         ]),
     ]
 
@@ -133,6 +136,27 @@ def _megabloc(dn_linha):
 
 def _meganorm(dn_linha):
     return s.meganorm_para_linha(_bocal(dn_linha)) or "100-315"
+
+
+def _gsd(dn_linha):
+    """A GSD para a linha — preferindo a que a casa compra.
+
+    A lista tem 11 das 34 GSD da folha dimensional. Mostrar uma da lista faz a
+    potência sair real em vez de proporção, e é a peça que alguém vai pedir.
+    """
+    from motor import desenho
+    return (desenho.gsd_da_lista(_bocal(dn_linha))
+            or s.gsd_para_linha(_bocal(dn_linha)) or "125-200")
+
+
+def _cv_gsd(modelo):
+    """A potência que a LISTA dá para esse modelo — não uma fórmula minha.
+
+    Onde a lista não tem o modelo, cai na proporção de `cv_da_gsd`, e a tarja
+    mostra a carcaça para quem quiser conferir.
+    """
+    from motor import desenho
+    return desenho.cv_de_gsd(modelo) or s.cv_da_gsd(modelo)
 
 
 def _maior_cv(tamanho):

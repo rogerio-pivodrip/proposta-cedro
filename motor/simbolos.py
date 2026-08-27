@@ -1885,10 +1885,16 @@ def valvula_hidraulica(dn_pol, serie="47"):
     # a tampa chata, larga, com o parafuso nas pontas
     tampa = comp * 0.66
     # A TAMPA e uma chapa, nao um bloco: o que e alto na peca de diafragma e a
-    # TORRE embaixo dela - a camara onde o diafragma trabalha. Com a tampa em
-    # 13% da altura ela virava um bloco e a torre ficava esmagada entre ela e o
-    # corpo; a casa pediu a torre subindo ate em cima
-    esp = alt * 0.07
+    # TORRE embaixo dela - a camara onde o diafragma trabalha.
+    #
+    # E a repartição sai da BANDA LIVRE - o que existe entre o topo do corpo e
+    # o topo cotado - e nao de uma fracao da altura total. Assim a torre fica
+    # na mesma proporcao em toda bitola: em 3" a banda e 105 mm dos 203 de
+    # altura e em 12" e 145 dos 495, e uma fracao da altura total dava torre de
+    # 40% da peca em 3" contra 18% em 12". A casa apontou a de 12" como certa,
+    # e 0,238 da banda para a tampa e o que a mantem igual.
+    banda = max(alt - fundo - corpo, alt * 0.08)
+    esp = banda * 0.238
     # -(alt - fundo) e nao -alt: o que a folha cota e a peca inteira, e a
     # barriga desce abaixo do eixo.
     #
@@ -2604,6 +2610,117 @@ def _letras_bomba(a, b, c, rv, x0, letras=("a", "b", "c"), x_direita=None):
              "texto": f"{letras[2]} {c:.0f}"}]
 
 
+_gsd = None
+
+
+def ficha_gsd(modelo):
+    """A folha dimensional da GSD - desenho 406.1 da EBARA, folha 2.
+
+    A folha tem celula mesclada, e o que sai dela esta em data/bombas_gsd.csv
+    com as guardas que tools/extrair_gsd.py aplica. Ver docs/MOTOR.md 4.14.
+    """
+    global _gsd
+    if _gsd is None:
+        with open(f"{DADOS}/bombas_gsd.csv", encoding="utf-8") as fh:
+            _gsd = {r["modelo"]: r for r in csv.DictReader(fh)}
+    return _gsd.get(modelo)
+
+
+def gsd_para_linha(dn_pol):
+    """A GSD cuja descarga tem a bitola pedida - a mesma regra da KSB.
+
+    A folha para em DN150 de recalque; acima disso devolve a maior que existe,
+    porque a linha de 12" e de 14" nao tem GSD do proprio bocal.
+    """
+    from .bomba import MM_PARA_POLEGADA
+    ficha_gsd("32-160")
+    def rotor(m):
+        return float(m.split("-")[1].rstrip("L").split(".")[0])
+    candidatas = [m for m, r in _gsd.items()
+                  if MM_PARA_POLEGADA.get(float(r["dn2_mm"])) == dn_pol]
+    if candidatas:
+        # a menor de cada bitola: e a que a linha pede primeiro
+        return min(candidatas, key=rotor)
+    maior = max((float(r["dn2_mm"]) for r in _gsd.values()), default=0)
+    acima = [m for m, r in _gsd.items() if float(r["dn2_mm"]) == maior]
+    return min(acima, key=rotor, default=None)
+
+
+def cv_da_gsd(modelo):
+    """Uma potencia plausivel para o modelo, pela bitola de recalque dele.
+
+    A folha dimensional nao cota potencia por modelo - a tabela de CV dela e
+    por carcaca de motor, nao por bomba. Isso e proporcao, e a tarja diz.
+    """
+    ficha = ficha_gsd(modelo) or {}
+    dn2 = float(ficha.get("dn2_mm") or 80)
+    return {32: 15.0, 40: 20.0, 50: 30.0, 65: 40.0, 80: 50.0, 100: 60.0,
+            125: 75.0, 150: 100.0}.get(int(dn2), 30.0)
+
+
+def bomba_gsd(modelo, cv=None, montagem="HORIZONTAL"):
+    """A EBARA GSD, monobloco, pela folha dimensional dela.
+
+    E a terceira linha de bomba do desenho, e a ponta molhada e a mesma coisa
+    das outras duas - por isso ela reusa _corpo_bomba inteiro. O que muda sao
+    as letras da folha:
+
+        h1  eixo -> base                (o b das KSB)
+        h2  eixo -> face do flange de descarga   (o a das KSB)
+        f1  face do flange do motor -> face da succao
+        f2  face do flange do motor -> eixo da descarga
+
+    Entao a face de succao ate o eixo da descarga e f1 - f2, e nao uma cota
+    propria. Isso da 73 mm no suporte GSD/230, 98 no GSD/240 e 108 no GSD/250 -
+    varia com o SUPORTE e nao com a bomba, que e o que se espera de uma cota
+    que mede do flange do motor.
+
+    O rotor sai do nome, como nas KSB: na GSD 125-250 o 250 e o rotor.
+    """
+    ficha = ficha_gsd(modelo)
+    if not ficha:
+        raise ValueError(f"GSD {modelo} nao esta na folha dimensional 406.1")
+    from .bomba import MM_PARA_POLEGADA
+    dn1 = MM_PARA_POLEGADA.get(float(ficha["dn1_mm"]))
+    dn2 = MM_PARA_POLEGADA.get(float(ficha["dn2_mm"]))
+    if dn1 is None or dn2 is None:
+        raise ValueError(f"GSD {modelo}: bocal fora da tabela de bitola")
+    a = float(ficha["h2_mm"])
+    b = float(ficha["h1_mm"])
+    c = float(ficha["f1_mm"]) - float(ficha["f2_mm"])
+    rotor = float(modelo.split("-")[1].rstrip("L").split(".")[0])
+    carcaca = f"{carcaca_do_motor(cv or 30):g}"
+
+    el, x0, x1, rv, largura, xd = _corpo_bomba(a, b, c, rotor, dn1, dn2,
+                                               pe_base=b - 22)
+    # monobloco como a Megabloc: o flange do motor aparafusa na tampa de tras
+    x_motor = x1
+    el += _eixo_da_bomba(x1 - largura * 0.3, x_motor, rv * 0.20)
+    motor, fim, ficha_m = _motor(x_motor, carcaca, base_y=b - 22)
+    el += motor
+    rotulo_motor = f"carcaça {carcaca}"
+    if cv:
+        rotulo_motor += f" · {cv:g} CV"
+    el.append({"tipo": "nota", "x": (x_motor + fim) / 2,
+               "y": -float(ficha_m.get("corpo_mm") or rv * 2) / 2 - rv * 0.30,
+               "texto": rotulo_motor})
+    el.append({"tipo": "rect", "x": x0, "y": b - 22, "w": fim - x0 + 20,
+               "h": 22, "classe": "corpo"})
+    el.append(_p(f"M-70 0 H{fim+40:.0f}", "centro"))
+    el.append(_p(f"M{xd:.1f} {-a-40:.1f} V{rv+30:.1f}", "centro"))
+    el += _letras_bomba(a, b, c, rv, x0, letras=("h2", "h1", "f1-f2"),
+                        x_direita=x1 + rv * 0.30)
+    portas = [Porta("entrada", 0, 0, 180, dn1),
+              Porta("saida", xd, -a, -90, dn2)]
+    peca = _montar("BOMBA", f'EBARA GSD {modelo} {dn1:g}"×{dn2:g}"', el, portas,
+                   "EBARA",
+                   {"linha": "GSD", "modelo": modelo, "cv": cv,
+                    "carcaca_motor": carcaca, "grupo_suporte":
+                    ficha.get("grupo_suporte"),
+                    "norma_flange": "NBR PN16"})
+    return girado(peca, -90) if montagem == "VERTICAL" else peca
+
+
 def bomba_meganorm(nome, cv=None, montagem="HORIZONTAL"):
     """A KSB Meganorm (METN), mancalizada, sobre base perfilada.
 
@@ -2931,6 +3048,36 @@ def sanduiche_wafer(x_entrada, x_saida, y=0.0, direcao=0.0, dn_pol=8,
     if direcao:
         for e in el:
             e["girar"] = (direcao, x_entrada, y)
+    return el
+
+
+def solda_de_topo(x, y=0.0, direcao=0.0, dn_mm=225):
+    """O cordao de termofusao entre duas pontas de PEAD.
+
+    PEAD nao emenda por flange - emenda por SOLDA, topo a topo, e o que sobra
+    na juncao e um cordao saliente dos dois lados da parede. Ele pertence a
+    JUNCAO e nao as pecas, exatamente como a junta e o parafuso pertencem a
+    junta flangeada: nenhum dos dois tubos carrega cordao antes de ser soldado.
+
+    A flange so aparece no PEAD onde o colar entra - para casar com a linha de
+    aco - e ai a peca e o colar, nao o tubo.
+    """
+    r = dn_mm / 2
+    largura = max(dn_mm * 0.055, 6.0)
+    rad = math.radians(direcao)
+    ux, uy = math.cos(rad), math.sin(rad)
+    nx, ny = -uy, ux
+    el = []
+    for lado in (-1, 1):
+        # o cordao e uma lente: sai da parede, engorda e volta para ela
+        base = (x + nx * r * lado, y + ny * r * lado)
+        ponta = (base[0] + nx * largura * 0.62 * lado,
+                 base[1] + ny * largura * 0.62 * lado)
+        el.append(_polilinha(
+            [(base[0] - ux * largura, base[1] - uy * largura),
+             (ponta[0] - ux * largura * 0.34, ponta[1] - uy * largura * 0.34),
+             (ponta[0] + ux * largura * 0.34, ponta[1] + uy * largura * 0.34),
+             (base[0] + ux * largura, base[1] + uy * largura)], "solda"))
     return el
 
 

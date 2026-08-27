@@ -626,7 +626,7 @@ manual da Meganorm chegou. Estimativa não sobrevive à folha.
 
 `tools/conferir_cobertura.py` tenta desenhar cada código do catálogo:
 
-> **1.701 de 5.157 códigos saem desenhados** — eram 919 antes destas
+> **1.712 de 5.157 códigos saem desenhados** — eram 919 antes destas
 > famílias, 1.237 antes das de milímetro (4.7) e 1.487 antes da norma (4.9).
 
 O que ainda não sai quase nunca é falha de símbolo: **2.265** códigos não têm
@@ -1302,6 +1302,78 @@ dois casos, havia um só mal entendido.
 Fica registrado no relatório: `conferir_cad` mostra a caixa da METB em **+7,6%**
 contra o bloco da casa, e a diferença é justamente esse avanço da flange — o
 corpo, da face de sucção ao fim do motor, fecha em 951 contra 949,7.
+
+## 4.14 A terceira linha de bomba: EBARA GSD
+
+A casa mandou a folha dimensional da GSD (desenho 406.1 da EBARA) e a tabela da
+base viga da GS, e pediu para acrescentar. As 14 GSD do catálogo estavam sem
+família — não desenhavam porque a lista não diz "bomba" no nome delas, diz
+`EBARA GSD 125-200 30CV`.
+
+A ponta molhada é a mesma peça das duas KSB, e por isso a GSD reusa
+`_corpo_bomba` inteiro. O que muda são as letras da folha:
+
+| letra da GSD | o que mede | equivale a |
+|---|---|---|
+| `h1` | eixo → base | o `b` das KSB |
+| `h2` | eixo → face do flange de descarga | o `a` das KSB |
+| `f1` | face do flange do motor → face da sucção | — |
+| `f2` | face do flange do motor → eixo da descarga | — |
+
+Então a face de sucção até o eixo da descarga é **`f1 − f2`**, e não uma cota
+própria. Isso dá 73 mm no suporte GSD/230, 98 no GSD/240 e 108 no GSD/250 —
+varia com o **suporte** e não com a bomba, que é o que se espera de uma cota
+medida a partir do flange do motor. É essa consistência que confirma a leitura.
+
+### Célula mesclada é o feitio mais fácil de ler errado
+
+A folha compartilha o diâmetro nominal, o `f2`, o `b`, o `m1`, o `m2` e o `s1`
+entre as bombas do mesmo grupo: o valor aparece uma vez e vale para o bloco.
+Ler linha a linha perde a maioria dos números, e descer o valor do vizinho de
+cima erra quando o rótulo do grupo está numa altura diferente da primeira bomba
+dele.
+
+`tools/extrair_gsd.py` lê **por posição x de coluna** e aplica quatro guardas:
+
+**Faixa da folha.** Sem ela o `1 2 3 4 5 6` do quadro do desenho cai dentro da
+tabela, e o `3` vira uma bomba com 3 mm de pé.
+
+**Faixa plausível por cota.** O PDF entrega `21215` onde estão 212 e 15
+grudados, e `200150500` onde estão três números. Um `n2` de 21 metros não é
+cota, é leitura errada — e o extrator diz o que recusou, em vez de engolir.
+
+**O nome diz o DN2.** Na GSD 125-250 o 125 é a descarga e o 250 é o rotor — a
+mesma regra do folheto da KSB, já homologada aqui. Onde a tabela discorda do
+nome, quem manda é o nome.
+
+**`f1` e `f2` pertencem ao grupo.** São cotas medidas do flange do motor, então
+valem o mesmo em todo o grupo do suporte. A moda do grupo corrige quem herdou
+do vizinho errado.
+
+Resultado: **34 modelos** dos 38 lidos, e os 4 que ficaram fora saíram por não
+ter cota essencial — o extrator nomeia quais.
+
+### O que o teste da GSD pergunta
+
+`tools/conferir_gsd.py` fecha em zero, e uma das perguntas nasceu errada: eu
+cobrava que a sucção fosse **um tamanho acima** da descarga, e a folha reprovava
+em duas bombas. A folha estava certa: na EBARA a 40-125 tem sucção DN50 e a
+40-200 tem DN65 — não é regra fixa. O invariante que dá para cobrar é só a
+desigualdade, e os pares que a folha dá ficaram registrados no relatório:
+32→50, 40→50, 40→65, 50→65, 65→80, 80→100, 100→125, 125→150, 150→200.
+
+### A potência sai da lista, não de fórmula
+
+A folha dimensional não cota potência por bomba — a tabela de CV dela é por
+carcaça de motor. Mas a **lista** cota: `EBARA GSD 125-200 30CV` é um item de
+verdade. Então a folha de símbolos escolhe, entre as 34, uma das **11 que a casa
+compra**, e a potência sai de lá. Foi o que corrigiu uma GSD 150-200 saindo com
+carcaça 315 e 100 CV — proporção minha, e over-motorizada.
+
+Três modelos do catálogo não estão nesta folha (100-200, 150-400L, 150-500).
+Esses recusam com o motivo dito, em vez de sair estimados. A base viga da GS
+está extraída em `data/bases_gs.csv` — 105 combinações de bomba e potência — e
+ainda não é usada: ela é da GS mancalizada, e a GSD é monobloco.
 
 ## 5. O que a peça puxa: um mecanismo só
 

@@ -62404,7 +62404,7 @@
   "un": "UN",
   "grupo": "BOMBAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "BOMBA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -62416,8 +62416,8 @@
   "manifold": null,
   "saida_pol": null,
   "acionamento": null,
-  "serie": null,
-  "confianca": 0.0
+  "serie": "GSD",
+  "confianca": 0.29
  },
  {
   "sap": "01578-000013",
@@ -62425,7 +62425,7 @@
   "un": "UN",
   "grupo": "BOMBAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "BOMBA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -62437,8 +62437,8 @@
   "manifold": null,
   "saida_pol": null,
   "acionamento": null,
-  "serie": null,
-  "confianca": 0.0
+  "serie": "GSD",
+  "confianca": 0.29
  },
  {
   "sap": "01578-000014",
@@ -62467,7 +62467,7 @@
   "un": "UN",
   "grupo": "BOMBAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "BOMBA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -62479,8 +62479,8 @@
   "manifold": null,
   "saida_pol": null,
   "acionamento": null,
-  "serie": null,
-  "confianca": 0.0
+  "serie": "GSD",
+  "confianca": 0.29
  },
  {
   "sap": "01578-000016",
@@ -62488,7 +62488,7 @@
   "un": "UN",
   "grupo": "BOMBAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "BOMBA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -62500,8 +62500,8 @@
   "manifold": null,
   "saida_pol": null,
   "acionamento": null,
-  "serie": null,
-  "confianca": 0.0
+  "serie": "GSD",
+  "confianca": 0.29
  },
  {
   "sap": "01578-000017",
@@ -62635,7 +62635,7 @@
   "un": "UN",
   "grupo": "BOMBAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "BOMBA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -62647,8 +62647,8 @@
   "manifold": null,
   "saida_pol": null,
   "acionamento": null,
-  "serie": null,
-  "confianca": 0.0
+  "serie": "GSD",
+  "confianca": 0.29
  },
  {
   "sap": "01578-000024",
@@ -62656,7 +62656,7 @@
   "un": "UN",
   "grupo": "BOMBAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "BOMBA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -62668,8 +62668,8 @@
   "manifold": null,
   "saida_pol": null,
   "acionamento": null,
-  "serie": null,
-  "confianca": 0.0
+  "serie": "GSD",
+  "confianca": 0.29
  },
  {
   "sap": "01578-000025",
@@ -62677,7 +62677,7 @@
   "un": "UN",
   "grupo": "BOMBAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "BOMBA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -62689,8 +62689,8 @@
   "manifold": null,
   "saida_pol": null,
   "acionamento": null,
-  "serie": null,
-  "confianca": 0.0
+  "serie": "GSD",
+  "confianca": 0.29
  },
  {
   "sap": "01578-000026",
@@ -62698,7 +62698,7 @@
   "un": "UN",
   "grupo": "BOMBAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "BOMBA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -62710,8 +62710,8 @@
   "manifold": null,
   "saida_pol": null,
   "acionamento": null,
-  "serie": null,
-  "confianca": 0.0
+  "serie": "GSD",
+  "confianca": 0.29
  },
  {
   "sap": "01578-000027",
@@ -62719,7 +62719,7 @@
   "un": "UN",
   "grupo": "BOMBAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "BOMBA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -62731,8 +62731,8 @@
   "manifold": null,
   "saida_pol": null,
   "acionamento": null,
-  "serie": null,
-  "confianca": 0.0
+  "serie": "GSD",
+  "confianca": 0.29
  },
  {
   "sap": "01578-000028",
@@ -62761,7 +62761,7 @@
   "un": "UN",
   "grupo": "BOMBAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "BOMBA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -62773,8 +62773,8 @@
   "manifold": null,
   "saida_pol": null,
   "acionamento": null,
-  "serie": null,
-  "confianca": 0.0
+  "serie": "GSD",
+  "confianca": 0.29
  },
  {
   "sap": "01578-000030",
@@ -62782,7 +62782,7 @@
   "un": "UN",
   "grupo": "BOMBAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "BOMBA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -62794,8 +62794,8 @@
   "manifold": null,
   "saida_pol": null,
   "acionamento": null,
-  "serie": null,
-  "confianca": 0.0
+  "serie": "GSD",
+  "confianca": 0.29
  },
  {
   "sap": "01578-000031",
@@ -62929,7 +62929,7 @@
   "un": "UN",
   "grupo": "BOMBAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "BOMBA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -62941,8 +62941,8 @@
   "manifold": null,
   "saida_pol": null,
   "acionamento": null,
-  "serie": null,
-  "confianca": 0.0
+  "serie": "GSD",
+  "confianca": 0.29
  },
  {
   "sap": "01578-000038",
@@ -62950,7 +62950,7 @@
   "un": "UN",
   "grupo": "BOMBAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "BOMBA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -62962,8 +62962,8 @@
   "manifold": null,
   "saida_pol": null,
   "acionamento": null,
-  "serie": null,
-  "confianca": 0.0
+  "serie": "GSD",
+  "confianca": 0.29
  },
  {
   "sap": "01578-000039",
@@ -62971,7 +62971,7 @@
   "un": "UN",
   "grupo": "BOMBAS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "BOMBA",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -62983,8 +62983,8 @@
   "manifold": null,
   "saida_pol": null,
   "acionamento": null,
-  "serie": null,
-  "confianca": 0.0
+  "serie": "GSD",
+  "confianca": 0.29
  },
  {
   "sap": "01578-299985",

@@ -22,6 +22,8 @@ RX_DOIS = re.compile(r"(\d{2,3})-(\d{2,4})(?!\d)")
 RX_CV = re.compile(r"(\d+(?:[,.]\d+)?)\s*CV")
 RX_MEGABLOC = re.compile(r"\bMETB\b")
 RX_MEGANORM = re.compile(r"\bMETN\b")
+# A GSD da EBARA: monobloco de outra fabricante, com folha dimensional propria
+RX_GSD = re.compile(r"\bGSD\s+(\d{2,3}-\d{3}[A-Z]?(?:\.\d)?)\b", re.I)
 
 # Tubo que vem em rolo nao e peca de linha - e material por metro. O FXN e
 # layflat: enrola, nao tem forma propria e nao entra em vista lateral.
@@ -45,6 +47,11 @@ def tamanho_de_bomba(descricao):
 
 def _bomba(item):
     descricao = item["descricao"]
+    m = RX_GSD.search(descricao)
+    if m:
+        cv = RX_CV.search(descricao)
+        return s.bomba_gsd(m.group(1),
+                           float(cv.group(1).replace(",", ".")) if cv else None)
     megabloc = bool(RX_MEGABLOC.search(descricao))
     if not megabloc and not RX_MEGANORM.search(descricao):
         raise SemSimbolo("bomba fora das linhas Mega")
@@ -292,6 +299,63 @@ def em_polegada(peca, mm, dn_pol, mm_menor=None, menor=None, norma="", serie="")
                          portas=portas, elementos=elementos,
                          params={**peca.params, "norma": norma,
                                  "dn_pol": dn_pol, "serie": serie})
+
+
+_cv_gsd = None
+
+
+def cv_de_gsd(modelo, catalogo="data/catalogo.json"):
+    """A potencia que a casa de fato compra nesse modelo de GSD.
+
+    A folha dimensional nao cota potencia por bomba - a tabela de CV dela e por
+    carcaca de motor. Mas a LISTA cota: "EBARA GSD 125-200 30CV" e um item de
+    verdade. Entao a potencia sai de lá, e nao de uma formula minha: a mediana
+    do que a casa compra naquele modelo.
+
+    Devolve None quando o modelo nao aparece na lista - e ai quem desenha
+    decide, sabendo que esta escolhendo.
+    """
+    global _cv_gsd
+    if _cv_gsd is None:
+        import json
+        _cv_gsd = {}
+        try:
+            with open(catalogo, encoding="utf-8") as fh:
+                itens = json.load(fh)
+        except OSError:
+            itens = []
+        for item in itens:
+            m = RX_GSD.search(item.get("descricao") or "")
+            cv = RX_CV.search(item.get("descricao") or "")
+            if m and cv:
+                _cv_gsd.setdefault(m.group(1), []).append(
+                    float(cv.group(1).replace(",", ".")))
+    lista = sorted(_cv_gsd.get(modelo) or [])
+    return lista[(len(lista) - 1) // 2] if lista else None
+
+
+def gsd_da_lista(dn_pol):
+    """A GSD que a LISTA tem para essa bitola de recalque, se houver.
+
+    A folha de simbolos mostra a peca que a casa compra, nao a que existe no
+    catalogo do fabricante: das 34 GSD da folha dimensional, 11 estao na lista.
+    Escolher da lista e o que faz a potencia sair real em vez de proporcao.
+    """
+    from .bomba import MM_PARA_POLEGADA
+    cv_de_gsd("32-160")            # carrega o indice
+    candidatas = []
+    for modelo in _cv_gsd:
+        ficha = s.ficha_gsd(modelo)
+        if not ficha:
+            continue
+        candidatas.append((MM_PARA_POLEGADA.get(float(ficha["dn2_mm"])),
+                           float(modelo.split("-")[1].rstrip("L")
+                                 .split(".")[0]), modelo))
+    exatas = [c for c in candidatas if c[0] == dn_pol]
+    if exatas:
+        return min(exatas, key=lambda c: c[1])[2]
+    abaixo = [c for c in candidatas if c[0] and c[0] <= dn_pol]
+    return max(abaixo, key=lambda c: (c[0], -c[1]))[2] if abaixo else None
 
 
 def de_item(item):

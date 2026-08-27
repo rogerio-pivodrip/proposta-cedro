@@ -141,6 +141,7 @@ RX_DN_MM = re.compile(
 SERIE_MM = {20, 25, 32, 40, 50, 63, 75, 90, 100, 110, 125, 140, 160, 180, 200,
             225, 250, 280, 300, 315, 350, 355, 400, 450, 500, 600}
 RX_PAR_MM = re.compile(r"\b(\d{2,3})\s*X\s*(\d{2,3})\s*MM\b")
+RX_GSD = re.compile(r"\bGSD\s+(\d{2,3}-\d{3}[A-Z]?(?:\.\d)?)\b", re.I)
 RX_MNFD = re.compile(r"\bD\s?(\d{2})\b")
 RX_GEOM = re.compile(
     r"(\d+\s?\d/\d|\d+)\s*\"?\s*X\s*([\d,.]+)\s*(?:MM)?\s*X\s*([\d,.]+)\s*(MM|M)\b"
@@ -284,6 +285,17 @@ def normalizar_item(item):
         if m:
             peca["dn"] = [int(m.group(1)), int(m.group(2))]
             dns_pos = [(v, m.start()) for v in peca["dn"]]
+
+    # A GSD da EBARA e bomba, e a lista nao diz "bomba" no nome dela: diz
+    # "EBARA GSD 125-200 30CV". Sem esta regra as 14 GSD do catalogo ficam sem
+    # familia e nao desenham.
+    m = RX_GSD.search(desc)
+    if m:
+        peca["familia"] = "BOMBA"
+        peca["serie"] = "GSD"
+        peca["manifold"] = None
+        peca["dn"] = []
+        peca["unidade_dn"] = None
 
     # Colar de tomada: '160X2"' e '125 X 2"' sao tubo em milimetro e saida em
     # polegada. Sem isso o 160 se perde e o colar fica sem diametro de tubo.
