@@ -75,7 +75,7 @@ def cobertura():
     """
     from tools import desenhar_simbolos as ds
     print("\n== de onde vem a cota de cada peça da folha (seção PVC e Plasson)\n")
-    print(f'{"bitola":8}{"DN":>6}{"junta":>8}{"folha":>7}{"casa":>6}'
+    print(f'{"bitola":8}{"DN":>6}{"folha":>7}{"casa":>6}'
           f'{"estimada":>10}   as estimadas')
     total = collections.Counter()
 
@@ -90,17 +90,18 @@ def cobertura():
         return "estimada"
 
     for dn in (3, 4, 5, 6, 8, 10, 12, 14):
-        pecas = dict(ds.elenco(dn)).get("PVC e Plasson") or []
+        pecas = next((p for titulo, p, _ in ds.elenco(dn)
+                      if titulo == "PVC e Plasson"), [])
         if not pecas:
-            print(f'{dn:g}"{"":5}{"—":>6}{"—":>8}{"—":>7}{"—":>6}{"—":>10}   '
-                  f"a linha Plasson acaba em DN225")
+            print(f'{dn:g}"{"":5}{ds._plasson(dn) or "—":>6}{"—":>7}{"—":>6}'
+                  f'{"—":>10}   ' + ds.vazia("PVC e Plasson", dn))
             continue
         grupo = collections.defaultdict(list)
         for peca in pecas:
             grupo[classe(peca)].append(peca)
         for k in ("folha", "casa", "estimada"):
             total[k] += len(grupo[k])
-        print(f'{dn:g}"{"":5}{ds._plasson(dn):>6}{ds._junta_pvc(dn):>8}'
+        print(f'{dn:g}"{"":5}{ds._plasson(dn):>6}'
               f'{len(grupo["folha"]):>7}{len(grupo["casa"]):>6}'
               f'{len(grupo["estimada"]):>10}   '
               + ", ".join(p.rotulo.split(" DN")[0] for p in grupo["estimada"]))

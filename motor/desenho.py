@@ -403,6 +403,16 @@ def _desenhar(item):
         "VALVULA_BORBOLETA": lambda: s.valvula_borboleta(
             maior, item.get("acionamento") or "ALAVANCA"),
         "VALVULA_GAVETA": lambda: s.valvula_gaveta(maior),
+        # a ventosa: a classe muda a peca inteira - a combinada de 2" tem 518
+        # mm de altura e a anti-vacuo de 2" tem 122 - e quem diz a classe e a
+        # descricao, com a marca junto para a cota achar o modelo medido
+        "VENTOSA": lambda: s.ventosa(
+            maior,
+            "ANTIVACUO" if re.search(r"ANTI\s*-?\s*VACUO|CINETICA",
+                                     item["descricao"], re.I) else "COMBINADA",
+            next((m for m in ("NAVC", "NETAFIM", "EMEK", "DOROT", "BERMAD",
+                              "ARI", "BD")
+                  if m in (item["descricao"] or "").upper()), None)),
         "VALVULA_HIDRAULICA": lambda: s.valvula_hidraulica(
             maior, item.get("serie") or "47"),
         "MEDIDOR": lambda: s.medidor(maior),

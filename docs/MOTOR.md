@@ -1714,6 +1714,72 @@ bloco próprio do relatório, com o par, para alguém olhar o bloco da casa.
 - **bolsa (PBA) em 3", 4" e 5"** — é outra norma e outra série de DN; a única
   fonte continua sendo o DXF da casa.
 
+## 4.19 A folha passa a sair da lista, e não de peça inventada
+
+A casa foi direta: *"use apenas as peças que temos na LM com código"*. Está
+certa, e por um motivo que já tinha aparecido duas vezes na mesma semana —
+**peça inventada não se compra**. O manifold com dois bocais que não existem e
+o PVC em DN280 são o mesmo erro que a curva de 60°.
+
+Agora cada célula da folha sai de um **item do catálogo, com código SAP**, e a
+tarja mostra o código e a descrição da lista. `pedidos(dn)` diz o que a folha
+pede ao catálogo; `_escolher()` traz o item; quem não tem item não é desenhado.
+
+### O que a lista não tem, e a folha passou a dizer
+
+| falta | onde |
+|---|---|
+| **curva de 60°** | em bitola nenhuma — zero itens no catálogo inteiro |
+| **válvula de pé em aço** | não existe; o que a lista tem é o `CRIVO AZ n" P/ VALV PE` e uma `VALVULA PE PVC 2 COM CRIVO` |
+| gaveta, hidráulica e medidor | não existem em 14" |
+| flange | não existe em 3" (só a FG sextavada e uma CPVC fêmea) |
+| flange cega c/ luva 2" | não existe em 14" |
+| curva 90° c/ escape 2" | não existe em 14" |
+| bomba | nenhuma com recalque de 14" |
+| PVC | nada em DN140 — a série Plasson existe, a casa não compra |
+
+Cada seção imprime a sua lista de faltas embaixo dos desenhos. Some sem
+explicação e o leitor supõe que faltou desenhar; dito, vira informação de
+projeto — quem for especificar uma curva de 60° descobre antes, e não na
+cotação.
+
+A contagem por bitola virou uma medida do próprio catálogo:
+
+| bitola | 3" | 4" | 5" | 6" | 8" | 10" | 12" | 14" |
+|---|---|---|---|---|---|---|---|---|
+| peças com código | 36 | 37 | **13** | 38 | 38 | 31 | 28 | 23 |
+
+O 5" confirma o que a seção 2 já dizia: **é bocal, não é linha.**
+
+### A flange solta era de PEAD, não de aço
+
+Procurar `FLANGE SOLTA` no aço não achava nada porque ela não existe ali: na
+lista, a flange solta é `FL P/COLAR. PEAD DN225 NBR PN16`, designada em
+milímetro. Ela mudou de seção — está no PEAD, ao lado do colar que ela prende.
+
+### A ventosa, que a casa tinha apontado que faltava
+
+A regra de **onde** a ventosa entra já existia (`motor/ventosa.py`) e a luva
+que a recebe também; a válvula em si nunca tinha sido desenhada. São **duas
+peças diferentes com o mesmo nome**, e a medida da casa não deixa dúvida:
+
+| classe | 2" | 1" |
+|---|---|---|
+| combinada (NAVC) | 483,6 × **518** | — |
+| anti-vácuo (EMEK) | 73,3 × **122** | 58,6 × 125 |
+| anti-vácuo (Netafim) | — | 76,4 × 286 |
+
+Desenhar uma pela outra erraria por **quatro vezes** na altura. Por isso a
+classe é parâmetro e a cota é procurada por `CLASSE/MARCA` — o DXF mediu
+quatro modelos de três marcas. Onde a marca do item não foi medida, cai na
+outra marca da mesma classe e a tarja diz qual: `casa (COMBINADA/NAVC)`.
+
+### O acionamento é preferência, não filtro
+
+Exigir borboleta com alavanca deixava a de 3" fora da folha, porque a lista só
+tem caixa e volante nessa bitola. O catálogo já ordena alavanca → caixa →
+volante; o pedido só precisa aceitar a ordem em vez de impor a primeira.
+
 ## 5. O que a peça puxa: um mecanismo só
 
 Hoje as derivações estão em quatro lugares diferentes. São todas o mesmo padrão

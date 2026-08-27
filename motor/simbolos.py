@@ -688,6 +688,74 @@ def luva(x, y=0.0, direcao=0.0, dn_pol=2, comprimento=None, externo=None):
     return el
 
 
+def ventosa(dn_pol=2, classe="COMBINADA", marca=None):
+    """A ventosa, em pe sobre a luva roscada que a recebe.
+
+    A casa apontou que ela faltava, e ela faltava mesmo: a regra de ONDE a
+    ventosa entra ja existia (motor/ventosa.py) e a luva que a recebe tambem,
+    mas a valvula em si nunca tinha sido desenhada.
+
+    Sao duas pecas diferentes com o mesmo nome, e a medida da casa mostra a
+    diferenca sem margem para duvida: a combinada de 2" tem 518 mm de altura e
+    a anti-vacuo de 2" tem 122. Desenhar uma pela outra erraria por quatro
+    vezes. Por isso a classe entra como parametro e a cota e procurada por
+    CLASSE/MARCA - o DXF da casa mediu quatro modelos, de tres marcas.
+
+    Onde a marca do item nao esta medida, cai na outra marca da mesma classe,
+    e a tarja diz de onde veio. Estimativa so quando nao ha nenhuma das duas.
+    """
+    tentativas = ([f"{classe}/{marca}"] if marca else []) + [
+        f"{classe}/NAVC", f"{classe}/NETAFIM", f"{classe}/EMEK", classe]
+    largura = altura = None
+    fonte = None
+    for variante in tentativas:
+        largura = cotas.cota_da_casa("VENTOSA", dn_pol, variante, "largura_mm")
+        altura = cotas.cota_da_casa("VENTOSA", dn_pol, variante,
+                                    "altura_total_mm")
+        if largura and altura:
+            fonte = "casa" if variante == tentativas[0] else f"casa ({variante})"
+            break
+    if not (largura and altura):
+        # sem medida: a proporcao sai da anti-vacuo de 2", que e a menor
+        largura, altura = dn_pol * 36.0, dn_pol * 61.0
+        fonte = "estimativa"
+
+    rosca = DE_TUBO.get(dn_pol, 60) / 2
+    r = largura / 2
+    # o bocal roscado que entra na luva, a base sextavada, o corpo e o capuz
+    pe = altura * 0.10
+    base = altura * 0.06
+    capuz = altura * 0.22
+    corpo = altura - pe - base - capuz
+    el = [_p(f"M{-rosca:.1f} 0 V{-pe:.1f}"), _p(f"M{rosca:.1f} 0 V{-pe:.1f}")]
+    el += [_p(f"M{-rosca:.1f} {-i*pe/4:.1f} H{rosca:.1f}", "malha")
+           for i in range(1, 4)]
+    el.append({"tipo": "rect", "x": -r * 0.62, "y": -pe - base,
+               "w": r * 1.24, "h": base, "classe": "corpo"})
+    el.append({"tipo": "rect", "x": -r, "y": -pe - base - corpo, "w": 2 * r,
+               "h": corpo, "rx": r * 0.10, "classe": "corpo"})
+    # o capuz: cone truncado com a saida de ar em cima
+    topo = -altura
+    el += [_polilinha([(-r, -pe - base - corpo), (-r * 0.55, topo + capuz * 0.18),
+                       (-r * 0.55, topo)]),
+           _polilinha([(r, -pe - base - corpo), (r * 0.55, topo + capuz * 0.18),
+                       (r * 0.55, topo)]),
+           _p(f"M{-r*0.55:.1f} {topo:.1f} H{r*0.55:.1f}")]
+    # a fresta de saida do ar, que e o que faz dela ventosa e nao um cap
+    el += [_p(f"M{-r*0.55:.1f} {topo + capuz*0.30:.1f} H{r*0.55:.1f}", "malha"),
+           _p(f"M{-r*0.30:.1f} {topo:.1f} V{topo + capuz*0.30:.1f}", "malha"),
+           _p(f"M{r*0.30:.1f} {topo:.1f} V{topo + capuz*0.30:.1f}", "malha")]
+    el.append(_p(f"M0 {altura*0.10:.1f} V{topo - altura*0.06:.1f}", "centro"))
+    el.append({"tipo": "nota", "x": r + largura * 0.10, "y": -altura * 0.55,
+               "texto": f'{classe.lower()} {dn_pol:g}"'})
+
+    portas = [Porta("entrada", 0, 0, 90, dn_pol)]
+    rot = f'ventosa {classe.lower()} {dn_pol:g}"'
+    return _montar("VENTOSA", rot, el, portas, fonte,
+                   {"dn_pol": dn_pol, "classe": classe, "marca": marca,
+                    "altura_total_mm": altura, "largura_mm": largura})
+
+
 def flange_cega(dn_pol, saida_pol=None, saida_tipo="LUVA"):
     """Fecha a linha. Tres versoes, e o catalogo tem as tres:
 

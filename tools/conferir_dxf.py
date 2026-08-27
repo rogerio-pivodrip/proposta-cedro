@@ -29,7 +29,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--dn", type=float, default=8)
     args = p.parse_args()
-    pecas = [peca for _, grupo in elenco(args.dn) for peca in grupo]
+    pecas = [peca for _, grupo, _ in elenco(args.dn) for peca in grupo]
 
     with tempfile.TemporaryDirectory() as pasta:
         caminho = os.path.join(pasta, "conferencia.dxf")

@@ -17,6 +17,7 @@ colecao de figuras soltas:
 Uso: python3 tools/desenhar_simbolos.py [--dn 8] > simbolos.html
 """
 import argparse
+import re
 import sys
 
 sys.path.insert(0, ".")
@@ -49,134 +50,227 @@ SECOES = {
 }
 
 
-# por que uma secao pode sair vazia nesta bitola
-VAZIA = {
-    "PVC e Plasson": "A linha Plasson do catálogo acaba em DN225 — nesta "
-                     "bitola a lista não tem a peça. Acima disso a linha "
-                     "segue em aço ou em PEAD.",
-}
+ACO = ("ACO_ZINCADO", "ACO_CARBONO", "INOX", None)
+PLASTICO = ("PVC", "PVC_PLASSON")
 
 
-def elenco(dn):
-    """Um simbolo por familia, na bitola pedida, agrupado por secao."""
+def _catalogo():
+    global _cat
+    if _cat is None:
+        from motor.catalogo import Catalogo
+        _cat = Catalogo()
+    return _cat
+
+
+_cat = None
+
+
+def _escolher(familia, dn, materiais=None, texto=None, sem=None, **filtros):
+    """O item da LISTA que representa essa familia nessa bitola.
+
+    A folha nao desenha mais peca parametrica solta: cada celula sai de um
+    item do catalogo, com codigo SAP. A casa pediu assim - "use apenas as
+    pecas que temos na LM com codigo" - e ela esta certa por um motivo que ja
+    tinha aparecido duas vezes nesta semana: peca inventada nao se compra. A
+    curva de 60 graus estava na folha em oito bitolas e nao existe na lista; a
+    valvula de pe em aco tambem nao - o que a lista tem e o CRIVO para valvula
+    de pe.
+    """
+    cat = _catalogo()
+    cand = cat.buscar(familia, dn, material=None, **filtros)
+    if materiais:
+        cand = [i for i in cand if i["material"] in materiais]
+    if texto:
+        cand = [i for i in cand if re.search(texto, i["descricao"], re.I)]
+    if sem:
+        cand = [i for i in cand if not re.search(sem, i["descricao"], re.I)]
+    return cand[0] if cand else None
+
+
+def pedidos(dn):
+    """O que a folha PEDE ao catalogo nesta bitola, secao por secao.
+
+    Cada pedido e (rotulo, familia, bitola, filtros). O rotulo so aparece
+    quando a lista NAO tem a peca - e o que a secao mostra no lugar dela.
+    """
     menor = {14: 12, 12: 10, 10: 8, 8: 6, 6: 4, 5: 4, 4: 3, 3: 2}.get(dn, 2)
+    mm = _plasson(dn)
+    mm_menor = _plasson(menor) or (_abaixo_plasson(mm) if mm else None)
+    junta = _junta_pvc(dn)
+    # o catalogo desenha a curva de pe, entrando por baixo: e so a pose da
+    # folha, a peca e a mesma que a montagem usa deitada
+    de_pe = {"pose": -90}
     return [
         ("Tubo e curva", [
-            s.tubo(dn, 1000),
-            # o catalogo desenha a curva de pe, entrando por baixo: aqui e so
-            # a pose da folha, a peca e a mesma que a montagem usa deitada
-            s.girado(s.curva(dn, 90, -1), -90),
-            s.girado(s.curva(dn, 60, -1), -90),
-            s.girado(s.curva(dn, 45, -1), -90),
-            s.girado(s.curva(dn, 30, -1), -90),
-            s.girado(s.curva_saida(dn, 90, 2, sentido=-1), -90),
+            ("tubo", "TUBO", dn, {"materiais": ACO, "comprimento_mm": 1000}),
+            ("curva 90°", "CURVA", dn, {"materiais": ACO, "angulo": 90, **de_pe}),
+            ("curva 60°", "CURVA", dn, {"materiais": ACO, "angulo": 60, **de_pe}),
+            ("curva 45°", "CURVA", dn, {"materiais": ACO, "angulo": 45, **de_pe}),
+            ("curva 30°", "CURVA", dn, {"materiais": ACO, "angulo": 30, **de_pe}),
+            ('curva 90° c/ escape 2"', "CURVA", dn,
+             {"materiais": ACO, "angulo": 90, "dn_saida": 2, **de_pe}),
         ]),
         ("Derivação e mudança de bitola", [
-            s.te(dn, 2),
-            # a folha mostra o D12, que e o liso com as duas luvas de
-            # ventosa - e o que a legenda dela ja dizia. Bocal em cima so
-            # quando a descricao do item pede
-            s.manifold(dn if dn >= 4 else 4),
-            s.reducao(dn, menor, "CONCENTRICA"),
-            s.reducao(dn, menor, "EXCENTRICA", "topo"),
-            s.adaptador(dn),
+            ("tê", "TE", dn, {"materiais": ACO}),
+            ("manifold", "MANIFOLD", dn, {"materiais": ACO}),
+            (f'redução concêntrica {dn:g}"×{menor:g}"', "REDUCAO_CONCENTRICA",
+             dn, {"materiais": ACO, "dn_saida": menor}),
+            (f'redução excêntrica {dn:g}"×{menor:g}"', "REDUCAO_EXCENTRICA",
+             dn, {"materiais": ACO, "dn_saida": menor}),
+            ("adaptador", "ADAPTADOR", dn, {"materiais": ACO}),
         ]),
         ("Fecho e flange", [
-            s.flange_cega(dn),
-            s.flange_cega(dn, 2),
-            s.flange_avulsa(dn),
-            s.flange_avulsa(dn, "SOLTA"),
+            ("flange cega", "FLANGE_CEGA", dn,
+             {"materiais": ACO, "sem": r"C/\s*(LG|FL)"}),
+            ('flange cega c/ luva 2"', "FLANGE_CEGA", dn,
+             {"materiais": ACO, "dn_saida": 2}),
+            ("flange", "FLANGE", dn,
+             {"materiais": ACO, "sem": r"P/\s*COLAR|SEXTAVADO|CPVC"}),
         ]),
         ("Válvula e medição", [
-            s.valvula_borboleta(dn, "ALAVANCA" if dn <= 6 else "CAIXA"),
-            s.valvula_gaveta(dn),
-            s.valvula_hidraulica(dn, "47"),
-            s.valvula_retencao(dn),
-            s.medidor(dn),
+            # o acionamento nao entra como filtro e sim como PREFERENCIA: o
+            # catalogo ja ordena alavanca, caixa e volante nessa ordem, e
+            # exigir alavanca deixava a borboleta de 3" fora da folha porque a
+            # lista so tem caixa e volante nessa bitola
+            ("válvula borboleta", "VALVULA_BORBOLETA", dn, {}),
+            ("registro de gaveta", "VALVULA_GAVETA", dn, {}),
+            ("válvula hidráulica", "VALVULA_HIDRAULICA", dn, {}),
+            ("válvula de retenção", "VALVULA_RETENCAO", dn, {}),
+            ("medidor", "MEDIDOR", dn, {}),
         ]),
-        ("Sucção", [s.crivo(dn), s.valvula_pe(dn)]),
-        # o PEAD entra pela equivalencia da casa: 8" de aco vira DN225
-        # o mm entra pela mesma equivalencia do PEAD: 8" de aco vira DN225.
-        # A junta vem da bitola porque e assim que a casa compra: a bolsa da
-        # linha de irrigacao para em DN150, acima dela a peca e soldavel
-        ("PVC e Plasson", [
-            s.tubo_pvc(mm, 6000, _ponta_pvc(dn)),
-            s.luva_pvc(mm, _junta_pvc(dn)),
-            s.luva_reducao(mm, _plasson(menor) or _abaixo_plasson(mm),
-                           _junta_pvc(dn)),
-            s.girado(s.curva_pvc(mm, 90, _junta_pvc(dn), -1), -90),
-            s.girado(s.curva_pvc(mm, 45, _junta_pvc(dn), -1), -90),
-            s.te_pvc(mm, junta=_junta_pvc(dn)),
-            s.te_pvc(mm, _plasson(menor) or _abaixo_plasson(mm),
-                     _junta_pvc(dn)),
-            s.adaptador_flange(mm),
-            s.bucha_reducao(mm, _plasson(menor) or _abaixo_plasson(mm)),
-        ] if (mm := _plasson(dn)) else []),
+        ("Sucção", [
+            ("crivo", "CRIVO", dn, {"materiais": ACO}),
+            ("válvula de pé", "VALVULA_PE", dn, {}),
+        ]),
+        # o mm entra pela equivalencia da casa: 8" de aco vira DN225. A junta
+        # vem da bitola porque e assim que a casa compra: a bolsa da linha de
+        # irrigacao para em DN150, acima dela a peca e soldavel
+        ("PVC e Plasson", [] if not mm else [
+            ("tubo", "TUBO", mm, {"materiais": PLASTICO}),
+            ("luva", "LUVA", mm, {"materiais": PLASTICO}),
+            ("luva de redução", "LUVA", mm,
+             {"materiais": PLASTICO, "dn_saida": mm_menor}),
+            ("curva 90°", "CURVA", mm,
+             {"materiais": PLASTICO, "angulo": 90, **de_pe}),
+            ("curva 45°", "CURVA", mm,
+             {"materiais": PLASTICO, "angulo": 45, **de_pe}),
+            ("tê", "TE", mm, {"materiais": PLASTICO}),
+            ("tê de redução", "TE_REDUZIDO", mm,
+             {"materiais": PLASTICO, "dn_saida": mm_menor}),
+            # o adaptador p/ flange da lista nao declara material na
+            # descricao - "ADAPTADOR P/FL 225MM SOLDA" - entao quem o
+            # identifica e o texto, nao o material
+            ("adaptador p/ flange", "ADAPTADOR", mm, {"texto": r"P/\s*FL"}),
+            ("bucha de redução", "BUCHA_REDUCAO", mm,
+             {"materiais": PLASTICO, "dn_saida": mm_menor}),
+        ]),
         # a bitola pequena nao acompanha a da linha: ela e derivacao, e a
         # ventosa e o manometro entram em 1/2" a 2" em qualquer casa de bomba
         ("Rosca e bitola pequena", [
-            _em_pol(s.niple(_rosca_mm(2)), 2),
-            _em_pol(s.uniao(_rosca_mm(2)), 2),
-            _em_pol(s.luva_pvc(_rosca_mm(1), "ROSCA"), 1),
-            _em_pol(s.cap_pvc(_rosca_mm(1), "ROSCA"), 1),
-            _em_pol(s.bucha_reducao(_rosca_mm(2), _rosca_mm(1)), 2, 1),
+            ('niple 2"', "NIPLE", 2, {}),
+            ('união 2"', "UNIAO", 2, {}),
+            ('luva 1"', "LUVA", 1, {}),
+            ('cap 1"', "CAP", 1, {}),
+            ('bucha de redução 2"×1"', "BUCHA_REDUCAO", 2, {"dn_saida": 1}),
+            ('ventosa 2"', "VENTOSA", 2, {}),
         ]),
-        ("PEAD", [s.tubo_pead(_pead(dn), 6000), s.colar_pead(_pead(dn))]),
-        ("Bomba", [
-            # a mesma bomba na menor e na maior potencia do folheto: o que
-            # muda de uma para a outra e o motor, e a diferenca e de folha
-            s.bomba_megabloc(_megabloc(dn)),
-            s.bomba_megabloc(_megabloc(dn), cv=_maior_cv(_megabloc(dn))),
-            # a bomba e a mesma peca nas duas poses, como a curva
-            s.bomba_megabloc(_megabloc(dn), "VERTICAL"),
-            # a mancalizada: mesma ponta molhada, mancal e motor sobre a base
-            s.bomba_meganorm(_meganorm(dn)),
-            # a terceira linha: EBARA GSD, monobloco de outra fabricante. A
-            # ponta molhada e a mesma peca; o que muda sao as letras da folha
-            s.bomba_gsd(_gsd(dn), cv=_cv_gsd(_gsd(dn))),
+        ("PEAD", [
+            ("tubo PEAD", "TUBO", _pead(dn), {"materiais": ("PEAD",)}),
+            ("colar de PEAD", "COLAR_PEAD", _pead(dn), {}),
+            # a flange SOLTA da lista e a do colar de PEAD, designada em DN
+            # milimetro: "FL P/COLAR. PEAD DN225 NBR PN16". Ela nao existe na
+            # secao de aco, e por isso mora aqui
+            ("flange p/ colar", "FLANGE", _pead(dn), {"texto": r"P/\s*COLAR"}),
         ]),
     ]
+
+
+def vazia(titulo, dn):
+    """Por que a secao saiu vazia nesta bitola - a folha diz, nao esconde."""
+    if titulo != "PVC e Plasson":
+        return ""
+    if _plasson(dn) is None:
+        return ("A linha Plasson do catálogo acaba em DN225 — acima disso a "
+                "linha segue em aço ou em PEAD.")
+    return (f"A lista não tem conexão de PVC em DN{_plasson(dn):g}. A série "
+            f"Plasson existe nessa bitola, mas a casa não compra peça dela.")
+
+
+def elenco(dn):
+    """Um simbolo por familia, na bitola pedida, agrupado por secao.
+
+    Devolve (titulo, pecas, faltam): o que a lista tem desenhado, e o nome do
+    que ela NAO tem nesta bitola. A folha mostra os dois - peca que falta
+    calada faz supor que faltou desenhar, e o que falta e informacao.
+    """
+    from motor import desenho
+    grupos = []
+    for titulo, lista in pedidos(dn):
+        pecas, faltam = [], []
+        for rotulo, familia, bitola, filtros in lista:
+            filtros = dict(filtros)
+            pose = filtros.pop("pose", 0)
+            item = _escolher(familia, bitola, **filtros)
+            if item is None:
+                faltam.append(rotulo)
+                continue
+            try:
+                peca = desenho.de_item(item)
+            except Exception as erro:                   # noqa: BLE001
+                faltam.append(f"{rotulo} — {type(erro).__name__}: {erro}")
+                continue
+            pecas.append(s.girado(peca, pose) if pose else peca)
+        grupos.append((titulo, pecas, faltam))
+    grupos.append(("Bomba", _bombas(dn), []))
+    return grupos
+
+
+_desenhadas = None
+
+
+def _bombas(dn):
+    """As bombas da LISTA cujo bocal de recalque casa com esta linha.
+
+    As tres linhas que a casa compra - Megabloc, Meganorm e GSD - e todas
+    saem de item com codigo. O folheto entra so para dar a cota; quem escolhe
+    o modelo e a lista, e por isso a potencia da tarja e a que se compra e nao
+    uma proporcao.
+
+    A bitola do recalque nao sai do nome sem desenhar: cada linha nomeia de um
+    jeito. Entao desenha e le a porta de saida, que e onde as tres concordam.
+    """
+    global _desenhadas
+    from motor import desenho
+    if _desenhadas is None:
+        _desenhadas = []
+        for item in _catalogo().itens:
+            if item.get("familia") != "BOMBA":
+                continue
+            try:
+                peca = desenho.de_item(item)
+            except Exception:                           # noqa: BLE001
+                continue
+            saida = s.porta(peca, s.SAIDA)
+            if saida and saida.dn_pol:
+                _desenhadas.append((saida.dn_pol, peca))
+    alvo = _bocal(dn)
+    saida, vistas = [], set()
+    for dn_saida, peca in _desenhadas:
+        linha = (peca.params.get("linha")
+                 or ("METN" if "meganorm" in peca.rotulo.lower() else None)
+                 or ("METB" if "megabloc" in peca.rotulo.lower() else "?"))
+        if dn_saida != alvo or linha in vistas:
+            continue
+        vistas.add(linha)
+        saida.append(peca)
+    return saida
 
 
 def _bocal(dn_linha):
     return {14: 8, 12: 8, 10: 6, 8: 6, 6: 4, 5: 4, 4: 3, 3: 2}.get(dn_linha, 2)
 
 
-def _megabloc(dn_linha):
-    """A Megabloc cujo bocal de sucção casa com a redução que sai da linha."""
-    return s.bomba_para_linha(_bocal(dn_linha)) or "80-250"
 
-
-def _meganorm(dn_linha):
-    return s.meganorm_para_linha(_bocal(dn_linha)) or "100-315"
-
-
-def _gsd(dn_linha):
-    """A GSD para a linha — preferindo a que a casa compra.
-
-    A lista tem 11 das 34 GSD da folha dimensional. Mostrar uma da lista faz a
-    potência sair real em vez de proporção, e é a peça que alguém vai pedir.
-    """
-    from motor import desenho
-    return (desenho.gsd_da_lista(_bocal(dn_linha))
-            or s.gsd_para_linha(_bocal(dn_linha)) or "125-200")
-
-
-def _cv_gsd(modelo):
-    """A potência que a LISTA dá para esse modelo — não uma fórmula minha.
-
-    Onde a lista não tem o modelo, cai na proporção de `cv_da_gsd`, e a tarja
-    mostra a carcaça para quem quiser conferir.
-    """
-    from motor import desenho
-    return desenho.cv_de_gsd(modelo) or s.cv_da_gsd(modelo)
-
-
-def _maior_cv(tamanho):
-    """A maior potência que o folheto lista para essa bomba."""
-    s.ficha_bomba(tamanho)
-    linhas = s._bombas.get((tamanho, 4)) or []
-    return max((float(r["cv"]) for r in linhas), default=None)
 
 
 def _rosca_mm(dn_pol):
@@ -185,13 +279,6 @@ def _rosca_mm(dn_pol):
     return cotas.milimetro_da_serie("ROSCA", dn_pol)[0]
 
 
-def _em_pol(peca, dn_pol, menor=None):
-    """A peça de rosca com o rótulo na polegada da lista, como o catálogo faz."""
-    from motor import desenho
-    return desenho.em_polegada(peca, _rosca_mm(dn_pol), dn_pol,
-                               _rosca_mm(menor) if menor else None, menor,
-                               "ISO 65", "ROSCA")
-
 
 def _abaixo_plasson(mm):
     """A bitola Plasson imediatamente abaixo - quando a menor da linha de aco
@@ -199,10 +286,6 @@ def _abaixo_plasson(mm):
     menores = [d for d in PLASSON if d < mm]
     return menores[-1] if menores else mm
 
-
-def _ponta_pvc(dn_pol):
-    """A barra da linha de irrigação vem com bolsa; a soldável, lisa."""
-    return "BOLSA" if _junta_pvc(dn_pol) == "BOLSA" else "LISA"
 
 
 def _junta_pvc(dn_pol):
@@ -441,6 +524,16 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .marca{font-size:9px;text-anchor:middle}
 /* o trim: a cota nao foge do eixo, o eixo abre para ela */
 .trim{fill:var(--papel);stroke:none}
+.lista{display:flex;gap:8px;align-items:baseline;margin:1px 0 3px;
+  font:400 10.5px/1.4 "IBM Plex Mono",ui-monospace,monospace;
+  color:var(--anota,#8a8f98)}
+.lista .sap{font-weight:500;color:var(--titulo,#3d424d);white-space:nowrap}
+.lista span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.falta{font:400 11.5px/1.5 "Source Sans 3",system-ui,sans-serif;
+  color:var(--anota,#8a8f98);margin:-14px 0 24px;max-width:78ch}
+.falta::before{content:"";display:inline-block;width:6px;height:6px;
+  border-radius:50%;background:var(--eixo,#c0392b);opacity:.55;
+  margin-right:7px;vertical-align:middle}
 .vazia{font:italic 12px/1.5 "Source Sans 3",system-ui,sans-serif;
   color:var(--anota,#8a8f98);margin:2px 0 22px;max-width:58ch}
 """
@@ -470,8 +563,15 @@ def figura(simbolo, altura=DESENHO, minimo=1):
     nome = simbolo.rotulo
     n = colunas(simbolo, minimo)
     classe = f' class="col{n}"' if n > 1 else ""
+    # o codigo SAP e a descricao da LISTA vem primeiro na tarja: a folha
+    # desenha o que se compra, e o codigo e o nome de compra da peca
+    sap = simbolo.params.get("sap")
+    descricao = simbolo.params.get("descricao")
+    codigo = f'<b class="sap">{sap}</b>' if sap else ""
+    lista = (f'<div class="lista">{codigo}<span>{descricao}</span></div>'
+             if sap or descricao else "")
     return (f'<figure{classe}>{celula(simbolo, altura, minimo)}<figcaption>'
-            f'<div class="nome">{nome}</div>'
+            f'<div class="nome">{nome}</div>{lista}'
             f'<div class="tarja"><i>{bitola(simbolo)}</i>'
             + "".join(f"<i>{f}</i>" for f in fatos(simbolo))
             + f'<span class="fonte">{simbolo.fonte or ""}</span></div>'
@@ -486,18 +586,25 @@ def fragmento(dn):
     """
     grupos = elenco(dn)
     corpo = []
-    for titulo, pecas in grupos:
+    for titulo, pecas, faltam in grupos:
         detalhe, altura, minimo = SECOES.get(titulo, ("", DESENHO, 1))
         corpo.append(f'<h2>{titulo}<em>{detalhe}</em></h2>')
-        if not pecas:
+        if pecas:
+            corpo.append('<div class="folha">'
+                         + "".join(figura(peca, altura, minimo)
+                                   for peca in pecas)
+                         + "</div>")
+        elif vazia(titulo, dn):
             # secao vazia diz POR QUE esta vazia: some sem explicacao e o
             # leitor supoe que faltou desenhar
-            corpo.append(f'<p class="vazia">{VAZIA.get(titulo, "")}</p>')
-            continue
-        corpo.append('<div class="folha">'
-                     + "".join(figura(peca, altura, minimo) for peca in pecas)
-                     + "</div>")
-    return "\n".join(corpo), sum(len(pecas) for _, pecas in grupos)
+            corpo.append(f'<p class="vazia">{vazia(titulo, dn)}</p>')
+        if faltam:
+            # o que a LISTA nao tem nesta bitola. Aparece porque e informacao:
+            # nao ha curva de 60 graus no catalogo, em bitola nenhuma, e quem
+            # projeta precisa saber disso antes de especificar uma
+            corpo.append('<p class="falta">a lista não tem nesta bitola: '
+                         + ", ".join(faltam) + "</p>")
+    return "\n".join(corpo), sum(len(pecas) for _, pecas, _ in grupos)
 
 
 def main():

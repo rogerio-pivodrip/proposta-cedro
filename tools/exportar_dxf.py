@@ -44,7 +44,7 @@ def main():
     caminho = os.path.join(args.saida, f"simbolos_{bitola}pol.dxf")
     feitos = catalogo(args.saida, alvo=caminho, dn=args.dn)
     if not feitos:
-        pecas = [peca for _, grupo in elenco(args.dn) for peca in grupo]
+        pecas = [peca for _, grupo, _ in elenco(args.dn) for peca in grupo]
         dxf.escrever_pecas(caminho, pecas)
         print(f"{caminho}: {len(pecas)} blocos (sem código - fora do catálogo)")
 

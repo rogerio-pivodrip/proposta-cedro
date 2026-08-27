@@ -133,14 +133,14 @@ CURVA,35,,mm,90/,envelope_x_mm,72.4,1,JOELHO AZUL 90 - 35mm,pecas_CAD2.dxf,DXF d
 CURVA,35,,mm,90/,envelope_y_mm,72.4,1,JOELHO AZUL 90 - 35mm,pecas_CAD2.dxf,DXF da casa
 ADAPTADOR,50,2,mm,ROSCA,comprimento_mm,343.7,1,"ADAP. BS x RM 50 x 2""",pecas_CAD2.dxf,DXF da casa
 ADAPTADOR,50,2,mm,ROSCA,d_externo_mm,119.0,1,"ADAP. BS x RM 50 x 2""",pecas_CAD2.dxf,DXF da casa
-VENTOSA,2,,in,,largura_mm,483.6,1,"VALV. VENTOSA NAVC 2"" PN10-16 NETAFIM",pecas_CAD3.dxf,DXF da casa
-VENTOSA,2,,in,,altura_total_mm,518.0,1,"VALV. VENTOSA NAVC 2"" PN10-16 NETAFIM",pecas_CAD3.dxf,DXF da casa
-VENTOSA,1,,in,,largura_mm,76.4,1,"VALV. ANTI-VACUO 1"" NETAFIM",pecas_CAD3.dxf,DXF da casa
-VENTOSA,1,,in,,altura_total_mm,286.0,1,"VALV. ANTI-VACUO 1"" NETAFIM",pecas_CAD3.dxf,DXF da casa
-VENTOSA,1,,in,,largura_mm,58.6,1,"VALV. ANTI-VACUO 1"" EMEK",pecas_CAD3.dxf,DXF da casa
-VENTOSA,1,,in,,altura_total_mm,125.0,1,"VALV. ANTI-VACUO 1"" EMEK",pecas_CAD3.dxf,DXF da casa
-VENTOSA,2,,in,,largura_mm,73.3,1,"VALV. ANTI-VACUO 2"" EMEK",pecas_CAD3.dxf,DXF da casa
-VENTOSA,2,,in,,altura_total_mm,122.0,1,"VALV. ANTI-VACUO 2"" EMEK",pecas_CAD3.dxf,DXF da casa
+VENTOSA,2,,in,COMBINADA/NAVC,largura_mm,483.6,1,"VALV. VENTOSA NAVC 2"" PN10-16 NETAFIM",pecas_CAD3.dxf,DXF da casa
+VENTOSA,2,,in,COMBINADA/NAVC,altura_total_mm,518.0,1,"VALV. VENTOSA NAVC 2"" PN10-16 NETAFIM",pecas_CAD3.dxf,DXF da casa
+VENTOSA,1,,in,ANTIVACUO/NETAFIM,largura_mm,76.4,1,"VALV. ANTI-VACUO 1"" NETAFIM",pecas_CAD3.dxf,DXF da casa
+VENTOSA,1,,in,ANTIVACUO/NETAFIM,altura_total_mm,286.0,1,"VALV. ANTI-VACUO 1"" NETAFIM",pecas_CAD3.dxf,DXF da casa
+VENTOSA,1,,in,ANTIVACUO/EMEK,largura_mm,58.6,1,"VALV. ANTI-VACUO 1"" EMEK",pecas_CAD3.dxf,DXF da casa
+VENTOSA,1,,in,ANTIVACUO/EMEK,altura_total_mm,125.0,1,"VALV. ANTI-VACUO 1"" EMEK",pecas_CAD3.dxf,DXF da casa
+VENTOSA,2,,in,ANTIVACUO/EMEK,largura_mm,73.3,1,"VALV. ANTI-VACUO 2"" EMEK",pecas_CAD3.dxf,DXF da casa
+VENTOSA,2,,in,ANTIVACUO/EMEK,altura_total_mm,122.0,1,"VALV. ANTI-VACUO 2"" EMEK",pecas_CAD3.dxf,DXF da casa
 VALVULA_HIDRAULICA,75,,mm,,face_a_face_mm,198.0,1,"VALV. PLASTICA  DOROT 75X2""",pecas_CAD3.dxf,DXF da casa
 VALVULA_HIDRAULICA,75,,mm,,altura_total_mm,121.5,1,"VALV. PLASTICA  DOROT 75X2""",pecas_CAD3.dxf,DXF da casa
 VALVULA_HIDRAULICA,75,,mm,,face_a_face_mm,188.0,1,VALV. PLASTICA  DOROT 75X1,pecas_CAD3.dxf,DXF da casa
