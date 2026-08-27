@@ -325,8 +325,11 @@ def reducao(dn_maior, dn_menor, tipo="CONCENTRICA", lado_plano="topo",
           _p(f"M0 {ra:.1f} L{comp:.1f} {base_b:.1f}")]
     desloca = (topo_b + base_b) / 2
     el += placa(0, a) + placa(comp, b, desloca, lado="saida")
-    el.append(_p(f"M-60 0 H{comp*0.55:.0f}", "centro"))
-    el.append(_p(f"M{comp*0.45:.0f} {desloca:.0f} H{comp + 60:.0f}", "centro"))
+    # o eixo liga o centro de uma flange ao centro da outra: na excentrica ele
+    # sai inclinado, e e essa inclinacao que mostra o desalinhamento das bocas
+    inclina = desloca / comp if comp else 0
+    el.append(_p(f"M-60 {-60 * inclina:.1f} L{comp + 60:.1f} "
+                 f"{desloca + 60 * inclina:.1f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, a),
               Porta("saida", comp, desloca, 0, b)]
     curto = "conc" if tipo == "CONCENTRICA" else "exc"
