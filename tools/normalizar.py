@@ -42,6 +42,7 @@ FAMILIAS = [
     (r"^UNIAO\b", "UNIAO", None),
     (r"^LUVA\b", "LUVA", None),
     (r"^CAP\b|^TAMPAO\b", "CAP", None),
+    (r"^COLAR\.?\s?P/\s?FL\b.*PEAD|^COLAR\.?\s?P/\s?\s?FL\b", "COLAR_PEAD", None),
     (r"^COLAR\s?TOMADA\b|^COLAR\b", "COLAR_TOMADA", None),
     (r"^JUNTA\s?PLANA\b", "JUNTA_PLANA", None),
     (r"^JUNTA\s?DE\s?EXPANSAO\b", "JUNTA_EXPANSAO", None),
@@ -107,7 +108,7 @@ RX_DN = re.compile(
     r"(?<![\d/])(\d+\s?\d/\d|\d+/\d+|\d+(?:[.,]\d+)?)\s*\"")
 RX_DN_MM = re.compile(
     r"\b(\d{2,3})\s*MM(?:\b|(?=X))|\((\d{2,3})\)|\b(\d{2,3})\s*(?:PLASSON|$)"
-    r"|\b(\d{2,3})M(?=X)|X\s?(\d{2,3})F\b")
+    r"|\b(\d{2,3})M(?=X)|X\s?(\d{2,3})F\b|\bDN\s?(\d{2,3})\b")
 # Serie comercial de PVC/PEAD/Plasson em mm. Um numero solto so vira DN se for
 # um desses - evita ler "CL 10" ou "PN 10" como diametro.
 SERIE_MM = {20, 25, 32, 40, 50, 63, 75, 90, 100, 110, 125, 140, 160, 180, 200,

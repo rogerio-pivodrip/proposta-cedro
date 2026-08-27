@@ -448,13 +448,63 @@ orientação, sempre no DN do bocal de entrada.
 Mesma ordem, mesmas famílias, mesmos DN — e o tipo da redução saindo certo dos
 dois lados pela orientação da bomba.
 
-### 7.2 Manifolds
+### 7.5 Manifolds
 
 Os **manifolds já são desenhos padrão** no catálogo: `MNFD AZ D02 … D20`,
 14 tipos, 151 itens; só o `D09` tem 43 variações de DN e comprimento. O conceito
 já existe na Netafim — o programa formaliza.
 
-### 7.3 Cobertura de 3" a 14"
+### 7.2 Trecho de PEAD, depois da primeira bomba
+
+Depois da primeira bomba a linha vira PEAD, e o trecho é sempre o mesmo
+conjunto: **N tubos de PEAD** (o usual é de 4 a 8) e, em cada ponta, um **colar
+de flange PEAD** apertado por uma **flange solta de aço**.
+
+Conferido nos três projetos:
+
+| projeto | tubos PEAD | flanges AZ |
+|---|---|---|
+| Marcelo Amorim | 3" × 4 | — |
+| Lincoln Junqueira | 6" × 4 | 6" × **2** |
+| Thiago Derks | 10" × 9 | 10" × **2** |
+
+Sempre 2 flanges, qualquer que seja o número de tubos. `templates.trecho_pead()`
+resolve os três: em 6" dá `TUBO PEAD 160MM` × 4, `COLAR. P/FL PEAD DN160` × 2 e
+`FL 6" (152MM) NBR PN16` × 2.
+
+Em 3" falta a flange — e o catálogo realmente não tem flange solta de 3", o que
+explica o projeto do Marcelo Amorim não listar nenhuma.
+
+### 7.3 Talude
+
+Para subir ou descer o talude, duas maneiras conforme o material:
+
+| material | peças | como |
+|---|---|---|
+| aço zincado | 2 × curva 45° | uma no pé, outra no topo |
+| Plasson | 2 × curva 90° | giradas uma em relação à outra até dar o ângulo |
+
+O segundo caso tem geometria fechada. Duas curvas de 90° com giro relativo φ
+entre os planos defletem o eixo em θ, e a relação é:
+
+```
+cos(θ) = sen(φ)      →      φ = arcsen(cos θ)
+```
+
+| deflexão desejada | girar |
+|---|---|
+| 15° | 75° |
+| 22,5° | 67,5° |
+| 30° | 60° |
+| 45° | 45° |
+| 60° | 30° |
+| 90° | 0° |
+
+Sem giro dá 90°; com giro de 90° as duas se cancelam e a linha volta ao rumo
+original, só deslocada. `motor/talude.py` calcula os dois sentidos e devolve as
+peças com o plano de montagem.
+
+### 7.4 Cobertura de 3" a 14"
 
 Antes de montar qualquer linha, `tools/matriz_bitolas.py` responde onde o
 catálogo tem buraco. `#` serve na linha (é NBR PN16, ou a peça não declara norma
@@ -537,6 +587,7 @@ tools/demo_succao.py          demonstração ponta a ponta (sucção, bomba, rec
 tools/demo_template.py        template de sucção conferido contra os dois projetos
 tools/matriz_bitolas.py       cobertura de peças e reduções de 3" a 14"
 motor/templates.py            receitas padrão resolvidas contra o catálogo
+motor/talude.py               travessia do talude e o giro das curvas de 90
 motor/bomba.py                nomenclatura da bomba -> entrada, saída e rotor
 motor/catalogo.py             índice por (família, DN, norma)
 motor/regras.py               compatibilidade + ferragem

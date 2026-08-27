@@ -1,5 +1,7 @@
 """Templates de linha: a receita padrao, resolvida contra o catalogo.
 
+Duas receitas por enquanto: a succao e o trecho de PEAD.
+
 A succao da casa segue sempre a mesma ordem:
 
     crivo -> valvula de retencao -> tubo de 1 m -> curva (se precisar)
@@ -8,8 +10,10 @@ A succao da casa segue sempre a mesma ordem:
 A curva e opcional e a reducao sai da bomba: concentrica ou excentrica conforme
 a orientacao, e sempre no DN do bocal de entrada.
 """
-from .bomba import HORIZONTAL, entrada_presumida, interpretar, tipo_reducao_succao
+from .bomba import (HORIZONTAL, MM_PARA_POLEGADA, entrada_presumida,
+                    interpretar, tipo_reducao_succao)
 from .linha import Linha, Peca
+from .traducao import POLEGADA_MM
 
 NORMA = "NBR PN16"
 
@@ -62,3 +66,44 @@ def succao(catalogo, dn_linha, modelo_bomba=None, orientacao=HORIZONTAL,
 def _polegada(mm):
     from .bomba import MM_PARA_POLEGADA
     return MM_PARA_POLEGADA.get(mm)
+
+
+# --------------------------------------------------------------------------
+# Trecho de PEAD, depois da primeira bomba
+# --------------------------------------------------------------------------
+TUBOS_PEAD_PADRAO = 4      # o usual e de 4 a 8
+COLARES_POR_TRECHO = 2     # um em cada ponta
+FLANGES_AZ_POR_TRECHO = 2  # a flange solta que aperta contra o colar
+
+
+def trecho_pead(catalogo, dn_pol, tubos=TUBOS_PEAD_PADRAO):
+    """Depois da primeira bomba a linha vira PEAD.
+
+    O trecho e sempre o mesmo conjunto: N tubos de PEAD e, em cada ponta, um
+    colar de flange PEAD apertado por uma flange solta de aco. Conferido nos
+    projetos - Lincoln Junqueira tem 4 tubos de 6" e 2 flanges AZ 6"; Thiago
+    Derks tem 9 tubos de 10" e 2 flanges AZ 10".
+
+    Devolve (itens, faltando), onde itens e [(registro, quantidade)].
+    """
+    dn_mm = POLEGADA_MM.get(dn_pol)
+    itens, faltando = [], []
+
+    def juntar(familia, dn, qtd, material=None, **extra):
+        item = catalogo.melhor(familia, dn, material=material, **extra)
+        if item:
+            itens.append((item, qtd))
+        else:
+            faltando.append((familia, dn, extra))
+
+    if dn_mm:
+        juntar("TUBO", dn_mm, tubos, material="PEAD")
+        juntar("COLAR_PEAD", dn_mm, COLARES_POR_TRECHO)
+    else:
+        faltando.append(("TUBO", dn_pol, {"material": "PEAD"}))
+    juntar("FLANGE", dn_pol, FLANGES_AZ_POR_TRECHO, norma=NORMA)
+    return itens, faltando
+
+
+def _dn_pead_em_mm(dn_pol):
+    return POLEGADA_MM.get(dn_pol)

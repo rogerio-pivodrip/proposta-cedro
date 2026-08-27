@@ -1655,15 +1655,17 @@
   "procedencia": "PVC TUBO - NACIONAL",
   "familia": "EXTREMIDADE",
   "material": null,
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   700
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01502-000002",
@@ -1673,15 +1675,17 @@
   "procedencia": "PVC TUBO - NACIONAL",
   "familia": "CURVA",
   "material": null,
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   700
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01502-000003",
@@ -1691,15 +1695,17 @@
   "procedencia": "PVC TUBO - NACIONAL",
   "familia": "CURVA",
   "material": null,
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   700
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01502-000004",
@@ -1727,21 +1733,23 @@
   "procedencia": "PVC TUBO - NACIONAL",
   "familia": null,
   "material": null,
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   700
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 700,
     "tipo": "SOLDA",
     "norma": "PVC SOLDAVEL"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01502-000006",
@@ -1771,15 +1779,17 @@
   "procedencia": "PVC TUBO - NACIONAL",
   "familia": "CURVA",
   "material": null,
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   700
+  ],
+  "unidade_dn": "mm",
   "angulo": 90,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01502-000008",
@@ -1789,15 +1799,17 @@
   "procedencia": "PVC TUBO - NACIONAL",
   "familia": "EXTREMIDADE",
   "material": null,
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   700
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01502-985502",
@@ -9033,15 +9045,17 @@
   "procedencia": "NACIONAL",
   "familia": "LUVA",
   "material": null,
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   75
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01520-000010",
@@ -10609,15 +10623,17 @@
   "procedencia": "NACIONAL",
   "familia": "LUVA",
   "material": null,
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   100
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01520-115045",
@@ -10627,15 +10643,17 @@
   "procedencia": "NACIONAL",
   "familia": "LUVA",
   "material": null,
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   125
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01520-115050",
@@ -10645,15 +10663,17 @@
   "procedencia": "NACIONAL",
   "familia": "LUVA",
   "material": null,
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   150
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01520-122110",
@@ -35000,15 +35020,17 @@
   "procedencia": "NACIONAL",
   "familia": null,
   "material": null,
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   200
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01540-015750",
@@ -35018,15 +35040,17 @@
   "procedencia": "NACIONAL",
   "familia": null,
   "material": null,
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   250
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01540-020200",
@@ -35672,28 +35696,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   355
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 355,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 355,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-000002",
@@ -35701,28 +35727,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   280
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 280,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 280,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-000003",
@@ -35953,28 +35981,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   500
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 500,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 500,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-000015",
@@ -35982,28 +36012,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   630
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 630,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 630,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-000016",
@@ -36011,28 +36043,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   160
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 160,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 160,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-000017",
@@ -36040,28 +36074,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   280
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 280,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 280,
     "tipo": "FLANGE",
     "norma": "NBR PN12"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-000018",
@@ -36109,28 +36145,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   225
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 225,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 225,
     "tipo": "FLANGE",
     "norma": "NBR PN20"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-000021",
@@ -36138,28 +36176,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   225
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 225,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 225,
     "tipo": "FLANGE",
     "norma": "NBR PN25"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-000022",
@@ -36167,28 +36207,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   315
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 315,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 315,
     "tipo": "FLANGE",
     "norma": "NBR PN12"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-000023",
@@ -36196,28 +36238,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   450
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 450,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 450,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-000024",
@@ -36225,28 +36269,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   500
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 500,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 500,
     "tipo": "FLANGE",
     "norma": "NBR PN08"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-511047",
@@ -36254,28 +36300,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   250
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 250,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 250,
     "tipo": "FLANGE",
     "norma": "NBR PN06"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-541000",
@@ -36283,28 +36331,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   90
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 90,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 90,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-541005",
@@ -36312,28 +36362,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   90
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 90,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 90,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-541012",
@@ -36341,28 +36393,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   110
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 110,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 110,
     "tipo": "FLANGE",
     "norma": "NBR PN06"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-541015",
@@ -36370,28 +36424,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   110
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 110,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 110,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-541025",
@@ -36399,28 +36455,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   160
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 160,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 160,
     "tipo": "FLANGE",
     "norma": "NBR PN06"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-541026",
@@ -36428,28 +36486,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   160
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 160,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 160,
     "tipo": "FLANGE",
     "norma": "NBR PN08"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-541027",
@@ -36457,28 +36517,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   160
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 160,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 160,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-541028",
@@ -36486,28 +36548,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   160
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 160,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 160,
     "tipo": "FLANGE",
     "norma": "NBR PN12"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-541036",
@@ -36515,28 +36579,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   180
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 180,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 180,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-541037",
@@ -36544,28 +36610,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   180
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 180,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 180,
     "tipo": "FLANGE",
     "norma": "NBR PN12"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-541040",
@@ -36573,28 +36641,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   225
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 225,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 225,
     "tipo": "FLANGE",
     "norma": "NBR PN06"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-541045",
@@ -36604,21 +36674,23 @@
   "procedencia": "NACIONAL",
   "familia": null,
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   225
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 225,
     "tipo": "FLANGE",
     "norma": null
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "01541-541051",
@@ -36626,28 +36698,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   280
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 280,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 280,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-541061",
@@ -36655,28 +36729,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   355
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 355,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 355,
     "tipo": "FLANGE",
     "norma": "NBR PN08"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-548012",
@@ -36684,28 +36760,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   160
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 160,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 160,
     "tipo": "FLANGE",
     "norma": "NBR PN12"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-548020",
@@ -36713,28 +36791,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   110
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 110,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 110,
     "tipo": "FLANGE",
     "norma": "NBR PN08"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-548023",
@@ -36742,28 +36822,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   225
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 225,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 225,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-548024",
@@ -36771,28 +36853,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   225
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 225,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 225,
     "tipo": "FLANGE",
     "norma": "NBR PN12"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-548025",
@@ -36800,28 +36884,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   250
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 250,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 250,
     "tipo": "FLANGE",
     "norma": "NBR PN08"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-548028",
@@ -36829,28 +36915,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   250
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 250,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 250,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-548035",
@@ -36858,28 +36946,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   315
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 315,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 315,
     "tipo": "FLANGE",
     "norma": "NBR PN06"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-548036",
@@ -36887,28 +36977,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   315
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 315,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 315,
     "tipo": "FLANGE",
     "norma": "NBR PN08"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-548037",
@@ -36916,28 +37008,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   315
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 315,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 315,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-548040",
@@ -36945,28 +37039,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   400
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 400,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 400,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-548060",
@@ -36974,28 +37070,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   200
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 200,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 200,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-548061",
@@ -37003,28 +37101,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   200
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 200,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 200,
     "tipo": "FLANGE",
     "norma": "NBR PN12"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01541-548062",
@@ -37032,28 +37132,30 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": "COLAR_TOMADA",
+  "familia": "COLAR_PEAD",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   200
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 200,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 200,
     "tipo": "FLANGE",
     "norma": "NBR PN06"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-000001",
@@ -38281,26 +38383,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   500
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 500,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 500,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-000085",
@@ -38850,15 +38954,17 @@
   "procedencia": "NACIONAL",
   "familia": "TUBO",
   "material": null,
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   16
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": 100000,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01542-000115",
@@ -39038,26 +39144,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   630
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 630,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 630,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-000125",
@@ -43584,26 +43692,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   450
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 450,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 450,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-000397",
@@ -48050,26 +48160,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   90
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 90,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 90,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-150175",
@@ -48079,26 +48191,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   90
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 90,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 90,
     "tipo": "FLANGE",
     "norma": "NBR PN10"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-150185",
@@ -48108,26 +48222,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   110
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 110,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 110,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-150200",
@@ -48137,26 +48253,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   160
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 160,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 160,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-150203",
@@ -48166,26 +48284,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   180
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 180,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 180,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-150206",
@@ -48195,26 +48315,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   200
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 200,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 200,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-150215",
@@ -48224,26 +48346,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   225
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 225,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 225,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-150220",
@@ -48253,26 +48377,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   250
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 250,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 250,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-150225",
@@ -48282,26 +48408,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   280
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 280,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 280,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-150228",
@@ -48311,26 +48439,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   315
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 315,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 315,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-150240",
@@ -48340,26 +48470,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   355
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 355,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 355,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-150250",
@@ -48369,26 +48501,28 @@
   "procedencia": "NACIONAL",
   "familia": "FLANGE",
   "material": "PEAD",
-  "dn": [],
-  "unidade_dn": null,
+  "dn": [
+   400
+  ],
+  "unidade_dn": "mm",
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": null,
+    "dn": 400,
     "tipo": "FLANGE",
     "norma": null
    },
    {
-    "dn": null,
+    "dn": 400,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.71
+  "confianca": 1.0
  },
  {
   "sap": "01542-153000",
