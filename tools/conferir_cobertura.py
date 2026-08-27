@@ -34,15 +34,24 @@ def tamanho_metb(descricao):
     return f"{int(m.group(1))}-{int(m.group(2))}" if m else None
 
 
+RX_CV = re.compile(r"(\d+(?:[,.]\d+)?)\s*CV")
+
+
 def desenhar(item):
     familia = item["familia"]
     if familia == "BOMBA":
-        if not re.search(r"\bMETB\b", item["descricao"]):
-            raise ValueError("bomba fora da Megabloc")
+        linha = "METB" if re.search(r"\bMETB\b", item["descricao"]) else (
+            "METN" if re.search(r"\bMETN\b", item["descricao"]) else None)
+        if not linha:
+            raise ValueError("bomba fora das linhas Mega")
         tamanho = tamanho_metb(item["descricao"])
         if not tamanho:
             raise ValueError("nome sem tamanho legivel")
-        return s.bomba_megabloc(tamanho)
+        m = RX_CV.search(item["descricao"])
+        cv = float(m.group(1).replace(",", ".")) if m else None
+        if linha == "METB":
+            return s.bomba_megabloc(tamanho, cv=cv)
+        return s.bomba_meganorm(tamanho, cv=cv)
     bitolas = [d for d in (item["dn"] or []) if isinstance(d, (int, float))]
     if not bitolas:
         raise ValueError("sem DN na descricao")

@@ -13,6 +13,7 @@ Cinco primitivas fazem todas as familias: eixo, cone, placa, giro e caixa.
 import csv
 import math
 import os
+import re
 from collections import namedtuple
 
 from . import cotas
@@ -1070,25 +1071,182 @@ SAIDA = ("saida", "menor")
 _bombas = None
 
 
-def ficha_bomba(tamanho, polos=4):
-    """A linha da bomba na tabela de dimensoes da KSB."""
+def _pol(texto):
+    """2.1/2" -> 2.5"""
+    texto = (texto or "").replace('"', "").strip()
+    m = re.fullmatch(r"(\d+)\.(\d+)/(\d+)", texto)
+    if m:
+        return int(m.group(1)) + int(m.group(2)) / int(m.group(3))
+    m = re.fullmatch(r"(\d+)/(\d+)", texto)
+    if m:
+        return int(m.group(1)) / int(m.group(2))
+    return float(texto) if texto else None
+
+
+def ficha_bomba(tamanho, polos=4, cv=None):
+    """A linha da bomba na tabela de dimensoes do manual A2744.
+
+    Aceita os dois nomes: 32-200 (dois grupos, como o folheto antigo e o
+    manual da Meganorm) e 050-032-200 (tres grupos, como a lista da casa).
+    A tabela cota por potencia de motor - sem cv, devolve a menor, que e a
+    que o desenho usa como padrao: a cauda do motor nao e cota de tubulacao.
+    """
     global _bombas
     if _bombas is None:
         _bombas = {}
         with open(f"{DADOS}/bombas_ksb_megabloc.csv", encoding="utf-8") as fh:
             for r in csv.DictReader(fh):
-                _bombas[(r["tamanho"], int(r["polos"]))] = r
-    return _bombas.get((tamanho, polos))
+                for chave in (r["tamanho"], r["tamanho_folheto"]):
+                    _bombas.setdefault((chave, int(r["polos"])), []).append(r)
+    linhas = _bombas.get((tamanho, polos))
+    if not linhas:
+        return None
+    if cv is None:
+        return min(linhas, key=lambda r: float(r["cv"]))
+    return min(linhas, key=lambda r: abs(float(r["cv"]) - cv))
 
 
-def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4):
-    """A KSB Megabloc, vista de lado - a ancora do desenho.
+# Carcaca IEC do motor por potencia, para 4 polos 60 Hz. Nao e cota de folheto
+# - e a serie que a industria pratica. So serve para ESCOLHER entre as carcacas
+# que o folheto lista para aquela bomba, nunca para inventar uma fora da lista.
+CARCACA_POR_CV = [(1, 80), (2, 90), (3, 100), (5, 112), (10, 132), (20, 160),
+                  (30, 180), (40, 200), (50, 225), (60, 250), (75, 280),
+                  (150, 315), (250, 355), (400, 400)]
+
+
+def carcaca_do_motor(cv):
+    for limite, carcaca in CARCACA_POR_CV:
+        if cv <= limite:
+            return carcaca
+    return CARCACA_POR_CV[-1][1]
+
+
+_meganorm = None
+_conjunto = None
+
+
+def ficha_meganorm(tamanho):
+    """A linha do tamanho na tabela de medidas da Meganorm (tabela 06)."""
+    global _meganorm
+    if _meganorm is None:
+        with open(f"{DADOS}/bombas_ksb_meganorm.csv", encoding="utf-8") as fh:
+            _meganorm = {r["tamanho"]: r for r in csv.DictReader(fh)}
+    return _meganorm.get(tamanho)
+
+
+def carcacas_meganorm(tamanho):
+    """As carcacas de motor que o folheto monta nessa bomba, e a base."""
+    global _conjunto
+    if _conjunto is None:
+        _conjunto = {}
+        with open(f"{DADOS}/bombas_ksb_meganorm_conjunto.csv",
+                  encoding="utf-8") as fh:
+            for r in csv.DictReader(fh):
+                _conjunto.setdefault(r["tamanho"], []).append(r)
+    return _conjunto.get(tamanho, [])
+
+
+def _escolher_carcaca(tamanho, cv):
+    """A carcaca do folheto mais proxima da que a potencia pede.
+
+    Se a bomba nao esta na secao 15, devolve (None, None) e quem chama usa
+    proporcao - o desenho marca isso na fonte.
+    """
+    opcoes = carcacas_meganorm(tamanho)
+    if not opcoes:
+        return None, None
+    def numero(texto):
+        return float(re.sub(r"[^0-9]", "", texto) or 0)
+    alvo = carcaca_do_motor(cv) if cv else None
+    if alvo is None:
+        escolhida = opcoes[len(opcoes) // 2]
+    else:
+        escolhida = min(opcoes, key=lambda r: abs(numero(r["carcaca_motor"]) - alvo))
+    return numero(escolhida["carcaca_motor"]), escolhida
+
+
+def tamanho_meganorm(nome):
+    """METN 150-125-400 e o tamanho 125-400 do folheto.
+
+    O codigo da lista tem tres grupos - succao, recalque, rotor - e o folheto
+    nomeia com dois, porque a succao ja esta na tabela. Aceita os dois.
+    """
+    partes = nome.split("-")
+    if len(partes) == 3:
+        return f"{int(partes[1])}-{int(partes[2])}"
+    if len(partes) == 2:
+        return f"{int(partes[0])}-{partes[1]}"
+    raise ValueError(f"nome de Meganorm nao reconhecido: {nome}")
+
+
+def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True):
+    """A parte hidraulica: bocal de succao, carcaca e pescoco da descarga.
+
+    E a mesma nas duas linhas - Megabloc e Meganorm dividem a ponta molhada, e
+    e por isso que so muda o que vem depois da carcaca: na monobloco o motor
+    encosta na voluta, na mancalizada entra mancal, luva e motor sobre a base.
+
+    Vista de lado a voluta e estreita e alta: o caracol esta no plano
+    perpendicular ao eixo, entao de lado aparece de canto. O circulo grande e
+    a terceira vista do folheto, olhando pelo eixo.
+    """
+    r1 = DE_TUBO.get(dn1, 100) / 2
+    r2 = DE_TUBO.get(dn2, 80) / 2
+    rv = rotor / 2 * 1.15
+    largura = max(rotor * 0.42, 2 * r1 * 1.1)
+    x0, x1 = c - largura / 2, c + largura / 2
+
+    el = list(placa(0, dn1, lado="entrada"))
+    el += eixo(0, x0, dn1)
+    el += [_p(f"M{x0:.1f} {-rv:.1f} H{x1:.1f}"),
+           _p(f"M{x0:.1f} {rv:.1f} H{x1:.1f}"),
+           _p(f"M{x0:.1f} {-rv:.1f} V{-r1:.1f}"),
+           _p(f"M{x0:.1f} {r1:.1f} V{rv:.1f}"),
+           _p(f"M{x1:.1f} {-rv:.1f} V{rv:.1f}"),
+           # a junta entre a tampa de succao e o corpo do caracol
+           _p(f"M{x0 + largura*0.28:.1f} {-rv:.1f} V{rv:.1f}", "malha")]
+    # o rotor: o segundo numero do nome e o diametro nominal dele. De lado o
+    # rotor e um disco de canto - uma linha, nao um circulo. O circulo so
+    # aparece na vista que olha pelo eixo, que nao e esta.
+    el.append(_p(f"M{c:.1f} {-rotor/2:.1f} V{rotor/2:.1f}", "centro"))
+    el += [_p(f"M{c-r2:.1f} {-a:.1f} V{-rv:.1f}"),
+           _p(f"M{c+r2:.1f} {-a:.1f} V{-rv:.1f}")]
+    el += placa(c, dn2, y=-a, direcao=-90, lado="saida")
+    if dreno:
+        # o bujao de dreno, no ponto baixo do caracol
+        el.append({"tipo": "rect", "x": c - largura * 0.10, "y": rv,
+                   "w": largura * 0.20, "h": rv * 0.10, "classe": "corpo"})
+    return el, x0, x1, rv, largura
+
+
+def _motor(x, comp, carcaca, com_pes=False, base_y=None):
+    """O bloco do motor: corpo com aletas, tampa do ventilador e, na
+    mancalizada, os proprios pes ate a base."""
+    hm = carcaca * 0.95
+    tampa = carcaca * 0.18
+    corpo = max(comp - tampa, carcaca * 0.6)
+    el = [{"tipo": "rect", "x": x, "y": -hm, "w": corpo, "h": 2 * hm,
+           "classe": "corpo"}]
+    for k in range(1, 9):
+        el.append(_p(f"M{x + corpo*k/9:.1f} {-hm:.1f} v{2*hm:.1f}", "malha"))
+    el.append({"tipo": "rect", "x": x + corpo, "y": -hm * 0.72, "w": tampa,
+               "h": 2 * hm * 0.72, "classe": "corpo"})
+    if com_pes and base_y is not None:
+        for xp in (x + corpo * 0.14, x + corpo * 0.72):
+            el.append({"tipo": "rect", "x": xp, "y": hm, "w": corpo * 0.14,
+                       "h": base_y - hm, "classe": "corpo"})
+    return el, x + corpo + tampa
+
+
+def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4, cv=None):
+    """A KSB Megabloc (METB), monobloco, vista de lado - a ancora do desenho.
 
     Tres cotas do folheto colocam os dois bocais, e sao elas que a tubulacao
     precisa: a (do eixo a face do flange de descarga), b (da base ao eixo) e
     c (da face da succao ao eixo da descarga). O corpo em volta sai da
-    nomenclatura: no nome 32-200 o 200 e o diametro nominal do rotor, e a
-    voluta mede cerca de 1,3 rotor. O motor sai da carcaca IEC h.
+    nomenclatura - no nome 32-200 o 200 e o diametro nominal do rotor - e da
+    carcaca IEC h do motor, que encosta direto na voluta: e isso que faz dela
+    monobloco e nao mancalizada.
 
     A peca e a MESMA nas duas montagens - o que muda e a pose. Montada na
     vertical, a bomba e a mesma fundicao de pe: o motor em cima, a succao
@@ -1096,74 +1254,159 @@ def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4):
     folha desenha a curva em pe; na linha a montagem sai sozinha de onde a
     bomba cai na corrente, porque a direcao chega acumulada.
     """
-    ficha = ficha_bomba(tamanho, polos)
-    if not ficha or not ficha["a_mm"]:
-        raise ValueError(f"{tamanho} nao tem dimensao no folheto IV polos")
-    a = float(ficha["a_mm"])
-    b = float(ficha["b_mm"])
-    c = float(ficha["c_mm"])
-    h = float(ficha["h_mm"])
-    comp = float(ficha["l_mm"])
-    dn1 = float(ficha["dn_succao_pol"])
-    dn2 = float(ficha["dn_recalque_pol"])
-    rotor = float(tamanho.split("-")[1].split(".")[0])
-    r1 = DE_TUBO.get(dn1, 100) / 2
-    r2 = DE_TUBO.get(dn2, 80) / 2
-    # a voluta vista de lado e estreita e alta: o caracol esta no plano
-    # perpendicular ao eixo, entao de lado aparece de canto. O circulo grande
-    # e a terceira vista do folheto, olhando pelo eixo - nao esta.
-    rv = rotor / 2 * 1.15              # meia altura da carcaca: proporcao
-    largura = max(rotor * 0.42, 2 * r1 * 1.1)
-    x_voluta = c - largura / 2
-    x_tras = c + largura / 2
-    hm = h * 0.95                      # meia altura do corpo do motor
-    lanterna = h * 0.55                # o suporte que liga a voluta ao motor
+    ficha = ficha_bomba(tamanho, polos, cv)
+    if not ficha:
+        raise ValueError(f"{tamanho} nao esta na tabela de dimensoes A2744")
+    c = float(ficha["a_mm"])            # face da succao -> eixo da descarga
+    a = float(ficha["h2_mm"])           # eixo -> face do flange de descarga
+    b = float(ficha["h1_mm"])           # eixo -> base
+    h = float(ficha["h_mm"])            # carcaca IEC do motor
+    comp = float(ficha["l_mm"])         # comprimento total do conjunto
+    dn1 = _pol(ficha["dn_succao_pol"])
+    dn2 = _pol(ficha["dn_recalque_pol"])
+    rotor = float(ficha["tamanho"].split("-")[2].split(".")[0])
 
-    el = list(placa(0, dn1, lado="entrada"))
-    el += eixo(0, x_voluta, dn1)
-    # a carcaca: caixa alta e estreita, com a tampa de succao na frente
-    el += [_p(f"M{x_voluta:.1f} {-rv:.1f} H{x_tras:.1f}"),
-           _p(f"M{x_voluta:.1f} {rv:.1f} H{x_tras:.1f}"),
-           _p(f"M{x_voluta:.1f} {-rv:.1f} V{-r1:.1f}"),
-           _p(f"M{x_voluta:.1f} {r1:.1f} V{rv:.1f}"),
-           _p(f"M{x_tras:.1f} {-rv:.1f} V{rv:.1f}"),
-           _p(f"M{x_voluta + largura*0.28:.1f} {-rv:.1f} V{rv:.1f}", "malha")]
-    # o pescoco da descarga, subindo da carcaca ate a face do flange
-    el += [_p(f"M{c-r2:.1f} {-a:.1f} V{-rv:.1f}"),
-           _p(f"M{c+r2:.1f} {-a:.1f} V{-rv:.1f}")]
-    el += placa(c, dn2, y=-a, direcao=-90, lado="saida")
-    # a lanterna e o motor, com as aletas e a tampa do ventilador
-    el.append({"tipo": "rect", "x": x_tras, "y": -hm * 0.62, "w": lanterna,
-               "h": 2 * hm * 0.62, "classe": "corpo"})
-    x_motor = x_tras + lanterna
-    corpo = max(comp - x_motor - h * 0.18, h * 0.6)
-    el.append({"tipo": "rect", "x": x_motor, "y": -hm, "w": corpo, "h": 2 * hm,
+    el, x0, x1, rv, largura = _corpo_bomba(a, b, c, rotor, dn1, dn2)
+    lanterna = h * 0.55
+    el.append({"tipo": "rect", "x": x1, "y": -h * 0.59, "w": lanterna,
+               "h": 2 * h * 0.59, "classe": "corpo"})
+    el.append(_p(f"M{x1:.1f} {-h*0.09:.1f} H{x1+lanterna:.1f}", "malha"))
+    el.append(_p(f"M{x1:.1f} {h*0.09:.1f} H{x1+lanterna:.1f}", "malha"))
+    motor, fim = _motor(x1 + lanterna, comp - x1 - lanterna, h)
+    el += motor
+    # o pe da voluta e o do motor, descendo ate a base no nivel que b manda
+    el.append({"tipo": "rect", "x": x0 + largura * 0.2, "y": rv,
+               "w": largura * 0.6, "h": b - rv - 22, "classe": "corpo"})
+    el.append({"tipo": "rect", "x": fim - h * 1.35, "y": h * 0.95,
+               "w": h * 0.6, "h": b - h * 0.95 - 22, "classe": "corpo"})
+    el.append({"tipo": "rect", "x": x0, "y": b - 22, "w": fim - x0, "h": 22,
                "classe": "corpo"})
-    for k in range(1, 9):
-        xa = x_motor + corpo * k / 9
-        el.append(_p(f"M{xa:.1f} {-hm:.1f} v{2*hm:.1f}", "malha"))
-    el.append({"tipo": "rect", "x": x_motor + corpo, "y": -hm * 0.72,
-               "w": h * 0.18, "h": 2 * hm * 0.72, "classe": "corpo"})
-    # a base e os dois pes, no nivel que a cota b manda
-    fim = x_motor + corpo + h * 0.18
-    el.append(_p(f"M{x_voluta:.1f} {b:.1f} H{fim:.1f}"))
-    for x0, larg in ((x_voluta, largura), (fim - h * 1.1, h * 0.7)):
-        el.append({"tipo": "rect", "x": x0, "y": b - 18, "w": larg, "h": 18,
-                   "classe": "corpo"})
     el.append(_p(f"M-70 0 H{fim+40:.0f}", "centro"))
     el.append(_p(f"M{c:.1f} {-a-40:.1f} V{rv+30:.1f}", "centro"))
+    el += _letras_bomba(a, b, c, rv, x0, x_direita=x1 + h * 0.30)
 
     portas = [Porta("entrada", 0, 0, 180, dn1),
               Porta("saida", c, -a, -90, dn2)]
-    simbolo = _montar("BOMBA", f'KSB Megabloc {tamanho} {dn1:g}"×{dn2:g}"',
+    nome = ficha["tamanho_folheto"]
+    simbolo = _montar("BOMBA", f'KSB Megabloc {nome} {dn1:g}"×{dn2:g}"',
                       el, portas, "KSB",
-                      {"tamanho": tamanho, "montagem": montagem,
+                      {"tamanho": nome, "montagem": montagem, "polos": polos,
                        "eixo_mm": b, "norma_flange": ficha["norma_flange"],
-                       "rosca_possivel": ficha["rosca_possivel"] == "1"})
+                       "carcaca_motor": ficha["carcaca_motor"],
+                       "cv": float(ficha["cv"]), "peso_kg": ficha["peso_kg"]})
     if montagem == "VERTICAL":
         simbolo = girado(simbolo, -90)
         simbolo = simbolo._replace(
-            rotulo=f'KSB Megabloc {tamanho} vertical {dn1:g}"×{dn2:g}"')
+            rotulo=f'KSB Megabloc {nome} vertical {dn1:g}"×{dn2:g}"')
+    return simbolo
+
+
+def _letras_bomba(a, b, c, rv, x0, letras=("a", "b", "c"), x_direita=None):
+    """As tres cotas escritas com a letra do folheto, so texto e em cinza.
+
+    Sao as mesmas tres medidas nas duas linhas, com nome diferente em cada
+    folha: a Megabloc chama a/b/c e a Meganorm, que segue a EN 733, chama
+    h2/h1/a. O desenho escreve a letra da folha de onde a cota veio.
+    """
+    lado = x_direita if x_direita is not None else c + rv * 0.9
+    return [{"tipo": "nota", "x": lado, "y": -(a + rv) / 2,
+             "texto": f"{letras[0]} {a:.0f}"},
+            {"tipo": "nota", "x": lado, "y": (b + rv) / 2,
+             "texto": f"{letras[1]} {b:.0f}"},
+            {"tipo": "nota", "x": c / 2, "y": -rv - 30,
+             "texto": f"{letras[2]} {c:.0f}"}]
+
+
+def bomba_meganorm(nome, cv=None, montagem="HORIZONTAL"):
+    """A KSB Meganorm (METN), mancalizada, sobre base perfilada.
+
+    Mesma ponta molhada da Megabloc e o mesmo arranjo de bocais - succao axial,
+    descarga para cima. O que muda vem depois da voluta: em vez de o motor
+    encostar no corpo, entram o mancal, a luva elastica e o motor, os tres
+    aparafusados numa base unica. Por isso a lista tem codigo "C/BASE
+    S/MOTOR" e codigo "MANCAL" - sao pecas separadas de verdade.
+
+    A Meganorm e normalizada (EN 733 / ISO 2858), entao as letras sao as da
+    norma e nao as do fabricante. Sao as mesmas tres medidas da Megabloc com
+    outro nome, e o proprio numero confirma isso em 26 dos 28 tamanhos que as
+    duas linhas tem em comum:
+
+        Meganorm a  = Megabloc c   da face da succao ao eixo da descarga
+        Meganorm h1 = Megabloc b   do eixo a base
+        Meganorm h2 = Megabloc a   do eixo a face do flange de descarga
+
+    E a Meganorm cota uma quarta que a Megabloc nao tem: f, do eixo da
+    descarga ao fim do mancal - o comprimento real da bomba sem o motor.
+    """
+    from .bomba import MM_PARA_POLEGADA
+    tamanho = tamanho_meganorm(nome)
+    ficha = ficha_meganorm(tamanho)
+    if not ficha:
+        raise ValueError(f"{tamanho} nao esta na tabela de medidas da Meganorm")
+    rotor = float(ficha["rotor_mm"])
+    dn1_mm, dn2_mm = float(ficha["dn1_mm"]), float(ficha["dn2_mm"])
+    dn1 = MM_PARA_POLEGADA.get(dn1_mm)
+    dn2 = MM_PARA_POLEGADA.get(dn2_mm)
+    if dn1 is None or dn2 is None:
+        raise ValueError(f"{tamanho}: bocal fora da tabela de bitola da casa")
+    c = float(ficha["a_mm"])            # face da succao -> eixo da descarga
+    a = float(ficha["h2_mm"])           # eixo -> face do flange de descarga
+    b = float(ficha["h1_mm"])           # eixo -> base
+    f = float(ficha["f_mm"])            # eixo da descarga -> fim do mancal
+
+    carcaca, linha_conjunto = _escolher_carcaca(tamanho, cv)
+    proporcao = carcaca is None
+    if proporcao:
+        carcaca = max(80.0, b * 0.8)    # sem a secao 15: so o bloco e proporcao
+
+    el, x0, x1, rv, largura = _corpo_bomba(a, b, c, rotor, dn1, dn2)
+    # o mancal: do fim da voluta ate o f do folheto, escalonado
+    fim_mancal = c + f
+    caixa_mancal = max(fim_mancal - x1, largura * 0.4)
+    el.append({"tipo": "rect", "x": x1, "y": -rv * 0.42,
+               "w": caixa_mancal * 0.26, "h": 2 * rv * 0.42, "classe": "corpo"})
+    el.append({"tipo": "rect", "x": x1 + caixa_mancal * 0.26, "y": -rv * 0.32,
+               "w": caixa_mancal * 0.74, "h": 2 * rv * 0.32, "classe": "corpo"})
+    # o pe do mancal, descendo ate a base
+    el.append({"tipo": "rect", "x": x1 + caixa_mancal * 0.30, "y": rv * 0.32,
+               "w": caixa_mancal * 0.34, "h": b - rv * 0.32 - 24,
+               "classe": "corpo"})
+    # a ponta do eixo e a luva elastica, dentro da protecao aberta
+    x_luva = fim_mancal
+    folga = max(rotor * 0.28, carcaca * 0.40)
+    el += [_p(f"M{x_luva:.1f} {-rv*0.14:.1f} H{x_luva+folga:.1f}"),
+           _p(f"M{x_luva:.1f} {rv*0.14:.1f} H{x_luva+folga:.1f}"),
+           _p(f"M{x_luva:.1f} {-rv*0.44:.1f} H{x_luva+folga:.1f}", "malha"),
+           _p(f"M{x_luva:.1f} {rv*0.44:.1f} H{x_luva+folga:.1f}", "malha"),
+           _p(f"M{x_luva:.1f} {-rv*0.44:.1f} V{-rv*0.14:.1f}", "malha"),
+           _p(f"M{x_luva+folga:.1f} {-rv*0.44:.1f} V{-rv*0.14:.1f}", "malha")]
+    # o motor: a carcaca sai do folheto, o comprimento e proporcao dela
+    motor, fim = _motor(x_luva + folga, carcaca * 2.4, carcaca,
+                        com_pes=True, base_y=b - 24)
+    el += motor
+    el.append({"tipo": "rect", "x": x0 - 30, "y": b - 24,
+               "w": fim - x0 + 70, "h": 24, "classe": "corpo"})
+    el.append(_p(f"M-70 0 H{fim+60:.0f}", "centro"))
+    el.append(_p(f"M{c:.1f} {-a-40:.1f} V{rv+30:.1f}", "centro"))
+    el += _letras_bomba(a, b, c, rv, x0, letras=("h2", "h1", "a"),
+                        x_direita=x1 + caixa_mancal * 0.22)
+    el.append({"tipo": "nota", "x": (c + fim_mancal) / 2, "y": -rv * 0.72,
+               "texto": f"f {f:.0f}"})
+
+    portas = [Porta("entrada", 0, 0, 180, dn1),
+              Porta("saida", c, -a, -90, dn2)]
+    fonte = "KSB" if not proporcao else "KSB (motor proporcao)"
+    rotulo = f'KSB Meganorm {tamanho} {dn1:g}"×{dn2:g}"'
+    simbolo = _montar("BOMBA", rotulo, el, portas, fonte,
+                      {"tamanho": tamanho, "montagem": montagem,
+                       "eixo_mm": b, "mancalizada": True, "cv": cv,
+                       "carcaca_motor": carcaca, "iso_2858": ficha["iso_2858"] == "1",
+                       "base": (linha_conjunto or {}).get("base"),
+                       "fim_mancal_mm": fim_mancal})
+    if montagem == "VERTICAL":
+        simbolo = girado(simbolo, -90)
+        simbolo = simbolo._replace(
+            rotulo=f'KSB Meganorm {tamanho} vertical {dn1:g}"×{dn2:g}"')
     return simbolo
 
 
@@ -1173,14 +1416,25 @@ def bomba_para_linha(dn_succao_pol, polos=4):
     A casa dimensiona a bomba pela vazao, nao pelo tubo - isso aqui e so para
     o desenho ter uma bomba plausivel quando ninguem escolheu o modelo.
     """
-    global _bombas
     ficha_bomba("32-200")               # garante a tabela carregada
-    candidatas = [r for (t, p), r in _bombas.items()
-                  if p == polos and r["a_mm"]
-                  and abs(float(r["dn_succao_pol"]) - dn_succao_pol) < 0.01]
+    candidatas = [linhas[0] for (nome, pol), linhas in _bombas.items()
+                  if pol == polos and "-" in nome and nome.count("-") == 2
+                  and abs((_pol(linhas[0]["dn_succao_pol"]) or 0)
+                          - dn_succao_pol) < 0.01]
     if not candidatas:
         return None
-    return min(candidatas, key=lambda r: float(r["l_mm"]))["tamanho"]
+    return min(candidatas, key=lambda r: float(r["l_mm"]))["tamanho_folheto"]
+
+
+def meganorm_para_linha(dn_succao_pol):
+    """A menor Meganorm cuja succao e a bitola pedida - so para o desenho."""
+    from .bomba import MM_PARA_POLEGADA
+    ficha_meganorm("50-160")            # garante a tabela carregada
+    candidatas = [r for r in _meganorm.values()
+                  if MM_PARA_POLEGADA.get(float(r["dn1_mm"])) == dn_succao_pol]
+    if not candidatas:
+        return None
+    return min(candidatas, key=lambda r: float(r["rotor_mm"]))["tamanho"]
 
 
 def porta(simbolo, papeis):

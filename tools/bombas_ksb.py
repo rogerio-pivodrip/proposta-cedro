@@ -30,7 +30,13 @@ Flange: ANSI B16.1 125# FF, exceto os tamanhos marcados (1) no catalogo, que
 sao ANSI B16.1 250# FF. Ate o tamanho 65-200 os bocais podem vir rosqueados
 (BSP) em vez de flangeados - nota (1) da folha de II polos.
 
-Uso: python3 tools/bombas_ksb.py > data/bombas_ksb_megabloc.csv
+Esta transcricao deixou de ser a fonte primaria quando o manual tecnico
+A2744.0.3P/2 chegou - ele traz a mesma tabela extraivel, por potencia, com
+peso e carcaca de motor. Ela FICA como segunda fonte independente: e uma
+leitura a mao de outro folheto, e serve para conferir a extracao contra ela
+- ver tools/conferir_bomba_ksb.py.
+
+Uso: python3 tools/bombas_ksb.py > data/bombas_ksb_megabloc_folheto.csv
 """
 import csv
 import sys

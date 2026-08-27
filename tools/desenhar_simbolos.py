@@ -56,13 +56,22 @@ def elenco(dn):
         # a bomba: a mesma peça nas duas poses, como a curva
         s.bomba_megabloc(_megabloc(dn)),
         s.bomba_megabloc(_megabloc(dn), "VERTICAL"),
+        # a mancalizada: mesma ponta molhada, mancal e motor sobre a base
+        s.bomba_meganorm(_meganorm(dn)),
     ]
+
+
+def _bocal(dn_linha):
+    return {14: 8, 12: 8, 10: 6, 8: 6, 6: 4, 5: 4, 4: 3, 3: 2}.get(dn_linha, 2)
 
 
 def _megabloc(dn_linha):
     """A Megabloc cujo bocal de sucção casa com a redução que sai da linha."""
-    bocal = {14: 8, 12: 8, 10: 6, 8: 6, 6: 4, 5: 4, 4: 3, 3: 2}.get(dn_linha, 2)
-    return s.bomba_para_linha(bocal) or "80-250"
+    return s.bomba_para_linha(_bocal(dn_linha)) or "80-250"
+
+
+def _meganorm(dn_linha):
+    return s.meganorm_para_linha(_bocal(dn_linha)) or "100-315"
 
 
 def _pead(dn_pol):
@@ -151,7 +160,9 @@ def celula(simbolo):
             meia = ms.flange(porta.dn_pol)["externo"] / 2 * escala
             partes.append(f'<text class="marca" x="{px:.1f}" '
                           f'y="{py - meia - 4:.1f}">{porta.dn_pol:g}"</text>')
-    if medida:
+    # a bomba ja escreve as cotas com a letra do folheto (a/b/c ou h2/h1/a):
+    # a medida genérica seria a mesma coisa duas vezes, uma sem letra
+    if medida and not notas:
         pa = pontas[0] if pontas else simbolo.portas[0]
         pb = pontas[-1] if pontas else pa
         xm = dx + (pa.x + pb.x) / 2 * escala

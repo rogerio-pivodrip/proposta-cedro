@@ -15,7 +15,10 @@ import sys
 sys.path.insert(0, ".")
 from motor import bomba, regras  # noqa: E402
 
-TABELA = "data/bombas_ksb_megabloc.csv"
+MANUAL = "data/bombas_ksb_megabloc.csv"          # extraido do A2744
+FOLHETO = "data/bombas_ksb_megabloc_folheto.csv"  # transcrito a mao, mais antigo
+MEGANORM = "data/bombas_ksb_meganorm.csv"         # extraido do A2742
+TABELA = MANUAL
 
 
 def mm(polegada):
@@ -25,11 +28,23 @@ def mm(polegada):
     return None
 
 
+def pol(texto):
+    texto = (texto or "").replace('"', "").strip()
+    m = re.fullmatch(r"(\d+)\.(\d+)/(\d+)", texto)
+    if m:
+        return int(m.group(1)) + int(m.group(2)) / int(m.group(3))
+    m = re.fullmatch(r"(\d+)/(\d+)", texto)
+    if m:
+        return int(m.group(1)) / int(m.group(2))
+    return float(texto) if texto else None
+
+
 def main():
+    tres_fontes()
     pares = {}
     for r in csv.DictReader(open(TABELA, encoding="utf-8")):
-        s = mm(float(r["dn_recalque_pol"]))    # o nome da bomba e a saida
-        e = mm(float(r["dn_succao_pol"]))
+        s = mm(pol(r["dn_recalque_pol"]))     # o nome da bomba e a saida
+        e = mm(pol(r["dn_succao_pol"]))
         if s and e:
             pares.setdefault(s, set()).add(e)
 
@@ -51,16 +66,67 @@ def main():
     print(f"  -> {bate} confirmadas, {diverge} divergentes, {falta} sem regra")
     nome_x_recalque()
 
-    faixa = [r for r in csv.DictReader(open(TABELA, encoding="utf-8"))
-             if r["polos"] == "4" and float(r["dn_succao_pol"]) >= 3]
+    vistos = set()
+    faixa = []
+    for r in csv.DictReader(open(TABELA, encoding="utf-8")):
+        chave = r["tamanho_folheto"]
+        if r["polos"] != "4" or (pol(r["dn_succao_pol"]) or 0) < 3 \
+                or chave in vistos:
+            continue
+        vistos.add(chave)
+        faixa.append(r)
     print(f"\n== ancora do desenho: {len(faixa)} tamanhos com succao de 3\" ou mais")
-    print(f"  {'tamanho':10} {'succao':>7} {'recalque':>9} {'eixo(b)':>8} "
-          f"{'a':>5} {'c':>5}  flange")
+    print(f"  {'tamanho':10} {'succao':>7} {'recalque':>9} {'eixo h1':>8} "
+          f"{'h2':>5} {'a':>5}  flange")
     for r in faixa:
-        print(f"  {r['tamanho']:10} {r['dn_succao_pol']+chr(34):>7} "
-              f"{r['dn_recalque_pol']+chr(34):>9} {r['b_mm']:>8} "
-              f"{r['a_mm']:>5} {r['c_mm']:>5}  {r['norma_flange']}")
+        print(f"  {r['tamanho_folheto']:10} {r['dn_succao_pol']:>7} "
+              f"{r['dn_recalque_pol']:>9} {r['h1_mm']:>8} "
+              f"{r['h2_mm']:>5} {r['a_mm']:>5}  {r['norma_flange']}")
     casar_com_a_lista()
+
+
+def tres_fontes():
+    """As tres medidas que posicionam os bocais, nas tres folhas que as tem.
+
+    O folheto antigo da Megabloc chama a/b/c; o manual A2744 e o manual da
+    Meganorm A2742 chamam h2/h1/a, que sao as letras da EN 733. Sao as mesmas
+    tres medidas, e conferir uma contra a outra e o que decide quando duas
+    folhas divergem: vence a que tem companhia.
+    """
+    def linhas(caminho, filtro=None):
+        return [r for r in csv.DictReader(open(caminho, encoding="utf-8"))
+                if not filtro or filtro(r)]
+    manual = {}
+    for r in linhas(MANUAL, lambda r: r["polos"] == "4"):
+        manual.setdefault(r["tamanho_folheto"],
+                          (r["h2_mm"], r["h1_mm"], r["a_mm"]))
+    folheto = {r["tamanho"]: (r["a_mm"], r["b_mm"], r["c_mm"])
+               for r in linhas(FOLHETO, lambda r: r["polos"] == "4" and r["a_mm"])}
+    meganorm = {r["tamanho"]: (r["h2_mm"], r["h1_mm"], r["a_mm"])
+                for r in linhas(MEGANORM)}
+
+    print("== as tres medidas do bocal, nas tres folhas")
+    iguais = 0
+    divergem = []
+    comuns = sorted(set(manual) & set(folheto),
+                    key=lambda t: (int(t.split("-")[0]), float(t.split("-")[1])))
+    for tamanho in comuns:
+        trio = {"manual A2744": manual[tamanho], "folheto": folheto[tamanho]}
+        if tamanho in meganorm:
+            trio["Meganorm A2742"] = meganorm[tamanho]
+        if len(set(trio.values())) == 1:
+            iguais += 1
+        else:
+            divergem.append((tamanho, trio))
+    print(f"  {iguais} de {len(comuns)} tamanhos com as tres folhas iguais")
+    for tamanho, trio in divergem:
+        print(f"    {tamanho}:")
+        for fonte, valores in trio.items():
+            print(f"      {fonte:16} h2/h1/a = {'/'.join(valores)}")
+        vencedor = max(set(trio.values()), key=list(trio.values()).count)
+        quantas = list(trio.values()).count(vencedor)
+        print(f"      -> {quantas} de {len(trio)} dizem {'/'.join(vencedor)}")
+    print("  O desenho de cada linha usa a folha da sua linha - nao mistura.")
 
 
 def nome_x_recalque():
@@ -73,9 +139,13 @@ def nome_x_recalque():
     print("\n== nome da bomba x DN de recalque")
     bate = diverge = fora = 0
     ruins = []
+    vistos = set()
     for r in csv.DictReader(open(TABELA, encoding="utf-8")):
-        nome = int(r["tamanho"].split("-")[0])
-        dn2 = mm(float(r["dn_recalque_pol"]))
+        if r["tamanho_folheto"] in vistos:
+            continue
+        vistos.add(r["tamanho_folheto"])
+        nome = int(r["tamanho_folheto"].split("-")[0])
+        dn2 = mm(pol(r["dn_recalque_pol"]))
         if dn2 is None:
             # 1", 1.1/4" e 1.1/2" nao estao na tabela de DN da casa - a casa
             # nao usa esse tamanho de bomba, e nao ha o que conferir
@@ -84,7 +154,8 @@ def nome_x_recalque():
             bate += 1
         else:
             diverge += 1
-            ruins.append(f'{r["tamanho"]} diz {nome} mm, folheto diz {dn2}')
+            ruins.append(f'{r["tamanho_folheto"]} diz {nome} mm, '
+                         f'folha diz {dn2}')
     print(f"  {bate} de {bate + diverge} confirmam: o nome da bomba E o DN2")
     for ruim in ruins:
         print(f"    {ruim}")
@@ -100,7 +171,8 @@ def casar_com_a_lista():
     nomeia com dois, saida e rotor, deixando a entrada implicita. Entao
     METB 150-125-200 e o tamanho 125-200 do catalogo, com succao de 150.
     """
-    tabela = {r["tamanho"]: r for r in csv.DictReader(open(TABELA, encoding="utf-8"))
+    tabela = {r["tamanho_folheto"]: r
+              for r in csv.DictReader(open(TABELA, encoding="utf-8"))
               if r["polos"] == "4"}
     catalogo = json.load(open("data/catalogo.json", encoding="utf-8"))
     metb = [i for i in catalogo if i.get("familia") == "BOMBA"

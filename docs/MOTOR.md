@@ -439,65 +439,118 @@ junto ao fundo e anota o resto, que é a convenção de elemento repetido.
 
 ## 4.2 A bomba: a âncora do desenho
 
-A Megabloc é o único item da casa de bombas que **não é tubulação e ainda assim
-manda na geometria**: tudo se posiciona em relação a ela, e a altura do eixo
-decide onde a sucção entra. Três cotas do folheto colocam os dois bocais, e é
-só isso que a tubulação precisa:
+A bomba é o único item da casa que **não é tubulação e ainda assim manda na
+geometria**: tudo se posiciona em relação a ela, e a altura do eixo decide
+onde a sucção entra. Três cotas colocam os dois bocais, e é só isso que a
+tubulação precisa:
 
-| letra | o que mede |
-|---|---|
-| **a** | do eixo da bomba à **face** do flange de descarga — vertical |
-| **b** | da base ao eixo — a altura do eixo |
-| **c** | da face da sucção ao **eixo** da descarga — horizontal |
+| o que mede | Megabloc | Meganorm (EN 733) |
+|---|---|---|
+| do eixo à **face** do flange de descarga | a | **h₂** |
+| do eixo à base — a altura do eixo | b | **h₁** |
+| da face da sucção ao **eixo** da descarga | c | **a** |
 
-A folha de II pólos (3.500 rpm) desenha a bomba **sem o motor** e chama de
-`a₁` o que a folha de IV pólos chama de `a`; traz também `a` (20 mm acima da
-face) e `b₁` (eixo ao pé do próprio corpo). O que a casa compra é IV pólos, e
-é essa folha que entrou.
+São as mesmas três medidas com nome diferente em cada folha, e o desenho
+escreve a letra da folha de onde a cota veio. Isso não foi deduzido — está
+conferido em **três folhas independentes**:
 
-O corpo em volta das três cotas sai de duas coisas, e as duas estão declaradas
-como proporção e não como cota de folha: **no nome `32-200` o 200 é o diâmetro
-nominal do rotor**, e a carcaça mede cerca de 1,15 rotor de meia altura; e `h`
-é a carcaça IEC do motor (90, 100, 112 … 225), que dá o corpo do motor.
+> `tools/conferir_bomba_ksb.py` — **25 de 28 tamanhos com as três folhas
+> iguais**, e nos três que divergem a folha vencida é sempre a mais antiga.
 
-**Vista de lado a voluta não é um círculo.** O caracol está no plano
-perpendicular ao eixo, então de lado aparece de canto: estreito em x, alto em
-y. O círculo grande é a terceira vista do folheto, olhando pelo eixo. Errei
-isso na primeira tentativa e o desenho engoliu a flange de sucção.
+As três divergências valem contar, porque duas eram erro do folheto antigo e
+uma é revisão de verdade:
+
+| tamanho | manual A2744 | folheto antigo | Meganorm A2742 |
+|---|---|---|---|
+| 50-250 | 225 | **228** | 225 |
+| 125-250 | 355 | **335** | 355 |
+| 150-200 | **180** (a) | 160 | 160 |
+
+Nos dois primeiros o folheto antigo está sozinho contra dois. No terceiro é o
+manual novo da Megabloc que está sozinho — e é ele que vale **para a
+Megabloc**, porque é a folha corrente daquela linha. A regra é essa: cada
+desenho usa a folha da sua linha, e nunca mistura.
+
+### O erro que vale contar
+
+Desenhei a voluta como um círculo e o desenho **engoliu a flange de sucção**.
+Vista de lado a voluta não é um círculo: o caracol está no plano perpendicular
+ao eixo, então de lado aparece de canto — estreito em x, alto em y. O círculo
+grande é a vista que olha pelo eixo. Pelo mesmo motivo o rotor de lado é uma
+linha, não um círculo: é um disco de canto.
+
+E errei duas vezes o significado de `a` antes de a Meganorm chegar. O que
+resolveu não foi raciocínio, foi a Fig. 04 do manual A2742, onde `h₂` e `h₁`
+saem do eixo para cima e para baixo. Os valores estavam certos desde o começo;
+a descrição é que estava errada.
 
 ### Vertical e horizontal são a mesma peça
 
-A Megabloc montada na vertical é a **mesma fundição de pé** — motor em cima,
-sucção entrando por baixo. Então não há duas peças e não há dois conjuntos de
-cota: há uma peça e duas poses, exatamente como a curva, que a folha desenha
-em pé e a montagem usa deitada.
+A bomba montada na vertical é a **mesma fundição de pé** — motor em cima,
+sucção entrando por baixo. Não há duas peças e não há dois conjuntos de cota:
+há uma peça e duas poses, exatamente como a curva, que a folha desenha em pé e
+a montagem usa deitada.
 
 E na linha a montagem **sai sozinha**, sem parâmetro nenhum: a direção chega
 acumulada pela corrente. Na sucção vertical a linha sobe reta e a bomba recebe
-por baixo; na horizontal há uma curva de 90° antes, e a bomba recebe deitada.
-O `montagem="VERTICAL"` só existe para a folha de símbolos poder mostrar as
-duas poses lado a lado.
+por baixo; na horizontal há uma curva de 90° antes, e ela recebe deitada. O
+`montagem="VERTICAL"` só existe para a folha de símbolos mostrar as duas poses
+lado a lado.
 
-### O que o folheto homologou
+## 4.3 Monobloco e mancalizada: muda o que vem depois da voluta
+
+METB é Megabloc, monobloco; METN é Meganorm, mancalizada. **A ponta molhada é
+a mesma** — mesmo caracol, mesmo rotor, mesmos bocais no mesmo lugar. O que
+muda é o que vem depois: na monobloco o motor encosta na voluta; na
+mancalizada entram o mancal, a luva elástica e o motor, os três aparafusados
+numa base única. Por isso a lista tem código **"C/BASE S/MOTOR"** e código
+**"MANCAL"** separados — são peças separadas de verdade.
+
+Para a tubulação isso **não muda nada**: os dois bocais estão na mesma bitola
+e no mesmo lugar. `desenhar_linha.succao_mancalizada()` é a mesma receita da
+horizontal com a outra bomba no fim.
+
+A Meganorm cota uma quarta medida que a Megabloc não tem: **f**, do eixo da
+descarga ao fim do mancal — o comprimento real da bomba sem o motor. E a
+seção 15 do manual dá, para cada tamanho, **quais carcaças de motor a KSB
+monta e qual base perfilada cada combinação usa**. É o que tirou o motor
+inventado do desenho: a carcaça sai da folha, não de uma regra de CV.
+
+### O que as folhas homologaram
 
 - **o nome da bomba É o DN de recalque**: EN 733 nomeia por (DN de descarga) ×
-  (rotor), e o primeiro número do nome reproduz a coluna DN2 do folheto em
-  **27 de 27** tamanhos dentro da faixa da casa. A sucção sobe uma ou duas
-  bitolas e não tem regra — fica a tabela.
+  (rotor). Na Megabloc o primeiro número reproduz a coluna DN2 em **27 de 27**
+  tamanhos da faixa da casa; na Meganorm o nome reproduz DN2 **e** o rotor em
+  **43 de 43**. A sucção sobe uma ou duas bitolas e não tem regra — fica a
+  tabela.
 - **a regra do bocal**, que tinha saído de medir a lista da Netafim, confirma
   em 6 de 6 saídas.
+- **a tabela 06 contra a seção 15** do mesmo manual da Meganorm: **964 cotas,
+  0 divergentes**. São a mesma folha lida de dois lugares, e divergir ali
+  seria erro de leitura.
 - flange **ANSI B16.1 125# FF**, exceto os tamanhos marcados (1), que são
-  250# FF. É a razão de a redução da sucção ter uma norma em cada ponta: NBR
-  do lado da linha, ANSI do lado da bomba.
-- **até o tamanho 65-200 o bocal pode vir rosqueado BSP** em vez de flangeado
-  (nota da folha de II pólos). Gravado na coluna `rosca_possivel`, porque é o
-  resolvedor de junção que precisa saber.
+  250# FF — e o marcador vem do próprio PDF, não de uma lista minha. Ele
+  corrigiu três tamanhos que eu tinha classificado errado. É a razão de a
+  redução da sucção ter uma norma em cada ponta: NBR do lado da linha, ANSI
+  do lado da bomba.
+- **até o tamanho 65-200 o bocal pode vir rosqueado BSP** em vez de flangeado.
+  Gravado, porque é o resolvedor de junção que precisa saber.
+- **25-150 e 25-200 não são previstos na ISO 2858**, pela nota da própria
+  folha. Gravado na coluna `iso_2858`.
 
-### Onde isso chegou
+### O que ainda não desenha
+
+Onze códigos METN citam **150-500, 200-400 e 200-500**, tamanhos que a folha
+de medidas não traz; treze códigos METB citam tamanhos fora do manual A2744.
+Ficam de fora em vez de estimados — houve uma versão deste motor que estimava
+a/b/c por ajuste sobre a tabela da Megabloc, e ela foi apagada no dia em que o
+manual da Meganorm chegou. Estimativa não sobrevive à folha.
+
+### Onde isso chegou### Onde isso chegou
 
 `tools/conferir_cobertura.py` tenta desenhar cada código do catálogo:
 
-> **1.212 de 5.157 códigos saem desenhados** — eram 919 antes destas famílias.
+> **1.262 de 5.157 códigos saem desenhados** — eram 919 antes destas famílias.
 
 O que ainda não sai não é falha de símbolo: 1.764 códigos não têm DN na
 descrição, 611 não têm família, e o resto é PVC, filtro e quadro elétrico —

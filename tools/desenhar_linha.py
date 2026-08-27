@@ -25,13 +25,16 @@ MARGEM = 46
 BOCAL_BOMBA = {3: 2, 4: 3, 5: 4, 6: 4, 8: 6, 10: 6, 12: 8, 14: 8}
 
 
-def _bomba(bocal_pol):
-    """A Megabloc cuja sucção tem a bitola que a redução entrega.
+def _bomba(bocal_pol, linha="METB"):
+    """A bomba cuja sucção tem a bitola que a redução entrega.
 
     A peça é a mesma nas duas montagens: a direção chega acumulada pela
     corrente, então na sucção vertical ela recebe por baixo e na horizontal
     recebe deitada, sem parâmetro nenhum dizendo isso.
     """
+    if linha == "METN":
+        tamanho = s.meganorm_para_linha(bocal_pol)
+        return s.bomba_meganorm(tamanho) if tamanho else None
     tamanho = s.bomba_para_linha(bocal_pol)
     return s.bomba_megabloc(tamanho) if tamanho else None
 
@@ -45,6 +48,20 @@ def succao_vertical(dn):
     bocal = BOCAL_BOMBA.get(dn, 2)
     return [s.crivo(dn), s.valvula_retencao(dn), s.tubo(dn, 1000),
             s.reducao(dn, bocal, "CONCENTRICA"), _bomba(bocal)]
+
+
+def succao_mancalizada(dn):
+    """Mesma sucção horizontal, com bomba mancalizada em vez de monobloco.
+
+    A tubulação não muda nada: os dois bocais estão no mesmo lugar e na mesma
+    bitola. O que muda é o que vem depois da voluta - e isso é problema da
+    base, não da linha.
+    """
+    bocal = BOCAL_BOMBA.get(dn, 2)
+    return [s.crivo(dn), s.valvula_retencao(dn), s.tubo(dn, 1000),
+            s.curva(dn, 90, -1), s.tubo(dn, 500),
+            s.reducao(dn, bocal, "EXCENTRICA", "topo"),
+            _bomba(bocal, "METN")]
 
 
 def succao_horizontal(dn):
@@ -206,6 +223,7 @@ def main():
     linhas = [("sucção · bomba vertical", succao_vertical(args.dn), -90),
               ("sucção · bomba horizontal", succao_horizontal(args.dn), -90),
               ("recalque", recalque(args.dn, menor), 0),
+              ("sucção · bomba mancalizada", succao_mancalizada(args.dn), -90),
               ("manifold c/ ventosas", manifold_ventosas(args.dn), 0),
               ("trecho de PEAD", trecho_pead(args.dn), 0)]
     for nome, pecas, giro in linhas:
