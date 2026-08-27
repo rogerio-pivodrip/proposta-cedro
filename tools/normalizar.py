@@ -101,7 +101,10 @@ CONEXOES = [
 
 # Derivacoes auxiliares: LG 2" = luva galvanizada, LV = luva, L2 = luva 2"
 RX_DERIV = re.compile(r"\b(?:C/\s*)?(\d)?\s*(LG|LV|L)\s*(\d+(?:\s?\d/\d)?)\s*\"?", re.I)
-RX_DN = re.compile(r"(\d+\s?\d/\d|\d+(?:[.,]\d+)?)\s*\"")
+# O lookbehind impede ler o denominador de uma fracao como diametro: em
+# 'QC 3/4"' o que vale e 3/4, nao 4.
+RX_DN = re.compile(
+    r"(?<![\d/])(\d+\s?\d/\d|\d+/\d+|\d+(?:[.,]\d+)?)\s*\"")
 RX_DN_MM = re.compile(
     r"\b(\d{2,3})\s*MM(?:\b|(?=X))|\((\d{2,3})\)|\b(\d{2,3})\s*(?:PLASSON|$)"
     r"|\b(\d{2,3})M(?=X)|X\s?(\d{2,3})F\b")
@@ -128,7 +131,7 @@ def para_float(txt):
     m = re.fullmatch(r"(\d+)\s?(\d)/(\d)", txt)
     if m:  # 11/2 -> 1 1/2 -> 1.5
         return int(m.group(1)) + int(m.group(2)) / int(m.group(3))
-    m = re.fullmatch(r"(\d)/(\d)", txt)
+    m = re.fullmatch(r"(\d+)/(\d+)", txt)   # 3/4, 9/16, 15/16
     if m:
         return int(m.group(1)) / int(m.group(2))
     return float(txt.replace(",", "."))

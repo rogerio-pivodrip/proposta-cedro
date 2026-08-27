@@ -423,23 +423,36 @@ tabela editável. Foi ela que levou o acerto de 34 para 66.
 
 ## 7. Desenhos padrão (templates)
 
+### 7.1 Sucção
+
+A sucção da casa segue sempre a mesma ordem:
+
+```
+crivo → válvula de retenção → tubo de 1 m → curva (se precisar) → redução → bomba
+```
+
+A curva é opcional e a redução sai da bomba: concêntrica ou excêntrica conforme a
+orientação, sempre no DN do bocal de entrada.
+
+`motor/templates.py::succao()` resolve isso contra o catálogo.
+**Reproduz os dois projetos peça por peça** (`tools/demo_template.py`):
+
+| | Marcelo Amorim, 4", bomba deitada | Lincoln Junqueira, 8", bomba em pé |
+|---|---|---|
+| 1 | `01523-052000` CRIVO AZ 4" | `01523-054000` CRIVO AZ 8" |
+| 2 | `01566-000003` VALV RETENÇÃO 4" | `01566-021141` VALV RETENÇÃO 8" UNIFLAP |
+| 3 | `01503-320220` TUBO AZ 4"×1M | `01503-540220` TUBO AZ 8"×1M |
+| 4 | `01523-132000` CURVA 90 AZ 4" | — sem curva |
+| 5 | `01523-281151` RED **EXC** 4"×2" | `01523-261946` RED **CON** 8"×5" |
+
+Mesma ordem, mesmas famílias, mesmos DN — e o tipo da redução saindo certo dos
+dois lados pela orientação da bomba.
+
+### 7.2 Manifolds
+
 Os **manifolds já são desenhos padrão** no catálogo: `MNFD AZ D02 … D20`,
 14 tipos, 151 itens; só o `D09` tem 43 variações de DN e comprimento. O conceito
 já existe na Netafim — o programa formaliza.
-
-Um template é a mesma estrutura de `Linha`, com DN paramétrico:
-
-```python
-SUCCAO_CANAL = [
-    ("CRIVO", {}), ("TUBO", {"comprimento_mm": 1000}),
-    ("CURVA", {"angulo": 90}), ("TUBO", {"comprimento_mm": 3000}),
-    ("CURVA", {"angulo": 45}), ("TUBO", {"comprimento_mm": 1500}),
-    ("REDUCAO_EXCENTRICA", {"dn_saida": dn - 2}),
-]
-```
-
-Escolhe o DN → resolve inteiro contra o catálogo → sai a lista.
-`tools/demo_succao.py` já faz isso.
 
 ## 8. Decisões em aberto
 
@@ -464,6 +477,8 @@ data/fichas/                  fichas técnicas do fabricante (fonte das tabelas)
 tools/conferir_bomba.py       reduções do desenho x bocais da bomba
 tools/compatibilizar_bomba.py norma da redução em cada bocal da bomba
 tools/demo_succao.py          demonstração ponta a ponta (sucção, bomba, recalque)
+tools/demo_template.py        template de sucção conferido contra os dois projetos
+motor/templates.py            receitas padrão resolvidas contra o catálogo
 motor/bomba.py                nomenclatura da bomba -> entrada, saída e rotor
 motor/catalogo.py             índice por (família, DN, norma)
 motor/regras.py               compatibilidade + ferragem

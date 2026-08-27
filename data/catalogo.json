@@ -7256,7 +7256,7 @@
   "material": null,
   "dn": [
    10.0,
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -7687,7 +7687,7 @@
   "material": null,
   "dn": [
    12.0,
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -8899,7 +8899,7 @@
   "familia": "COLAR_TOMADA",
   "material": "PVC",
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -10370,7 +10370,7 @@
   "familia": "COLAR_TOMADA",
   "material": "PVC",
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -10390,7 +10390,7 @@
   "familia": "COLAR_TOMADA",
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -10410,7 +10410,7 @@
   "familia": "COLAR_TOMADA",
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -10430,7 +10430,7 @@
   "familia": "COLAR_TOMADA",
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -10450,7 +10450,7 @@
   "familia": "COLAR_TOMADA",
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -11204,7 +11204,7 @@
   "familia": "TE_REDUZIDO",
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -11422,7 +11422,7 @@
   "familia": "ADAPTADOR",
   "material": "PVC",
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -11448,7 +11448,7 @@
   "familia": "ADAPTADOR",
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -12070,7 +12070,7 @@
   "familia": "CURVA",
   "material": "PVC",
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -12190,7 +12190,7 @@
   "familia": "LUVA",
   "material": "PVC",
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -12210,7 +12210,7 @@
   "familia": "LUVA",
   "material": "PVC",
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -12230,7 +12230,7 @@
   "familia": "LUVA",
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -12630,7 +12630,7 @@
   "familia": "TE_REDUZIDO",
   "material": "PVC",
   "dn": [
-   8.0
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -12638,7 +12638,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 8.0,
+    "dn": 0.375,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -12736,7 +12736,7 @@
   "familia": "TE_REDUZIDO",
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -12828,8 +12828,8 @@
   "familia": "BUCHA_REDUCAO",
   "material": "PVC",
   "dn": [
-   2.0,
-   4.0
+   0.5,
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -12849,8 +12849,8 @@
   "familia": "BUCHA_REDUCAO",
   "material": "PVC",
   "dn": [
-   4.0,
-   4.0
+   0.75,
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -12870,8 +12870,8 @@
   "familia": "BUCHA_REDUCAO",
   "material": "PVC",
   "dn": [
-   4.0,
-   2.0
+   0.75,
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -12892,7 +12892,7 @@
   "material": "PVC",
   "dn": [
    1.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -12913,7 +12913,7 @@
   "material": "PVC",
   "dn": [
    1.0,
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -12955,7 +12955,7 @@
   "material": "PVC",
   "dn": [
    1.5,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -12976,7 +12976,7 @@
   "material": "PVC",
   "dn": [
    1.5,
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -13039,7 +13039,7 @@
   "material": "PVC",
   "dn": [
    2.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -13060,7 +13060,7 @@
   "material": "PVC",
   "dn": [
    2.0,
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -13345,7 +13345,7 @@
   "familia": "CURVA",
   "material": "PVC",
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": 90.0,
@@ -13365,7 +13365,7 @@
   "familia": "CURVA",
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": 90.0,
@@ -13445,7 +13445,7 @@
   "familia": "LUVA",
   "material": "PVC",
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -13465,7 +13465,7 @@
   "familia": "LUVA",
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -13585,7 +13585,7 @@
   "familia": "NIPLE",
   "material": "PVC",
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -13605,7 +13605,7 @@
   "familia": "NIPLE",
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -13745,7 +13745,7 @@
   "familia": null,
   "material": "PVC",
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -13765,7 +13765,7 @@
   "familia": "TE",
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": 90.0,
@@ -13866,7 +13866,7 @@
   "material": "PVC",
   "dn": [
    1.0,
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -13886,7 +13886,7 @@
   "familia": "UNIAO",
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -28476,8 +28476,8 @@
   "familia": "BUCHA_REDUCAO",
   "material": "FERRO_GALV",
   "dn": [
-   2.0,
-   4.0
+   0.5,
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -28497,8 +28497,8 @@
   "familia": "BUCHA_REDUCAO",
   "material": "FERRO_GALV",
   "dn": [
-   4.0,
-   4.0
+   0.75,
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -28518,8 +28518,8 @@
   "familia": "BUCHA_REDUCAO",
   "material": "FERRO_GALV",
   "dn": [
-   4.0,
-   2.0
+   0.75,
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -28540,7 +28540,7 @@
   "material": "FERRO_GALV",
   "dn": [
    1.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -28561,7 +28561,7 @@
   "material": "FERRO_GALV",
   "dn": [
    1.0,
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -28706,7 +28706,7 @@
   "familia": "CURVA",
   "material": "FERRO_GALV",
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": 90,
@@ -28714,12 +28714,12 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 4.0,
+    "dn": 0.25,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    },
    {
-    "dn": 4.0,
+    "dn": 0.25,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -28912,7 +28912,7 @@
   "familia": "LUVA",
   "material": "FERRO_GALV",
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -28932,7 +28932,7 @@
   "familia": "LUVA",
   "material": "FERRO_GALV",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -29096,7 +29096,7 @@
   "familia": "NIPLE",
   "material": "FERRO_GALV",
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -29116,7 +29116,7 @@
   "familia": "NIPLE",
   "material": "FERRO_GALV",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -31600,8 +31600,7 @@
   "familia": "MANIFOLD",
   "material": "ACO_ZINCADO",
   "dn": [
-   6.0,
-   4.0
+   6.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -31614,7 +31613,7 @@
     "norma": "NBR PN16"
    },
    {
-    "dn": 4.0,
+    "dn": 6.0,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
@@ -31632,8 +31631,7 @@
   "familia": "MANIFOLD",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
-   4.0
+   8.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -31646,7 +31644,7 @@
     "norma": "NBR PN16"
    },
    {
-    "dn": 4.0,
+    "dn": 8.0,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
@@ -31664,8 +31662,7 @@
   "familia": "MANIFOLD",
   "material": "ACO_ZINCADO",
   "dn": [
-   10.0,
-   4.0
+   10.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -31678,7 +31675,7 @@
     "norma": "NBR PN16"
    },
    {
-    "dn": 4.0,
+    "dn": 10.0,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
@@ -31696,8 +31693,7 @@
   "familia": "MANIFOLD",
   "material": "ACO_ZINCADO",
   "dn": [
-   12.0,
-   4.0
+   12.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -31710,7 +31706,7 @@
     "norma": "NBR PN16"
    },
    {
-    "dn": 4.0,
+    "dn": 12.0,
     "tipo": "FLANGE",
     "norma": "NBR PN16"
    }
@@ -33988,7 +33984,7 @@
   "material": null,
   "dn": [
    8.0,
-   8.0
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34026,7 +34022,7 @@
   "familia": "UNIAO",
   "material": null,
   "dn": [
-   8.0
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34034,7 +34030,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 8.0,
+    "dn": 0.375,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -34052,8 +34048,8 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   8.0,
-   4.0
+   0.125,
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34073,8 +34069,8 @@
   "familia": "UNIAO",
   "material": "FERRO_GALV",
   "dn": [
-   2.0,
-   8.0
+   0.5,
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34082,12 +34078,12 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    },
    {
-    "dn": 8.0,
+    "dn": 0.375,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -34106,7 +34102,7 @@
   "material": null,
   "dn": [
    4.0,
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34126,8 +34122,8 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   2.0,
-   4.0
+   0.5,
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34147,8 +34143,8 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   8.0,
-   4.0
+   0.375,
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34168,8 +34164,8 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   4.0,
-   4.0
+   0.75,
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34190,7 +34186,7 @@
   "material": null,
   "dn": [
    4.0,
-   8.0
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34211,7 +34207,7 @@
   "material": null,
   "dn": [
    2.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34232,7 +34228,7 @@
   "material": null,
   "dn": [
    4.0,
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34253,7 +34249,7 @@
   "material": null,
   "dn": [
    2.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34274,7 +34270,7 @@
   "material": null,
   "dn": [
    4.0,
-   8.0
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34294,8 +34290,8 @@
   "familia": "CURVA",
   "material": null,
   "dn": [
-   2.0,
-   8.0
+   0.5,
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34335,7 +34331,7 @@
   "familia": "LUVA",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34356,7 +34352,7 @@
   "material": null,
   "dn": [
    4.0,
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34376,8 +34372,8 @@
   "familia": "NIPLE",
   "material": null,
   "dn": [
-   2.0,
-   4.0
+   0.5,
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34417,7 +34413,7 @@
   "familia": "NIPLE",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34437,7 +34433,7 @@
   "familia": "TE",
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34457,7 +34453,7 @@
   "familia": "TE",
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34477,7 +34473,7 @@
   "familia": "TE",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34498,7 +34494,7 @@
   "material": null,
   "dn": [
    4.0,
-   8.0
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34519,7 +34515,7 @@
   "material": null,
   "dn": [
    4.0,
-   8.0
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34539,7 +34535,7 @@
   "familia": "TE",
   "material": null,
   "dn": [
-   8.0
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34559,7 +34555,7 @@
   "familia": "TUBO",
   "material": null,
   "dn": [
-   8.0
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -34579,7 +34575,7 @@
   "familia": "TUBO",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -37068,7 +37064,7 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -37198,7 +37194,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -37218,7 +37214,7 @@
   "familia": "LUVA",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -37238,7 +37234,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -37258,7 +37254,7 @@
   "familia": "CURVA",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": 90,
@@ -37334,7 +37330,7 @@
   "familia": null,
   "material": "INOX",
   "dn": [
-   2.0,
+   0.5,
    3.0
   ],
   "unidade_dn": "in",
@@ -37375,8 +37371,8 @@
   "familia": "PORCA",
   "material": "INOX",
   "dn": [
-   2.0,
-   4.0
+   0.5,
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -37494,7 +37490,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.375,
    2.5
   ],
   "unidade_dn": "in",
@@ -37515,7 +37511,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.375,
    3.5
   ],
   "unidade_dn": "in",
@@ -37536,7 +37532,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   2.0,
+   0.5,
    4.5
   ],
   "unidade_dn": "in",
@@ -37557,7 +37553,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   2.0,
+   0.5,
    5.0
   ],
   "unidade_dn": "in",
@@ -37578,8 +37574,8 @@
   "familia": "PORCA",
   "material": "ACO_ZINCADO",
   "dn": [
-   2.0,
-   4.0
+   0.5,
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -37599,8 +37595,8 @@
   "familia": "PORCA",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
-   16.0
+   0.375,
+   0.5625
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -37620,7 +37616,7 @@
   "familia": "ARRUELA",
   "material": "ACO_ZINCADO",
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -37640,7 +37636,7 @@
   "familia": "ARRUELA",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -37660,7 +37656,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   16.0,
+   0.3125,
    2.25
   ],
   "unidade_dn": "in",
@@ -37681,8 +37677,8 @@
   "familia": "PORCA",
   "material": "ACO_ZINCADO",
   "dn": [
-   16.0,
-   2.0
+   0.3125,
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -37702,7 +37698,7 @@
   "familia": "ARRUELA",
   "material": "ACO_ZINCADO",
   "dn": [
-   16.0
+   0.3125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -37722,7 +37718,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -37730,7 +37726,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -37766,7 +37762,7 @@
   "familia": null,
   "material": "INOX",
   "dn": [
-   16.0
+   0.3125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -37804,7 +37800,7 @@
   "familia": null,
   "material": "INOX",
   "dn": [
-   16.0,
+   0.3125,
    2.25
   ],
   "unidade_dn": "in",
@@ -37951,8 +37947,8 @@
   "familia": null,
   "material": "INOX",
   "dn": [
-   16.0,
-   2.0
+   0.3125,
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -38028,7 +38024,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   2.0,
+   0.5,
    3.0
   ],
   "unidade_dn": "in",
@@ -38265,7 +38261,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   4.0,
+   0.75,
    4.5
   ],
   "unidade_dn": "in",
@@ -39267,7 +39263,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.875,
    7.0
   ],
   "unidade_dn": "in",
@@ -39613,7 +39609,7 @@
   "familia": "ARRUELA",
   "material": "FERRO_GALV",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -39633,7 +39629,7 @@
   "familia": "ARRUELA",
   "material": "FERRO_GALV",
   "dn": [
-   8.0
+   0.625
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -39859,7 +39855,7 @@
   "familia": "ARRUELA",
   "material": "ACO_ZINCADO",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -39879,7 +39875,7 @@
   "familia": "ARRUELA",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0
+   0.625
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -39899,7 +39895,7 @@
   "familia": "ARRUELA",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0
+   0.875
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -40385,7 +40381,7 @@
   "familia": "BARRA_ROSCADA",
   "material": "FERRO_GALV",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -40405,7 +40401,7 @@
   "familia": "BARRA_ROSCADA",
   "material": "FERRO_GALV",
   "dn": [
-   8.0
+   0.625
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -40425,7 +40421,7 @@
   "familia": "BARRA_ROSCADA",
   "material": "FERRO_GALV",
   "dn": [
-   8.0
+   0.875
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -40465,7 +40461,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -40504,7 +40500,7 @@
   "material": null,
   "dn": [
    4.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -40512,7 +40508,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -40531,7 +40527,7 @@
   "material": null,
   "dn": [
    4.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -40539,7 +40535,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -40991,7 +40987,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -41029,8 +41025,8 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0,
-   8.0
+   0.25,
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -41050,8 +41046,8 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0,
-   8.0
+   0.375,
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -41937,8 +41933,7 @@
   "material": null,
   "dn": [
    10.0,
-   4.0,
-   48.0
+   4.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -42418,7 +42413,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -42539,7 +42534,7 @@
   "material": null,
   "dn": [
    2.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -42547,7 +42542,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -42905,8 +42900,8 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0,
-   8.0
+   0.25,
+   0.625
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -43238,7 +43233,7 @@
   "familia": "FILTRO",
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -43995,7 +43990,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -44015,7 +44010,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -44035,7 +44030,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -44199,7 +44194,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   4.0,
+   0.75,
    2.5
   ],
   "unidade_dn": "in",
@@ -44220,7 +44215,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   4.0,
+   0.75,
    3.0
   ],
   "unidade_dn": "in",
@@ -44241,7 +44236,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   4.0,
+   0.75,
    3.5
   ],
   "unidade_dn": "in",
@@ -44262,7 +44257,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   4.0,
+   0.75,
    4.0
   ],
   "unidade_dn": "in",
@@ -44283,7 +44278,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   4.0,
+   0.75,
    5.0
   ],
   "unidade_dn": "in",
@@ -44304,7 +44299,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.625,
    2.0
   ],
   "unidade_dn": "in",
@@ -44325,7 +44320,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.625,
    2.5
   ],
   "unidade_dn": "in",
@@ -44346,7 +44341,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.625,
    3.0
   ],
   "unidade_dn": "in",
@@ -44367,7 +44362,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.625,
    3.5
   ],
   "unidade_dn": "in",
@@ -44388,7 +44383,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.625,
    4.0
   ],
   "unidade_dn": "in",
@@ -44409,7 +44404,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.625,
    5.0
   ],
   "unidade_dn": "in",
@@ -44430,7 +44425,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.625,
    6.0
   ],
   "unidade_dn": "in",
@@ -44451,7 +44446,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.625,
    7.0
   ],
   "unidade_dn": "in",
@@ -44472,7 +44467,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.875,
    3.0
   ],
   "unidade_dn": "in",
@@ -44493,7 +44488,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.875,
    3.5
   ],
   "unidade_dn": "in",
@@ -44514,7 +44509,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.875,
    4.0
   ],
   "unidade_dn": "in",
@@ -44535,7 +44530,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.875,
    5.0
   ],
   "unidade_dn": "in",
@@ -44556,7 +44551,7 @@
   "familia": "PARAFUSO",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
+   0.875,
    6.0
   ],
   "unidade_dn": "in",
@@ -44744,7 +44739,7 @@
   "familia": "PARAFUSO",
   "material": "INOX",
   "dn": [
-   8.0,
+   0.625,
    3.5
   ],
   "unidade_dn": "in",
@@ -44765,7 +44760,7 @@
   "familia": null,
   "material": "INOX",
   "dn": [
-   8.0,
+   0.625,
    2.5
   ],
   "unidade_dn": "in",
@@ -44786,7 +44781,7 @@
   "familia": null,
   "material": "INOX",
   "dn": [
-   4.0,
+   0.75,
    1.125
   ],
   "unidade_dn": "in",
@@ -44807,8 +44802,8 @@
   "familia": null,
   "material": "INOX",
   "dn": [
-   8.0,
-   16.0
+   0.625,
+   0.9375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -44846,7 +44841,7 @@
   "familia": "PORCA",
   "material": "ACO_ZINCADO",
   "dn": [
-   4.0,
+   0.75,
    1.125
   ],
   "unidade_dn": "in",
@@ -44867,8 +44862,8 @@
   "familia": "PORCA",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
-   16.0
+   0.625,
+   0.9375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -44888,8 +44883,8 @@
   "familia": "PORCA",
   "material": "ACO_ZINCADO",
   "dn": [
-   8.0,
-   16.0
+   0.875,
+   0.3125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -44970,7 +44965,7 @@
   "material": "ACO_ZINCADO",
   "dn": [
    1.125,
-   16.0
+   0.6875
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -45026,7 +45021,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -45034,7 +45029,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -45052,7 +45047,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -45060,7 +45055,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -45078,7 +45073,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -45086,7 +45081,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -46291,7 +46286,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -48404,7 +48399,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -48424,7 +48419,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -48504,7 +48499,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.625
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -48645,7 +48640,7 @@
   "material": null,
   "dn": [
    4.0,
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -48719,7 +48714,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -49369,7 +49364,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -49389,7 +49384,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -49489,7 +49484,7 @@
   "familia": null,
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -49509,7 +49504,7 @@
   "familia": null,
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -49589,7 +49584,7 @@
   "familia": null,
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -50487,7 +50482,7 @@
   "familia": "FILTRO",
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -50607,7 +50602,7 @@
   "familia": "VALVULA_RETENCAO",
   "material": "BRONZE",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -51317,7 +51312,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -51337,7 +51332,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -51357,7 +51352,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -51377,7 +51372,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -51397,8 +51392,8 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0,
-   8.0
+   0.25,
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -51436,7 +51431,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -51537,7 +51532,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -51718,8 +51713,7 @@
   "material": null,
   "dn": [
    10.0,
-   4.0,
-   48.0
+   4.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -51987,8 +51981,7 @@
   "material": null,
   "dn": [
    10.0,
-   4.0,
-   48.0
+   4.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -52009,8 +52002,7 @@
   "material": null,
   "dn": [
    12.0,
-   4.0,
-   48.0
+   4.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -52718,8 +52710,7 @@
   "material": null,
   "dn": [
    12.0,
-   4.0,
-   48.0
+   4.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -52861,8 +52852,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0,
-   48.0
+   8.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -53057,8 +53047,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0,
-   48.0
+   8.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -53078,8 +53067,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   6.0,
-   36.0
+   6.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -53147,8 +53135,7 @@
   "material": null,
   "dn": [
    6.0,
-   2.0,
-   24.0
+   2.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -53188,8 +53175,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0,
-   24.0
+   4.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -54673,7 +54659,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -75503,8 +75489,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0,
-   3.0
+   4.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -75557,8 +75542,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0,
-   3.0
+   4.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77096,7 +77080,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77104,7 +77088,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -77122,7 +77106,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77130,7 +77114,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -77148,7 +77132,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77156,7 +77140,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -77248,7 +77232,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77304,7 +77288,7 @@
   "familia": "VENTOSA",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77324,7 +77308,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77658,7 +77642,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77666,7 +77650,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -77684,7 +77668,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77692,7 +77676,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -77710,7 +77694,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77718,7 +77702,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 4.0,
+    "dn": 0.75,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -77736,7 +77720,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77744,7 +77728,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 4.0,
+    "dn": 0.75,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -77762,7 +77746,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77770,7 +77754,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 4.0,
+    "dn": 0.75,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -77808,7 +77792,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77816,7 +77800,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -77894,7 +77878,7 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77902,7 +77886,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -77940,7 +77924,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -77948,7 +77932,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 4.0,
+    "dn": 0.75,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -78006,7 +77990,7 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78014,7 +77998,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -78110,7 +78094,7 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78130,7 +78114,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78138,7 +78122,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -78216,7 +78200,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78224,7 +78208,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -78242,7 +78226,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78250,7 +78234,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -78268,7 +78252,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78276,7 +78260,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 4.0,
+    "dn": 0.75,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -78294,7 +78278,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78302,7 +78286,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -78320,7 +78304,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78328,7 +78312,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -78346,7 +78330,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78354,7 +78338,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 4.0,
+    "dn": 0.75,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -78372,7 +78356,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78380,7 +78364,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 4.0,
+    "dn": 0.75,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -78472,7 +78456,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78480,7 +78464,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 4.0,
+    "dn": 0.75,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -78708,7 +78692,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78716,7 +78700,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 4.0,
+    "dn": 0.75,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -78734,7 +78718,7 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78742,7 +78726,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -78760,7 +78744,7 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78768,7 +78752,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -78786,7 +78770,7 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78794,7 +78778,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -78812,7 +78796,7 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -78820,7 +78804,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -79116,7 +79100,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -79136,7 +79120,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -79216,8 +79200,8 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0,
-   2.0
+   0.5,
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -79237,7 +79221,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -79245,7 +79229,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -79263,7 +79247,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -79271,7 +79255,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -79289,7 +79273,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -79297,7 +79281,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -79315,7 +79299,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -79323,7 +79307,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -79361,7 +79345,7 @@
   "familia": "VENTOSA",
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -79421,7 +79405,7 @@
   "familia": "VENTOSA",
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -79541,7 +79525,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -79599,7 +79583,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81059,7 +81043,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81097,7 +81081,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81180,7 +81164,6 @@
   "material": null,
   "dn": [
    30.0,
-   36.0,
    6.0,
    3.0
   ],
@@ -81203,7 +81186,6 @@
   "material": null,
   "dn": [
    20.0,
-   24.0,
    4.0,
    3.0
   ],
@@ -81445,7 +81427,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81526,7 +81508,7 @@
   "material": null,
   "dn": [
    2.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81534,7 +81516,7 @@
   "comprimento_mm": 500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81553,7 +81535,7 @@
   "material": null,
   "dn": [
    2.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81561,7 +81543,7 @@
   "comprimento_mm": 1500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81580,7 +81562,7 @@
   "material": null,
   "dn": [
    2.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81588,7 +81570,7 @@
   "comprimento_mm": 9000,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81607,7 +81589,7 @@
   "material": null,
   "dn": [
    2.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81615,7 +81597,7 @@
   "comprimento_mm": 12000,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81634,7 +81616,7 @@
   "material": null,
   "dn": [
    3.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81642,7 +81624,7 @@
   "comprimento_mm": 500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81661,7 +81643,7 @@
   "material": null,
   "dn": [
    3.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81669,7 +81651,7 @@
   "comprimento_mm": 1500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81688,7 +81670,7 @@
   "material": null,
   "dn": [
    4.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81696,7 +81678,7 @@
   "comprimento_mm": 500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81715,7 +81697,7 @@
   "material": null,
   "dn": [
    4.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81723,7 +81705,7 @@
   "comprimento_mm": 1500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81802,7 +81784,7 @@
   "material": null,
   "dn": [
    2.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81810,7 +81792,7 @@
   "comprimento_mm": 500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81829,7 +81811,7 @@
   "material": null,
   "dn": [
    2.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81837,7 +81819,7 @@
   "comprimento_mm": 1500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81856,7 +81838,7 @@
   "material": null,
   "dn": [
    3.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81864,7 +81846,7 @@
   "comprimento_mm": 500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81883,7 +81865,7 @@
   "material": null,
   "dn": [
    3.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81891,7 +81873,7 @@
   "comprimento_mm": 1500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81910,7 +81892,7 @@
   "material": null,
   "dn": [
    4.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81918,7 +81900,7 @@
   "comprimento_mm": 500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81937,7 +81919,7 @@
   "material": null,
   "dn": [
    4.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81945,7 +81927,7 @@
   "comprimento_mm": 1500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81964,7 +81946,7 @@
   "material": null,
   "dn": [
    2.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81972,7 +81954,7 @@
   "comprimento_mm": 500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -81991,7 +81973,7 @@
   "material": null,
   "dn": [
    2.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -81999,7 +81981,7 @@
   "comprimento_mm": 500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -82018,7 +82000,7 @@
   "material": null,
   "dn": [
    3.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -82026,7 +82008,7 @@
   "comprimento_mm": 500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -82045,7 +82027,7 @@
   "material": null,
   "dn": [
    3.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -82053,7 +82035,7 @@
   "comprimento_mm": 500,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -82783,7 +82765,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -82803,7 +82785,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -82823,7 +82805,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -83221,7 +83203,7 @@
   "familia": "VALVULA_RETENCAO",
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -83241,7 +83223,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -83459,9 +83441,9 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   4.0,
+   0.75,
    1.0,
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -83474,7 +83456,7 @@
     "norma": "BSP"
    },
    {
-    "dn": 4.0,
+    "dn": 0.75,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -83492,9 +83474,9 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   4.0,
+   0.75,
    1.0,
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -83507,7 +83489,7 @@
     "norma": "BSP"
    },
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -83885,7 +83867,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -84049,7 +84031,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -87093,7 +87075,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -87119,7 +87101,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -87145,7 +87127,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -87579,7 +87561,7 @@
   "familia": "TUBO",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -87587,7 +87569,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_MACHO",
     "norma": "BSP"
    }
@@ -87661,7 +87643,7 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -87669,7 +87651,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -87687,7 +87669,7 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -87695,7 +87677,7 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -87713,8 +87695,8 @@
   "familia": "ADAPTADOR",
   "material": null,
   "dn": [
-   2.0,
-   2.0
+   0.5,
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -87722,12 +87704,12 @@
   "comprimento_mm": null,
   "conexoes": [
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    },
    {
-    "dn": 2.0,
+    "dn": 0.5,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -87746,7 +87728,7 @@
   "material": null,
   "dn": [
    1.0,
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -87759,7 +87741,7 @@
     "norma": "BSP"
    },
    {
-    "dn": 4.0,
+    "dn": 0.75,
     "tipo": "ROSCA_FEMEA",
     "norma": "BSP"
    }
@@ -88146,17 +88128,15 @@
   "procedencia": "IMPORTADO",
   "familia": null,
   "material": null,
-  "dn": [
-   4.0
-  ],
-  "unidade_dn": "in",
+  "dn": [],
+  "unidade_dn": null,
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.29
+  "confianca": 0.0
  },
  {
   "sap": "70220-002818",
@@ -88166,17 +88146,15 @@
   "procedencia": "IMPORTADO",
   "familia": null,
   "material": null,
-  "dn": [
-   6.0
-  ],
-  "unidade_dn": "in",
+  "dn": [],
+  "unidade_dn": null,
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.29
+  "confianca": 0.0
  },
  {
   "sap": "70220-002824",
@@ -88186,17 +88164,15 @@
   "procedencia": "IMPORTADO",
   "familia": null,
   "material": null,
-  "dn": [
-   8.0
-  ],
-  "unidade_dn": "in",
+  "dn": [],
+  "unidade_dn": null,
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
   "conexoes": [],
   "derivacoes": [],
   "manifold": null,
-  "confianca": 0.29
+  "confianca": 0.0
  },
  {
   "sap": "70220-002849",
@@ -88577,7 +88553,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -88603,7 +88579,7 @@
   "familia": "MEDIDOR",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -88703,7 +88679,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -88763,7 +88739,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -89443,7 +89419,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -90258,7 +90234,7 @@
   "familia": "FILTRO",
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -90278,7 +90254,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -92365,7 +92341,7 @@
   "familia": "TE",
   "material": null,
   "dn": [
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -92954,7 +92930,7 @@
   "material": null,
   "dn": [
    2.0,
-   24.0
+   0.8333333333333334
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -93441,7 +93417,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -93461,7 +93437,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -93481,7 +93457,7 @@
   "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -93933,7 +93909,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -95087,8 +95063,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   3.0,
-   4.0
+   3.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -95221,8 +95196,7 @@
   "familia": "VALVULA_HIDRAULICA",
   "material": null,
   "dn": [
-   3.0,
-   4.0
+   3.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -95793,7 +95767,7 @@
   "familia": "FILTRO",
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -95813,8 +95787,8 @@
   "familia": "FILTRO",
   "material": null,
   "dn": [
-   2.0,
-   2.0
+   0.5,
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -96252,7 +96226,7 @@
   "material": null,
   "dn": [
    2.0,
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -96294,8 +96268,7 @@
   "material": null,
   "dn": [
    10.0,
-   4.0,
-   48.0
+   4.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -96316,8 +96289,7 @@
   "material": null,
   "dn": [
    10.0,
-   4.0,
-   48.0
+   4.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -96338,8 +96310,7 @@
   "material": null,
   "dn": [
    12.0,
-   4.0,
-   48.0
+   4.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -96360,8 +96331,7 @@
   "material": null,
   "dn": [
    12.0,
-   4.0,
-   48.0
+   4.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -96420,8 +96390,7 @@
   "material": null,
   "dn": [
    6.0,
-   2.0,
-   24.0
+   2.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -96504,8 +96473,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0,
-   24.0
+   4.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -96525,8 +96493,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0,
-   48.0
+   8.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -98278,8 +98245,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0,
-   48.0
+   8.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -98322,7 +98288,7 @@
   "material": null,
   "dn": [
    3.0,
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -98343,7 +98309,7 @@
   "material": null,
   "dn": [
    4.0,
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -98403,8 +98369,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   6.0,
-   36.0
+   6.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -99494,7 +99459,7 @@
   "familia": "FILTRO",
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -100577,9 +100542,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0,
-   3.0,
-   4.0
+   2.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -100617,9 +100580,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0,
-   3.0,
-   4.0
+   2.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -100757,9 +100718,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0,
-   3.0,
-   4.0
+   2.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -100779,8 +100738,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   6.0,
-   8.0
+   6.0
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -102754,7 +102712,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -104912,7 +104870,7 @@
   "familia": null,
   "material": "PVC_PLASSON",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105108,7 +105066,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105128,7 +105086,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105166,7 +105124,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105186,7 +105144,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105280,7 +105238,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105300,7 +105258,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105320,7 +105278,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105340,7 +105298,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105378,7 +105336,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105398,7 +105356,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105436,7 +105394,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105456,7 +105414,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105476,7 +105434,7 @@
   "familia": "CAP",
   "material": null,
   "dn": [
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105496,7 +105454,7 @@
   "familia": "NIPLE",
   "material": null,
   "dn": [
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105516,7 +105474,7 @@
   "familia": "NIPLE",
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105536,8 +105494,8 @@
   "familia": "NIPLE",
   "material": null,
   "dn": [
-   4.0,
-   8.0
+   0.25,
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105557,7 +105515,7 @@
   "familia": "LUVA",
   "material": null,
   "dn": [
-   8.0
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105577,7 +105535,7 @@
   "familia": "LUVA",
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105597,7 +105555,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   8.0
+   0.375
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105617,8 +105575,8 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0,
-   8.0
+   0.25,
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105638,8 +105596,8 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0,
-   4.0
+   0.5,
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105659,8 +105617,8 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0,
-   8.0
+   0.25,
+   0.125
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105698,7 +105656,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105772,8 +105730,8 @@
   "familia": "FILTRO",
   "material": null,
   "dn": [
-   8.0,
-   4.0
+   0.125,
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105793,8 +105751,8 @@
   "familia": "TE",
   "material": null,
   "dn": [
-   8.0,
-   4.0
+   0.125,
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -105814,8 +105772,8 @@
   "familia": "TE",
   "material": null,
   "dn": [
-   8.0,
-   4.0
+   0.125,
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -106125,7 +106083,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -106199,8 +106157,8 @@
   "familia": "NIPLE",
   "material": null,
   "dn": [
-   4.0,
-   2.0
+   0.75,
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -106985,7 +106943,7 @@
   "material": null,
   "dn": [
    2.0,
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -107046,7 +107004,7 @@
   "familia": "ADAPTADOR",
   "material": "PVC_PLASSON",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -107488,7 +107446,7 @@
   "familia": "NIPLE",
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -107548,7 +107506,7 @@
   "familia": "ADAPTADOR",
   "material": "PVC_PLASSON",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -107999,7 +107957,7 @@
   "familia": null,
   "material": "PVC",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -108256,7 +108214,7 @@
   "familia": "VALVULA_RETENCAO",
   "material": "PVC_PLASSON",
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -108442,7 +108400,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -108462,7 +108420,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -108482,7 +108440,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -108596,7 +108554,7 @@
   "familia": null,
   "material": null,
   "dn": [
-   4.0
+   0.25
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -108652,7 +108610,7 @@
   "familia": "VALVULA_RETENCAO",
   "material": null,
   "dn": [
-   2.0
+   0.5
   ],
   "unidade_dn": "in",
   "angulo": null,
@@ -108888,7 +108846,7 @@
   "familia": "UNIAO",
   "material": null,
   "dn": [
-   4.0
+   0.75
   ],
   "unidade_dn": "in",
   "angulo": null,
