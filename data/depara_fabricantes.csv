@@ -1,0 +1,62 @@
+familia,variante,dn_pol,cota_netafim_mm,cota_irrigafour_mm,delta_mm,codigos_az_netafim,veredito,observacao,base_da_comparacao
+REDUCAO_CONCENTRICA,,3,250,150,-100,12,TROCA_REDESENHA,o conjunto muda -100mm por peca,"L do caderno x E do catalogo, os dois face a face entre flanges (desenho 01528 e pagina 23)"
+REDUCAO_CONCENTRICA,,4,250,150,-100,13,TROCA_REDESENHA,o conjunto muda -100mm por peca,"L do caderno x E do catalogo, os dois face a face entre flanges (desenho 01528 e pagina 23)"
+REDUCAO_CONCENTRICA,,5,250,150,-100,1,TROCA_REDESENHA,o conjunto muda -100mm por peca,"L do caderno x E do catalogo, os dois face a face entre flanges (desenho 01528 e pagina 23)"
+REDUCAO_CONCENTRICA,,6,300,150,-150,17,TROCA_REDESENHA,o conjunto muda -150mm por peca,"L do caderno x E do catalogo, os dois face a face entre flanges (desenho 01528 e pagina 23)"
+REDUCAO_CONCENTRICA,,8,300,150,-150,21,TROCA_REDESENHA,o conjunto muda -150mm por peca,"L do caderno x E do catalogo, os dois face a face entre flanges (desenho 01528 e pagina 23)"
+REDUCAO_CONCENTRICA,,10,350,150,-200,14,TROCA_REDESENHA,o conjunto muda -200mm por peca,"L do caderno x E do catalogo, os dois face a face entre flanges (desenho 01528 e pagina 23)"
+REDUCAO_CONCENTRICA,,12,450,150,-300,13,TROCA_REDESENHA,o conjunto muda -300mm por peca,"L do caderno x E do catalogo, os dois face a face entre flanges (desenho 01528 e pagina 23)"
+REDUCAO_CONCENTRICA,,14,600,150,-450,5,TROCA_REDESENHA,o conjunto muda -450mm por peca,"L do caderno x E do catalogo, os dois face a face entre flanges (desenho 01528 e pagina 23)"
+REDUCAO_EXCENTRICA,,3,250,150,-100,6,TROCA_REDESENHA,o conjunto muda -100mm por peca,mesma tabela da concentrica nos dois fabricantes
+REDUCAO_EXCENTRICA,,4,250,150,-100,8,TROCA_REDESENHA,o conjunto muda -100mm por peca,mesma tabela da concentrica nos dois fabricantes
+REDUCAO_EXCENTRICA,,5,250,150,-100,0,TROCA_REDESENHA,o conjunto muda -100mm por peca,mesma tabela da concentrica nos dois fabricantes
+REDUCAO_EXCENTRICA,,6,300,200,-100,14,TROCA_REDESENHA,o conjunto muda -100mm por peca,mesma tabela da concentrica nos dois fabricantes
+REDUCAO_EXCENTRICA,,8,300,200,-100,9,TROCA_REDESENHA,o conjunto muda -100mm por peca,mesma tabela da concentrica nos dois fabricantes
+REDUCAO_EXCENTRICA,,10,350,300,-50,9,TROCA_REDESENHA,o conjunto muda -50mm por peca,mesma tabela da concentrica nos dois fabricantes
+REDUCAO_EXCENTRICA,,12,450,300,-150,9,TROCA_REDESENHA,o conjunto muda -150mm por peca,mesma tabela da concentrica nos dois fabricantes
+REDUCAO_EXCENTRICA,,14,600,280,-320,8,TROCA_REDESENHA,o conjunto muda -320mm por peca,mesma tabela da concentrica nos dois fabricantes
+CURVA,90/4gomos,3,152,223,+71,7,TROCA_REDESENHA,o conjunto muda +71mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,90/4gomos,4,175,250,+75,9,TROCA_REDESENHA,o conjunto muda +75mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,90/4gomos,5,191,193,+2,2,TROCA_REDESENHA,o conjunto muda +2mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,90/4gomos,6,216,285,+69,9,TROCA_REDESENHA,o conjunto muda +69mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,90/4gomos,8,297,335,+38,8,TROCA_REDESENHA,o conjunto muda +38mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,90/4gomos,10,325,386,+61,8,TROCA_REDESENHA,o conjunto muda +61mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,90/4gomos,12,365,385,+20,8,TROCA_REDESENHA,o conjunto muda +20mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,90/4gomos,14,370,408,+38,5,TROCA_REDESENHA,o conjunto muda +38mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,45/3gomos,3,184,352,+168,7,TROCA_REDESENHA,o conjunto muda +168mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,45/3gomos,4,245,343,+98,9,TROCA_REDESENHA,o conjunto muda +98mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,45/3gomos,5,276,270,-6,2,TROCA_REDESENHA,o conjunto muda -6mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,45/3gomos,6,307,275,-32,9,TROCA_REDESENHA,o conjunto muda -32mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,45/3gomos,8,337,466,+129,8,TROCA_REDESENHA,o conjunto muda +129mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,45/3gomos,10,400,461,+61,8,TROCA_REDESENHA,o conjunto muda +61mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,45/3gomos,12,460,512,+52,8,TROCA_REDESENHA,o conjunto muda +52mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CURVA,45/3gomos,14,460,489,+29,5,TROCA_REDESENHA,o conjunto muda +29mm por peca,"R do caderno x C do catalogo, os dois a perna da curva (desenho 01523 e pagina 13)"
+CRIVO,,3,100,300,,1,PECA_DIFERENTE,Netafim e cone e cresce com a bitola; Irrigafour e cesto cilindrico de 300mm fixo,altura do corpo nos dois
+CRIVO,,4,130,300,,1,PECA_DIFERENTE,Netafim e cone e cresce com a bitola; Irrigafour e cesto cilindrico de 300mm fixo,altura do corpo nos dois
+CRIVO,,5,,300,,0,SO_IRRIGAFOUR,sem cota no caderno Netafim,altura do corpo nos dois
+CRIVO,,6,190,300,,1,PECA_DIFERENTE,Netafim e cone e cresce com a bitola; Irrigafour e cesto cilindrico de 300mm fixo,altura do corpo nos dois
+CRIVO,,8,250,300,,1,PECA_DIFERENTE,Netafim e cone e cresce com a bitola; Irrigafour e cesto cilindrico de 300mm fixo,altura do corpo nos dois
+CRIVO,,10,355,300,,1,PECA_DIFERENTE,Netafim e cone e cresce com a bitola; Irrigafour e cesto cilindrico de 300mm fixo,altura do corpo nos dois
+CRIVO,,12,425,300,,1,PECA_DIFERENTE,Netafim e cone e cresce com a bitola; Irrigafour e cesto cilindrico de 300mm fixo,altura do corpo nos dois
+CRIVO,,14,495,300,,2,PECA_DIFERENTE,Netafim e cone e cresce com a bitola; Irrigafour e cesto cilindrico de 300mm fixo,altura do corpo nos dois
+TE,,3,304,1000,,1,PECA_DIFERENTE,te compacto (2R) contra derivado de corpo corrido de 1m - nao sao a mesma peca,2R do caderno (corpo corrido) x E do catalogo
+TE,,4,350,1000,,3,PECA_DIFERENTE,te compacto (2R) contra derivado de corpo corrido de 1m - nao sao a mesma peca,2R do caderno (corpo corrido) x E do catalogo
+TE,,5,,1000,,0,SO_IRRIGAFOUR,sem cota no caderno Netafim,2R do caderno (corpo corrido) x E do catalogo
+TE,,6,432,1000,,1,PECA_DIFERENTE,te compacto (2R) contra derivado de corpo corrido de 1m - nao sao a mesma peca,2R do caderno (corpo corrido) x E do catalogo
+TE,,8,594,1000,,1,PECA_DIFERENTE,te compacto (2R) contra derivado de corpo corrido de 1m - nao sao a mesma peca,2R do caderno (corpo corrido) x E do catalogo
+TE,,10,650,1000,,2,PECA_DIFERENTE,te compacto (2R) contra derivado de corpo corrido de 1m - nao sao a mesma peca,2R do caderno (corpo corrido) x E do catalogo
+TE,,12,730,1000,,3,PECA_DIFERENTE,te compacto (2R) contra derivado de corpo corrido de 1m - nao sao a mesma peca,2R do caderno (corpo corrido) x E do catalogo
+TE,,14,740,1000,,1,PECA_DIFERENTE,te compacto (2R) contra derivado de corpo corrido de 1m - nao sao a mesma peca,2R do caderno (corpo corrido) x E do catalogo
+ADAPTADOR_ESPIGAO,,3-8,,,,30,CONFERIR,5 bitolas na casa,sem cota tabelada dos dois lados
+ANCORAGEM,,4-12,,,,0,SO_IRRIGAFOUR,6 bitolas na casa; sem familia equivalente no catalogo,sem cota tabelada dos dois lados
+ANCORAGEM_MEIA_LUA,,3-14,,,,0,SO_IRRIGAFOUR,8 bitolas na casa; sem familia equivalente no catalogo,sem cota tabelada dos dois lados
+ARTICULADOR,,3-14,,,,6,CONFERIR,8 bitolas na casa,sem cota tabelada dos dois lados
+CRUZETA,,3-14,,,,0,SO_IRRIGAFOUR,8 bitolas na casa; sem familia equivalente no catalogo,sem cota tabelada dos dois lados
+CURVA_DUPLA,,3-14,,,,0,SO_IRRIGAFOUR,8 bitolas na casa; sem familia equivalente no catalogo,sem cota tabelada dos dois lados
+CURVA_SAIDA,,3-14,,,,56,CONFERIR,8 bitolas na casa,sem cota tabelada dos dois lados
+MANIFOLD,,6-14,,,,90,CONFERIR,5 bitolas na casa,sem cota tabelada dos dois lados
+PECA_TRANSICAO_LUVA,,3-6,,,,3,CONFERIR,4 bitolas na casa,sem cota tabelada dos dois lados
+PECA_TRANSICAO_NIPLE,,3-6,,,,24,CONFERIR,4 bitolas na casa,sem cota tabelada dos dois lados
+TE_45,,4-14,,,,0,SO_IRRIGAFOUR,7 bitolas na casa; sem familia equivalente no catalogo,sem cota tabelada dos dois lados
+Y,,6-14,,,,0,SO_IRRIGAFOUR,5 bitolas na casa; sem familia equivalente no catalogo,sem cota tabelada dos dois lados
+Y_45,,3-14,,,,0,SO_IRRIGAFOUR,8 bitolas na casa; sem familia equivalente no catalogo,sem cota tabelada dos dois lados
