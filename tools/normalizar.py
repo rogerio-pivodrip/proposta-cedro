@@ -96,6 +96,11 @@ MATERIAIS = [
 
 # Tipos de conexao. tipo = como acopla; norma = furacao/padrao dimensional.
 CONEXOES = [
+    # NBR 7675 e a norma dos flanges: "FL NBR7675 PN16" e o mesmo que
+    # "FL NBR PN16", so escrito com o numero da norma.
+    (r"FL\.?\s?NBR\s?7675\s?PN\s?(\d+)", "FLANGE", "NBR PN{0}"),
+    (r"\bNBR\s?7675\s?PN\s?(\d+)", "FLANGE", "NBR PN{0}"),
+    (r"FL\.?\s?ABNT\s?PN\s?(\d+)|FL\.?\s?ABNT\s?(\d+)", "FLANGE", "NBR PN{0}"),
     (r"FL\.?\s?NBR\s?PN\s?(\d+)", "FLANGE", "NBR PN{0}"),
     (r"FL\.?\s?EN\s?PN\s?(\d+)", "FLANGE", "EN PN{0}"),
     (r"FL\.?\s?ANSI\s?(\d+)", "FLANGE", "ANSI {0}"),

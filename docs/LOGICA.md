@@ -448,7 +448,7 @@ orientação, sempre no DN do bocal de entrada.
 Mesma ordem, mesmas famílias, mesmos DN — e o tipo da redução saindo certo dos
 dois lados pela orientação da bomba.
 
-### 7.7 Manifolds
+### 7.8 Manifolds
 
 Os **manifolds já são desenhos padrão** no catálogo: `MNFD AZ D02 … D20`,
 14 tipos, 151 itens; só o `D09` tem 43 variações de DN e comprimento. O conceito
@@ -627,7 +627,45 @@ desativados"* — por isso `tools/conferir_codigos.py` varre todas as tabelas e 
 próprio documento, e confere cada SAP citado contra a lista atual. Hoje:
 **32 códigos citados, 32 conferem.**
 
-### 7.6 Cobertura de 3" a 14"
+### 7.6 Tubo de aço: comprimento por bitola
+
+Os comprimentos usuais da casa — 0,50 / 1,00 / 1,50 / 2,00 / 3,00 e 6,00 m — em
+cada bitola. O catálogo escreve tanto `1M` quanto `1000MM`, e o interpretador
+normaliza os dois (`tools/matriz_tubos.py`):
+
+```
+         0.50m   1.00m   1.50m   2.00m   3.00m   6.00m
+   3"      # 2     # 1     # 1       -     # 1     # 1
+   4"      # 2     # 1     # 1     # 1     # 1     # 1
+   5"        -       -       -       -       -       -
+   6"      # 1     # 1     # 1     # 1     # 1     # 1
+   8"      # 2     # 1     # 2     # 2     # 1     # 1
+  10"      # 3     # 2     # 3     # 2     # 2     # 2
+  12"      # 1     # 2     # 1     # 2     # 2     # 2
+  14"      # 4     # 3     # 2     # 1     # 1     # 2
+```
+
+De 3" a 14" está tudo coberto, com **um único buraco: 3" de 2,00 m**. E 5" de
+novo vazio, o que já era esperado.
+
+> **Uma correção importante.** Na primeira passada esta matriz acusava três
+> casos que só existiriam com ponta de engate K — 6" de 1 m, 8" de 1 m e 12" de
+> 1,5 m. Era bug do interpretador: esses tubos existem flangeados, escritos como
+> `FL NBR7675 PN16` em vez de `FL NBR PN16`. **NBR 7675 é a norma do flange** —
+> mesma coisa, outra grafia. O template de sucção vinha escolhendo um tubo com
+> ponta K10 em 8" quando havia um limpo (`01503-340220`), e era daí que saía o
+> aviso de engate K que aparecia desde o começo.
+
+Duas outras grafias entraram junto: `FL ABNT PN16` e ponta que **não declara
+norma**. Válvula, medidor e junta não trazem norma na descrição porque ela é
+definida no pedido — então uma ponta sem norma encaixa na do vizinho, em vez de
+o motor pedir adaptador. O mesmo vale para o material: o corpo da válvula não
+declara material, e adota o do vizinho para escolher o parafuso.
+
+Com isso a lista do recalque de 8" fecha em **cinco junções diretas**, sem
+nenhum adaptador espúrio.
+
+### 7.7 Cobertura de 3" a 14"
 
 Antes de montar qualquer linha, `tools/matriz_bitolas.py` responde onde o
 catálogo tem buraco. `#` serve na linha (é NBR PN16, ou a peça não declara norma
@@ -711,6 +749,8 @@ tools/compatibilizar_bomba.py norma da redução em cada bocal da bomba
 tools/demo_succao.py          demonstração ponta a ponta (sucção, bomba, recalque)
 tools/demo_template.py        template de sucção conferido contra os dois projetos
 tools/matriz_bitolas.py       cobertura de peças e reduções de 3" a 14"
+tools/matriz_tubos.py         comprimento de tubo AZ por bitola
+tools/conferir_serie_valvula.py  faixa de cada série de válvula
 motor/templates.py            receitas padrão resolvidas contra o catálogo
 motor/talude.py               travessia do talude e o giro das curvas de 90
 motor/ventosa.py              colar de tomada ou peça de aço com saída de 2"

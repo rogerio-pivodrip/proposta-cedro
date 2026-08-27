@@ -5249,7 +5249,7 @@
    {
     "dn": 6.0,
     "tipo": "FLANGE",
-    "norma": null
+    "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
@@ -5502,7 +5502,7 @@
    {
     "dn": 8.0,
     "tipo": "FLANGE",
-    "norma": null
+    "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
@@ -6376,7 +6376,7 @@
    {
     "dn": 12.0,
     "tipo": "FLANGE",
-    "norma": null
+    "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
@@ -6700,7 +6700,7 @@
    {
     "dn": 16.0,
     "tipo": "FLANGE",
-    "norma": null
+    "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
@@ -49393,6 +49393,11 @@
     "dn": null,
     "tipo": "FLANGE",
     "norma": null
+   },
+   {
+    "dn": 20.0,
+    "tipo": "FLANGE",
+    "norma": "NBR PN16"
    }
   ],
   "derivacoes": [],
@@ -51197,11 +51202,17 @@
   "angulo": null,
   "espessura_mm": null,
   "comprimento_mm": null,
-  "conexoes": [],
+  "conexoes": [
+   {
+    "dn": 6.0,
+    "tipo": "FLANGE",
+    "norma": "NBR PN25"
+   }
+  ],
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.29
+  "confianca": 0.57
  },
  {
   "sap": "01560-134000",
@@ -100801,7 +100812,7 @@
    {
     "dn": 3.0,
     "tipo": "FLANGE",
-    "norma": null
+    "norma": "NBR PN"
    }
   ],
   "derivacoes": [],
@@ -100828,7 +100839,7 @@
    {
     "dn": 3.0,
     "tipo": "FLANGE",
-    "norma": null
+    "norma": "NBR PN"
    }
   ],
   "derivacoes": [],

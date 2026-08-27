@@ -223,6 +223,12 @@ PLASSON = {"PVC", "PVC_PLASSON"}
 
 
 def contexto_da_junta(material_a, material_b):
+    # Valvula, medidor e filtro nao declaram material: o corpo e de ferro ou aco
+    # e o flange segue a linha. Entao a ponta sem material adota a do vizinho.
+    if material_a is None:
+        material_a = material_b
+    if material_b is None:
+        material_b = material_a
     materiais = {material_a, material_b}
     if "BOMBA" in materiais:
         return "BOMBA"
@@ -255,6 +261,16 @@ def resolver_juncao(porta_a, porta_b):
     if porta_a["tipo"] == porta_b["tipo"] and porta_a["norma"] == porta_b["norma"]:
         return "direta", {"junta": porta_a["tipo"], "dn": porta_a["dn"],
                           "norma": porta_a["norma"]}
+    # Valvula, medidor e junta nao declaram norma na descricao - ela e definida
+    # no pedido. Entao ponta sem norma encaixa na norma do vizinho, e nao e
+    # caso de adaptador.
+    if porta_a["tipo"] == porta_b["tipo"] and None in (porta_a["norma"],
+                                                       porta_b["norma"]):
+        norma = porta_a["norma"] or porta_b["norma"]
+        return "direta", {"junta": porta_a["tipo"], "dn": porta_a["dn"],
+                          "norma": norma,
+                          "nota": "uma das pontas nao declara norma - "
+                                  "pedir na norma da linha"}
     return "adaptador", {"dn": porta_a["dn"],
                          "de": (porta_a["tipo"], porta_a["norma"]),
                          "para": (porta_b["tipo"], porta_b["norma"])}
