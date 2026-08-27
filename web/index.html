@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sucção &amp; recalque</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1 5h14M1 11h14' stroke='%2316181d' stroke-width='1.4'/%3E%3Cpath d='M0 8h16' stroke='%23c0392b' stroke-width='1' stroke-dasharray='3 1.5 1 1.5'/%3E%3C/svg%3E">
+<!-- o CSS do desenho vem do motor, por /comando {"nome":"estilo"}. Duas
+     folhas de estilo divergiriam no primeiro ajuste, e o traço é do desenho -->
+<style id="desenho"></style>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<header>
+  <h1>Sucção &amp; recalque</h1>
+  <div class="barra">
+    <label>linha
+      <select id="bitola">
+        <option>3</option><option>4</option><option>6</option>
+        <option selected>8</option><option>10</option><option>12</option>
+        <option>14</option>
+      </select>"
+    </label>
+    <button id="succao">montar sucção</button>
+    <span class="vazio"></span>
+    <button id="desfazer" disabled>desfazer</button>
+    <button id="refazer" disabled>refazer</button>
+  </div>
+</header>
+
+<main>
+  <section class="desenho">
+    <div id="vista" class="vista"><p class="nada">Monte uma sucção para começar.</p></div>
+    <p id="recado" class="recado" hidden></p>
+  </section>
+
+  <aside>
+    <div class="painel" id="painel" hidden>
+      <h2 id="painel_nome">—</h2>
+      <p class="sap" id="painel_sap"></p>
+      <label>comprimento
+        <input type="number" id="comprimento" step="10" min="0">
+        <span>mm</span>
+      </label>
+      <label>cota de
+        <select id="fonte"></select>
+      </label>
+      <div class="acoes">
+        <button id="subir">◂ mover</button>
+        <button id="descer">mover ▸</button>
+        <button id="remover" class="perigo">remover</button>
+      </div>
+    </div>
+
+    <div class="acrescentar">
+      <h2>acrescentar</h2>
+      <label>família
+        <select id="familia"></select>
+      </label>
+      <div id="candidatos" class="candidatos"></div>
+    </div>
+
+    <h2>lista de materiais</h2>
+    <table id="lista"><tbody></tbody></table>
+
+    <div id="avisos" class="avisos"></div>
+  </aside>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -12,7 +12,7 @@ essa a decisao que evitou a sincronizacao - ver docs/LOGICA.md 2.
 O erro tambem e resposta, e nao excecao: `{"ok": false, "erro": ...}`. A tela
 precisa mostrar o motivo, e nao um traceback.
 """
-from motor import templates
+from motor import templates, vista
 from motor.catalogo import Catalogo
 from motor.linha import Linha, Peca
 
@@ -27,6 +27,10 @@ class Sessao:
     def __init__(self, catalogo=None, tipo="RECALQUE", area="P01"):
         self.catalogo = catalogo or Catalogo()
         self.linha = Linha(self.catalogo, tipo=tipo, area=area)
+        # o tamanho da area de desenho da tela. Fica na sessao porque o SVG
+        # sai pronto do motor, ja escalado - a tela nao redesenha nada, so
+        # avisa de quanto espaco dispoe
+        self.janela = {"largura": 940, "altura_max": 620}
 
     # ------------------------------------------------------------------ ler
     def documento(self):
@@ -42,6 +46,7 @@ class Sessao:
             "trechos_retos": [_trecho(t) for t in linha.trechos_retos()],
             "lista": [dict(r) for r in lista],
             "avisos": list(avisos),
+            "vista": vista.vista(linha, **self.janela),
             "pode_desfazer": bool(linha.feitos),
             "pode_refazer": bool(linha.desfeitos),
             "historico": [c.nome for c in linha.feitos],
@@ -201,11 +206,30 @@ def _catalogo(sessao, comando):
                       for i in achados[:comando.get("limite", 40)]]}
 
 
+def _estilo(sessao, comando):
+    """O CSS do desenho, do motor. A tela pede uma vez e nao copia nada.
+
+    Se a tela tivesse a propria copia, o traco da tela e o da folha de
+    simbolos divergiriam no primeiro ajuste - e o traco e do desenho, nao da
+    interface.
+    """
+    return {"css": vista.ESTILO}
+
+
+def _janela(sessao, comando):
+    """Diz ao motor de quanto espaco a tela dispoe, em pixel."""
+    for campo in ("largura", "altura_max"):
+        if comando.get(campo):
+            sessao.janela[campo] = max(200, int(comando[campo]))
+    return dict(sessao.janela)
+
+
 COMANDOS = {
     "inserir": _inserir, "remover": _remover, "substituir": _substituir,
     "alterar": _alterar, "mover": _mover,
     "desfazer": _desfazer, "refazer": _refazer,
-    "template": _template, "catalogo": _catalogo,
+    "template": _template, "catalogo": _catalogo, "janela": _janela,
+    "estilo": _estilo,
     # ler nao muda nada, e por isso nao entra no historico
     "documento": lambda sessao, comando: {},
 }

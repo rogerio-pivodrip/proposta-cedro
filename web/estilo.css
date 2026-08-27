@@ -1,0 +1,95 @@
+/* A tela. O traço do desenho vem do motor - aqui é só a página em volta.
+
+   Uma regra que vale a pena dizer: a tela NÃO guarda estado. Cada comando
+   devolve o documento inteiro e a tela repinta. O único estado dela é qual
+   peça está selecionada, e mesmo esse é um id que veio do motor. */
+:root{
+  --fundo:#f6f6f4; --papel:#fff; --tinta:#16181d; --titulo:#3d424d;
+  --anota:#8c9099; --linha:#e2e3e0; --realce:#eef3fb; --marca:#2f6fd0;
+  --perigo:#b23b32;
+}
+body{
+  margin:0; background:var(--fundo); color:var(--tinta); padding:0;
+  font:400 13px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+header{
+  display:flex; align-items:baseline; gap:20px; flex-wrap:wrap;
+  padding:14px 20px; background:var(--papel);
+  border-bottom:1px solid var(--linha);
+}
+h1{font-size:14px; font-weight:600; letter-spacing:-.01em; margin:0}
+h2{font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+   color:var(--titulo); margin:18px 0 8px}
+.barra{display:flex; align-items:center; gap:10px; flex:1}
+.barra .vazio{flex:1}
+button, select, input{
+  font:inherit; color:inherit; background:var(--papel);
+  border:1px solid var(--linha); border-radius:5px; padding:5px 9px;
+}
+button{cursor:pointer}
+button:hover:not(:disabled){border-color:var(--marca); color:var(--marca)}
+button:disabled{opacity:.4; cursor:default}
+button.perigo:hover{border-color:var(--perigo); color:var(--perigo)}
+
+main{display:grid; grid-template-columns:1fr 330px; gap:0; align-items:start}
+.desenho{padding:18px 20px; min-width:0}
+.vista{background:var(--papel); border:1px solid var(--linha); border-radius:8px;
+  padding:8px; overflow:auto}
+.vista svg{display:block; margin:0 auto; max-width:100%; height:auto}
+.nada{color:var(--anota); text-align:center; padding:70px 0; margin:0}
+aside{padding:18px 20px 60px; border-left:1px solid var(--linha);
+  background:var(--papel); min-height:calc(100vh - 52px)}
+
+/* a peça do desenho e a linha da tabela são a mesma peça, com o mesmo id */
+.vista g.peca{cursor:pointer}
+.vista g.peca:hover rect.alvo{fill:rgba(47,111,208,.06)}
+.vista g.peca.escolhida rect.alvo{fill:rgba(47,111,208,.10)}
+.vista g.peca.escolhida path,
+.vista g.peca.escolhida rect:not(.alvo){stroke:var(--marca)}
+
+table{width:100%; border-collapse:collapse; font-size:12px}
+td{padding:5px 6px; border-bottom:1px solid var(--linha); vertical-align:top}
+tr{cursor:pointer}
+tr:hover td{background:var(--realce)}
+tr.escolhida td{background:var(--realce); box-shadow:inset 2px 0 0 var(--marca)}
+td.qtd{text-align:right; width:34px; color:var(--anota)}
+td.sap{font:400 11px/1.4 "IBM Plex Mono",ui-monospace,monospace;
+  color:var(--anota); white-space:nowrap; width:96px}
+tr.derivada td{color:var(--anota)}
+
+.painel{border:1px solid var(--linha); border-radius:8px; padding:12px;
+  background:var(--fundo)}
+.painel h2{margin:0 0 2px}
+.painel .sap{font:400 11px/1.4 "IBM Plex Mono",ui-monospace,monospace;
+  color:var(--anota); margin:0 0 10px}
+.painel label{display:flex; align-items:center; gap:8px; margin-bottom:8px;
+  font-size:12px; color:var(--titulo)}
+.painel label input,.painel label select{flex:1; min-width:0}
+.acoes{display:flex; gap:6px; margin-top:10px}
+.acoes button{flex:1; padding:5px 4px; font-size:12px}
+
+.candidatos{display:flex; flex-direction:column; gap:4px; max-height:180px;
+  overflow:auto}
+.candidatos button{text-align:left; font-size:11.5px; line-height:1.35;
+  padding:6px 8px}
+.candidatos .codigo{
+  font:400 10.5px/1.4 "IBM Plex Mono",ui-monospace,monospace;
+  color:var(--anota); display:block}
+
+.recado{margin:10px 0 0; padding:8px 11px; border-radius:6px; font-size:12.5px;
+  background:#fdf0ee; color:var(--perigo); border:1px solid #f3d5d1}
+.avisos{margin-top:14px; font-size:11.5px; color:var(--anota)}
+.avisos p{margin:0 0 5px; padding-left:13px; position:relative}
+.avisos p::before{content:"·"; position:absolute; left:4px}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --fundo:#16181b; --papel:#1c1f23; --tinta:#e7e9ec; --titulo:#c3c8cf;
+    --anota:#878d96; --linha:#2a2e34; --realce:#1e2937; --marca:#6ba3f0;
+    --perigo:#e2776c;
+  }
+  /* o desenho é traço preto sobre papel branco: no escuro ele inverte pelo
+     mesmo token que a folha usa, e não por uma segunda folha de estilo */
+  .vista{background:#f7f7f5}
+}

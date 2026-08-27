@@ -34,6 +34,36 @@ Comandos (única porta de escrita): `inserir`, `remover`, `substituir`,
 redesenha as duas views. Undo/redo é a pilha de comandos. O balão do desenho e a
 linha da tabela são a mesma peça, com o mesmo id.
 
+### A tela não guarda o documento
+
+`web/` é o programa: desenho à esquerda, lista de materiais à direita, painel
+da peça selecionada. E ela **não acumula estado** — cada comando devolve o
+documento inteiro e a tela repinta. O único estado dela é qual peça está
+selecionada, e mesmo esse é um id que veio do motor.
+
+Duas decisões que caem daí:
+
+**O SVG vem pronto do motor.** `motor/vista.py` desenha a linha e marca cada
+grupo com `data-id`. A tela não sabe desenhar nada — ela sabe em quem o dedo
+caiu, e só. Desenhar no navegador significaria uma segunda biblioteca de
+símbolos em JavaScript, que é exatamente a duplicação que este projeto evita
+em todo o resto.
+
+**O CSS do desenho também vem do motor**, por um comando `estilo`. Duas folhas
+de estilo divergiriam no primeiro ajuste, e o traço é do desenho, não da
+interface.
+
+Uma coisa que só apareceu ao clicar: **traço de 1 px não é alvo**. Quem quer
+selecionar o tubo aponta para o meio dele, que é vazio. Cada peça leva um
+retângulo transparente do tamanho da caixa dela — invisível no papel, alvo no
+programa.
+
+`tools/conferir_tela.py` sobe o servidor, abre um navegador de verdade e cobra
+as três coisas: clicar no desenho acende a linha certa da tabela, desfazer pelo
+botão devolve o desenho **e** a tabela, e o console fica limpo — erro de
+JavaScript não aparece no desenho, a tela só para de repintar e quem usa acha
+que o programa travou.
+
 ### A camada que expõe isso não decide nada
 
 `api/nucleo.py` é a única função que a tela precisa conhecer:

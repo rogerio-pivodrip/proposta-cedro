@@ -24,8 +24,8 @@ O motor é uma biblioteca: ele não sabe onde roda. Quem o expõe é a camada
 e ela tem duas cascas sobre o mesmo núcleo:
 
 ```bash
-python3 -m api.stdio            # um JSON por linha; é assim que o Electron fala
-python3 -m api.http --porta 8765  # o mesmo motor em 127.0.0.1, para a tela
+python3 -m api.http --porta 8765   # abra http://127.0.0.1:8765 — o programa
+python3 -m api.stdio               # um JSON por linha; é assim que o Electron fala
 ```
 
 ```bash
@@ -51,3 +51,4 @@ junções, lista de materiais e avisos.
 | `tools/` | importação, normalização, extração de PDF, casamento, demonstração |
 | `motor/` | catálogo indexado, regras de montagem, corte, tradução, modelo da linha |
 | `api/` | camada fina: comando → documento. `nucleo.py` decide, `stdio.py` e `http.py` só transportam |
+| `web/` | a tela: desenho em SVG à esquerda, lista de materiais à direita, o mesmo id nos dois |
