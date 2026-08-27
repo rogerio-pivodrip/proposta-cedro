@@ -1,0 +1,17 @@
+# Norma do flange de cada familia de bomba. E o que falta para o motor escolher
+# a reducao sozinho: hoje ele sabe o DN dos bocais pela nomenclatura, mas nao
+# sabe em que norma a bomba vem, e a reducao tem uma ponta em cada norma.
+#
+# Preencher norma_entrada e norma_saida com uma das normas que existem em
+# reducao: ANSI 150, ANSI 300, EN PN10, EN PN16, EN PN40, NBR PN16, NBR PN25,
+# NBR PN40, BSP. Deixe em branco o que nao souber - o motor pergunta em vez de
+# escolher errado. dn_mm em branco vale para todos os bocais da familia.
+familia,dn_mm,norma_entrada,norma_saida,fonte
+METB,,,,
+METN,,,,
+MCPK,,,,
+ETA,,,,
+BLOC,,,,
+INI,,,,
+INIB,,,,
+ITAP,,,,

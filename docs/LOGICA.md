@@ -94,17 +94,13 @@ n × porca
 | qualquer × flange da bomba | 5/8" × 3½" | 3/4" × 3½" |
 | aço × flange Plasson | 5/8" × 3½" | 3/4" × 3½" |
 
-**Só quando flange Plasson encontra flange Plasson** o comprimento é pelo
-diâmetro do tubo, com a quebra em 110 mm:
+**Só quando flange Plasson encontra flange Plasson** vale a regra própria, com
+bitola e comprimento quebrando no mesmo ponto, 110 mm:
 
 | tubo | parafuso |
 |---|---|
-| 75, 90 e 110 mm | 5/8" × **4"** |
-| 140 mm | 5/8" × **5"** |
-| 160 e 225 mm | 3/4" × **5"** |
-
-O comprimento está confirmado; a bitola no PVC ainda segue a regra de DN do aço
-e está marcada `homologado=NAO`.
+| 75, 90 e 110 mm | **5/8" × 4"** |
+| 140, 160 e 225 mm | **3/4" × 5"** |
 
 Aço contra flange Plasson tem regra própria — **3½"**, na tabela acima. Sobra o
 contexto `MISTO`, que é o que não cai em nenhum dos quatro casos (PEAD, por
@@ -159,8 +155,9 @@ norma da ponta de jusante — e é aí que a tabela ANSI entra.
 
 ### 4.2.1 Barra roscada
 
-Válvula wafer é presa por tirante. A regra de compra é **3 barras roscadas
-inteiras por válvula** de retenção ou borboleta — o corte acontece na montagem e
+Válvula wafer é presa por tirante. Porca e arruela saem da furação: **2 de cada
+por furo do flange** — uma em cada ponta do tirante. A regra de compra é
+**3 barras roscadas inteiras por válvula** de retenção ou borboleta — o corte acontece na montagem e
 não reduz a quantidade comprada. De 10" para cima 3 barras não rendem um tirante
 por furo, e a quantidade sobe para cobrir a furação: **4 barras**.
 
@@ -303,6 +300,47 @@ diz como a bomba foi montada. Rodando nos dois projetos, ele acerta os dois —
 horizontal no Marcelo Amorim, vertical no Lincoln Junqueira, exatamente o que os
 isométricos mostram.
 
+### 4.6 Compatibilizar a bomba com a norma da redução
+
+O motor sabe o **DN** dos bocais pela nomenclatura, mas a redução tem uma ponta
+em cada norma: NBR PN16 do lado da linha e a norma do equipamento do outro. Falta
+saber em que norma cada bomba vem.
+
+`data/bombas_norma.csv` é a tabela dessa amarração — família da bomba (e, se
+precisar, DN) → norma do flange de entrada e de saída. Está criada e vazia de
+propósito: em branco, o motor pergunta em vez de escolher errado.
+
+Enquanto ela não é preenchida, `tools/compatibilizar_bomba.py` mostra o cardápio
+— quais reduções existem em cada bocal, em cada norma:
+
+```
+== METB 125-80-315 - 40cv ==
+  entrada  125 mm (5")  ->  EN PN16 (6), ANSI 150 (6), ANSI 300 (4), EN PN40 (2)
+  saida     80 mm (3")  ->  ANSI 150 (4), EN PN16 (4), ANSI 300 (3), BSP (2)
+```
+
+O relatório também acha os buracos: no bocal de **25 mm (1")** não existe
+nenhuma redução fora da NBR PN16 — se aparecer uma bomba com essa saída, não há
+peça de transição no catálogo.
+
+Bocais que as bombas do catálogo realmente usam, e o que existe de redução em
+cada um:
+
+| bocal | bombas | normas de redução disponíveis |
+|---|---|---|
+| 25 mm · 1" | 1 | **nenhuma** fora da NBR PN16 |
+| 32 mm · 1¼" | 13 | ANSI 150, ANSI 300, BSP |
+| 40 mm · 1½" | 12 | ANSI 150, ANSI 300, EN PN16, BSP |
+| 50 mm · 2" | 35 | ANSI 150, ANSI 300, EN PN16, BSP |
+| 65 mm · 2½" | 31 | ANSI 150, ANSI 300, EN PN16, EN PN10, BSP |
+| 80 mm · 3" | 48 | ANSI 150, ANSI 300, EN PN16, BSP |
+| 100 mm · 4" | 50 | ANSI 150, ANSI 300, EN PN16, EN PN40, EN PN10 |
+| 125 mm · 5" | 104 | EN PN16, ANSI 150, ANSI 300, EN PN40 |
+| 150 mm · 6" | 86 | EN PN16, ANSI 150, ANSI 300, EN PN40, NBR PN25 |
+| 200 mm · 8" | 53 | ANSI 150, ANSI 300, EN PN10, NBR PN40, NBR PN25 |
+| 250 mm · 10" | 15 | ANSI 300, EN PN16, EN PN10, ANSI 150 |
+| 300 mm · 12" | 1 | NBR PN25, EN PN16, NBR PN40, EN PN10, ANSI 150 |
+
 ## 5. Do desenho à geometria — sem CAD
 
 Vista lateral 2D. Cada peça tem comprimento face a face; curva tem ângulo. A
@@ -372,14 +410,12 @@ Escolhe o DN → resolve inteiro contra o catálogo → sai a lista.
 
 ## 8. Decisões em aberto
 
-1. **Quantas porcas e arruelas por barra roscada?** Hoje o motor conta 2, como
-   suposição avisada.
-2. **Bitola do parafuso no Plasson.** O comprimento está definido; a bitola ainda
-   segue a regra de DN do aço.
-3. **Comprimento do prisioneiro em NBR.** A ficha mede a versão ASME 150, cujo
+1. **Norma do flange de cada família de bomba** (`data/bombas_norma.csv`). É o
+   que falta para o motor escolher a redução sozinho, sem perguntar.
+2. **Comprimento do prisioneiro em NBR.** A ficha mede a versão ASME 150, cujo
    flange é mais grosso — o tirante em NBR sai um pouco mais curto. Mantive o
    número da ficha, que erra para mais.
-4. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
+3. **Homologar EN e ANSI.** As linhas NBR estão medidas; EN 1092-1 e ASME B16.5
    ainda são norma escrita — e são justamente as do lado da bomba.
 
 ## 9. Estado do código
@@ -393,6 +429,7 @@ tools/gerar_furacao.py        tabelas EN 1092-1 e ASME B16.5 -> regras_furacao.c
 tools/relatorio_furacao.py    regra da casa x norma, e onde a norma muda na linha
 data/fichas/                  fichas técnicas do fabricante (fonte das tabelas)
 tools/conferir_bomba.py       reduções do desenho x bocais da bomba
+tools/compatibilizar_bomba.py norma da redução em cada bocal da bomba
 tools/demo_succao.py          demonstração ponta a ponta (sucção, bomba, recalque)
 motor/bomba.py                nomenclatura da bomba -> entrada, saída e rotor
 motor/catalogo.py             índice por (família, DN, norma)

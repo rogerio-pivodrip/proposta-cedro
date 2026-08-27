@@ -228,10 +228,4 @@ class Linha:
                     continue
                 somar(item["sap"], item["descricao"], qtd, "ferragem")
 
-        if regras.SUPOSICAO_PORCAS:
-            avisos.append(
-                f"porca e arruela do tirante contadas a "
-                f"{regras.PORCAS_POR_BARRA} por barra - regra a confirmar"
-            )
-
         return list(bom.values()), avisos

@@ -33,10 +33,9 @@ BARRAS_ROSCADAS_POR_PECA = {
     "VALVULA_RETENCAO": 3,
     "VALVULA_BORBOLETA": 3,
 }
-# Porcas e arruelas do tirante: quantas por barra ainda nao foi definido.
-# 2 e o minimo por tirante (uma ponta e outra) - fica como suposicao avisada.
-PORCAS_POR_BARRA = 2
-SUPOSICAO_PORCAS = True
+# Porca do tirante: 2 por furo do flange - uma em cada ponta. A arruela segue a
+# mesma conta, uma sob cada porca.
+PORCAS_POR_FURO = 2
 
 
 def furos_da_valvula(dn, unidade="in", norma="NBR PN16", ficha=None):
@@ -268,7 +267,10 @@ def barra_roscada_da_peca(familia, dn, unidade="in", contexto="AZ_AZ",
     qtd, _por_barra = barras_da_valvula(familia, ficha, dn, unidade, norma)
     bit = (ficha["bitola_pol"] if ficha
            else especificacao_parafuso(dn_pol, contexto)["bitola_pol"])
-    itens = [("BARRA_ROSCADA", {"bitola_pol": bit}, qtd)]
-    itens.append(("PORCA", {"bitola_pol": bit}, PORCAS_POR_BARRA * qtd))
-    itens.append(("ARRUELA", {"bitola_pol": bit}, PORCAS_POR_BARRA * qtd))
-    return itens
+    furos = furos_da_valvula(dn, unidade, norma, ficha) or 0
+    ferragem = PORCAS_POR_FURO * furos
+    return [
+        ("BARRA_ROSCADA", {"bitola_pol": bit}, qtd),
+        ("PORCA", {"bitola_pol": bit}, ferragem),
+        ("ARRUELA", {"bitola_pol": bit}, ferragem),
+    ]
