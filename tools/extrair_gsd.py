@@ -154,6 +154,96 @@ def dimensional(caminho, recusados=None):
     return saida
 
 
+# a tabela de motor da mesma folha, do lado direito dela
+MOTOR = [("A_mm", 534), ("AB_mm", 551), ("AD_mm", 568), ("AC_mm", 586),
+         ("B_mm", 613), ("BB_mm", 641), ("C_mm", 663), ("K_mm", 680),
+         ("H_mm", 698), ("L2_mm", 714), ("L1_230_mm", 744), ("L1_250_mm", 787)]
+LIMITES_MOTOR = {"A_mm": (90, 700), "AB_mm": (100, 800), "AD_mm": (100, 600),
+                 "AC_mm": (60, 500), "B_mm": (60, 600), "BB_mm": (80, 700),
+                 "C_mm": (30, 300), "K_mm": (5, 40), "H_mm": (60, 400),
+                 "L2_mm": (150, 1200), "L1_230_mm": (200, 1400),
+                 "L1_250_mm": (200, 1400)}
+RX_CARCACA = re.compile(r"^L?\d{2,3}[SML]?(?:/[SML])?$|^L\d{2,3}[SML]$")
+
+
+def motores(caminho):
+    """A tabela de motor da folha da GSD - e ela que explica o pescoco.
+
+    L2 e o corpo do motor e L1 e o total dele com o PESCOCO que liga no
+    caracol. A diferenca entre os dois e o pescoco, e ela muda com o grupo do
+    suporte: na carcaca 160M sao 185 mm no GSDB/230 e 230 no GSDB/250. E por
+    isso que o motor da GSD nao encosta na voluta como o da Megabloc encosta.
+    """
+    pg = pdfplumber.open(caminho).pages[1]
+    filas = {}
+    for w in pg.extract_words():
+        if w["x0"] > 495:
+            filas.setdefault(round(w["top"] / 3.2), []).append(w)
+
+    linhas = []
+    for y in sorted(filas):
+        fila = sorted(filas[y], key=lambda w: w["x0"])
+        carcaca = next((w["text"] for w in fila
+                        if w["x0"] < 533 and RX_CARCACA.match(w["text"])), None)
+        valores = {}
+        for w in fila:
+            valor = _numero(w["text"])
+            if valor is None:
+                continue
+            for nome, x in MOTOR:
+                if abs(w["x0"] - x) > 8:
+                    continue
+                lo, hi = LIMITES_MOTOR[nome]
+                if lo <= valor <= hi:
+                    valores[nome] = valor
+                break
+        if carcaca or valores:
+            linhas.append({"carcaca": carcaca, **valores})
+
+    saida = []
+    for i, linha in enumerate(linhas):
+        if not linha["carcaca"]:
+            continue
+        peca = dict(linha)
+        for j in (i - 1, i + 1):
+            if 0 <= j < len(linhas) and not linhas[j]["carcaca"]:
+                for k, v in linhas[j].items():
+                    if k != "carcaca" and v is not None:
+                        peca.setdefault(k, v)
+        saida.append(peca)
+    return saida
+
+
+def potencias(caminho):
+    """A tabela CV -> carcaca da propria folha da GSD, em 2 e 4 polos.
+
+    Precisa dela porque a folha NOMEIA a carcaca do jeito dela - L112M, 132M,
+    225S/M - e e por esse nome que a tabela de motor da mesma folha esta
+    indexada. A tabela IEC generica do motor devolve "160" e "200", que nao
+    casam com "160M" e "200L".
+    """
+    pg = pdfplumber.open(caminho).pages[1]
+    filas = {}
+    for w in pg.extract_words():
+        if w["x0"] < 120:
+            filas.setdefault(round(w["top"] / 3.2), []).append(w)
+    saida = []
+    for y in sorted(filas):
+        fila = sorted(filas[y], key=lambda w: w["x0"])
+        cv = next((_numero(w["text"]) for w in fila
+                   if w["x0"] < 56 and _numero(w["text"]) is not None), None)
+        if cv is None or not 0.5 <= cv <= 400:
+            continue
+        dois = next((w["text"] for w in fila if 60 <= w["x0"] < 90
+                     and RX_CARCACA.match(w["text"])), None)
+        quatro = next((w["text"] for w in fila if 90 <= w["x0"] < 120
+                       and RX_CARCACA.match(w["text"])), None)
+        if dois or quatro:
+            saida.append({"cv": cv, "carcaca_2p": dois or "",
+                          "carcaca_4p": quatro or dois or ""})
+    return saida
+
+
 def base_viga(caminho):
     """A base viga da GS: uma linha por bomba e potencia."""
     pdf = pdfplumber.open(caminho)
@@ -199,6 +289,25 @@ def main():
     if recusados:
         print(f"  numeros recusados por estarem fora de faixa: "
               f"{', '.join(f'{n}={v}' for n, v in recusados)}")
+
+    mot = [m for m in motores(sys.argv[1])
+           if m.get("L2_mm") and (m.get("L1_230_mm") or m.get("L1_250_mm"))]
+    campos_m = ["carcaca"] + [n for n, _ in MOTOR]
+    with open("data/motores_gsd.csv", "w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, campos_m + ["fonte"], extrasaction="ignore")
+        w.writeheader()
+        for m in mot:
+            w.writerow({**m, "fonte": "GSD desenho 406.1 folha 2 (rev. 10)"})
+    print(f"{len(mot)} carcacas de motor -> data/motores_gsd.csv")
+
+    pot = potencias(sys.argv[1])
+    with open("data/potencias_gsd.csv", "w", newline="",
+              encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, ["cv", "carcaca_2p", "carcaca_4p", "fonte"])
+        w.writeheader()
+        for r in pot:
+            w.writerow({**r, "fonte": "GSD desenho 406.1 folha 2 (rev. 10)"})
+    print(f"{len(pot)} potencias -> data/potencias_gsd.csv")
 
     base = base_viga(sys.argv[2])
     with open("data/bases_gs.csv", "w", newline="", encoding="utf-8") as fh:

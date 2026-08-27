@@ -1317,13 +1317,86 @@ A ponta molhada é a mesma peça das duas KSB, e por isso a GSD reusa
 |---|---|---|
 | `h1` | eixo → base | o `b` das KSB |
 | `h2` | eixo → face do flange de descarga | o `a` das KSB |
-| `f1` | face do flange do motor → face da sucção | — |
-| `f2` | face do flange do motor → eixo da descarga | — |
+| `f1` | face da sucção → face do flange de trás | — |
+| `f2` | face da sucção → eixo da descarga | — |
 
-Então a face de sucção até o eixo da descarga é **`f1 − f2`**, e não uma cota
-própria. Isso dá 73 mm no suporte GSD/230, 98 no GSD/240 e 108 no GSD/250 —
-varia com o **suporte** e não com a bomba, que é o que se espera de uma cota
-medida a partir do flange do motor. É essa consistência que confirma a leitura.
+### As linhas de cota da folha 1 corrigem uma leitura minha
+
+Eu tinha lido `f1` e `f2` como cotas medidas **do flange do motor**, e por isso
+inferi que a face de sucção até o eixo da descarga fosse `f1 − f2`. A folha 1
+— a elevação cotada, com as linhas de `f1`, `f2`, `L1`, `L2`, `C`, `B`, `BB`,
+`m1`, `m2` e `ØDN1` — mostra as duas nascendo na **face de sucção**: a linha do
+`f2` morre no eixo da descarga, a do `f1` na face do flange de trás. Então a
+cota que eu queria é **o `f2` sozinho**, e eu tinha derivado o que estava
+cotado.
+
+Isso amarra o caracol inteiro sem chute nenhum: ele é centrado no eixo da
+descarga (`f2`) e a face de trás dele cai em `f1`, logo
+
+    largura do caracol = 2 × (f1 − f2)
+
+E a folha se confere sozinha nisso. Com essa leitura, a **frente** do caracol
+cai a 27, 27 e 32 mm da face de sucção nos três grupos de suporte — que é a
+espessura do flange de sucção mais uma folga, o mesmo número nos três. Três
+grupos independentes chegando no mesmo valor não é coincidência; é a prova de
+que a origem das duas cotas é a face de sucção.
+
+| grupo | `f2` | `f1` | largura = 2(f1−f2) | frente |
+|---|---|---|---|---|
+| GSD/230 | 100 | 173 | 146 | 27 |
+| GSD/240 | 125 | 223 | 196 | 27 |
+| GSD/250 | 140 | 248 | 216 | 32 |
+
+`_corpo_bomba` ganhou por isso um parâmetro `largura_folha`: quando existe folha
+que cote o caracol, a largura é **medida**; onde não existe (as duas KSB), ela
+continua saindo da proporção tirada do desenho de fábrica — 0,65 do rotor, com
+a boca de descarga como piso.
+
+### O motor da GSD chega por um pescoço
+
+A casa apontou: *"esse motor é diferente na GSD, tem um pescoço mais fino"*. E
+a folha cota exatamente isso, em duas medidas do mesmo motor: `L2` é o corpo
+dele e `L1` é o total com a peça que liga no caracol. A diferença é o pescoço:
+
+| carcaça | `L1 − L2` |
+|---|---|
+| 71 | 110 |
+| 90 | 134 |
+| 132 | 155 |
+| grupo /230 | 185 |
+| grupo /250 | 230 |
+
+Nas duas KSB o flange do motor aparafusa direto na tampa de trás do caracol —
+monobloco encostado. Na GSD não encosta: entre o caracol e o corpo do motor vai
+um tubo mais fino, com a nervura onde ele agarra. É essa a diferença de forma
+entre as três linhas, e ela está cotada, não estimada.
+
+Duas ressalvas ditas em vez de escondidas. A folha dá `L1` em duas colunas, dos
+suportes 230 e 250; o grupo **240 não tem coluna própria** e usa a do 230, com
+`pescoco_da_folha=False` no `params` da peça para quem for conferir. E a carcaça
+que a folha nomeia é **160M**, **200L**, **225S/M** — nomes que
+`carcaca_do_motor()` não produz, porque ela devolve `"160"` e `"200"`. Daí
+`carcaca_gsd()`, que lê a carcaça na tabela de CV **da própria folha**; onde a
+linha da folha veio incompleta (160L, L160L, 200M), o pescoço sai da carcaça
+vizinha de mesmo tamanho, porque ele anda com o tamanho e com o grupo do
+suporte, não com a letra.
+
+### Dá para extrair as formas?
+
+Dá para **medir**, e foi o que fizemos. A folha 406.1 é vetorial — 2841 linhas
+e 3600 curvas, nenhuma imagem — e está desenhada em escala exata de **1:9**: a
+linha de cota do `f2` mede 31,5 pt e a tabela diz 100 mm, o que dá 3,175 mm/pt
+redondo. Por isso as linhas de cota resolvem as letras: não é interpretação de
+figura, é medição.
+
+O limite é o traço automático do perfil, e ele é do arquivo, não do método: o
+PDF não expõe camada por entidade. Linha de cota, hachura, quadro do desenho e
+contorno da peça chegam como o mesmo tipo de objeto. Quem tenta traçar o
+contorno sozinho leva as cotas dentro dele — foi o que aconteceu quando tentei.
+Então o caminho que serve é o que está no código: **as cotas saem medidas da
+folha, e a forma sai do símbolo paramétrico** que já desenha as duas KSB. É a
+mesma divisão de trabalho de sempre aqui — o teste guarda a cota, o desenho
+guarda a forma.
 
 ### Célula mesclada é o feitio mais fácil de ler errado
 

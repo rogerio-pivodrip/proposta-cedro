@@ -2340,7 +2340,8 @@ def tamanho_meganorm(nome):
     raise ValueError(f"nome de Meganorm nao reconhecido: {nome}")
 
 
-def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, pe_base=None):
+def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, pe_base=None,
+                 largura_folha=None):
     """A parte hidraulica: bocal de succao, carcaca e pescoco da descarga.
 
     E a mesma nas duas linhas - Megabloc e Meganorm dividem a ponta molhada, e
@@ -2368,7 +2369,10 @@ def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, pe_base=None):
     # um rotor de 315, ou 0,65 e 1,38 do rotor. Antes eram 0,95 e 1,85 - chute,
     # e o caracol saia gordo e alto demais. O piso continua sendo a boca: ela
     # nao pode ser mais larga que o caracol que a sustenta.
-    largura = max(rotor * 0.65, 2 * r2 * 0.90)
+    # a GSD passa a largura MEDIDA na folha dela - 2 x (f1 - f2). Onde nao ha
+    # folha que a cote, ela sai da proporcao do desenho de fabrica (0,65 do
+    # rotor), com a boca como piso
+    largura = largura_folha or max(rotor * 0.65, 2 * r2 * 0.90)
     # O caracol e CENTRADO na boca de descarga, que fica em c - o a do folheto,
     # face de succao ate o eixo da descarga. O motor comeca depois dele, e nao
     # no eixo: a casa disse, e o desenho de fabrica mostra. Ver 4.13 para o que
@@ -2483,7 +2487,7 @@ def _ponta_de_eixo(x, comprimento, d1, u, t):
              "classe": "corpo"}]
 
 
-def _motor(x, carcaca, base_y=None):
+def _motor(x, carcaca, base_y=None, comprimento=None):
     """O motor IEC visto de lado, na medida da carcaca.
 
     O que faz um motor de 60 CV parecer um motor de 60 CV nao e proporcao: e
@@ -2496,7 +2500,9 @@ def _motor(x, carcaca, base_y=None):
     Devolve (elementos, x do fim, ficha da carcaca).
     """
     ficha = ficha_motor(carcaca) or {}
-    comp = float(ficha.get("comprimento_mm") or 400)
+    # comprimento entra de fora quando a folha da bomba cota o motor dela: a
+    # GSD cota L2, o corpo do motor, e nao o mesmo numero que a KSB chama de l
+    comp = float(comprimento or ficha.get("comprimento_mm") or 400)
     corpo = float(ficha.get("corpo_mm") or 160)
     eixo = float(ficha.get("eixo_mm") or 100)
     r = corpo / 2
@@ -2611,6 +2617,76 @@ def _letras_bomba(a, b, c, rv, x0, letras=("a", "b", "c"), x_direita=None):
 
 
 _gsd = None
+_motores_gsd = None
+
+
+_potencias_gsd = None
+
+
+def carcaca_gsd(cv, polos=4):
+    """A carcaca que a propria folha da GSD pede para essa potencia.
+
+    Precisa dela porque a folha NOMEIA a carcaca do jeito dela - L112M, 132M,
+    225S/M - e e por esse nome que a tabela de motor da mesma folha esta
+    indexada. carcaca_do_motor() devolve "160" e "200", que nao casam.
+    """
+    global _potencias_gsd
+    if _potencias_gsd is None:
+        with open(f"{DADOS}/potencias_gsd.csv", encoding="utf-8") as fh:
+            _potencias_gsd = [(float(r["cv"]), r["carcaca_2p"], r["carcaca_4p"])
+                              for r in csv.DictReader(fh)]
+    if cv is None:
+        return None
+    coluna = 2 if polos >= 4 else 1
+    for potencia, dois, quatro in _potencias_gsd:
+        if cv <= potencia:
+            return (quatro if coluna == 2 else dois) or dois or quatro
+    return _potencias_gsd[-1][coluna] or None
+
+
+def ficha_motor_gsd(carcaca, grupo="GSD/230"):
+    """O motor da GSD, com o PESCOCO que a folha cota.
+
+    A folha da 406.1 cota o motor em duas medidas: L2 e o corpo dele e L1 e o
+    total dele com o pescoco que liga no caracol. A diferenca e o pescoco - 110
+    mm na carcaca 71, 134 na 90, 155 na 132, 185 no grupo /230 e 230 no /250 -
+    e e por isso que o motor da GSD nao encosta na voluta como o da Megabloc
+    encosta. Ele chega por um pescoco mais fino que o corpo.
+
+    A folha da L1 em duas colunas, para os suportes 230 e 250. O grupo 240 nao
+    tem coluna propria: aqui ele usa a do 230, e o params da peca marca
+    pescoco_da_folha=False para quem for conferir saber.
+    """
+    global _motores_gsd
+    if _motores_gsd is None:
+        with open(f"{DADOS}/motores_gsd.csv", encoding="utf-8") as fh:
+            _motores_gsd = {}
+            for r in csv.DictReader(fh):
+                _motores_gsd.setdefault(r["carcaca"], {}).update(
+                    {k: v for k, v in r.items() if v})
+    ficha = dict(_motores_gsd.get(str(carcaca)) or {})
+    if not ficha:
+        # a carcaca vizinha serve: o pescoco anda com o TAMANHO da carcaca e
+        # com o grupo do suporte, nao com a letra dela - a 160L usa o mesmo
+        # pescoco da 160M. Sem isto a 160L, a L160L e a 200M ficariam sem
+        # pescoco so porque a linha delas na folha veio incompleta
+        def numero(nome):
+            digitos = "".join(ch for ch in nome if ch.isdigit())
+            return float(digitos) if digitos else 0.0
+        alvo_n = numero(str(carcaca))
+        vizinhas = sorted(_motores_gsd, key=lambda n: abs(numero(n) - alvo_n))
+        ficha = dict(_motores_gsd.get(vizinhas[0]) or {}) if vizinhas else {}
+        if not ficha:
+            return None
+        ficha["carcaca_vizinha"] = vizinhas[0]
+    coluna = "L1_250_mm" if grupo == "GSD/250" else "L1_230_mm"
+    l2 = float(ficha.get("L2_mm") or 0)
+    l1 = float(ficha.get(coluna) or ficha.get("L1_250_mm")
+               or ficha.get("L1_230_mm") or 0)
+    ficha["corpo_axial_mm"] = l2
+    ficha["pescoco_mm"] = max(l1 - l2, 0.0)
+    ficha["pescoco_da_folha"] = grupo in ("GSD/230", "GSD/250")
+    return ficha
 
 
 def ficha_gsd(modelo):
@@ -2667,13 +2743,19 @@ def bomba_gsd(modelo, cv=None, montagem="HORIZONTAL"):
 
         h1  eixo -> base                (o b das KSB)
         h2  eixo -> face do flange de descarga   (o a das KSB)
-        f1  face do flange do motor -> face da succao
-        f2  face do flange do motor -> eixo da descarga
+        f1  face da succao -> face do flange do lado do motor
+        f2  face da succao -> eixo da descarga
 
-    Entao a face de succao ate o eixo da descarga e f1 - f2, e nao uma cota
-    propria. Isso da 73 mm no suporte GSD/230, 98 no GSD/240 e 108 no GSD/250 -
-    varia com o SUPORTE e nao com a bomba, que e o que se espera de uma cota
-    que mede do flange do motor.
+    As duas leem direto na folha 1, onde a linha de cota do f2 morre no eixo da
+    descarga e a do f1 na face do flange de tras. Eu tinha inferido f1 - f2
+    para o eixo da descarga; a folha 1 diz que e o f2 sozinho.
+
+    Isso amarra o caracol inteiro sem chute: ele e centrado no eixo da descarga
+    (f2) e a face de tras dele cai em f1, entao a largura e 2 x (f1 - f2). A
+    folha se confere sozinha nisso - a frente do caracol cai em 27, 27 e 32 mm
+    da face de succao nos tres grupos de suporte, que e a espessura do flange
+    de succao mais uma folga. Tres grupos independentes chegando no mesmo
+    numero nao e coincidencia.
 
     O rotor sai do nome, como nas KSB: na GSD 125-250 o 250 e o rotor.
     """
@@ -2687,16 +2769,34 @@ def bomba_gsd(modelo, cv=None, montagem="HORIZONTAL"):
         raise ValueError(f"GSD {modelo}: bocal fora da tabela de bitola")
     a = float(ficha["h2_mm"])
     b = float(ficha["h1_mm"])
-    c = float(ficha["f1_mm"]) - float(ficha["f2_mm"])
+    f1 = float(ficha["f1_mm"])
+    c = float(ficha["f2_mm"])            # face da succao -> eixo da descarga
     rotor = float(modelo.split("-")[1].rstrip("L").split(".")[0])
-    carcaca = f"{carcaca_do_motor(cv or 30):g}"
+    carcaca = carcaca_gsd(cv) or f"{carcaca_do_motor(cv or 30):g}"
 
-    el, x0, x1, rv, largura, xd = _corpo_bomba(a, b, c, rotor, dn1, dn2,
-                                               pe_base=b - 22)
-    # monobloco como a Megabloc: o flange do motor aparafusa na tampa de tras
-    x_motor = x1
+    # o caracol da GSD tem largura de folha: 2 x (f1 - f2), com a face de tras
+    # caindo em f1 - e ali que o pescoco do motor comeca
+    el, x0, x1, rv, largura, xd = _corpo_bomba(
+        a, b, c, rotor, dn1, dn2, pe_base=b - 22,
+        largura_folha=2 * max(f1 - c, DE_TUBO.get(dn2, 80) * 0.45))
+    # A GSD nao encosta o motor no caracol: entre os dois vai um PESCOCO mais
+    # fino, e a folha cota ele - L1 menos L2. E o que separa esta linha das
+    # duas KSB, onde o flange do motor aparafusa direto na tampa de tras.
+    grupo = ficha.get("grupo_suporte") or "GSD/230"
+    fm = ficha_motor_gsd(carcaca, grupo) or {}
+    pescoco = float(fm.get("pescoco_mm") or 0)
+    corpo_axial = float(fm.get("corpo_axial_mm") or 0) or None
+    r_pescoco = rv * 0.34
+    if pescoco:
+        el += [_p(f"M{x1:.1f} {-r_pescoco:.1f} H{x1 + pescoco:.1f}"),
+               _p(f"M{x1:.1f} {r_pescoco:.1f} H{x1 + pescoco:.1f}"),
+               # a nervura do pescoco, que e onde ele agarra no flange
+               _p(f"M{x1 + pescoco*0.30:.1f} {-r_pescoco:.1f} "
+                  f"V{r_pescoco:.1f}", "malha")]
+    x_motor = x1 + pescoco
     el += _eixo_da_bomba(x1 - largura * 0.3, x_motor, rv * 0.20)
-    motor, fim, ficha_m = _motor(x_motor, carcaca, base_y=b - 22)
+    motor, fim, ficha_m = _motor(x_motor, carcaca, base_y=b - 22,
+                                 comprimento=corpo_axial)
     el += motor
     rotulo_motor = f"carcaça {carcaca}"
     if cv:
@@ -2717,6 +2817,8 @@ def bomba_gsd(modelo, cv=None, montagem="HORIZONTAL"):
                    {"linha": "GSD", "modelo": modelo, "cv": cv,
                     "carcaca_motor": carcaca, "grupo_suporte":
                     ficha.get("grupo_suporte"),
+                    "pescoco_mm": pescoco or None,
+                    "pescoco_da_folha": fm.get("pescoco_da_folha"),
                     "norma_flange": "NBR PN16"})
     return girado(peca, -90) if montagem == "VERTICAL" else peca
 
