@@ -1186,6 +1186,39 @@ E a cota `furo 6 c/ 3` saiu do desenho a pedido da casa. Ela continua onde
 sempre esteve — em `data/crivos_netafim.csv`, que é a folha — e quem precisa
 dela pede pela ficha em vez de ler do desenho.
 
+## 4.12 "Falta corpo": o desenho do fabricante ao lado do meu
+
+A casa mandou dois desenhos de fábrica — uma METB e uma METN — e uma frase:
+*falta corpo nessas bombas*. Faltava. Lado a lado, o que o meu desenho dizia
+errado não era cota nenhuma: era **massa**.
+
+| o que o fabricante mostra | o que eu desenhava |
+|---|---|
+| caracol grande, quase da altura do motor, descendo até perto da base | uma cápsula de 1,15 raio de rotor, um caroço no meio do conjunto |
+| pé do caracol **aberto**, alargando para apoiar | um retângulo estreito |
+| sucção abrindo em **sino** para dentro do caracol | tubo reto entrando |
+| mancal de fundição cheia, alto junto do caracol e descendo em rampa | tubo escalonado |
+| acoplamento **gordo** entre as duas pontas de eixo | um tubinho, e o vão entre bomba e motor vazio |
+| junta aparafusada entre caracol e flange do motor | nada |
+
+Todas essas são forma, não cota — e é por isso que a conferência não as pegava.
+`conferir_cad` compara a **caixa** da peça, e caixa não vê onde a massa está
+dentro dela. Uma bomba com o caracol pequeno e o mancal fino tem exatamente a
+mesma caixa de uma bomba com os dois no tamanho certo.
+
+O caracol ganhou piso e teto, e os dois vêm de medida: não pode ser mais
+estreito que a boca que sustenta, nem passar do vão que `c` deixa até a face de
+sucção — e o teto depende de como ele se apoia, porque a monobloco é recuada e
+cresce só para trás da face, enquanto a mancalizada é centrada em `c` e cresce
+para os dois lados.
+
+### O que continua não saindo de parâmetro
+
+Do desenho do fabricante ficaram de fora, e de propósito: o olhal de içamento,
+as nervuras da lanterna, a tampa cônica do ventilador, o logotipo na fundição.
+Isso é traçado do modelo 3D, como diz a 4.5 — não sai de cota, e fingir que sai
+seria pior que a diferença.
+
 ## 5. O que a peça puxa: um mecanismo só
 
 Hoje as derivações estão em quatro lugares diferentes. São todas o mesmo padrão

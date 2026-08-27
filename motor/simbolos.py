@@ -2325,7 +2325,8 @@ def tamanho_meganorm(nome):
     raise ValueError(f"nome de Meganorm nao reconhecido: {nome}")
 
 
-def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, recuar=False):
+def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, recuar=False,
+                 pe_base=None):
     """A parte hidraulica: bocal de succao, carcaca e pescoco da descarga.
 
     E a mesma nas duas linhas - Megabloc e Meganorm dividem a ponta molhada, e
@@ -2338,13 +2339,21 @@ def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, recuar=False):
     """
     r1 = DE_TUBO.get(dn1, 100) / 2
     r2 = DE_TUBO.get(dn2, 80) / 2
-    rv = rotor / 2 * 1.15
+    # O caracol e GRANDE - no desenho do fabricante ele e quase da altura do
+    # motor e desce quase ate a base, com pe proprio. Em 1,15 do raio do rotor
+    # ele saia um caroco no meio do conjunto. O teto e b: o caracol nao passa
+    # da base, senao a peca fura o chao.
+    rv = min(rotor / 2 * 1.85, b * 0.86)
     # A largura AXIAL do caracol. Em 0,42 do rotor ela saia desproporcional -
     # um caracol de 105 mm carregando uma boca de 152 de furo, com o pescoco
     # mais largo que a peca que o sustenta. O piso agora e a propria boca: o
     # caracol nao pode ser mais estreito do que ela pede. E o teto e o vao
     # ate a face de succao, senao o caracol engole o bocal de entrada.
-    largura = min(max(rotor * 0.55, 2 * r2 * 0.62), c * 0.85)
+    # o teto depende de como o caracol se apoia em c: na monobloco ele e recuado
+    # e cresce so para tras da face de succao, entao nao pode passar de c; na
+    # mancalizada ele e centrado em c e pode crescer para os dois lados
+    teto = c * 0.85 if recuar else c * 1.55
+    largura = min(max(rotor * 0.95, 2 * r2 * 0.90), teto)
     # recuar: a face de tras do caracol fica NO eixo da descarga, que e onde o
     # flange do motor aparafusa. E o caso da monobloco, e e o que faz o
     # comprimento total fechar em a + l.
@@ -2365,7 +2374,11 @@ def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, recuar=False):
     xd = c
 
     el = list(placa(0, dn1, lado="entrada"))
-    el += eixo(0, x0, dn1)
+    # A SUCCAO abre em sino para dentro do caracol, e nao entra como tubo reto:
+    # e fundicao, e a boca cresce do furo do flange ate a tampa do caracol.
+    boca = min(rv * 0.62, r1 * 1.7)
+    el += [_polilinha([(0, -r1), (x0 * 0.42, -r1), (x0, -boca)]),
+           _polilinha([(0, r1), (x0 * 0.42, r1), (x0, boca)])]
     # O caracol e ARREDONDADO, como a casa pediu: peca fundida, e onde o rotor
     # gira o corpo acompanha o circulo dele. De canto isso e uma capsula - meio
     # circulo em cima, meio circulo embaixo - e nao uma caixa de quinas vivas.
@@ -2383,9 +2396,18 @@ def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, recuar=False):
     # largura axial: vista de lado a boca E mais larga que o caracol, e o
     # pescoco fecha nele. Duas verticais diziam que os dois tinham a mesma
     # largura, o que nao e verdade em bitola nenhuma.
-    el += [_polilinha([(xd - r2, -a), (x0, -rv * 0.72)]),
-           _polilinha([(xd + r2, -a), (x1, -rv * 0.72)])]
+    # o pescoco morre no TOPO do caracol, nao dentro dele: com o caracol na
+    # altura certa, terminar em 0,72 rv punha a parede do pescoco atravessando
+    # a propria peca que ela alimenta
+    el += [_polilinha([(xd - r2, -a), (x0 + largura * 0.10, -rv * 0.92)]),
+           _polilinha([(xd + r2, -a), (x1 - largura * 0.10, -rv * 0.92)])]
     el += placa(xd, dn2, y=-a, direcao=-90, lado="saida")
+    # a junta aparafusada entre o caracol e o flange do motor: e ela que faz a
+    # monobloco ser monobloco, e no desenho do fabricante ela aparece
+    el.append({"tipo": "rect", "x": x1 - largura * 0.09, "y": -rv * 0.86,
+               "w": largura * 0.09, "h": rv * 1.72, "classe": "flange"})
+    el += parafusos_de_tampa(x1 - largura * 0.045, x1 - largura * 0.045,
+                             -rv * 0.86, largura * 0.09)
     if dreno:
         # o bujao de dreno, no ponto baixo do caracol
         el.append({"tipo": "rect", "x": xd - largura * 0.10, "y": rv,
@@ -2399,6 +2421,18 @@ def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, recuar=False):
     el.append(_seta(x0 + largura * 0.30, 0, 0, min(r1 * 0.38,
                                                    largura * 0.22)))
     el.append(_seta(xd, -(rv + a) / 2, -90, r2 * 0.42))
+    # O PE DO CARACOL desce ABERTO ate a base - e fundicao, e alarga para
+    # apoiar. No desenho do fabricante ele e a peca que segura a bomba, e um
+    # retangulo estreito nao diz isso.
+    if pe_base is not None and pe_base > rv:
+        topo_pe = rv * 0.94
+        el.append(_polilinha([(x0 + largura * 0.30, topo_pe),
+                              (x0 + largura * 0.12, pe_base),
+                              (x1 - largura * 0.12, pe_base),
+                              (x1 - largura * 0.30, topo_pe)]))
+        el.append({"tipo": "rect", "x": x0 + largura * 0.06, "y": pe_base,
+                   "w": largura * 0.88, "h": max(rv * 0.05, 8.0),
+                   "classe": "corpo"})
     return el, x0, x1, rv, largura, xd
 
 
@@ -2507,7 +2541,7 @@ def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4, cv=None):
     rotor = float(ficha["tamanho"].split("-")[2].split(".")[0])
 
     el, x0, x1, rv, largura, xd = _corpo_bomba(a, b, c, rotor, dn1, dn2,
-                                           recuar=True)
+                                               recuar=True, pe_base=b - 22)
     # monobloco nao tem lanterna: o flange do motor aparafusa na tampa de tras
     # da voluta, e o eixo do motor E o eixo da bomba. O comprimento total sai
     # de a + l, e e isso que o DXF da casa mede - 951 contra 949,7 na
@@ -2523,8 +2557,6 @@ def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4, cv=None):
                         f'{float(ficha["cv"]):g} CV'})
     # o pe da voluta e a base, no nivel que b manda. Os pes do motor ja vem
     # do proprio motor, na altura da carcaca
-    el.append({"tipo": "rect", "x": x0 + largura * 0.2, "y": rv,
-               "w": largura * 0.6, "h": b - rv - 22, "classe": "corpo"})
     el.append({"tipo": "rect", "x": x0, "y": b - 22, "w": fim - x0 + 20,
                "h": 22, "classe": "corpo"})
     el.append(_p(f"M-70 0 H{fim+40:.0f}", "centro"))
@@ -2606,14 +2638,26 @@ def bomba_meganorm(nome, cv=None, montagem="HORIZONTAL"):
         # sem a secao 15 nao ha carcaca listada: cai na que a potencia pede
         carcaca = float(carcaca_do_motor(cv or 50))
 
-    el, x0, x1, rv, largura, xd = _corpo_bomba(a, b, c, rotor, dn1, dn2)
+    el, x0, x1, rv, largura, xd = _corpo_bomba(a, b, c, rotor, dn1, dn2,
+                                               pe_base=b - 24)
     # o mancal: do fim da voluta ate o f do folheto, escalonado
     fim_mancal = c + f
     caixa_mancal = max(fim_mancal - x1, largura * 0.4)
-    el.append({"tipo": "rect", "x": x1, "y": -rv * 0.42,
-               "w": caixa_mancal * 0.26, "h": 2 * rv * 0.42, "classe": "corpo"})
-    el.append({"tipo": "rect", "x": x1 + caixa_mancal * 0.26, "y": -rv * 0.32,
-               "w": caixa_mancal * 0.74, "h": 2 * rv * 0.32, "classe": "corpo"})
+    # O MANCAL tem corpo: no desenho do fabricante e uma fundicao cheia, alta
+    # junto do caracol e descendo em rampa ate a ponta do eixo - nao um tubo
+    # escalonado. E ele que carrega o rotor em voadico, e a massa dele e o que
+    # se ve de lado.
+    alto, baixo_m = rv * 0.60, rv * 0.42
+    rampa = [(x1, -alto), (x1 + caixa_mancal * 0.34, -alto),
+             (x1 + caixa_mancal * 0.56, -baixo_m), (fim_mancal, -baixo_m)]
+    el.append(_polilinha(rampa))
+    el.append(_polilinha([(x, -y) for x, y in rampa]))
+    el.append(_p(f"M{fim_mancal:.1f} {-baixo_m:.1f} V{baixo_m:.1f}"))
+    # a junta aparafusada com o caracol, e a tampa do rolamento na outra ponta
+    el.append(_p(f"M{x1 + caixa_mancal*0.09:.1f} {-alto:.1f} V{alto:.1f}",
+                 "malha"))
+    el.append(_p(f"M{fim_mancal - caixa_mancal*0.10:.1f} {-baixo_m:.1f} "
+                 f"V{baixo_m:.1f}", "malha"))
     # o pe: a folha cota w do eixo da descarga ate ele, e m1 entre os furos.
     # w + v = f em 43 dos 43 tamanhos, entao os dois partem o f a partir do
     # eixo da descarga - e por isso da para posicionar o pe sem inventar.
@@ -2624,8 +2668,8 @@ def bomba_meganorm(nome, cv=None, montagem="HORIZONTAL"):
     x_pe = c + w
     el.append({"tipo": "rect", "x": x_pe - m1 / 2 - s1, "y": b - 24 - g2,
                "w": m1 + 2 * s1, "h": g2, "classe": "corpo"})
-    el.append({"tipo": "rect", "x": x_pe - m1 * 0.34, "y": rv * 0.32,
-               "w": m1 * 0.68, "h": b - 24 - g2 - rv * 0.32, "classe": "corpo"})
+    el.append({"tipo": "rect", "x": x_pe - m1 * 0.34, "y": baixo_m,
+               "w": m1 * 0.68, "h": b - 24 - g2 - baixo_m, "classe": "corpo"})
     for sinal in (-1, 1):
         xf = x_pe + sinal * m1 / 2
         el.append(_p(f"M{xf:.1f} {b-24-g2:.1f} v{g2:.1f}", "furo"))
@@ -2641,10 +2685,25 @@ def bomba_meganorm(nome, cv=None, montagem="HORIZONTAL"):
     # 100 CV mede 1799,5 e a soma da 1820 - 1,1% de diferenca, com todo termo
     # saindo de folha.
     folga = comp_ponta * 1.15
-    el += [_p(f"M{x_luva:.1f} {-rv*0.44:.1f} H{x_luva+folga:.1f}", "malha"),
-           _p(f"M{x_luva:.1f} {rv*0.44:.1f} H{x_luva+folga:.1f}", "malha"),
-           _p(f"M{x_luva:.1f} {-rv*0.44:.1f} V{-rv*0.14:.1f}", "malha"),
-           _p(f"M{x_luva+folga:.1f} {-rv*0.44:.1f} V{-rv*0.14:.1f}", "malha")]
+    # O ACOPLAMENTO e um barrilete gordo entre as duas pontas de eixo, com as
+    # duas metades e a folga entre elas. No desenho do fabricante ele e a peca
+    # mais cheia do vao; desenhado como tubinho, o vao entre bomba e motor
+    # ficava vazio e a maquina parecia partida em duas.
+    r_acopla = d1 * 0.95
+    l_acopla = folga * 0.62
+    x_acopla = x_luva + (folga - l_acopla) / 2
+    el.append({"tipo": "rect", "x": x_acopla, "y": -r_acopla,
+               "w": l_acopla, "h": 2 * r_acopla, "classe": "corpo"})
+    el.append(_p(f"M{x_acopla + l_acopla/2:.1f} {-r_acopla:.1f} "
+                 f"V{r_acopla:.1f}", "junta"))
+    for lado in (0, l_acopla):
+        el.append(_p(f"M{x_acopla + lado:.1f} {-r_acopla*0.62:.1f} "
+                     f"V{r_acopla*0.62:.1f}", "malha"))
+    # a protecao aberta em volta dele
+    el += [_p(f"M{x_luva:.1f} {-rv*0.50:.1f} H{x_luva+folga:.1f}", "malha"),
+           _p(f"M{x_luva:.1f} {rv*0.50:.1f} H{x_luva+folga:.1f}", "malha"),
+           _p(f"M{x_luva:.1f} {-rv*0.50:.1f} V{-rv*0.20:.1f}", "malha"),
+           _p(f"M{x_luva+folga:.1f} {-rv*0.50:.1f} V{-rv*0.20:.1f}", "malha")]
     # o motor: a carcaca sai do folheto, o comprimento e proporcao dela
     x_motor = x_luva + folga
     nome_carcaca = (linha_conjunto or {}).get("carcaca_motor") or f"{carcaca:g}"
