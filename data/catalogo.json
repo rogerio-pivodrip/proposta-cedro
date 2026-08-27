@@ -37238,7 +37238,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "FLUTUADOR",
   "material": "PEAD",
   "dn": [
    3.0
@@ -37251,7 +37251,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "01541-000004",
@@ -37259,7 +37259,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "FLUTUADOR",
   "material": "PEAD",
   "dn": [
    4.0
@@ -37272,7 +37272,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "01541-000005",
@@ -37280,7 +37280,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "FLUTUADOR",
   "material": "PEAD",
   "dn": [
    6.0
@@ -37293,7 +37293,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "01541-000006",
@@ -37301,7 +37301,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "FLUTUADOR",
   "material": "PEAD",
   "dn": [
    8.0
@@ -37314,7 +37314,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "01541-000007",
@@ -37322,7 +37322,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "FLUTUADOR",
   "material": "PEAD",
   "dn": [
    10.0
@@ -37335,7 +37335,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "01541-000008",
@@ -37343,7 +37343,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "FLUTUADOR",
   "material": "PEAD",
   "dn": [
    10.0
@@ -37356,7 +37356,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "01541-000009",
@@ -37364,7 +37364,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "FLUTUADOR",
   "material": "PEAD",
   "dn": [
    12.0
@@ -37377,7 +37377,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "01541-000010",
@@ -37385,7 +37385,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "FLUTUADOR",
   "material": "PEAD",
   "dn": [
    14.0
@@ -37398,7 +37398,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "01541-000011",
@@ -40592,7 +40592,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "FLUTUADOR",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -40603,7 +40603,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000116",
@@ -40611,7 +40611,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "FLUTUADOR",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -40622,7 +40622,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000117",
@@ -40630,7 +40630,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "FLUTUADOR",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -40641,7 +40641,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000118",
@@ -40670,7 +40670,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "FLUTUADOR",
   "material": "PEAD",
   "dn": [
    16.0
@@ -40683,7 +40683,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.43
+  "confianca": 0.71
  },
  {
   "sap": "01542-000120",
@@ -40731,7 +40731,7 @@
   "un": "UN",
   "grupo": "OUTROS",
   "procedencia": "NACIONAL",
-  "familia": null,
+  "familia": "FLUTUADOR",
   "material": null,
   "dn": [],
   "unidade_dn": null,
@@ -40742,7 +40742,7 @@
   "derivacoes": [],
   "manifold": null,
   "saida_pol": null,
-  "confianca": 0.0
+  "confianca": 0.29
  },
  {
   "sap": "01542-000123",

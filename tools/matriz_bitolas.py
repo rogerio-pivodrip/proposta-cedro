@@ -38,7 +38,8 @@ LINHAS = [
     ("junta plana", "JUNTA_PLANA", {}),
     ("manifold", "MANIFOLD", {}),
     ("medidor", "MEDIDOR", {}),
-    ("articulador", "ARTICULADOR", {}),
+    ("articulador 30", "ARTICULADOR", {}),
+    ("flutuador PEAD", "FLUTUADOR", {}),
 ]
 
 

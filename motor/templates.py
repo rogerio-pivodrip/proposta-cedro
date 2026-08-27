@@ -9,6 +9,10 @@ A succao da casa segue sempre a mesma ordem:
 
 A curva e opcional e a reducao sai da bomba: concentrica ou excentrica conforme
 a orientacao, e sempre no DN do bocal de entrada.
+
+Na succao com flutuante entra o ARTICULADOR de 30 graus, que e o eixo em que a
+tomada gira quando o nivel da agua sobe e desce. O manual recomenda flutuante
+para agua de baixa qualidade.
 """
 from .bomba import (HORIZONTAL, MM_PARA_POLEGADA, entrada_presumida,
                     interpretar, tipo_reducao_succao)
@@ -27,13 +31,19 @@ def _melhor(catalogo, familia, dn, **extra):
 
 
 def succao(catalogo, dn_linha, modelo_bomba=None, orientacao=HORIZONTAL,
-           curva=None, area="P01"):
-    """Monta a succao padrao. curva = None, 45 ou 90."""
+           curva=None, area="P01", flutuante=False):
+    """Monta a succao padrao. curva = None, 45 ou 90.
+
+    flutuante=True insere o articulador de 30 graus logo depois da tomada: e
+    nele que a succao gira acompanhando o nivel da agua.
+    """
     linha = Linha(catalogo, tipo="SUCCAO", area=area)
     faltando = []
 
-    receita = [("CRIVO", {}), ("VALVULA_RETENCAO", {}),
-               ("TUBO", {"comprimento_mm": 1000})]
+    receita = [("CRIVO", {}), ("VALVULA_RETENCAO", {})]
+    if flutuante:
+        receita.append(("ARTICULADOR", {}))
+    receita.append(("TUBO", {"comprimento_mm": 1000}))
     if curva:
         receita.append(("CURVA", {"angulo": curva}))
 
@@ -107,3 +117,17 @@ def trecho_pead(catalogo, dn_pol, tubos=TUBOS_PEAD_PADRAO):
 
 def _dn_pead_em_mm(dn_pol):
     return POLEGADA_MM.get(dn_pol)
+
+
+# --------------------------------------------------------------------------
+# Succao com flutuante
+# --------------------------------------------------------------------------
+def flutuadores(catalogo, dn_pol, tubos_pead):
+    """Flutuador bipartido, um conjunto por tubo de PEAD boiando.
+
+    Quantos por tubo ainda nao foi definido - devolve um por tubo e avisa.
+    """
+    item = catalogo.melhor("FLUTUADOR", dn_pol, material=None)
+    if not item:
+        return [], [("FLUTUADOR", dn_pol, {})]
+    return [(item, tubos_pead)], []

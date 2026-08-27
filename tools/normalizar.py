@@ -39,6 +39,7 @@ FAMILIAS = [
     (r"^FLANGE\b|^FL\b|^FL\.", "FLANGE", None),
     (r"^CRIVO\b|^JACOBUCCI\s?CRIVO", "CRIVO", None),
     (r"^ARTICULADOR\b", "ARTICULADOR", None),
+    (r"^FLUTUADOR\b|^FLUTUANTE\b", "FLUTUADOR", None),
     (r"^UNIAO\b", "UNIAO", None),
     (r"^LUVA\b", "LUVA", None),
     (r"^CAP\b|^TAMPAO\b", "CAP", None),
