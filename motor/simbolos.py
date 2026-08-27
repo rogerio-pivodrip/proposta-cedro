@@ -564,6 +564,41 @@ def ficha_crivo(dn_pol):
     return _crivos.get(float(dn_pol))
 
 
+def chapa_perfurada(x0, x1, meia_altura, ficha=None, limite=2600):
+    """Os furos da chapa perfurada, em quincuncio - o mesmo gerador para o
+    crivo AZ e para o cesto da valvula de pe.
+
+    E a mesma chapa na obra, entao tem de ser a mesma no desenho: a casa viu os
+    dois lado a lado na folha e o furo de um estava no dobro do outro. Sair de
+    uma funcao so e o que garante que nao volte a divergir.
+
+    A furacao vai desenhada em DOBRO, furo e passo juntos, para a proporcao
+    entre chapa e vazio nao mudar - o furo de 6 mm no tamanho real e um ponto.
+    Devolve (furos, furo_real, passo_real) para quem chama escrever a nota.
+    """
+    ficha = ficha or {}
+    margem = float(ficha.get("margem_mm") or 10.0)
+    passo_livre = float(ficha.get("passo_mm") or 3.0)
+    furo = float(ficha.get("furo_mm") or 6.0)
+    amplia = 2.0
+    furo_visto = furo * amplia
+    passo_visto = (furo + passo_livre) * amplia
+
+    colunas = int((x1 - x0) / passo_visto)
+    fileiras = int((2 * meia_altura - 2 * margem) / passo_visto)
+    mostradas = min(colunas, max(1, limite // max(fileiras, 1)))
+    furos = []
+    for i in range(mostradas):
+        x = x0 + furo_visto / 2 + passo_visto * i
+        for j in range(fileiras):
+            y = (-meia_altura + margem + furo_visto / 2 + passo_visto * j
+                 + (passo_visto / 2 if i % 2 else 0))
+            if abs(y) < meia_altura - margem:
+                furos.append({"tipo": "circulo", "cx": x, "cy": y,
+                              "r": furo_visto / 2, "classe": "malha"})
+    return furos, furo, passo_livre
+
+
 def crivo(dn_pol, variante=""):
     """Cesto de chapa perfurada: furo de 6 mm a cada 3, fundo fechado.
 
@@ -574,9 +609,9 @@ def crivo(dn_pol, variante=""):
 
     A furacao vai desenhada em DOBRO - furo e passo juntos, para a proporcao
     entre chapa e vazio nao mudar. No tamanho real o furo de 6 mm num cesto de
-    368 e um ponto, e a casa pediu para se ver o que e. A cota de verdade vai
-    na nota, que por isso sai sempre e nao so quando o desenho corta a
-    contagem: e o unico lugar onde o 6 mm aparece.
+    368 e um ponto, e a casa pediu para se ver o que e. A cota nao vai escrita
+    no desenho: ela mora na folha (data/crivos_netafim.csv), e quem precisa
+    dela pede pela ficha.
     """
     ficha = ficha_crivo(dn_pol) or {}
     comp, fonte = _cota("CRIVO", dn_pol, variante, "comprimento_mm")
@@ -604,29 +639,14 @@ def crivo(dn_pol, variante=""):
           {"tipo": "rect", "x": 0, "y": -r, "w": parede * 2, "h": 2 * r,
            "classe": "chapa_lisa"}]
 
-    # a malha, em quincuncio, comecando depois da margem lisa e parando antes
-    # dela do outro lado. Corta no meio do cesto quando a contagem explode.
+    # a malha, em quincuncio, comecando depois da margem lisa e parando perto
+    # da flange - o gerador e o mesmo da valvula de pe
     inicio = margem + parede * 2
     fim = comp - margem
-    colunas = int((fim - inicio) / passo_visto)
-    fileiras = int((2 * r - 2 * margem) / passo_visto)
-    # a malha vai ate perto da flange, como a casa pediu: o corte por contagem
-    # so entra se o cesto for grande demais para caber em desenho
-    limite = 2600
-    mostradas = min(colunas, max(1, limite // max(fileiras, 1)))
-    for i in range(mostradas):
-        x = inicio + furo_visto / 2 + passo_visto * i
-        for j in range(fileiras):
-            yy = (-r + margem + furo_visto / 2 + passo_visto * j
-                  + (passo_visto / 2 if i % 2 else 0))
-            if abs(yy) < r - margem:
-                el.append({"tipo": "circulo", "cx": x, "cy": yy,
-                           "r": furo_visto / 2, "classe": "malha"})
-    # A nota da furacao vai SEMPRE, e nao so quando o desenho corta a
-    # contagem: e ela que carrega a cota de verdade, e agora que o furo esta
-    # desenhado em dobro ela e o unico lugar onde o 6 mm aparece.
-    el.append({"tipo": "nota", "x": (inicio + fim) / 2, "y": -r * 0.62,
-               "texto": f"furo {furo:g} c/ {passo_livre:g}"})
+    el += chapa_perfurada(inicio, fim, r, ficha)[0]
+    # A cota da furacao NAO vai escrita no desenho: a casa tirou. Ela continua
+    # onde sempre esteve - em data/crivos_netafim.csv, que e a folha - e quem
+    # precisa dela pede pela ficha, nao le do desenho.
 
     el += placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-40 0 H{comp+60:.0f}", "centro"))
@@ -2125,21 +2145,18 @@ def valvula_pe(dn_pol):
                  f"L{corpo*0.34:.1f} {r*0.62:.1f}", "obturador"))
     el.append(_p(f"M{corpo*0.78:.1f} 0 H{corpo:.1f}", "haste"))
     # cesto perfurado embaixo, com a chapa lisa no fundo
+    parede_cesto = max(r * 0.05, 4.0)
     el += [_p(f"M{-cesto:.1f} {-r*0.95:.1f} H0"),
            _p(f"M{-cesto:.1f} {r*0.95:.1f} H0"),
            # V do SVG e absoluto: sair de -r*0.95 e ir para r*1.9 descia o
            # dobro e a chapa sobrava embaixo da peca. O fim e r*0.95
            _p(f"M{-cesto:.1f} {-r*0.95:.1f} V{r*0.95:.1f}", "chapa_lisa")]
-    # a furacao em dobro, como no crivo AZ: o furo real e um ponto no desenho,
-    # e o cesto da valvula de pe e a mesma chapa perfurada
-    passo = max(18.0, cesto / 7)
-    for i in range(int((cesto - passo) / passo)):
-        x = -cesto + passo * (i + 1)
-        for j in range(int((1.9 * r - passo) / passo)):
-            yy = -r * 0.95 + passo * (j + 1) + (passo / 2 if i % 2 else 0)
-            if abs(yy) < r * 0.95 - passo / 3:
-                el.append({"tipo": "circulo", "cx": x, "cy": yy,
-                           "r": passo / 3, "classe": "malha"})
+    # A furacao sai do MESMO gerador do crivo AZ, com a MESMA ficha: e a mesma
+    # chapa perfurada na obra, e a casa viu os dois lado a lado na folha com o
+    # furo de um no dobro do outro. Passar pela ficha do crivo da bitola
+    # garante que o furo e o passo sejam iguais nos dois desenhos.
+    el += chapa_perfurada(-cesto + parede_cesto, 0.0, r * 0.95,
+                          ficha_crivo(dn_pol))[0]
     el += placa(corpo, dn_pol, lado="saida")
     el.append(_p(f"M{-cesto-40:.0f} 0 H{corpo+60:.0f}", "centro"))
     portas = [Porta("saida", corpo, 0, 0, dn_pol)]
@@ -2325,32 +2342,44 @@ def _corpo_bomba(a, b, c, rotor, dn1, dn2, dreno=True, recuar=False):
     # comprimento total fechar em a + l.
     x0, x1 = ((c - largura, c) if recuar
               else (c - largura / 2, c + largura / 2))
+    # A BOCA DA DESCARGA fica sobre a voluta, no meio dela - nao em c. Na
+    # monobloco a voluta e recuada para a face de tras dela cair em c, que e
+    # onde o flange do motor aparafusa; deixar a boca em c punha o pescoco
+    # pendurado na quina de tras do caracol, com uma parede quase vertical e a
+    # outra atravessando o motor. O rotor gira no mesmo plano da boca.
+    xd = (x0 + x1) / 2
 
     el = list(placa(0, dn1, lado="entrada"))
     el += eixo(0, x0, dn1)
-    el += [_p(f"M{x0:.1f} {-rv:.1f} H{x1:.1f}"),
-           _p(f"M{x0:.1f} {rv:.1f} H{x1:.1f}"),
-           _p(f"M{x0:.1f} {-rv:.1f} V{-r1:.1f}"),
-           _p(f"M{x0:.1f} {r1:.1f} V{rv:.1f}"),
-           _p(f"M{x1:.1f} {-rv:.1f} V{rv:.1f}"),
-           # a junta entre a tampa de succao e o corpo do caracol
-           _p(f"M{x0 + largura*0.28:.1f} {-rv:.1f} V{rv:.1f}", "malha")]
+    # O caracol e ARREDONDADO, como a casa pediu: peca fundida, e onde o rotor
+    # gira o corpo acompanha o circulo dele. De canto isso e uma capsula - meio
+    # circulo em cima, meio circulo embaixo - e nao uma caixa de quinas vivas.
+    el.append({"tipo": "rect", "x": x0, "y": -rv, "w": largura, "h": 2 * rv,
+               "rx": largura * 0.5, "classe": "corpo"})
+    # a junta entre a tampa de succao e o corpo do caracol
+    el.append(_p(f"M{x0 + largura*0.28:.1f} {-rv*0.92:.1f} V{rv*0.92:.1f}",
+                 "malha"))
     # o rotor: o segundo numero do nome e o diametro nominal dele. De lado o
     # rotor e um disco de canto - uma linha, nao um circulo. O circulo so
     # aparece na vista que olha pelo eixo, que nao e esta.
-    el.append(_p(f"M{c:.1f} {-rotor/2:.1f} V{rotor/2:.1f}", "centro"))
-    el += [_p(f"M{c-r2:.1f} {-a:.1f} V{-rv:.1f}"),
-           _p(f"M{c+r2:.1f} {-a:.1f} V{-rv:.1f}")]
-    el += placa(c, dn2, y=-a, direcao=-90, lado="saida")
+    el.append(_p(f"M{xd:.1f} {-rotor/2:.1f} V{rotor/2:.1f}", "centro"))
+    # O pescoco da descarga AFUNILA da flange para o caracol, e nao desce em
+    # duas paredes retas. A boca de 6" tem 152 mm de furo e o caracol tem 84 de
+    # largura axial: vista de lado a boca E mais larga que o caracol, e o
+    # pescoco fecha nele. Duas verticais diziam que os dois tinham a mesma
+    # largura, o que nao e verdade em bitola nenhuma.
+    el += [_polilinha([(xd - r2, -a), (x0, -rv * 0.72)]),
+           _polilinha([(xd + r2, -a), (x1, -rv * 0.72)])]
+    el += placa(xd, dn2, y=-a, direcao=-90, lado="saida")
     if dreno:
         # o bujao de dreno, no ponto baixo do caracol
-        el.append({"tipo": "rect", "x": c - largura * 0.10, "y": rv,
+        el.append({"tipo": "rect", "x": xd - largura * 0.10, "y": rv,
                    "w": largura * 0.20, "h": rv * 0.10, "classe": "corpo"})
     # o sentido do fluxo: entra pelo eixo, sai por cima. E a informacao que
     # decide de que lado a reducao excentrica leva o lado plano.
     el.append(_seta(x0 * 0.45, 0, 0, r1 * 0.42))
-    el.append(_seta(c, -(rv + a) / 2, -90, r2 * 0.42))
-    return el, x0, x1, rv, largura
+    el.append(_seta(xd, -(rv + a) / 2, -90, r2 * 0.42))
+    return el, x0, x1, rv, largura, xd
 
 
 def _seta(x, y, direcao, tamanho):
@@ -2457,7 +2486,7 @@ def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4, cv=None):
     dn2 = _pol(ficha["dn_recalque_pol"])
     rotor = float(ficha["tamanho"].split("-")[2].split(".")[0])
 
-    el, x0, x1, rv, largura = _corpo_bomba(a, b, c, rotor, dn1, dn2,
+    el, x0, x1, rv, largura, xd = _corpo_bomba(a, b, c, rotor, dn1, dn2,
                                            recuar=True)
     # monobloco nao tem lanterna: o flange do motor aparafusa na tampa de tras
     # da voluta, e o eixo do motor E o eixo da bomba. O comprimento total sai
@@ -2479,11 +2508,11 @@ def bomba_megabloc(tamanho, montagem="HORIZONTAL", polos=4, cv=None):
     el.append({"tipo": "rect", "x": x0, "y": b - 22, "w": fim - x0 + 20,
                "h": 22, "classe": "corpo"})
     el.append(_p(f"M-70 0 H{fim+40:.0f}", "centro"))
-    el.append(_p(f"M{c:.1f} {-a-40:.1f} V{rv+30:.1f}", "centro"))
+    el.append(_p(f"M{xd:.1f} {-a-40:.1f} V{rv+30:.1f}", "centro"))
     el += _letras_bomba(a, b, c, rv, x0, x_direita=x1 + h * 0.30)
 
     portas = [Porta("entrada", 0, 0, 180, dn1),
-              Porta("saida", c, -a, -90, dn2)]
+              Porta("saida", xd, -a, -90, dn2)]
     nome = ficha["tamanho_folheto"]
     simbolo = _montar("BOMBA", f'KSB Megabloc {nome} {dn1:g}"×{dn2:g}"',
                       el, portas, "KSB",
@@ -2557,7 +2586,7 @@ def bomba_meganorm(nome, cv=None, montagem="HORIZONTAL"):
         # sem a secao 15 nao ha carcaca listada: cai na que a potencia pede
         carcaca = float(carcaca_do_motor(cv or 50))
 
-    el, x0, x1, rv, largura = _corpo_bomba(a, b, c, rotor, dn1, dn2)
+    el, x0, x1, rv, largura, xd = _corpo_bomba(a, b, c, rotor, dn1, dn2)
     # o mancal: do fim da voluta ate o f do folheto, escalonado
     fim_mancal = c + f
     caixa_mancal = max(fim_mancal - x1, largura * 0.4)
@@ -2611,14 +2640,14 @@ def bomba_meganorm(nome, cv=None, montagem="HORIZONTAL"):
     el.append({"tipo": "rect", "x": x0 - 30, "y": b - 24,
                "w": fim - x0 + 70, "h": 24, "classe": "corpo"})
     el.append(_p(f"M-70 0 H{fim+60:.0f}", "centro"))
-    el.append(_p(f"M{c:.1f} {-a-40:.1f} V{rv+30:.1f}", "centro"))
+    el.append(_p(f"M{xd:.1f} {-a-40:.1f} V{rv+30:.1f}", "centro"))
     el += _letras_bomba(a, b, c, rv, x0, letras=("h2", "h1", "a"),
                         x_direita=x1 + caixa_mancal * 0.22)
     el.append({"tipo": "nota", "x": (c + fim_mancal) / 2, "y": -rv * 0.72,
                "texto": f"f {f:.0f}"})
 
     portas = [Porta("entrada", 0, 0, 180, dn1),
-              Porta("saida", c, -a, -90, dn2)]
+              Porta("saida", xd, -a, -90, dn2)]
     fonte = "KSB" if not proporcao else "KSB (motor proporcao)"
     rotulo = f'KSB Meganorm {tamanho} {dn1:g}"×{dn2:g}"'
     simbolo = _montar("BOMBA", rotulo, el, portas, fonte,

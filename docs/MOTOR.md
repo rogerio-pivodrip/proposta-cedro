@@ -1118,6 +1118,51 @@ desta família — `H`/`V` lidos como par (4.4), Bézier reduzida à ponta (4.8)
 agora `V` absoluto usado como relativo. Todos no mesmo lugar: a fronteira entre
 o que se escreve no path e o que se acredita que ele desenha.
 
+## 4.11 O corpo da bomba, e a mesma chapa em dois desenhos
+
+Mais três apontamentos, e o do caracol abriu uma incoerência que estava no
+código desde o começo.
+
+**O caracol é arredondado.** É peça fundida, e onde o rotor gira o corpo
+acompanha o círculo dele. De canto isso é uma cápsula — meio círculo em cima,
+meio embaixo — e não uma caixa de quinas vivas.
+
+**O pescoço da descarga afunila.** A boca de 6" tem 152 mm de furo e o caracol
+tem 84 de largura axial: vista de lado a boca **é mais larga** que o caracol, e
+o pescoço fecha nele. Duas paredes verticais diziam que os dois tinham a mesma
+largura, o que não é verdade em bitola nenhuma.
+
+### A incoerência que isso revelou
+
+Desenhado o pescoço afunilando, ele saiu torto: uma parede quase vertical e a
+outra atravessando o motor. A causa estava no `recuar` da monobloco.
+
+A monobloco recua o caracol para a face de trás dele cair em `c` — é o que faz
+o comprimento total fechar em `a + l`, e foi assim que a 4.3 bateu com o DXF da
+casa. Mas eu deixei a **boca** em `c` também. As duas coisas não podem estar
+no mesmo lugar: `c` é onde o flange do motor aparafusa, e a boca fica *sobre* o
+caracol, no meio dele. Com a boca em `c` o pescoço ficava pendurado na quina de
+trás.
+
+Agora a boca, o rotor, o dreno, a seta de fluxo, o eixo da descarga e a porta
+de saída saem todos de `xd = (x0 + x1) / 2`. Com duas paredes verticais isso
+nunca apareceu — a geometria errada estava escondida atrás de um traço que não
+a exercitava.
+
+O custo é honesto e está no relatório: contra o bloco da casa a largura da METB
+foi de +4,1% para **+5,9%**, porque a flange da descarga agora avança 4,5 mm
+além da face de sucção. Isso é o que a geometria dá quando a boca está no lugar
+certo; o bloco da casa é desenho de projeto, e aqui quem manda é a folha.
+
+**Os furos da válvula de pé iguais aos do crivo.** É a mesma chapa perfurada na
+obra, e na folha o furo de uma estava no dobro do da outra. Agora as duas saem
+de `chapa_perfurada()`, com a **mesma ficha** — a do crivo daquela bitola. Sair
+de uma função só é o que garante que não volte a divergir.
+
+E a cota `furo 6 c/ 3` saiu do desenho a pedido da casa. Ela continua onde
+sempre esteve — em `data/crivos_netafim.csv`, que é a folha — e quem precisa
+dela pede pela ficha em vez de ler do desenho.
+
 ## 5. O que a peça puxa: um mecanismo só
 
 Hoje as derivações estão em quatro lugares diferentes. São todas o mesmo padrão
