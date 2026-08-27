@@ -760,20 +760,49 @@ junta plana e ferragem. O motor hoje puxa só a contra-flange.
 o 47-14" faltando, agora em escala — e a marcação `CADASTRAR` é da própria
 Netafim, não minha inferência.
 
+### As que faltam cadastrar são necessárias?
+
+Quase nenhuma. Das **55** posições `CADASTRAR` entre 3" e 14":
+
+| | |
+|---|---|
+| **4** são padrão da casa — `FL NBR7675 PN16` nas duas pontas | **faltam mesmo** |
+| 31 têm uma ponta em rosca BSP | derivação, não peça de linha |
+| 7 são `EN 1092` e 7 são BSP puro | norma de equipamento importado |
+| 3 têm ponta lisa e 3 são K10 | não é o padrão da casa de máquinas |
+
+Ou seja: **51 das 55 são variantes** que a casa não usa ou só usa na transição
+com equipamento. O trabalho de cadastro real é bem menor do que o número sugere.
+
+### O problema não são as 4 — é a página inteira
+
+As 4 estão todas na **página 32**, e ali o buraco é outro: **nenhum dos 9
+códigos que a página cita existe na LM**. A peça é o manifold com derivação
+flangeada, corpo de 1000 mm com a saída a 500 mm.
+
+Na faixa `01528-08xxxx` a LM tem só dois itens, e os dois são **inox**, não aço
+zincado. E o projeto **Thiago Derks usa a peça**: `Te AZ 10" -1000mm`, quantidade 2.
+
+> Peça desenhada, usada em projeto real, sem código de aço zincado na lista.
+> Não é variante exótica — é peça de linha.
+
+Outras duas páginas estão na mesma situação: a **18** (curva 45 com uma ponta
+K10, 3 códigos) e a **30** (manifold curto com derivação BSP, 3 códigos e mais
+10 `CADASTRAR`).
+
 Ainda faltam 77 posições cujo código o PDF corta na extração; as páginas estão
 listadas no relatório para conferência à mão.
 
 ## 8. Decisões em aberto
 
-1. **Engate K10: o manual diz que é usado.** *"Para as tubulações adutoras, são
-   empregados tubos AZ com acoplamento K10"* — e vocês me disseram que não usam.
-   Entendo que a diferença é o trecho: K10 na adutora, flange na casa de
-   máquinas. O motor hoje recusa K em qualquer lugar. Confirma?
-2. **O kit da flange PVC leva junta e ferragem**, segundo o manual. Hoje o motor
+1. **A página 32 do caderno não tem nenhum código na LM** — manifold com
+   derivação flangeada, 1000 × 500 mm. O projeto Thiago Derks usa
+   (`Te AZ 10" -1000mm` ×2). Como isso é comprado hoje?
+2. **Engate K10: o manual diz que é usado** nas adutoras, e vocês disseram que
+   não usam. A diferença é o trecho — K10 na adutora, flange na casa de
+   máquinas? O motor hoje recusa K em qualquer lugar.
+3. **O kit da flange PVC leva junta e ferragem**, segundo o manual. Hoje o motor
    puxa só a contra-flange.
-3. **32 códigos do caderno de desenhos não estão na LM**, e a Netafim marcou
-   **101 posições como CADASTRAR** — 55 delas entre 3" e 14". Vale abrir com o
-   cadastro?
 4. **Norma do flange de cada família de bomba** (`data/bombas_norma.csv`).
 5. **Por que 3 colares de tomada para 2 ventosas?**
 

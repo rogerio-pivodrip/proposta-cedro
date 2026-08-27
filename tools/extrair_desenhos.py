@@ -14,6 +14,7 @@ import csv
 import re
 import sys
 import types
+import unicodedata
 
 sys.modules.setdefault("cryptography", types.ModuleType("cryptography"))
 from pypdf import PdfReader  # noqa: E402
@@ -21,8 +22,9 @@ from pypdf import PdfReader  # noqa: E402
 PADRAO = "data/fichas/NETAFIM_desenhos_tubos_conexoes_aco_PN16_rev20.pdf"
 RX_LINHA = re.compile(r"^(\d{2,3})\s*\[\s*(\d{1,2})\s*\"\s*\]\s*(.*)$")
 RX_SAP = re.compile(r"\b(\d{5}-\d{6})\b")
-RX_TITULO = re.compile(r"Dimensional padrao p/ construcao de (.+?)(?:\s{2,}|$)",
-                       re.I)
+RX_TITULO = re.compile(
+    r"Dimensional\s+padrao\s+p/\s*construcao\s+d[eo]\s+(.+?)(?:\s{2,}|$)",
+    re.I)
 
 
 # Linha em que a tipografia saiu letra a letra: "1 5 2  [6 " ]  2 5 0".
@@ -46,8 +48,8 @@ def desespacar(linha):
 
 
 def titulo_da_pagina(texto):
-    sem_acento = (texto.replace("ç", "c").replace("ã", "a").replace("ô", "o")
-                  .replace("é", "e").replace("ê", "e").replace("í", "i"))
+    normal = unicodedata.normalize("NFD", texto)
+    sem_acento = "".join(c for c in normal if not unicodedata.combining(c))
     m = RX_TITULO.search(sem_acento)
     if m:
         return " ".join(m.group(1).split())[:70]
