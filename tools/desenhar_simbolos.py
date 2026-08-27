@@ -22,7 +22,9 @@ import sys
 
 sys.path.insert(0, ".")
 from motor import simbolos as s  # noqa: E402
-from motor.svg import ESTILO, desenhar, texto_no_eixo  # noqa: E402,F401
+from motor.svg import (DEFS, ESTILO, cor_de, desenhar,  # noqa: E402,F401
+                       texto_no_eixo)
+from motor.vista import MODOS  # noqa: E402
 
 LARGURA = 320          # px da celula
 DESENHO = 190          # px da area de desenho dentro dela
@@ -394,10 +396,17 @@ def celula(simbolo, altura=DESENHO, minimo=1):
                     if e["tipo"] not in ("texto_furos", "nota"))
     notas = [e for e in simbolo.elementos if e["tipo"] == "nota"]
 
+    # o mesmo grupo `peca` da vista montada, com a mesma librea: a folha e a
+    # linha tem de mostrar a valvula da mesma cor, senao a folha vira uma
+    # segunda opiniao sobre como a peca e
+    cor = cor_de(simbolo)
+    pintura = f' data-cor="{cor}"' if cor else ""
     partes = [f'<svg viewBox="0 0 {largura} {altura}" role="img" '
               f'aria-label="{simbolo.rotulo}">',
               f'<g class="geo" transform="translate({dx:.2f} {dy:.2f}) '
-              f'scale({escala:.5f})">{corpo}</g>', '<g class="anota">']
+              f'scale({escala:.5f})"><g class="peca"{pintura} '
+              f'data-familia="{simbolo.familia}">{corpo}</g></g>',
+              '<g class="anota">']
     # A cota fica dentro da peca, so o texto - e so quando a peca nao escreve
     # a sua propria, como a bomba faz com as letras do folheto.
     medida = cota_escrita(simbolo)
@@ -496,15 +505,21 @@ def main():
     p.add_argument("--dn", type=float, default=8)
     p.add_argument("--fragmento", action="store_true",
                    help="so as <figure>, sem a pagina em volta")
+    p.add_argument("--modo", default="traco", choices=list(MODOS),
+                   help="traco (projeto), pb (para plotar), metal (colorido)")
     args = p.parse_args()
     texto, total = fragmento(args.dn)
     corpo = [texto]
+    # os degrades ficam num <svg> escondido no topo: gradiente tem de morar
+    # dentro de um SVG, e uma vez na pagina serve a todas as celulas
+    defs = f'<svg width="0" height="0" style="position:absolute">{DEFS}</svg>'
     if args.fragmento:
-        print("\n".join(corpo))
+        print(defs + "\n".join(corpo))
     else:
         print(f'<!doctype html><meta charset="utf-8">'
               f'<title>Símbolos {args.dn:g}"</title><style>{ESTILO}</style>'
-              f'<div class="papel"><header><h1>Símbolos paramétricos</h1>'
+              f'{defs}<div class="papel modo-{args.modo}">'
+              f'<header><h1>Símbolos paramétricos</h1>'
               f'<span class="dn">{args.dn:g}"</span>'
               f'<span class="sub">{total} peças · cota do fabricante · '
               f'milímetro real</span></header>{legenda()}'

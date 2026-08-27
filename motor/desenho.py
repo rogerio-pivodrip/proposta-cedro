@@ -361,7 +361,11 @@ def gsd_da_lista(dn_pol):
 def de_item(item):
     """O simbolo do item, ja com o codigo e a descricao nos params."""
     simbolo = _desenhar(item)
-    return simbolo._replace(params={**simbolo.params,
+    # o material vem da LISTA, e nao do desenho: e ela que sabe se aquele
+    # DN225 e PVC ou PEAD. Entra por baixo dos params do simbolo, para nao
+    # apagar o que a peca ja declarou por conta propria
+    return simbolo._replace(params={"material": item["material"],
+                                    **simbolo.params,
                                     "sap": item["sap"],
                                     "descricao": item["descricao"]})
 

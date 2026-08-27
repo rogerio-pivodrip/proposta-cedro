@@ -94,6 +94,16 @@ DEFS = """<defs>
 <stop offset=".36" stop-color="#767e88"/><stop offset=".60" stop-color="#4d545c"/>
 <stop offset=".84" stop-color="#333940"/><stop offset="1" stop-color="#24282e"/>
 </linearGradient>
+<linearGradient id="pvc" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#8f959b"/><stop offset=".2" stop-color="#bdc2c7"/>
+<stop offset=".42" stop-color="#d2d6da"/><stop offset=".68" stop-color="#b4b9be"/>
+<stop offset="1" stop-color="#8a9096"/>
+</linearGradient>
+<linearGradient id="pead" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#1e2125"/><stop offset=".2" stop-color="#3f454b"/>
+<stop offset=".42" stop-color="#525960"/><stop offset=".68" stop-color="#33383e"/>
+<stop offset="1" stop-color="#191c1f"/>
+</linearGradient>
 <linearGradient id="claro" x1="0" y1="0" x2="0" y2="1">
 <stop offset="0" stop-color="#a8b0b8"/><stop offset=".16" stop-color="#dde2e7"/>
 <stop offset=".36" stop-color="#f6f8fa"/><stop offset=".60" stop-color="#e2e6eb"/>
@@ -118,16 +128,23 @@ DEFS = """<defs>
 LIVREA_MARCA = {"KSB": "azul_medio", "EBARA": "claro"}
 LIVREA_FAMILIA = {"VALVULA_RETENCAO": "azul", "VALVULA_BORBOLETA": "azul",
                   "VALVULA_HIDRAULICA": "azul", "VALVULA_GAVETA": "escuro"}
+# plastico nao brilha como aco: o PVC sai cinza fosco e o PEAD, preto
+LIVREA_MATERIAL = {"PVC": "pvc", "PEAD": "pead"}
 
 
 def cor_de(simbolo):
     """A cor da peca no modo metalizado, ou None - e ai ela sai em aco.
 
-    A marca manda na familia: uma bomba e uma bomba, mas a KSB pinta de azul e
-    a EBARA deixa em cinza claro.
+    Tres degraus, do mais especifico ao mais geral. A MARCA manda na familia:
+    uma bomba e uma bomba, mas a KSB pinta de azul e a EBARA deixa em cinza
+    claro. A FAMILIA manda no material: uma valvula hidraulica de plastico e
+    azul do mesmo jeito que a de ferro. E o MATERIAL responde pelo resto - o
+    tubo, a luva, a curva, que nao tem cor propria alem da do plastico.
     """
-    marca = (simbolo.params or {}).get("marca")
-    return LIVREA_MARCA.get(marca) or LIVREA_FAMILIA.get(simbolo.familia)
+    params = simbolo.params or {}
+    return (LIVREA_MARCA.get(params.get("marca"))
+            or LIVREA_FAMILIA.get(simbolo.familia)
+            or LIVREA_MATERIAL.get(params.get("material")))
 
 
 ESTILO = """
@@ -206,6 +223,7 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
    O tubulo NUNCA tem traco: a parede ja esta desenhada por cima dele, e um
    contorno a mais engrossaria a linha do desenho. */
 .geo .tubulo{fill:none;stroke:none}
+.geo .revolucao{fill:none;stroke:none}
 
 .modo-metal .geo .tubulo{fill:url(#aco);stroke:none}
 .modo-metal .geo rect.corpo{fill:url(#aco)}
@@ -215,7 +233,14 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
    mais carregar sozinha a forma da peca */
 /* `:not(.alvo)` porque o alvo e a area de clique, e nao geometria: sem isto
    o modo pinta o retangulo invisivel de cada peca e ele aparece na folha */
-.modo-metal .geo *:not(.alvo){stroke:#3c424a}
+/* as exclusoes nao sao decoracao: cada `:not` sobe a especificidade desta
+   regra, e sem elas ela passa por cima da cor do eixo e da junta - que sao
+   vermelhas por convencao, em qualquer modo */
+.modo-metal .geo *:not(.alvo):not(.revolucao):not(.centro):not(.junta){
+  stroke:#3c424a}
+/* a hachura de revolucao: as geratrizes do cilindro. Nao e cor propria, e
+   sombra - por isso vai em preto transparente e serve a qualquer librea */
+.modo-metal .geo .revolucao{stroke:rgba(0,0,0,.15);stroke-width:.5;fill:none}
 .modo-metal .geo .malha,.modo-metal .geo .furo,.modo-metal .geo .solda{
   stroke:#6f757d}
 /* o furo e um vazio na chapa: pintado de branco ele volta a ser buraco, e
@@ -246,8 +271,25 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .modo-metal .peca[data-cor="claro"] rect.corpo,
 .modo-metal .peca[data-cor="claro"] .flange,
 .modo-metal .peca[data-cor="claro"] .chapa_lisa{fill:url(#claro)}
+.modo-metal .peca[data-cor="pvc"] .tubulo,
+.modo-metal .peca[data-cor="pvc"] rect.corpo,
+.modo-metal .peca[data-cor="pvc"] .flange,
+.modo-metal .peca[data-cor="pvc"] .chapa_lisa{fill:url(#pvc)}
+.modo-metal .peca[data-cor="pead"] .tubulo,
+.modo-metal .peca[data-cor="pead"] rect.corpo,
+.modo-metal .peca[data-cor="pead"] .chapa_lisa{fill:url(#pead)}
+/* a flange do colar de PEAD e de ACO solta: ela nao e pintada de preto */
+.modo-metal .peca[data-cor="pead"] .flange{fill:url(#chapa)}
+
 /* peca escura pede traco claro, senao o contorno some dentro dela */
-.modo-metal .peca[data-cor="escuro"] *:not(.alvo):not(.centro){stroke:#9aa1a9}
+.modo-metal .peca[data-cor="escuro"] *:not(.alvo):not(.centro):not(.revolucao){
+  stroke:#9aa1a9}
+.modo-metal .peca[data-cor="pead"] *:not(.alvo):not(.centro):not(.revolucao){
+  stroke:#98a0a8}
+/* em peca escura a sombra some: ali a geratriz vira luz */
+.modo-metal .peca[data-cor="escuro"] .revolucao,
+.modo-metal .peca[data-cor="pead"] .revolucao{stroke:rgba(255,255,255,.16)}
+.modo-metal .peca[data-cor="azul"] .revolucao{stroke:rgba(0,0,0,.20)}
 .modo-metal .peca[data-cor="azul"] *:not(.alvo):not(.centro){stroke:#0f2c4c}
 
 .modo-pb .geo *:not(.alvo){stroke:#000}

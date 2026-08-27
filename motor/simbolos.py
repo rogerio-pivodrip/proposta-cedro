@@ -121,13 +121,52 @@ def tubulo(pontos):
                  + " Z"}
 
 
+def revolucao(a, b, passos=6):
+    """As geratrizes do cilindro - a hachura de uma superficie de revolucao.
+
+    O tubo e um solido de revolucao: girando a geratriz em torno do eixo ela
+    varre a parede inteira. Visto de lado, a geratriz que esta no angulo teta
+    aparece a `r * sen(teta)` do eixo - entao passos IGUAIS de angulo dao
+    espacamentos DESIGUAIS na folha, apertando perto da silhueta e abrindo no
+    meio. E isso que faz o desenho parecer redondo em vez de chato: a mesma
+    conta das aletas do motor.
+
+    Recebe as duas paredes e interpola entre elas, ponto a ponto - por isso
+    serve ao tubo (duas retas), ao cone (duas inclinadas) e a curva de gomos
+    (duas polilinhas), sem saber qual e qual.
+    """
+    if len(a) != len(b) or len(a) < 2:
+        return []
+    linhas = []
+    for k in range(1, passos + 1):
+        seno = math.sin(math.radians(90 * k / (passos + 1)))
+        for sinal in (-1, 1):
+            # t=0 e a parede a, t=1 e a parede b, t=0.5 e o eixo
+            t = (1 + sinal * seno) / 2
+            pontos = [(pa[0] + (pb[0] - pa[0]) * t,
+                       pa[1] + (pb[1] - pa[1]) * t) for pa, pb in zip(a, b)]
+            linhas.append({"tipo": "path", "classe": "revolucao",
+                           "d": "M" + " L".join(f"{p[0]:.1f} {p[1]:.1f}"
+                                                for p in pontos)})
+    return linhas
+
+
+def corpo_de(a, b):
+    """A regiao entre duas paredes, mais a hachura de revolucao dentro dela.
+
+    As duas coisas andam juntas e por isso saem juntas: quem tem duas paredes
+    tem um cilindro, e um cilindro tem preenchimento e tem geratriz.
+    """
+    return [tubulo(list(a) + list(reversed(b)))] + revolucao(a, b)
+
+
 def eixo(x, comprimento, dn_pol, y=0.0):
     """Corpo cilindrico visto de lado: duas paredes e a linha de centro."""
     r = DE_TUBO.get(dn_pol, 100) / 2
     x2 = x + comprimento
-    return [tubulo([(x, y - r), (x2, y - r), (x2, y + r), (x, y + r)]),
-            _p(f"M{x:.1f} {y-r:.1f} H{x2:.1f}"),
-            _p(f"M{x:.1f} {y+r:.1f} H{x2:.1f}")]
+    return corpo_de([(x, y - r), (x2, y - r)], [(x, y + r), (x2, y + r)]) + [
+        _p(f"M{x:.1f} {y-r:.1f} H{x2:.1f}"),
+        _p(f"M{x:.1f} {y+r:.1f} H{x2:.1f}")]
 
 
 def cone(x, comprimento, dn_maior, dn_menor, alinhamento="centro", y=0.0):
@@ -142,9 +181,10 @@ def cone(x, comprimento, dn_maior, dn_menor, alinhamento="centro", y=0.0):
     else:                                     # plano em cima: succao
         topo_b, base_b = y - ra, y - ra + 2 * rb
     x2 = x + comprimento
-    return [tubulo([(x, y - ra), (x2, topo_b), (x2, base_b), (x, y + ra)]),
-            _p(f"M{x:.1f} {y-ra:.1f} L{x2:.1f} {topo_b:.1f}"),
-            _p(f"M{x:.1f} {y+ra:.1f} L{x2:.1f} {base_b:.1f}")]
+    return corpo_de([(x, y - ra), (x2, topo_b)],
+                    [(x, y + ra), (x2, base_b)]) + [
+        _p(f"M{x:.1f} {y-ra:.1f} L{x2:.1f} {topo_b:.1f}"),
+        _p(f"M{x:.1f} {y+ra:.1f} L{x2:.1f} {base_b:.1f}")]
 
 
 def placa(x, dn_pol, y=0.0, direcao=0.0, norma="NBR PN16", lado="entrada"):
@@ -232,8 +272,8 @@ def giro(x, perna, angulo, dn_pol, sentido=1, y=0.0, gomos=4):
 
     fora, dentro = parede(1 * sentido), parede(-1 * sentido)
     caminho = lambda pts: "M" + " L".join(f"{p[0]:.1f} {p[1]:.1f}" for p in pts)
-    elementos = [tubulo(list(fora) + list(reversed(dentro))),
-                 _p(caminho(fora)), _p(caminho(dentro))]
+    elementos = corpo_de(fora, dentro) + [_p(caminho(fora)),
+                                          _p(caminho(dentro))]
     for i in range(1, len(fora) - 1):
         elementos.append(_p(f"M{fora[i][0]:.1f} {fora[i][1]:.1f} "
                             f"L{dentro[i][0]:.1f} {dentro[i][1]:.1f}", "solda"))
@@ -583,7 +623,7 @@ def _corpo_tubular(elementos):
         meio = lambda pts: sum(p[lado] for p in pts) / len(pts)
         if abs(meio(um) - meio(outro)) < 0.5:
             continue               # coincidentes: nao ha corpo entre elas
-        novos.append(tubulo(um + list(reversed(outro))))
+        novos += corpo_de(um, outro)
     # na frente da lista: o preenchimento vai ATRAS do traco, e ordem de
     # elemento e ordem de desenho
     return novos + list(elementos)
@@ -1367,15 +1407,14 @@ def curva_pvc(dn_mm, angulo=90, junta="BOLSA", sentido=1):
             entrada = reta = max(entrada * envelope / obtido, minimo)
 
     fora, dentro, centro, direcao, _, _ = montar(entrada, reta)
-    el = [_polilinha(fora), _polilinha(dentro)]
+    # as duas paredes da curva nao percorrem o mesmo trecho - a de fora e mais
+    # longa que a de dentro - entao o reconhecedor de _corpo_tubular nao as
+    # casa. Aqui elas estao na mao, e a regiao sai exata
+    el = corpo_de(fora, dentro) + [_polilinha(fora), _polilinha(dentro)]
     fim = centro[-1]
-    # a sobra do eixo sai do TAMANHO da peca, nao da perna: numa curva de
-    # raio curto a perna e curta, e uma sobra proporcional a ela desaparecia
-    folga = max(envelope * 0.07, r * 0.5)
-    el.append(_polilinha([(-folga, 0)] + centro
-                         + [(fim[0] + math.cos(direcao) * folga,
-                             fim[1] + math.sin(direcao) * folga)],
-                        "centro"))
+    # o eixo morre na face da peca: numa linha montada a sobra de uma curva
+    # entra dentro da vizinha
+    el.append(_polilinha(list(centro), "centro"))
     for x, y, para_dentro in cintas(centro, direcao):
         el += _cinta(x, y, para_dentro, dn_mm, externo)
     if junta != "BOLSA":
