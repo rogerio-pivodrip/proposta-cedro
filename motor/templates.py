@@ -10,8 +10,9 @@ A succao da casa segue sempre a mesma ordem:
 A curva e opcional e a reducao sai da bomba: concentrica ou excentrica conforme
 a orientacao, e sempre no DN do bocal de entrada.
 
-O ARTICULADOR de 30 graus entra como opcao da succao. A casa NAO usa flutuador
-- o manual descreve succao com flutuante, mas ainda nao e praticado aqui.
+O articulador NAO entra aqui: ele fica na crista do talude, depois do trecho de
+PEAD - ver motor/talude.py. A casa tambem nao usa flutuador; o manual descreve
+succao com flutuante, mas ainda nao e praticado aqui.
 """
 from .bomba import (HORIZONTAL, MM_PARA_POLEGADA, entrada_presumida,
                     interpretar, tipo_reducao_succao)
@@ -30,18 +31,13 @@ def _melhor(catalogo, familia, dn, **extra):
 
 
 def succao(catalogo, dn_linha, modelo_bomba=None, orientacao=HORIZONTAL,
-           curva=None, area="P01", articulador=False):
-    """Monta a succao padrao. curva = None, 45 ou 90.
-
-    articulador=True insere o articulador de 30 graus depois da tomada.
-    """
+           curva=None, area="P01"):
+    """Monta a succao padrao. curva = None, 45 ou 90."""
     linha = Linha(catalogo, tipo="SUCCAO", area=area)
     faltando = []
 
-    receita = [("CRIVO", {}), ("VALVULA_RETENCAO", {})]
-    if articulador:
-        receita.append(("ARTICULADOR", {}))
-    receita.append(("TUBO", {"comprimento_mm": 1000}))
+    receita = [("CRIVO", {}), ("VALVULA_RETENCAO", {}),
+               ("TUBO", {"comprimento_mm": 1000})]
     if curva:
         receita.append(("CURVA", {"angulo": curva}))
 

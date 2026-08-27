@@ -454,27 +454,6 @@ Os **manifolds já são desenhos padrão** no catálogo: `MNFD AZ D02 … D20`,
 14 tipos, 151 itens; só o `D09` tem 43 variações de DN e comprimento. O conceito
 já existe na Netafim — o programa formaliza.
 
-### 7.1.1 Articulador
-
-O **articulador de 30°** entra como opção da sucção, depois da tomada:
-
-```
-crivo → válvula de retenção → articulador 30° → tubo de 1 m → curva → redução → bomba
-```
-
-`templates.succao(..., articulador=True)`. Resolvido de 4" a 14":
-
-| DN | 4" | 6" | 8" | 10" | 12" | 14" |
-|---|---|---|---|---|---|---|
-| código | `01523-850000` | `-850001` | `-850002` | `-850003` | `-850004` | `-850005` |
-
-**Não existe em 3"** — a série começa em 4".
-
-> **Flutuador fica fora.** O manual descreve sucção com flutuante e o catálogo
-> tem o flutuador bipartido de 3" a 16", mas a casa **ainda não usa**. Deixei a
-> peça reconhecida no catálogo e fora do template, marcado em
-> `templates.FLUTUADOR_EM_USO`. Quando passar a usar, é uma linha.
-
 ### 7.2 Trecho de PEAD, depois da primeira bomba
 
 Depois da primeira bomba a linha vira PEAD, e o trecho é sempre o mesmo
@@ -498,7 +477,11 @@ explica o projeto do Marcelo Amorim não listar nenhuma.
 
 ### 7.3 Talude
 
-Para subir ou descer o talude, duas maneiras conforme o material:
+A sequência é **trecho de PEAD → articulador na crista → curvas para descer**.
+O articulador de 30° fica no alto, onde a linha muda de inclinação, e é nele que
+o movimento angular do trecho de PEAD é absorvido.
+
+As curvas, duas maneiras conforme o material:
 
 | material | peças | como |
 |---|---|---|
@@ -506,24 +489,36 @@ Para subir ou descer o talude, duas maneiras conforme o material:
 | Plasson | 2 × curva 90° | giradas uma em relação à outra até dar o ângulo |
 
 O segundo caso tem geometria fechada. Duas curvas de 90° com giro relativo φ
-entre os planos defletem o eixo em θ, e a relação é:
+entre os planos defletem o eixo em θ:
 
 ```
 cos(θ) = sen(φ)      →      φ = arcsen(cos θ)
 ```
 
-| deflexão desejada | girar |
-|---|---|
-| 15° | 75° |
-| 22,5° | 67,5° |
-| 30° | 60° |
-| 45° | 45° |
-| 60° | 30° |
-| 90° | 0° |
+| deflexão desejada | 15° | 22,5° | 30° | 45° | 60° | 90° |
+|---|---|---|---|---|---|---|
+| **girar** | 75° | 67,5° | 60° | 45° | 30° | 0° |
 
 Sem giro dá 90°; com giro de 90° as duas se cancelam e a linha volta ao rumo
-original, só deslocada. `motor/talude.py` calcula os dois sentidos e devolve as
-peças com o plano de montagem.
+original, só deslocada.
+
+A travessia completa em 6", com os 4 tubos de PEAD:
+
+```
+ 4 x 01521-113111  TUBO PEAD PE100 PN06 160MMX6,2MMX6M
+ 2 x 01541-000016  COLAR. P/FL PEAD PE100 DN160 NBR PN16
+ 2 x 01542-083000  FL 6" (152MM) NBR PN16
+ 1 x 01523-850001  ARTICULADOR 30° 6" 150PSI FL NBR PN16     ← a crista
+ 2 x 01523-093000  CURVA 45 AZ 6" FL NBR PN16
+```
+
+**Em 3" a travessia não fecha:** faltam a flange solta e o articulador, que só
+existem de 4" para cima. O motor aponta os dois.
+
+> **Flutuador fica fora.** O manual descreve sucção com flutuante e o catálogo
+> tem o flutuador bipartido de 3" a 16", mas a casa **ainda não usa**. A peça
+> segue reconhecida no catálogo e fora dos templates
+> (`templates.FLUTUADOR_EM_USO`).
 
 ### 7.4 Ventosa: colar de tomada ou saída na peça
 

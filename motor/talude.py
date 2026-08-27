@@ -1,6 +1,10 @@
 """Subir e descer o talude.
 
-Duas maneiras, conforme o material:
+A sequencia e: trecho de PEAD -> ARTICULADOR na crista -> curvas para descer.
+O articulador de 30 graus fica no alto, onde a linha muda de inclinacao, e e
+nele que o movimento angular do trecho de PEAD e absorvido.
+
+As curvas, duas maneiras conforme o material:
 
   aco zincado -> duas curvas de 45 graus, uma no pe e outra no topo
   Plasson     -> duas curvas de 90 graus giradas uma em relacao a outra, que
@@ -41,7 +45,13 @@ def deflexao_do_giro(phi_graus):
         math.radians(phi_graus))))))
 
 
-def travessia(catalogo, dn, material=ACO, norma="NBR PN16", theta_graus=None):
+def articulador_da_crista(catalogo, dn, norma="NBR PN16"):
+    """O articulador que fica no alto do talude, logo depois do PEAD."""
+    return catalogo.melhor("ARTICULADOR", dn, norma=norma, material=None)
+
+
+def travessia(catalogo, dn, material=ACO, norma="NBR PN16", theta_graus=None,
+              com_articulador=True):
     """Pecas para vencer o talude. Devolve (itens, plano, faltando)."""
     receita = RECEITA.get(material)
     if not receita:
@@ -55,6 +65,13 @@ def travessia(catalogo, dn, material=ACO, norma="NBR PN16", theta_graus=None):
                                material=None))
     faltando = [] if item else [("CURVA", dn, receita["angulo_curva"])]
     itens = [(item, receita["curvas"])] if item else []
+    if com_articulador:
+        art = articulador_da_crista(catalogo, dn, norma)
+        if art:
+            # entra antes das curvas: e a primeira peca depois do PEAD
+            itens.insert(0, (art, 1))
+        else:
+            faltando.append(("ARTICULADOR", dn, {}))
     plano = dict(receita)
     if material == PLASSON and theta_graus is not None:
         plano["deflexao_graus"] = theta_graus
