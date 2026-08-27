@@ -176,7 +176,11 @@ def luz_de(cor, giro=0.0, espelhado=False):
     if m * math.cos(math.radians(float(giro))) >= -1e-9:
         return f"--luz:url(#{corpo});--luz-chapa:url(#{chapa})", {}
     defs = {}
-    for base in {corpo, chapa}:
+    # `dict.fromkeys` e nao `set`: a ordem de um conjunto de strings muda de
+    # processo para processo (o hash e aleatorizado), e com ela mudava a ordem
+    # dos <defs> - dois processos gerariam SVG diferente para o mesmo
+    # documento. conferir_api cobra justamente isso
+    for base in dict.fromkeys((corpo, chapa)):
         defs[f"{base}-v"] = (
             f'<linearGradient id="{base}-v" href="#{base}" '
             f'xlink:href="#{base}" gradientTransform="translate(0 1) '
@@ -292,6 +296,10 @@ figcaption{padding:0 14px}
 .geo .flange,.geo .chapa_lisa,.geo .parafuso,.geo .porca{fill:var(--chapa)}
 .geo .malha,.geo .furo,.geo .solda{stroke-width:.55;stroke:#8f949c}
 .geo .centro{stroke:var(--eixo);stroke-width:.65;stroke-dasharray:12 3 1.5 3}
+/* linha oculta: o que existe dentro da peca e nao se ve de fora - a cunha da
+   gaveta, o furo por tras da parede. Tracejada, que e a convencao, e mais
+   clara: ela informa, nao desenha o contorno */
+.geo .oculto{stroke:#9aa1a9;stroke-width:.6;stroke-dasharray:9 6;fill:none}
 .geo .parafuso,.geo .porca{stroke-width:.65}
 .geo .junta{stroke:var(--eixo);stroke-width:.9}
 .geo .fluxo{fill:#8f949c;stroke:none}
@@ -346,7 +354,8 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 /* as exclusoes nao sao decoracao: cada `:not` sobe a especificidade desta
    regra, e sem elas ela passa por cima da cor do eixo e da junta - que sao
    vermelhas por convencao, em qualquer modo */
-.modo-metal .geo *:not(.alvo):not(.centro):not(.junta){stroke:#3c424a}
+.modo-metal .geo *:not(.alvo):not(.centro):not(.junta):not(.oculto){
+  stroke:#3c424a}
 .modo-metal .geo .malha,.modo-metal .geo .furo,.modo-metal .geo .solda{
   stroke:#6f757d}
 /* o furo e um vazio na chapa: pintado de branco ele volta a ser buraco, e
@@ -358,9 +367,15 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .modo-metal .geo .fluxo{fill:#6f757d;stroke:none}
 
 /* peca escura pede traco claro, senao o contorno some dentro dela */
-.modo-metal .peca[data-cor="escuro"] *:not(.alvo):not(.centro){stroke:#9aa1a9}
-.modo-metal .peca[data-cor="pead"] *:not(.alvo):not(.centro){stroke:#98a0a8}
-.modo-metal .peca[data-cor="azul"] *:not(.alvo):not(.centro){stroke:#0f2c4c}
+.modo-metal .peca[data-cor="escuro"] *:not(.alvo):not(.centro):not(.oculto){
+  stroke:#9aa1a9}
+.modo-metal .peca[data-cor="pead"] *:not(.alvo):not(.centro):not(.oculto){
+  stroke:#98a0a8}
+.modo-metal .peca[data-cor="azul"] *:not(.alvo):not(.centro):not(.oculto){
+  stroke:#0f2c4c}
+/* dentro de peca escura a linha oculta some no preto: ali ela clareia */
+.modo-metal .peca[data-cor="escuro"] .oculto,
+.modo-metal .peca[data-cor="pead"] .oculto{stroke:#aab1b9}
 
 .modo-pb .geo *:not(.alvo){stroke:#000}
 .modo-pb .geo .malha,.modo-pb .geo .furo,.modo-pb .geo .solda{stroke-width:.45}

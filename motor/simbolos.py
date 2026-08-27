@@ -2203,11 +2203,23 @@ def valvula_borboleta(dn_pol, acionamento="ALAVANCA"):
 
 
 def valvula_gaveta(dn_pol):
-    """Corpo de fundo abaulado, castelo aparafusado, sobreposta e volante chato.
+    """Registro de gaveta de cunha: colo, barriga, castelo aparafusado, volante.
 
-    Desenhada como o bloco da casa desenha: o volante de canto - chato, com o
-    aro nas pontas e a porca da haste em cima; a sobreposta acima da flange do
-    castelo; e o corpo com o fundo redondo, que e onde a cunha desce.
+    A silhueta e o que identifica a peca de longe, e ela tem quatro partes que
+    precisam se ler separadas:
+
+      COLO       na bitola do tubo, encostando na flange. Sem ele a barriga
+                 nascia colada na chapa e a flange virava um poste solto ao
+                 lado de um ovo - era o defeito da versao anterior.
+      BARRIGA    o alojamento da cunha, que desce ABAIXO do eixo: e por isso
+                 que altura_total_mm e medida do fundo dela, e nao do eixo.
+      CASTELO    tampa aparafusada, com a junta vermelha na linha de aperto e
+                 a cabeca do parafuso aparecendo nas duas pontas. Ele afina
+                 para cima - um tronco, e nao tres cilindros empilhados.
+      HASTE      barra estreita ate o volante, com a caixa de gaxeta na base.
+
+    A cunha vai em linha oculta dentro da barriga: e ela que da nome a peca, e
+    de fora nao se ve nada dela.
     """
     comp, fonte = _cota("VALVULA_GAVETA", dn_pol)
     comp = comp or 230
@@ -2219,59 +2231,72 @@ def valvula_gaveta(dn_pol):
     alt = alt or corpo * 2.4
     volante_d = volante_d or corpo
     meio = comp / 2
-    bocal = DE_TUBO.get(dn_pol, 100)
-    r = corpo / 2
+    rb = DE_TUBO.get(dn_pol, 100) / 2      # o colo, na bitola do tubo
+    r = corpo / 2                          # a barriga
 
-    # o corpo: parede reta e fundo abaulado
-    el = [_p(f"M0 {-bocal/2:.1f} L{comp*0.22:.1f} {-r:.1f} H{comp*0.78:.1f} "
-             f"L{comp:.1f} {-bocal/2:.1f}"),
-          _p(f"M0 {bocal/2:.1f} L{comp*0.22:.1f} {r*0.55:.1f} "
-             f"Q{comp*0.22:.1f} {r:.1f} {meio:.1f} {r:.1f} "
-             f"Q{comp*0.78:.1f} {r:.1f} {comp*0.78:.1f} {r*0.55:.1f} "
-             f"L{comp:.1f} {bocal/2:.1f}")]
-    # a cunha, tracejada dentro do corpo
-    el.append(_p(f"M{meio - bocal*0.3:.1f} {-r*0.42:.1f} h{bocal*0.6:.1f} "
-                 f"v{r*0.86:.1f} l{-bocal*0.3:.1f} {r*0.14:.1f} "
-                 f"l{-bocal*0.3:.1f} {-r*0.14:.1f} Z", "oculto"))
+    colo = comp * 0.13
+    ombro = comp * 0.30
+    # a barriga desce ate exatamente r: numa quadratica o ponto do meio e
+    # (P0 + 2*P1 + P2)/4, entao o controle sobe a 1,18r para o fundo dar r -
+    # e o fundo E a cota, o resto da altura da peca se mede a partir dele
+    fundo = r * 1.18
+    el = [
+        _p(f"M0 {-rb:.1f} H{colo:.1f} L{ombro:.1f} {-r:.1f} "
+           f"H{comp - ombro:.1f} L{comp - colo:.1f} {-rb:.1f} H{comp:.1f}"),
+        _p(f"M0 {rb:.1f} H{colo:.1f} "
+           f"Q{ombro * 0.55:.1f} {rb:.1f} {ombro:.1f} {r * 0.82:.1f} "
+           f"Q{meio:.1f} {fundo:.1f} {comp - ombro:.1f} {r * 0.82:.1f} "
+           f"Q{comp - ombro * 0.55:.1f} {rb:.1f} {comp - colo:.1f} {rb:.1f} "
+           f"H{comp:.1f}"),
+    ]
+    # a cunha, em linha oculta: corpo reto e a ponta em cunha, que e o que
+    # veda contra as duas sedes
+    lc = rb * 1.1
+    el.append(_p(f"M{meio - lc/2:.1f} {-r * 0.30:.1f} h{lc:.1f} "
+                 f"v{r * 0.92:.1f} l{-lc/2:.1f} {r * 0.22:.1f} "
+                 f"l{-lc/2:.1f} {-r * 0.22:.1f} Z", "oculto"))
 
-    # a flange do castelo, com a junta, e a sobreposta em cima dela
-    esp = comp * 0.07
-    yf = -r
-    largura_flange = comp * 0.72
-    el.append({"tipo": "rect", "x": meio - largura_flange/2, "y": yf - esp,
+    # o castelo: flange de aperto, junta, e o tronco afinando para cima
+    esp = comp * 0.06
+    largura_flange = comp * 0.66
+    el.append({"tipo": "rect", "x": meio - largura_flange/2, "y": -r - esp,
                "w": largura_flange, "h": esp, "classe": "corpo"})
-    el.append(_p(f"M{meio - largura_flange/2:.1f} {yf:.1f} h{largura_flange:.1f}",
-                 "junta"))
-    # sobreposta: dois degraus estreitando, e a caixa de gaxeta no topo.
-    #
-    # A altura dela sai do VAO disponivel - do topo do corpo ao topo do
-    # volante - e nao de uma fracao da cota total. Com 44% da cota total a
-    # sobreposta passava do volante em bitola grande, e o volante aparecia
-    # dentro dela em vez de em cima; a casa pediu ele mais para cima, e o que
-    # faltava era justamente sobrar haste livre entre os dois
-    y1 = yf - esp
-    vao = alt - 2 * r          # do topo do corpo ao topo do volante
-    passo = vao * 0.52
-    el.append({"tipo": "rect", "x": meio - comp*0.24, "y": y1 - passo*0.55,
-               "w": comp*0.48, "h": passo*0.55, "classe": "corpo"})
-    el.append({"tipo": "rect", "x": meio - comp*0.17, "y": y1 - passo,
-               "w": comp*0.34, "h": passo*0.45, "classe": "corpo"})
-    y2 = y1 - passo
-    el.append({"tipo": "rect", "x": meio - comp*0.13, "y": y2 - comp*0.11,
-               "w": comp*0.26, "h": comp*0.11, "classe": "corpo"})
+    el.append(_p(f"M{meio - largura_flange/2:.1f} {-r:.1f} "
+                 f"h{largura_flange:.1f}", "junta"))
+    el += parafusos_de_tampa(meio - largura_flange * 0.42,
+                             meio + largura_flange * 0.42, -r - esp, esp * 1.1)
 
-    # a haste e o volante de canto.
-    #
-    # altura_total_mm e TOTAL: do fundo do corpo ao topo do volante, nao do
-    # eixo para cima. Tratar como se fosse do eixo somava o corpo por baixo e
-    # deixava a valvula 29% mais alta que a folha - erro que nao aparece
-    # olhando, porque a torre parece proporcional em qualquer bitola.
-    # o volante encosta no topo cotado: a porca da haste, que e o que fica mais
-    # alto nele, termina la
+    # o vao util: do topo do corpo ao topo do volante. Repartir por FRACAO do
+    # vao, e nao da cota total, e o que mantem a torre proporcional em toda
+    # bitola - com fracao do total a gaxeta passava do volante no 14"
+    vao = alt - 2 * r
+    y_flange = -r - esp
+    h_castelo = vao * 0.36
+    base_castelo = comp * 0.44
+    topo_castelo = comp * 0.26
+    y_castelo = y_flange - h_castelo
+    el.append(_p(f"M{meio - base_castelo/2:.1f} {y_flange:.1f} "
+                 f"L{meio - topo_castelo/2:.1f} {y_castelo:.1f} "
+                 f"H{meio + topo_castelo/2:.1f} "
+                 f"L{meio + base_castelo/2:.1f} {y_flange:.1f} Z"))
+
+    # a caixa de gaxeta, apertada por dois prisioneiros
+    h_gaxeta = vao * 0.14
+    y_gaxeta = y_castelo - h_gaxeta
+    el.append({"tipo": "rect", "x": meio - comp*0.15, "y": y_gaxeta,
+               "w": comp*0.30, "h": h_gaxeta, "classe": "corpo"})
+    el += parafusos_de_tampa(meio - comp*0.115, meio + comp*0.115,
+                             y_gaxeta, esp * 0.8)
+
+    # a haste: barra, e nao fio. altura_total_mm e do FUNDO da barriga ao topo
+    # do volante - tratar como se fosse do eixo somava o corpo por baixo e
+    # deixava a valvula 29% mais alta que a folha
     topo_volante = -(alt - r)
-    yv = topo_volante + comp * 0.055 * 2.1
-    el.append(_p(f"M{meio:.1f} {y2 - comp*0.11:.1f} V{yv:.1f}", "haste"))
-    el += volante_de_canto(meio, yv, volante_d, comp * 0.055)
+    espessura = comp * 0.055
+    yv = topo_volante + espessura * 2.1
+    el.append({"tipo": "rect", "x": meio - comp*0.035, "y": yv,
+               "w": comp*0.07, "h": y_gaxeta - yv, "classe": "haste"})
+    el += volante_de_canto(meio, yv, volante_d, espessura)
 
     el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
     el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))

@@ -45,12 +45,13 @@ CAMADAS = {
     "PORCA": (7, "CONTINUOUS"),
     "JUNTA": (1, "CONTINUOUS"),
     "FLUXO": (8, "CONTINUOUS"),
+    "OCULTO": (8, "HIDDEN"),
     "COTA": (9, "CONTINUOUS"),
 }
 CLASSE_CAMADA = {"corpo": "CORPO", "flange": "FLANGE", "chapa_lisa": "CHAPA_LISA",
                  "centro": "EIXO", "malha": "MALHA", "furo": "FURO",
                  "solda": "SOLDA", "parafuso": "PARAFUSO", "porca": "PORCA",
-                 "junta": "JUNTA", "fluxo": "FLUXO"}
+                 "junta": "JUNTA", "fluxo": "FLUXO", "oculto": "OCULTO"}
 ALTURA_TEXTO = 24.0        # mm, para a cota escrita dentro da peca
 
 def _fechar(d, linhas):
