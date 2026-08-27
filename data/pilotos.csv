@@ -1,0 +1,9 @@
+# Kit de piloto da valvula hidraulica, por funcao. O esquema do fabricante
+# (data/fichas/) numera os itens de 01 a 13, mas avisa em rodape que NAO lista
+# material de ligacao - solda plastica, solucao limpadora, parafuso, porca e
+# arruela ficam de fora. E o mesmo buraco que este programa fecha.
+#
+# A mola escolhe a faixa de pressao e vem em tres cores; o esquema manda ver o
+# catalogo Dorot. Deixe mola_sap em branco ate definir a faixa.
+funcao,piloto_sap,piloto_descricao,kit_sap,mola_opcoes,esquema
+REDUTORA_SUSTENTADORA,71680-001200,DOROT PILOTO METALICO 3W 31-310/47 VD,71680-001590,71680-010500|71680-010550|71680-010600,Esquema valvula redutora + sustentadora 31-310

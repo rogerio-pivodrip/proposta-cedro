@@ -448,7 +448,7 @@ orientação, sempre no DN do bocal de entrada.
 Mesma ordem, mesmas famílias, mesmos DN — e o tipo da redução saindo certo dos
 dois lados pela orientação da bomba.
 
-### 7.6 Manifolds
+### 7.7 Manifolds
 
 Os **manifolds já são desenhos padrão** no catálogo: `MNFD AZ D02 … D20`,
 14 tipos, 151 itens; só o `D09` tem 43 variações de DN e comprimento. O conceito
@@ -543,7 +543,47 @@ E em aço, as peças que já trazem a saída de 2":
 **3 colares de tomada para 2 ventosas**. O terceiro colar é de outra coisa —
 manômetro, provavelmente. Fica registrado como pergunta.
 
-### 7.5 Cobertura de 3" a 14"
+### 7.5 Válvula hidráulica: fica na saída do filtro
+
+Ordem confirmada nos **três projetos**:
+
+```
+filtro → válvula hidráulica → medidor
+```
+
+| projeto | filtro | válvula | medidor |
+|---|---|---|---|
+| Marcelo Amorim | item 27 | item 29 (Dorot 47-3") | item 30 |
+| Lincoln Junqueira | item 15 | item 16 (Dorot 47-6") | item 17 |
+| Thiago Derks | item 19 | item 22 (Dorot 47-10") | item 23 |
+
+`hidraulica.conferir_sequencia()` acusa filtro sem válvula na saída, e medidor
+que venha antes dela.
+
+**A válvula nunca vem sozinha:** leva o esquema de piloto
+(`data/fichas/DOROT_esquema_valvula_redutora_sustentadora_31-310.pdf`), e o
+conjunto lista junto. `data/pilotos.csv` amarra:
+
+| item | código |
+|---|---|
+| piloto | `71680-001200` DOROT PILOTO METÁLICO 3W 31-310/47 VD |
+| kit | `71680-001590` DOROT KIT PARA PILOTO 31-310 |
+| mola | `71680-010500` (VM), `71680-010550` (VD), `71680-010600` (AM) |
+
+A mola escolhe a faixa de pressão e o próprio esquema manda ver o catálogo
+Dorot — fica em aberto até a faixa ser definida.
+
+**O rodapé do esquema diz o mesmo que este programa:** ele lista os itens do
+piloto mas avisa que *"não estão listados nenhum material de ligação como: solda
+plástica, solução limpadora, parafuso, porca, arruela"*. É exatamente o buraco
+que a ferragem derivada fecha.
+
+E avisa também que *"códigos e produtos poderão ser substituídos ou
+desativados"* — por isso `tools/conferir_codigos.py` varre todas as tabelas e o
+próprio documento, e confere cada SAP citado contra a lista atual. Hoje:
+**32 códigos citados, 32 conferem.**
+
+### 7.6 Cobertura de 3" a 14"
 
 Antes de montar qualquer linha, `tools/matriz_bitolas.py` responde onde o
 catálogo tem buraco. `#` serve na linha (é NBR PN16, ou a peça não declara norma
@@ -630,6 +670,8 @@ tools/matriz_bitolas.py       cobertura de peças e reduções de 3" a 14"
 motor/templates.py            receitas padrão resolvidas contra o catálogo
 motor/talude.py               travessia do talude e o giro das curvas de 90
 motor/ventosa.py              colar de tomada ou peça de aço com saída de 2"
+motor/hidraulica.py           sequência filtro/válvula/medidor e kit de piloto
+tools/conferir_codigos.py     confere cada SAP citado contra a lista atual
 motor/bomba.py                nomenclatura da bomba -> entrada, saída e rotor
 motor/catalogo.py             índice por (família, DN, norma)
 motor/regras.py               compatibilidade + ferragem
