@@ -151,12 +151,17 @@ def _da_bomba(peca):
     furacao = peca.flange_bomba or ficha["furacao"]
     origem = ficha["fonte"] or ("assumida" if not peca.flange_bomba
                                 else "informada")
+    # a CLASSE e da folha, e so vale enquanto a folha valer: dizer que a boca
+    # veio EN PN16 e dizer que ela nao e a Classe 125 da folha
+    classe = None if peca.flange_bomba else ficha["classe"]
     saida = [_linha("furação da boca",
-                    furacao + (f' · {ficha["classe"]}' if ficha["classe"]
-                               else ""),
-                    origem)]
-    if ficha["norma"]:
-        saida.append(_linha("norma do flange", ficha["norma"], origem))
+                    furacao + (f" · {classe}" if classe else ""), origem)]
+    # e a norma acompanha a furacao escolhida - com EN PN16 na boca, a norma
+    # e a EN 1092-2, e nao a ASME B16.1 que a folha trazia
+    norma = (regras.FURACOES_DE_BOMBA.get(furacao) if peca.flange_bomba
+             else ficha["norma"])
+    if norma:
+        saida.append(_linha("norma do flange", norma, origem))
     bocas = [p["dn"] for p in (peca.portas or [])]
     if regras.pode_vir_roscada(bocas[0] if bocas else None, peca.descricao):
         saida.append(_linha("pode vir rosqueada", "BSP, conforme o pedido",

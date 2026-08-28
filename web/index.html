@@ -122,6 +122,13 @@
       <label>cota de
         <select id="fonte"></select>
       </label>
+      <!-- COM QUE FURAÇÃO A BOMBA VEIO. A mesma máquina sai em ASME B16.1
+           Classe 125, Classe 250 ou EN 1092-2 PN16 conforme o pedido, e só
+           quem tem a folha da máquina sabe qual. Sem dizer, o programa usa a
+           folha quando tem uma e assume a Classe 125 quando não tem -->
+      <label id="rotulo_flange" hidden>flange
+        <select id="flange_bomba"></select>
+      </label>
       <!-- a MESMA peça noutro tamanho. Sem peça escolhida, `bitola 8` na
            barra troca a linha inteira - e é uma edição só, que desfaz de
            uma vez -->

@@ -357,6 +357,11 @@ function pintarPainel() {
   fonte.value = peca.fonte || "IRRIGAFOUR";
   $("espelhar").classList.toggle("ligado", peca.sentido < 0);
   $("balao").classList.toggle("ligado", peca.balao !== false);
+  // a furação da boca só existe na bomba, e é do PEDIDO: a mesma máquina sai
+  // furada de três jeitos, e quem tem a folha em mãos diz qual
+  const eBomba = peca.familia === "BOMBA";
+  $("rotulo_flange").hidden = !eBomba;
+  if (eBomba) $("flange_bomba").value = peca.flange_bomba || "";
   // com várias escolhidas o painel continua mostrando UMA - a última - e
   // avisa que o botão vale para todas. Mostrar campo em branco "porque são
   // várias" esconderia o que a pessoa acabou de clicar
@@ -961,6 +966,10 @@ function ligar() {
     const r = await mandar({nome: "ramificar", alvo: escolhida});
     if (r.ok) soltarEscolha();
   });
+  $("flange_bomba").addEventListener("change", (ev) => mandar({
+    nome: "alterar", alvo: escolhida, alvos: alvos(),
+    campos: {flange_bomba: ev.target.value || null},
+  }));
   $("trocar").addEventListener("click", trocar);
   // esticar TROCA a peça - outro comprimento é outro código SAP - então a
   // seleção tem de seguir a peça nova, senão o painel fica apontando para
@@ -1132,6 +1141,11 @@ async function comecar() {
   // aparece na lista sozinha, sem ninguém tocar nesta tela
   (vocabulario.montagens || []).forEach((m) =>
     $("prontas").add(new Option(m.nome, m.chave)));
+  // "da folha" é o padrão: sem ninguém dizer, vale a folha da máquina quando
+  // a casa tem uma, e a Classe 125 assumida quando não tem
+  $("flange_bomba").add(new Option("da folha", ""));
+  (vocabulario.furacoes_bomba || []).forEach((f) =>
+    $("flange_bomba").add(new Option(`${f.chave} — ${f.nome}`, f.chave)));
   FAMILIAS.forEach((f) => $("familia").add(new Option(f.toLowerCase().replace(/_/g, " "), f)));
   ligar();
   ligarBarra();

@@ -233,6 +233,25 @@ async def rodar(porta):
                          texto[:90].replace("\n", " · "))
             conferir("e não inventa a chapa de uma norma que a casa não tem",
                      "não tem a folha desta norma" in texto)
+        # a FURACAO DA BOCA e do pedido: quem tem a folha em maos diz qual,
+        # e a ficha inteira acompanha - inclusive a norma
+        if bomba:
+            opcoes = await pagina.eval_on_selector_all(
+                "#flange_bomba option", "os => os.map(o => o.value)")
+            conferir("o painel oferece as três furações da bomba",
+                     {"", "ANSI 150", "ANSI 300", "EN PN16"} <= set(opcoes),
+                     str(opcoes))
+            await pagina.select_option("#flange_bomba", "EN PN16")
+            await pagina.wait_for_timeout(900)
+            texto = await pagina.inner_text("#ficha")
+            conferir("dizer EN PN16 muda a norma das duas bocas",
+                     texto.count("EN PN16") >= 3, texto[:100].replace("\n", " · "))
+            conferir("e a norma do flange acompanha",
+                     "EN 1092-2" in texto and "ASME" not in texto,
+                     texto[-90:].replace("\n", " · "))
+            await pagina.select_option("#flange_bomba", "")
+            await pagina.wait_for_timeout(700)
+
         # a ficha ENVELHECE com a edicao: depois de cortar o tubo ela tem de
         # dizer o corte, e nao o comprimento do codigo
         tubo = await pagina.query_selector('g.peca[data-familia="TUBO"]')

@@ -136,6 +136,7 @@ def _peca(p, catalogo=None):
         "rotulo": p.rotulo,
         "balao": p.balao, "balao_angulo": p.balao_angulo,
         "balao_distancia": p.balao_distancia,
+        "flange_bomba": p.flange_bomba,
     }
 
 
@@ -724,7 +725,12 @@ def _vocabulario(sessao, comando):
     divergencia que ela evita nao guardando documento.
     """
     return {"verbos": linguagem.vocabulario(),
-            "montagens": templates.catalogo_de_montagens()}
+            "montagens": templates.catalogo_de_montagens(),
+            # a mesma maquina sai furada de tres jeitos conforme o pedido -
+            # quem sabe quais e o motor, e a tela so oferece
+            "furacoes_bomba": [{"chave": chave, "nome": nome}
+                               for chave, nome
+                               in regras.FURACOES_DE_BOMBA.items()]}
 
 
 def _procurar(sessao, comando):
