@@ -276,3 +276,7 @@ tr.derivada td{color:var(--anota)}
 .abas button:hover .fechar{color:var(--anota)}
 .abas .fechar:hover{color:var(--perigo)}
 .abas .nova{border-style:dashed; color:var(--anota)}
+/* o ramo sai de uma boca de outra montagem: a tira mostra isso com o galho,
+   e nao com uma lista separada - as duas coisas sao montagens */
+.abas .ramo .galho{color:var(--anota); font-size:11px; margin-right:-3px}
+.abas .ramo{margin-left:10px}

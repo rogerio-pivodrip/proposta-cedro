@@ -127,6 +127,10 @@ VERBOS = [
           [_arg("qual", "resto")], "montagem 1", False,
           lambda v, alvo, s: {"nome": "montagem", "acao": "escolher",
                               "alvo": _montagem_alvo(v)}),
+    Verbo("ramificar", "abre uma montagem saindo da boca livre da peça "
+          "escolhida", [_arg("como", "resto")], "ramificar saída 1", True,
+          lambda v, alvo, s: {"nome": "ramificar", "alvo": alvo,
+                              "rotulo": (v.get("como") or "").strip() or None}),
     Verbo("nova", "abre uma montagem em branco no projeto",
           [_arg("como", "resto")], "nova barrilete", False,
           lambda v, alvo, s: {"nome": "montagem", "acao": "criar",

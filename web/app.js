@@ -65,8 +65,10 @@ function pintarAbas() {
   tira.innerHTML = "";
   (documento.montagens || []).forEach((m) => {
     const b = document.createElement("button");
-    b.className = m.ativa ? "ativa" : "";
-    b.innerHTML = `<span>${m.nome}</span><i>${m.pecas}</i>` +
+    b.className = (m.ativa ? "ativa" : "") + (m.ramo ? " ramo" : "");
+    if (m.ramo) b.title = "ramo — sai de uma boca de outra montagem";
+    b.innerHTML = (m.ramo ? '<span class="galho">⌐</span>' : "") +
+      `<span>${m.nome}</span><i>${m.pecas}</i>` +
       ((documento.montagens || []).length > 1
         ? '<span class="fechar" title="apagar esta montagem">×</span>' : "");
     b.addEventListener("click", (ev) => {
@@ -115,6 +117,19 @@ function pintarVista() {
   }
   alvo.querySelectorAll("g.peca[data-id]").forEach((g) => {
     const id = g.dataset.id;
+    // PEÇA DE OUTRA MONTAGEM: o desenho mostra a árvore inteira - o tronco e
+    // os ramos - e a aba aberta é só uma delas. Clicar numa peça de outra
+    // troca de montagem primeiro, senão o painel procuraria uma peça que a
+    // aba aberta não tem, e não abriria
+    if (g.dataset.montagem && g.dataset.montagem !== documento.montagem) {
+      g.addEventListener("click", async () => {
+        soltarEscolha();
+        await mandar({nome: "montagem", acao: "escolher",
+                      alvo: g.dataset.montagem});
+        escolher(id);
+      });
+      return;
+    }
     if (escolhidas.includes(id)) g.classList.add("escolhida");
     // o arrasto é estado DA TELA, como a seleção: cada repintura o reaplica.
     // A tela repinta a cada comando - inclusive o `simular` do próprio
@@ -161,11 +176,15 @@ function pintarLista() {
   // mesmo mapa de que a linha era apagada, e a segunda curva saía sem número
   const numeros = new Map();
   documento.lista.forEach((r) => { porSap.set(r.sap, r); numeros.set(r.sap, r.item); });
+  // a quantidade da linha da PEÇA é quantas há NESTA montagem, e não na
+  // árvore: com ramos, a lista agregada conta o projeto inteiro, e pôr esse
+  // total ao lado de uma peça só dizia que aquela peça eram dez
+  const aqui = new Map();
+  documento.pecas.forEach((p) => aqui.set(p.sap, (aqui.get(p.sap) || 0) + 1));
   documento.pecas.forEach((peca) => {
-    const registro = porSap.get(peca.sap);
     corpo.appendChild(linhaDaTabela({
       id: peca.id, sap: peca.sap, descricao: peca.descricao,
-      qtd: registro ? registro.qtd : 1,
+      qtd: aqui.get(peca.sap),
       item: numeros.get(peca.sap) || null, balao: peca.balao,
     }));
     porSap.delete(peca.sap);
@@ -887,6 +906,12 @@ function ligar() {
   $("balao").addEventListener("click", () => mandar({
     nome: "balao", alvo: escolhida, alvos: alvos(),
   }));
+  // o ramo não é acessório: acessório FECHA a boca, o ramo continua a partir
+  // dela - é assim que se monta barrilete e duas bombas em paralelo
+  $("ramificar").addEventListener("click", async () => {
+    const r = await mandar({nome: "ramificar", alvo: escolhida});
+    if (r.ok) soltarEscolha();
+  });
   $("trocar").addEventListener("click", trocar);
   // esticar TROCA a peça - outro comprimento é outro código SAP - então a
   // seleção tem de seguir a peça nova, senão o painel fica apontando para

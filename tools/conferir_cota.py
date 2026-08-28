@@ -136,6 +136,23 @@ def main():
                 certo(f'{nome} {dn}" {lado}', not fora,
                       " · ".join(f"{f} erra {d:.0f} mm" for f, d in fora[:3]))
 
+    print("\n== o tubo CORTADO: o corte é do projeto, e o papel tem de mostrá-lo")
+    for dn in (4, 6, 8, 10):
+        item = catalogo.melhor("TUBO", dn, material=None)
+        if not item:
+            continue
+        for corte in (700, 1500, 2350):
+            linha = Linha(catalogo)
+            peca = Peca(item, comprimento_mm=corte)
+            linha.inserir(peca)
+            postos, _recusadas = vista.postos_da_linha(linha)
+            desenhado = (postos[0].saida[0] - postos[0].entrada[0]
+                         if postos else 0)
+            certo(f'tubo {dn}" cortado em {corte} mm sai com {corte} no papel',
+                  abs(desenhado - corte) < FOLGA_MM,
+                  f"o desenho saiu com {desenhado:.0f} mm - o código traz "
+                  f'{item.get("comprimento_mm") or 0:.0f}')
+
     print("\n== peça a peça: o que o documento anda é o que o símbolo desenha")
     print("   (o catálogo inteiro é uma LISTA DE TRABALHO, e não uma falha:\n"
           "    fora da faixa da casa há CPVC, PRFV, bronze de 1/2\" e bomba,\n"

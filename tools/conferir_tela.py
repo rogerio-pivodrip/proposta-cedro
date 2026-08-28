@@ -295,6 +295,43 @@ async def rodar(porta):
         conferir("Escape solta a escolha",
                  not await pagina.query_selector_all("g.peca.escolhida"))
 
+        print("\n== ramificar: o barrilete com duas saídas, numa folha só")
+        await pagina.select_option("#prontas", "LIVRE")
+        await pagina.click("#succao")
+        await pagina.wait_for_timeout(800)
+        for familia in ("tubo", "tê", "tubo"):
+            await pagina.fill("#comando", f"inserir {familia} 8")
+            await pagina.keyboard.press("Enter")
+            await pagina.wait_for_timeout(600)
+        te = await pagina.query_selector('g.peca[data-familia="TE"]')
+        conferir("o tê entrou na montagem em branco", te is not None)
+        if te:
+            await te.click()
+            await pagina.wait_for_timeout(400)
+            desenhadas = len(await pagina.query_selector_all("g.peca[data-id]"))
+            abas = len(await pagina.query_selector_all(
+                ".abas button:not(.nova)"))
+            await pagina.click("#ramificar")
+            await pagina.wait_for_timeout(800)
+            conferir("ramificar abre outra montagem",
+                     len(await pagina.query_selector_all(
+                         ".abas button:not(.nova)")) == abas + 1)
+            conferir("e ela aparece na tira como ramo",
+                     bool(await pagina.query_selector_all(".abas .ramo")))
+            # a peca que entra no ramo tem de aparecer no MESMO desenho: o
+            # tronco e o ramo sao a mesma folha
+            await pagina.fill("#comando", "inserir tubo 8")
+            await pagina.keyboard.press("Enter")
+            await pagina.wait_for_timeout(800)
+            conferir("a peça do ramo entra no desenho do tronco",
+                     len(await pagina.query_selector_all("g.peca[data-id]"))
+                     == desenhadas + 1,
+                     f'{len(await pagina.query_selector_all("g.peca[data-id]"))}'
+                     f" contra {desenhadas + 1}")
+            linhas = await pagina.eval_on_selector_all(
+                "#lista tbody tr", "rs => rs.length")
+            conferir("e na lista da árvore", linhas > 0)
+
         print("\n== salvar e abrir devolvem a mesma montagem")
         antes = await retrato(pagina)
         async with pagina.expect_download() as espera:

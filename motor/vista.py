@@ -43,8 +43,11 @@ def simbolos_da_linha(linha):
     espelho_da_linha = getattr(linha, "espelho", 1)
     for peca in linha.pecas:
         try:
+            # o CORTE vai junto: o tubo e a unica peca que se corta, e o
+            # comprimento dele e da instancia, nao do codigo
             simbolo = desenho.de_item(peca.item,
-                                      getattr(peca, "pose", None))
+                                      getattr(peca, "pose", None),
+                                      peca.comprimento_mm)
             # o `sentido` da peca e o espelho da linha se multiplicam: a curva
             # que ja descia, numa linha espelhada, volta a subir. Espelhar o
             # SIMBOLO e o que faz a corrente inteira acompanhar - montar()
@@ -101,6 +104,18 @@ def acessorios_da_linha(linha):
                 pass
         saida.append(desta)
     return saida
+
+
+def bocas_livres(simbolo, gastas=0):
+    """As bocas que a corrente nao usa, da primeira em diante.
+
+    `gastas` sao as que o acessorio ja tomou: uma pilha de acessorios ocupa
+    UMA boca, nao uma por acessorio - eles se empilham um no outro. O ramo
+    entra na proxima, e por isso ele nunca nasce em cima da flange cega.
+    """
+    livres = [p for p in simbolo.portas
+              if p.papel not in s.ENTRADA + s.SAIDA]
+    return livres[gastas:]
 
 
 def porta_livre(simbolo):
@@ -278,9 +293,43 @@ def extensao(postos):
             max(c[1] for c in cantos) - min(c[1] for c in cantos))
 
 
+def ramos_de(projeto, montagem):
+    """A arvore de ramos que pende desta montagem, pronta para desenhar.
+
+    Recursiva: um ramo pode ter ramos. E o que faz um barrilete com quatro
+    saidas, uma delas virando outro barrilete, sair no mesmo desenho.
+    """
+    saida = []
+    for filho in projeto.filhos(montagem):
+        prontos, _recusadas = simbolos_da_linha(filho)
+        por_peca = {p.id: lista for p, lista in
+                    zip(filho.pecas, acessorios_da_linha(filho))}
+        saida.append({
+            "montagem": filho.id,
+            "peca": (filho.origem or {}).get("peca"),
+            "boca": (filho.origem or {}).get("boca", 0),
+            "pecas": [sim for _p, sim in prontos],
+            "ids": [p.id for p, _sim in prontos],
+            "acessorios": [por_peca.get(p.id, []) for p, _sim in prontos],
+            "ramos": ramos_de(projeto, filho),
+        })
+    return saida
+
+
 def vista(linha, largura=940, altura_max=620, giro=None, modo="traco",
-          escala=None, anota=1.0):
-    """O SVG da linha, com cada peca marcada pelo id dela."""
+          escala=None, anota=1.0, projeto=None):
+    """O SVG da linha, com cada peca marcada pelo id dela.
+
+    Com um `projeto`, desenha a ARVORE: a montagem de onde esta pende e tudo
+    o que sai dela. E o que faz ver o barrilete inteiro enquanto se edita uma
+    saida - quem monta duas bombas em paralelo precisa ver as duas.
+    """
+    if projeto is not None:
+        raiz = projeto.raiz(linha)
+        if raiz is not linha:
+            return vista(raiz, largura=largura, altura_max=altura_max,
+                         giro=giro, modo=modo, escala=escala, anota=anota,
+                         projeto=projeto)
     prontos, recusadas = simbolos_da_linha(linha)
     if not prontos:
         return {"svg": "", "pecas": 0, "recusadas": recusadas, "modo": modo}
@@ -292,12 +341,17 @@ def vista(linha, largura=940, altura_max=620, giro=None, modo="traco",
     # o balao de cada peca vem do DOCUMENTO, com o numero que a lista deu -
     # a vista nao numera nada. Fosse ela a contar, o numero mudaria ao girar a
     # folha ou ao esconder um balao, e o desenho discordaria da lista
-    numerados = {b["id"]: b for b in linha.baloes()}
+    if projeto is not None:
+        numerados = {b["id"]: b for b in projeto.baloes(linha)}
+        ramos = ramos_de(projeto, linha)
+    else:
+        numerados = {b["id"]: b for b in linha.baloes()}
+        ramos = None
     svg, postos, fim = desenhar_linha(
         [sim for _, sim in prontos], largura=largura, giro=giro,
         altura_max=altura_max, ids=ids, modo=modo, escala=escala, anota=anota,
         acessorios=[por_peca.get(peca.id, []) for peca, _ in prontos],
-        baloes=numerados)
+        baloes=numerados, ramos=ramos, montagem=linha.id)
     return {"svg": svg, "pecas": len(prontos), "recusadas": recusadas,
             "fim": list(fim), "modo": modo,
             "baloes": [{"id": b["id"], "item": b["n"]}
@@ -468,9 +522,37 @@ def _desenhar_balao(identidade, numero, pouso, centro, anota=1.0):
             f'style="font-size:{9.5 * anota:.2f}px">{numero}</text></g>')
 
 
+def _rigida(x, y, graus):
+    """A transformacao que leva (0,0) olhando para +x ate (x,y) olhando para `graus`."""
+    rad = math.radians(graus)
+    cos, sen = math.cos(rad), math.sin(rad)
+
+    def levar(px, py):
+        return (x + px * cos - py * sen, y + px * sen + py * cos)
+
+    return levar, graus
+
+
+def _encaixar_corrente(postos, levar, giro):
+    """A corrente inteira levada para a boca em que ela nasce.
+
+    E a mesma transformacao rigida do acessorio, aplicada a uma CORRENTE em
+    vez de a uma peca. Por isso o ramo nao precisou de geometria propria: o
+    que ja sabia montar uma linha monta o ramo, e o que sabia pendurar um
+    acessorio pendura a linha inteira.
+    """
+    saida = []
+    for p in postos:
+        dx, dy = levar(p.dx, p.dy)
+        saida.append(p._replace(dx=dx, dy=dy, giro=p.giro + giro,
+                                entrada=levar(*p.entrada),
+                                saida=levar(*p.saida)))
+    return saida
+
+
 def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
                    modo="traco", escala=None, anota=1.0, acessorios=None,
-                   baloes=None):
+                   baloes=None, ramos=None, montagem=None):
     """A linha inteira em SVG, encadeando os simbolos pelas portas.
 
     Cada peca e desenhada uma vez, na origem, olhando para +x. Encaixar e uma
@@ -488,29 +570,34 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
     # boca olha. E a mesma transformacao rigida de `montar`, uma peca so
     postos_extra = []
     juntas_extra = []
+    de_ramo = {}          # id da peca -> id da montagem, para as de ramo
     for i, posto in enumerate(postos):
         # OS ACESSORIOS SE EMPILHAM. O primeiro entra na boca livre da peca da
         # corrente; o segundo, na boca livre do PRIMEIRO, e assim por diante -
         # que e como a coisa sobe na obra: o te recebe a flange cega, a flange
         # cega tem a luva de 2", e e na luva que a ventosa enrosca. Pondo os
         # dois na mesma boca eles sairiam um dentro do outro
-        montagem = posto
+        # `empilhada` e a peca em que o PROXIMO acessorio vai entrar: a
+        # primeira e a da corrente, a segunda e o acessorio anterior. (Ja se
+        # chamou `montagem`, e o nome colidiu com a montagem do documento
+        # quando ela passou a ser marcada em cada grupo do SVG.)
+        empilhada = posto
         desta = []
         for identidade, simbolo in ((acessorios or [None] * len(postos))[i]
                                     or []):
-            boca = porta_livre(montagem.simbolo)
+            boca = porta_livre(empilhada.simbolo)
             if boca is None:
                 continue
-            rad = math.radians(montagem.giro)
+            rad = math.radians(empilhada.giro)
             cos, sen = math.cos(rad), math.sin(rad)
-            px = montagem.dx + boca.x * cos - boca.y * sen
-            py = montagem.dy + boca.x * sen + boca.y * cos
-            direcao = montagem.giro + boca.direcao
+            px = empilhada.dx + boca.x * cos - boca.y * sen
+            py = empilhada.dy + boca.x * sen + boca.y * cos
+            direcao = empilhada.giro + boca.direcao
             entrada = s.porta(simbolo, s.ENTRADA) or s.porta(simbolo, s.SAIDA)
             ex, ey = (entrada.x, entrada.y) if entrada else (0.0, 0.0)
             rad2 = math.radians(direcao)
             c2, s2 = math.cos(rad2), math.sin(rad2)
-            montagem = s.Posto(
+            empilhada = s.Posto(
                 simbolo, px - (ex * c2 - ey * s2), py - (ex * s2 + ey * c2),
                 direcao, (px, py), (px, py))
             # A ORDEM DE MONTAGEM E O CONTRARIO DA ORDEM DE PINTURA. A ventosa
@@ -519,13 +606,78 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
             # o ultimo desenhado tapa o anterior e a ventosa cobria a luva em
             # que ela esta enfiada. Entao a cadeia se monta para frente e se
             # pinta para tras
-            desta.insert(0, (identidade, montagem))
+            desta.insert(0, (identidade, empilhada))
             # a boca em que ele entrou: e ela que diz se ha JUNTA FLANGEADA
             # ali. A luva e rosca e nao leva parafuso; a derivacao do te e
             # flange e leva - e sem isto a flange cega saia sem ferragem
             # nenhuma, encostada no te por nada
             juntas_extra.append((px, py, direcao, boca, simbolo))
         postos_extra += desta
+
+    # OS RAMOS. Cada um e uma corrente inteira que nasce numa boca livre de
+    # uma peca desta - o barrilete com quatro saidas, as duas bombas em
+    # paralelo, a adução que sai do te. Ele nao e acessorio: acessorio FECHA a
+    # boca, o ramo CONTINUA a partir dela.
+    #
+    # E a mesma transformacao rigida do acessorio, so que aplicada a uma
+    # corrente: monta-se o ramo na origem, acha-se a boca em que ele nasce, e
+    # leva-se tudo para la. Por isso o ramo nao precisou de geometria propria.
+    def pendurar(nos, identidades, gastas_por_peca, filhos_do_no):
+        """Poe cada ramo na boca em que ele nasce - e os ramos dele tambem.
+
+        Recursivo de proposito: barrilete com quatro saidas, e uma delas
+        virando outro barrilete, e a mesma coisa duas vezes.
+        """
+        for ramo in (filhos_do_no or []):
+            _pendurar_um(nos, identidades, gastas_por_peca, ramo)
+
+    def _pendurar_um(nos, identidades, gastas_por_peca, ramo):
+        onde = next(((i, p) for i, p in enumerate(nos)
+                     if i < len(identidades)
+                     and identidades[i] == ramo.get("peca")), None)
+        if onde is None:
+            return
+        i, dono = onde
+        gastas = gastas_por_peca[i] if i < len(gastas_por_peca) else 0
+        bocas = bocas_livres(dono.simbolo, gastas)
+        indice = int(ramo.get("boca") or 0)
+        if indice >= len(bocas):
+            return                      # boca que nao existe: o ramo nao cai
+        boca = bocas[indice]
+        rad = math.radians(dono.giro)
+        cos, sen = math.cos(rad), math.sin(rad)
+        px = dono.dx + boca.x * cos - boca.y * sen
+        py = dono.dy + boca.x * sen + boca.y * cos
+        direcao = dono.giro + boca.direcao
+        filhos, _fim = s.montar(ramo["pecas"])
+        if not filhos:
+            return
+        levar, volta = _rigida(px, py, direcao)
+        # a corrente nasce com a entrada na origem; o que sobra e leva-la
+        entrada = s.porta(filhos[0].simbolo, s.ENTRADA)
+        recuo = (entrada.x, entrada.y) if entrada else (0.0, 0.0)
+        colocados = _encaixar_corrente(
+            [p._replace(dx=p.dx - recuo[0], dy=p.dy - recuo[1],
+                        entrada=(p.entrada[0] - recuo[0],
+                                 p.entrada[1] - recuo[1]),
+                        saida=(p.saida[0] - recuo[0], p.saida[1] - recuo[1]))
+             for p in filhos], levar, volta)
+        marcas = ramo.get("ids") or [None] * len(colocados)
+        postos_extra.extend(zip(marcas, colocados))
+        # a peca do ramo nao e acessorio, e e de OUTRA montagem: quem clicar
+        # nela tem de cair na montagem dela, e nao numa peca que a aba aberta
+        # nao conhece
+        for marca in marcas:
+            de_ramo[marca] = ramo.get("montagem")
+        # a boca em que ele nasceu leva ferragem como qualquer outra juncao
+        juntas_extra.append((px, py, direcao, boca, filhos[0].simbolo))
+        # e os ramos DELE, na mesma conta
+        pendurar(colocados, list(marcas), [0] * len(colocados),
+                 ramo.get("ramos"))
+
+    pendurar(postos, list(ids or [None] * len(postos)),
+             [1 if a else 0 for a in (acessorios or [None] * len(postos))],
+             ramos)
     if giro:
         # a sucção nasce no poço e sobe: a linha inteira gira para ficar de pé
         rad = math.radians(giro)
@@ -698,7 +850,8 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
         estilo, novos = luz_de(cor, p.giro, espelhada)
         degrades.update(novos)
         partes.append(f'<g class="peca"{marca}{pintura}'
-                      f' data-familia="{p.simbolo.familia}"'
+                      + (f' data-montagem="{montagem}"' if montagem else "")
+                      + f' data-familia="{p.simbolo.familia}"'
                       f' style="{estilo}" '
                       f'transform="translate({p.dx:.1f} {p.dy:.1f}) '
                       f'rotate({p.giro:g})">{corpo}</g>')
@@ -713,8 +866,15 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
                  f'width="{max(cw, 1):.1f}" height="{max(ch, 1):.1f}"/>' + corpo)
         estilo, novos = luz_de(cor, p.giro, espelhada)
         degrades.update(novos)
-        partes.append(f'<g class="peca acessorio" data-id="{identidade}"'
-                      f'{f" data-cor={chr(34)}{cor}{chr(34)}" if cor else ""}'
+        # acessorio e peca de ramo saem os dois daqui, e nao sao a mesma
+        # coisa: o acessorio vive DENTRO da peca que o carrega, o ramo e uma
+        # montagem inteira pendurada numa boca. Quem clica precisa saber qual
+        ramo = de_ramo.get(identidade)
+        partes.append(f'<g class="peca {"ramo" if ramo else "acessorio"}"'
+                      f' data-id="{identidade}"'
+                      + (f' data-montagem="{ramo or montagem}"'
+                         if (ramo or montagem) else "")
+                      + f'{f" data-cor={chr(34)}{cor}{chr(34)}" if cor else ""}'
                       f' data-familia="{p.simbolo.familia}" style="{estilo}" '
                       f'transform="translate({p.dx:.1f} {p.dy:.1f}) '
                       f'rotate({p.giro:g})">{corpo}</g>')

@@ -64,16 +64,22 @@ def _bomba(item):
             else s.bomba_meganorm(tamanho, cv=cv))
 
 
-def _tubo(item, dn_pol):
+def _tubo(item, dn_pol, comprimento_mm=None):
     """O tubo, se for barra. Rolo e cadastro fora de faixa nao desenham.
 
     Rolo nao e peca: entra na lista por metro e no desenho por trecho, nao por
     bloco. E comprimento acima da barra maxima quase sempre e virgula errada
     no cadastro, nao um tubo de dois quilometros.
+
+    **O comprimento pedido manda.** O tubo e a unica peca que se CORTA, e o
+    corte e decisao de projeto: quem escreveu 1,5 m numa barra de 6 espera ver
+    1,5 m no papel. Sem isto o desenho saia com a barra inteira enquanto a
+    cota escrita e a lista diziam o corte - e o desenho e a lista discordavam
+    justamente na peca que mais se edita.
     """
     if RX_ROLO.search(item["descricao"]):
         raise SemSimbolo("tubo de rolo - material por metro")
-    comprimento = item.get("comprimento_mm") or 6000
+    comprimento = comprimento_mm or item.get("comprimento_mm") or 6000
     if comprimento > BARRA_MAXIMA_MM:
         raise SemSimbolo(f"comprimento de {comprimento/1000:.0f} m fora de "
                          f"barra - conferir cadastro")
@@ -120,10 +126,12 @@ def _pead(item, familia, maior):
         if RX_ROLO.search(descricao):
             raise SemSimbolo("tubo de rolo - material por metro")
         if item["material"] == "PEAD":
-            return s.tubo_pead(maior, min(item.get("comprimento_mm") or 6000,
-                                          BARRA_MAXIMA_MM))
+            return s.tubo_pead(maior, min(comprimento_mm
+                                          or item.get("comprimento_mm")
+                                          or 6000, BARRA_MAXIMA_MM))
         ponta = "LISA" if RX_PONTA_LISA.search(descricao) else "BOLSA"
-        return s.tubo_pvc(maior, min(item.get("comprimento_mm") or 6000,
+        return s.tubo_pvc(maior, min(comprimento_mm
+                                     or item.get("comprimento_mm") or 6000,
                                      BARRA_MAXIMA_MM), ponta)
     if familia == "CURVA":
         angulo = int(item["angulo"] or 90)
@@ -358,14 +366,17 @@ def gsd_da_lista(dn_pol):
     return max(abaixo, key=lambda c: (c[0], -c[1]))[2] if abaixo else None
 
 
-def de_item(item, pose=None):
+def de_item(item, pose=None, comprimento_mm=None):
     """O simbolo do item, ja com o codigo e a descricao nos params.
 
     `pose` e da INSTANCIA e nao do item: o mesmo te de 6" e o mesmo codigo SAP
     montado em linha ou de pe sobre a derivacao. Como o `sentido` da curva, ela
     vive na peca e chega aqui na hora de desenhar.
+
+    `comprimento_mm` tambem e da instancia, e vale so no tubo: e o corte. Ver
+    _tubo - a barra de 6 m cortada em 1,5 tem de sair com 1,5 no papel.
     """
-    simbolo = _desenhar(item, pose)
+    simbolo = _desenhar(item, pose, comprimento_mm)
     # o material vem da LISTA, e nao do desenho: e ela que sabe se aquele
     # DN225 e PVC ou PEAD. Entra por baixo dos params do simbolo, para nao
     # apagar o que a peca ja declarou por conta propria
@@ -375,7 +386,7 @@ def de_item(item, pose=None):
                                     "descricao": item["descricao"]})
 
 
-def _desenhar(item, pose=None):
+def _desenhar(item, pose=None, comprimento_mm=None):
     familia = item["familia"]
     if familia == "BOMBA":
         return _bomba(item)
@@ -389,7 +400,7 @@ def _desenhar(item, pose=None):
         return _pead(item, familia, maior)
 
     if familia == "TUBO":
-        return _tubo(item, maior)
+        return _tubo(item, maior, comprimento_mm)
 
     despacho = {
         "CURVA": lambda: s.curva(maior, angulo=int(item["angulo"] or 90)),

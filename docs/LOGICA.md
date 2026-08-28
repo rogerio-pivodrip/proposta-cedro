@@ -44,6 +44,23 @@ inventar não precisam de permissão do programa para existir. As montagens
 uma linha na tabela, e ela aparece sozinha na barra de comando e na tela, pelo
 mesmo motivo que o vocabulário mora no motor.
 
+**O ramo é uma montagem ancorada numa boca livre.** Não é acessório —
+acessório é peça terminal, que *fecha* a boca (flange cega, ventosa); o ramo
+*continua* a partir dela, com tubo, curva, válvula e o que precisar. Sendo uma
+`Linha` como qualquer outra, ele se edita com os mesmos comandos, desfaz na
+mesma pilha e numera os mesmos balões. É assim que se monta barrilete, adução
+e duas bombas em paralelo.
+
+No desenho isso não custou geometria nova: monta-se o ramo na origem, acha-se
+a boca em que ele nasce e leva-se a corrente inteira para lá — a mesma
+transformação rígida que já pendurava um acessório, aplicada a uma corrente em
+vez de a uma peça. E é recursiva: um ramo pode ter ramos.
+
+**Com ramo, a lista passa a ser da árvore.** O desenho mostra o tronco e as
+saídas juntos, então a lista tem de mostrar as duas — lista só do tronco ao
+lado de um desenho com os ramos seria exatamente a divergência que este
+programa existe para não ter.
+
 **Desfazer atravessa montagens.** Cada comando sabe *quando* aconteceu, e o
 `ctrl+Z` desfaz o mais recente do projeto inteiro — não o último da aba em que
 o olho está. Quem edita a sucção, troca para o recalque e desfaz quer de volta

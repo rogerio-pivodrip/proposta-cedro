@@ -34,7 +34,9 @@ DA_PECA = ("sentido", "pose", "fonte", "rotulo",
 
 
 def _da_peca(peca):
-    ficha = {"sap": peca.sap}
+    # o `id` nao volta a ser o id da peca: ele so serve para reapontar a
+    # origem dos ramos ao abrir, e o id de verdade nasce nesta sessao
+    ficha = {"sap": peca.sap, "id": peca.id}
     ficha.update({campo: getattr(peca, campo) for campo in DA_PECA})
     if peca._comprimento_pedido is not None:
         # corte de campo: e decisao, e por isso e escolha e nao derivado
@@ -49,6 +51,10 @@ def _da_peca(peca):
 
 def _da_montagem(linha):
     return {
+        # de onde ela sai, quando e ramo: o id da PECA e o da boca. O id da
+        # peca e o do arquivo, e nao o desta sessao - por isso ele e gravado
+        # e reapontado ao abrir (ver `abrir`)
+        "origem": dict(linha.origem) if linha.origem else None,
         "id": linha.id, "nome": linha.nome,
         "tipo": linha.tipo, "area": linha.area,
         "giro": linha.giro, "espelho": linha.espelho,
@@ -106,7 +112,7 @@ def _montar_peca(catalogo, ficha, avisos):
     return peca
 
 
-def _montar_linha(catalogo, dados, avisos):
+def _montar_linha(catalogo, dados, avisos, de_para=None):
     linha = Linha(catalogo, tipo=dados.get("tipo") or "RECALQUE",
                   area=dados.get("area") or "P01",
                   nome=dados.get("nome"))
@@ -115,10 +121,14 @@ def _montar_linha(catalogo, dados, avisos):
         if peca is None:
             continue
         linha.inserir(peca)
+        if de_para is not None and ficha.get("id"):
+            de_para[ficha["id"]] = peca.id
         for outra in ficha.get("acessorios") or []:
             acessorio = _montar_peca(catalogo, outra, avisos)
             if acessorio is not None:
                 linha.acoplar(peca.id, acessorio)
+                if de_para is not None and outra.get("id"):
+                    de_para[outra["id"]] = acessorio.id
     linha.pose(giro=dados.get("giro") or 0.0,
                espelho=dados.get("espelho") or 1)
     linha.ordem_baloes = [s for s in (dados.get("ordem_baloes") or [])
@@ -153,8 +163,25 @@ def abrir(catalogo, texto):
                       area=dados.get("area") or "P01")
     # versao 1: o arquivo E uma montagem, sem tira de montagens em volta
     fichas = dados.get("montagens") or [dados]
+    # o id da peca nasce nesta sessao, e o do arquivo era de outra: a origem
+    # de cada ramo tem de ser reapontada para a peca que a substituiu. Sem
+    # isto o barrilete abriria com os ramos soltos, sem tronco
+    de_para = {}
     for ficha in fichas:
-        projeto.criar(_montar_linha(catalogo, ficha, avisos), escolher=False)
+        antes = list(de_para)
+        montagem = _montar_linha(catalogo, ficha, avisos, de_para)
+        projeto.criar(montagem, escolher=False)
+        del antes
+    for montagem, ficha in zip(projeto.montagens, fichas):
+        origem = ficha.get("origem")
+        if not origem:
+            continue
+        nova = de_para.get(origem.get("peca"))
+        if nova is None:
+            avisos.append(f"{montagem.nome}: a peça de onde este ramo saía "
+                          f"não está mais no projeto - ele abriu solto")
+            continue
+        montagem.origem = {"peca": nova, "boca": int(origem.get("boca") or 0)}
     guardado = dados.get("ativa")
     for montagem, ficha in zip(projeto.montagens, fichas):
         if ficha.get("id") and ficha["id"] == guardado:

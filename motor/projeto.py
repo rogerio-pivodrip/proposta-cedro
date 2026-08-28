@@ -70,6 +70,71 @@ class Projeto:
                 return montagem
         raise KeyError(f"nao ha montagem {alvo!r} neste projeto")
 
+    # ----------------------------------------------------------- a arvore
+    #
+    # Um ramo e uma montagem ANCORADA numa boca livre de uma peca de outra.
+    # Nao e um acessorio: acessorio e peca terminal, que fecha a boca; o ramo
+    # continua, com tubo, curva, valvula e o que mais precisar. E e assim que
+    # se monta o barrilete, a adução e as duas bombas em paralelo - cada
+    # derivação e uma corrente, e corrente o programa ja sabe montar.
+    def dona_da_peca(self, peca_id):
+        """A montagem em que esta peca esta. None se ela nao esta em nenhuma."""
+        for montagem in self.montagens:
+            for peca in montagem.todas_as_pecas():
+                if peca.id == peca_id:
+                    return montagem
+        return None
+
+    def filhos(self, montagem):
+        """As montagens que saem de alguma peca desta."""
+        montagem = self.achar(montagem)
+        meus = {p.id for p in montagem.todas_as_pecas()}
+        return [m for m in self.montagens
+                if m.origem and m.origem.get("peca") in meus]
+
+    def pai(self, montagem):
+        montagem = self.achar(montagem)
+        if not montagem.origem:
+            return None
+        return self.dona_da_peca(montagem.origem.get("peca"))
+
+    def raiz(self, montagem):
+        """A montagem de onde a arvore desta pende. Ela mesma, se for raiz."""
+        montagem = self.achar(montagem)
+        vistos = {montagem.id}
+        while True:
+            acima = self.pai(montagem)
+            if acima is None or acima.id in vistos:
+                return montagem
+            montagem, _ = acima, vistos.add(acima.id)
+
+    def arvore(self, montagem):
+        """A raiz e tudo o que pende dela, em ordem de leitura."""
+        raiz = self.raiz(montagem)
+        saida, fila = [], [raiz]
+        while fila:
+            atual = fila.pop(0)
+            if atual in saida:
+                continue
+            saida.append(atual)
+            fila += self.filhos(atual)
+        return saida
+
+    def ramificar(self, peca_id, boca=0, nome=None, tipo="RAMO"):
+        """Abre uma montagem nova saindo da boca livre de uma peca.
+
+        A boca e o INDICE entre as bocas que sobram na peca - o te tem uma, o
+        manifold tem uma por bocal. Quem escolhe qual e quem ramifica; o
+        desenho so obedece.
+        """
+        dona = self.dona_da_peca(peca_id)
+        if dona is None:
+            raise KeyError(f"peca {peca_id} nao esta em montagem nenhuma")
+        ramo = Linha(self.catalogo, tipo=(tipo or "RAMO").upper(),
+                     area=dona.area, nome=nome)
+        ramo.origem = {"peca": peca_id, "boca": int(boca)}
+        return self.criar(ramo)
+
     # ----------------------------------------------------- comandos do projeto
     def _executar(self, comando):
         comando.fazer()
@@ -196,9 +261,58 @@ class Projeto:
         todos = [c for pilha in self._pilhas("feitos") for c in pilha]
         return sorted(todos, key=lambda c: c.ordem)
 
+    # ------------------------------------------------- as duas projecoes
+    #
+    # Com ramo, a lista deixa de ser da montagem e passa a ser da ARVORE: o
+    # desenho mostra o tronco e as saidas juntos, e lista e desenho sao as
+    # duas projecoes DA MESMA COISA. Uma lista so do tronco, ao lado de um
+    # desenho que mostra as saidas, seria a divergencia que este programa
+    # existe para nao ter.
+    def lista_materiais(self, montagem=None):
+        """A lista da arvore inteira. (itens, avisos)"""
+        from collections import OrderedDict
+
+        bom, avisos = OrderedDict(), []
+        for cada in self.arvore(montagem or self.ativa):
+            itens, recados = cada.lista_materiais()
+            for reg in itens:
+                antes = bom.get(reg["sap"])
+                if antes is None:
+                    bom[reg["sap"]] = dict(reg)
+                else:
+                    antes["qtd"] += reg["qtd"]
+            avisos += [f"{cada.nome}: {a}" if len(self.montagens) > 1 else a
+                       for a in recados]
+        for numero, reg in enumerate(bom.values(), 1):
+            reg["item"] = numero
+        return list(bom.values()), avisos
+
+    def numeracao(self, montagem=None):
+        """{codigo SAP: numero do item} da arvore desenhada."""
+        from collections import OrderedDict
+
+        itens, _avisos = self.lista_materiais(montagem)
+        return OrderedDict((r["sap"], r["item"]) for r in itens)
+
+    def baloes(self, montagem=None):
+        """Os baloes de todas as montagens da arvore, com o numero da lista."""
+        numeros = self.numeracao(montagem)
+        saida = []
+        for cada in self.arvore(montagem or self.ativa):
+            for peca in cada.todas_as_pecas():
+                if not peca.balao or peca.sap not in numeros:
+                    continue
+                saida.append({"id": peca.id, "n": numeros[peca.sap],
+                              "angulo": peca.balao_angulo,
+                              "distancia": peca.balao_distancia,
+                              "montagem": cada.id})
+        return saida
+
     def resumo(self):
         """O que a tela mostra na tira de montagens."""
         ativa = self.ativa
         return [{"id": m.id, "nome": m.nome, "tipo": m.tipo, "area": m.area,
-                 "pecas": len(m.pecas), "ativa": m.id == ativa.id}
+                 "pecas": len(m.pecas), "ativa": m.id == ativa.id,
+                 "ramo": bool(m.origem),
+                 "origem": dict(m.origem) if m.origem else None}
                 for m in self.montagens]

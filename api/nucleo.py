@@ -12,8 +12,8 @@ essa a decisao que evitou a sincronizacao - ver docs/LOGICA.md 2.
 O erro tambem e resposta, e nao excecao: `{"ok": false, "erro": ...}`. A tela
 precisa mostrar o motivo, e nao um traceback.
 """
-from motor import (arquivo, exportar as exportacao, folha, regras,
-                   templates, vista)
+from motor import (arquivo, desenho, exportar as exportacao, folha,
+                   regras, templates, vista)
 
 from . import linguagem
 from motor.catalogo import Catalogo
@@ -70,7 +70,11 @@ class Sessao:
     def documento(self):
         """As duas projecoes, mais o que a tela precisa para se desenhar."""
         linha = self.linha
-        lista, avisos = linha.lista_materiais()
+        # a lista e a ARVORE, e nao so esta montagem: o desenho mostra o
+        # tronco com os ramos, e lista e desenho sao duas projecoes da mesma
+        # coisa. Lista so do tronco ao lado de desenho com os ramos seria a
+        # divergencia que este programa existe para nao ter
+        lista, avisos = self.projeto.lista_materiais(linha)
         return {
             "tipo": linha.tipo,
             "area": linha.area,
@@ -97,7 +101,8 @@ class Sessao:
                               "desenhado_mm": d["desenhado_mm"],
                               "do_codigo_mm": d["do_codigo_mm"]}
                              for d in linha.divergencias()],
-            "vista": vista.vista(linha, modo=self.modo, **self.janela),
+            "vista": vista.vista(linha, modo=self.modo,
+                                 projeto=self.projeto, **self.janela),
             "pontas": vista.pontas_erradas(linha),
             "projeto": {"nome": self.projeto.nome, "area": self.projeto.area},
             "montagens": self.projeto.resumo(),
@@ -614,6 +619,48 @@ def _template(sessao, comando):
                          for f, d, e in faltando]}
 
 
+def _ramificar(sessao, comando):
+    """Abre uma montagem nova saindo da boca livre da peca escolhida.
+
+    O ramo NAO e um acessorio. Acessorio e peca terminal - flange cega,
+    ventosa - que fecha a boca; o ramo continua a partir dela, com tubo,
+    curva, valvula e o que mais precisar. E como se monta o barrilete, a
+    adução e as duas bombas em paralelo, e por isso ele e uma `Linha` como
+    qualquer outra: os mesmos comandos, o mesmo desfazer, os mesmos baloes.
+    """
+    alvo = comando.get("alvo")
+    if not alvo:
+        raise Erro("ramificar sai de uma peça - escolha a que tem a boca livre")
+    # a peca pode estar em QUALQUER montagem do projeto - quem ramifica um
+    # tronco costuma estar com um ramo aberto quando lembra da segunda saida
+    dona = sessao.projeto.dona_da_peca(alvo if isinstance(alvo, str) else None)
+    peca = (dona or sessao.linha).achar(alvo)
+    simbolo = None
+    try:
+        simbolo = desenho.de_item(peca.item, peca.pose, peca.comprimento_mm)
+    except Exception:                                       # noqa: BLE001
+        pass
+    if simbolo is not None:
+        gastas = 1 if peca.acessorios else 0
+        bocas = vista.bocas_livres(simbolo, gastas)
+        # ja usadas por outros ramos desta mesma peca
+        tomadas = {m.origem.get("boca", 0) for m in sessao.projeto.montagens
+                   if m.origem and m.origem.get("peca") == peca.id}
+        livres = [i for i in range(len(bocas)) if i not in tomadas]
+        if not livres:
+            raise Erro(f"{peca.descricao} não tem boca livre - o que sobrava "
+                       f"já está ocupado")
+        boca = comando.get("boca")
+        boca = livres[0] if boca is None else int(boca)
+    else:
+        boca = int(comando.get("boca") or 0)
+    ramo = sessao.projeto.ramificar(
+        peca.id, boca=boca, nome=comando.get("rotulo"),
+        tipo=comando.get("tipo") or "RAMO")
+    return {"montagem": ramo.id, "rotulo": ramo.nome, "boca": boca,
+            "peca": peca.id}
+
+
 def _montagem(sessao, comando):
     """Cria, escolhe, renomeia ou apaga uma montagem do projeto.
 
@@ -857,7 +904,7 @@ COMANDOS = {
     "balao": _balao, "numerar": _numerar, "bitola": _bitola,
     "desfazer": _desfazer, "refazer": _refazer,
     "template": _template, "catalogo": _catalogo, "janela": _janela,
-    "montagem": _montagem,
+    "montagem": _montagem, "ramificar": _ramificar,
     "modo": _modo,
     "estilo": _estilo, "simular": _simular, "exportar": _exportar,
     "abrir": _abrir,

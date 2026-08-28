@@ -80,9 +80,15 @@ def main():
         executar(sessao, {"nome": "desfazer"})
         # o alvo e o TUBO, e nao a primeira peca: `esticar` so vale em tubo,
         # e o exemplo tem de rodar sobre uma peca em que ele faz sentido
+        # `ramificar` so vale em peca com boca livre: a succao nao tem
+        # nenhuma, e um te entra na linha so para o exemplo ter onde cair
+        if verbo.nome == "ramificar":
+            executar(sessao, {"nome": "inserir", "familia": "TE", "dn": 8})
         pecas = sessao.documento()["pecas"]
-        alvo = next((p["id"] for p in pecas if p["familia"] == "TUBO"),
-                    pecas[0]["id"])
+        alvo = next((p["id"] for p in pecas if p["familia"] == "TE"), None) \
+            if verbo.nome == "ramificar" else None
+        alvo = alvo or next((p["id"] for p in pecas if p["familia"] == "TUBO"),
+                            pecas[0]["id"])
         resposta = executar(sessao, {"nome": "dizer", "texto": verbo.exemplo,
                                      "alvo": alvo})
         conferir(f'{verbo.nome}: "{verbo.exemplo}"', resposta["ok"],

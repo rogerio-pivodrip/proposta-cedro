@@ -292,6 +292,13 @@ class Linha:
         self.tipo = tipo
         self.area = area
         self.nome = nome or tipo.replace("_", " ").capitalize()
+        # DE ONDE ESTA MONTAGEM SAI, quando ela e um ramo: {"peca", "boca"}.
+        # O ramo nao e um acessorio - acessorio e peca terminal, que FECHA a
+        # boca. O ramo continua: e uma corrente inteira que nasce numa boca
+        # livre de outra, e e assim que se monta barrilete, adução e duas
+        # bombas em paralelo. Sendo uma `Linha` como qualquer outra, ele se
+        # edita com os mesmos comandos e desfaz na mesma pilha
+        self.origem = None
         self.pecas = []
         # a POSE da linha na folha: de quanto ela esta girada, e se esta
         # espelhada. Nao e geometria da peca - e como o conjunto se deita no
