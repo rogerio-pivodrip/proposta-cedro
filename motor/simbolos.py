@@ -1086,25 +1086,32 @@ _contorno_ventosa = None
 
 
 def contorno_ventosa():
-    """O contorno da ventosa combinada: (raio_rosca_rel, [(x, y), ...]).
+    """O contorno da ventosa combinada, em milimetro. (ficha, {peca: pontos})
 
-    Uma linha so, normalizada pela ALTURA - as duas colunas sao fracao dela.
-    Sai do DXF vetorial do desenho do fabricante, reduzido por Douglas-Peucker.
+    Uma linha por peca - `corpo` e a ventosa, `bico` e o cotovelo de 2" BSP
+    femea que enrosca na saida dela. Sai do DXF vetorial do desenho do
+    fabricante, reduzido por Douglas-Peucker, e ESCALADO PELA ROSCA: ela e
+    2" BSP macho, 59,614 mm por ISO 228, e a razao entre isso e o que ela mede
+    no desenho leva a figura inteira a milimetro sem depender de cota escrita.
+
     Ver data/ventosa_contorno.csv.
     """
     global _contorno_ventosa
     if _contorno_ventosa is None:
-        pontos, r_rosca = [], 0.12
+        ficha, pecas, atual = {}, {}, None
         with open(f"{DADOS}/ventosa_contorno.csv", encoding="utf-8") as fh:
             for linha in fh:
                 if linha.startswith("#") or not linha.strip():
                     continue
                 a, b = linha.strip().split(",")
-                if a == "raio_rosca_rel":
-                    r_rosca = float(b)
-                elif a != "x":
-                    pontos.append((float(a), float(b)))
-        _contorno_ventosa = (r_rosca, pontos)
+                if a == "peca":
+                    atual = []
+                    pecas.setdefault(b, []).append(atual)
+                elif atual is None:
+                    ficha[a] = float(b)
+                else:
+                    atual.append((float(a), float(b)))
+        _contorno_ventosa = (ficha, pecas)
     return _contorno_ventosa
 
 
@@ -1153,37 +1160,41 @@ def ventosa(dn_pol=2, classe="COMBINADA", marca=None):
     if classe != "COMBINADA":
         return _ventosa_em_faixas(dn_pol, classe, marca, largura, altura,
                                   corpo_d, r_rosca, fonte)
-    r_rosca_rel, contorno = contorno_ventosa()
-    # PARAMETRICO: o contorno esta em fracao da altura, entao basta multiplicar
-    # pela altura da ficha. A mesma forma serve a qualquer bitola
-    k = altura
-    pontos = [(x * k, y * k) for x, y in contorno]
-    # A ROSCA VEM DA NORMA. O desenho de origem e cotado mas nao esta em escala
-    # consigo mesmo - a rosca nele mede o equivalente a 86 mm onde ele proprio
-    # anota 59,6 - entao os pontos dela sao levados ao raio BSP de verdade. O
-    # resto do contorno e proporcao, e proporcao o desenho da bem
-    r_desenhada = r_rosca_rel * k
-    if r_desenhada > 0.1:
-        ajuste = r_rosca / r_desenhada
-        pontos = [(x * ajuste if abs(x) > r_desenhada * 0.80 and
-                   y > -altura * 0.16 else x, y) for x, y in pontos]
-    el = [{"tipo": "path", "classe": "corpo",
-           "d": "M" + " L".join(f"{x:.1f} {y:.1f}" for x, y in pontos) + " Z"}]
-    # o filete da rosca, no trecho em que ela e a rosca
-    fim_rosca = -altura * 0.135
-    fios = max(int(abs(fim_rosca) / (r_rosca * 0.22)), 3)
-    for kk in range(1, fios):
-        el.append(_p(f"M{-r_rosca:.1f} {fim_rosca*kk/fios:.1f} "
-                     f"H{r_rosca:.1f}", "malha"))
-    y_fim = min(y for _x, y in pontos)
+    ficha_c, pecas = contorno_ventosa()
+    # PARAMETRICO PELA ROSCA. O contorno esta em milimetro para 2" BSP; noutra
+    # bitola ele escala pela razao dos diametros BSP. A forma nao muda - o que
+    # muda e a regua, e a regua e a rosca, que e a unica cota que se sabe de cor
+    k = polegada_bsp(rosca_pol) / polegada_bsp(ficha_c.get("rosca_pol", 2))
+    el = []
+    # a ordem importa: as duas voltas externas primeiro, o detalhe por cima -
+    # senao o preenchimento do corpo apaga o relevo dele
+    CLASSE = {"corpo": "corpo", "bico": "acessorio", "detalhe": "malha"}
+    for nome in ("corpo", "bico", "detalhe"):
+        for pontos in pecas.get(nome, []):
+            pontos = [(x * k, y * k) for x, y in pontos]
+            if len(pontos) < 2:
+                continue
+            # a volta externa FECHA; o detalhe e linha aberta - fecha-lo
+            # inventaria uma area onde ha um vinco
+            fecha = " Z" if nome != "detalhe" else ""
+            el.append({"tipo": "path", "classe": CLASSE[nome], "grupo": nome,
+                       "d": "M" + " L".join(f"{x:.1f} {y:.1f}"
+                                            for x, y in pontos) + fecha})
+    altura = ficha_c.get("altura_mm", altura) * k
+    corpo_pts = [(x * k, y * k) for x, y in pecas["corpo"][0]]
+    largura = max(x for x, _y in corpo_pts) - min(x for x, _y in corpo_pts)
+    # o filete da rosca NAO e gerado aqui: ele ja vem no grupo `detalhe`,
+    # desenhado pelo fabricante. Gerar por cima poria dois filetes na peca
+    y_fim = min(y for _x, y in corpo_pts)
     el.append(_p(f"M0 {altura*0.08:.1f} V{y_fim - altura*0.06:.1f}", "centro"))
     el.append({"tipo": "nota", "x": largura / 2 + largura * 0.14,
                "y": -altura * 0.55, "texto": f'{classe.lower()} {dn_pol:g}"'})
     portas = [Porta("entrada", 0, 0, 90, dn_pol)]
     return _montar("VENTOSA", f'ventosa {classe.lower()} {dn_pol:g}"',
-                   el, portas, fonte,
+                   el, portas, "dxf vetorial",
                    {"dn_pol": dn_pol, "classe": classe, "marca": marca,
                     "material": "PLASTICO", "ponta": "ROSCA_MACHO_BSP",
+                    "com_cotovelo": "bico" in pecas,
                     "altura_total_mm": altura, "largura_mm": largura})
 
 

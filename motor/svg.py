@@ -389,6 +389,7 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .modo-metal .geo path.acionamento.fechado,
 .modo-metal .geo rect.haste,
 .modo-metal .geo path.haste.fechado{fill:var(--luz,url(#aco))}
+.modo-metal .geo path.acessorio.fechado{fill:var(--luz-chapa,url(#chapa))}
 .modo-metal .geo .flange,
 .modo-metal .geo .chapa_lisa{fill:var(--luz-chapa,url(#chapa))}
 .modo-metal .geo .parafuso,.modo-metal .geo .porca{fill:url(#ferragem)}
