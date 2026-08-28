@@ -272,17 +272,47 @@ class Projeto:
         """A lista da arvore inteira. (itens, avisos)"""
         from collections import OrderedDict
 
+        from . import regras
+        from .linha import ferragem_de_juncao
+
         bom, avisos = OrderedDict(), []
-        for cada in self.arvore(montagem or self.ativa):
+
+        def somar(sap, descricao, qtd, origem):
+            reg = bom.setdefault(sap, {"sap": sap, "descricao": descricao,
+                                       "qtd": 0, "origem": origem})
+            reg["qtd"] += qtd
+
+        arvore = self.arvore(montagem or self.ativa)
+        for cada in arvore:
             itens, recados = cada.lista_materiais()
             for reg in itens:
-                antes = bom.get(reg["sap"])
-                if antes is None:
-                    bom[reg["sap"]] = dict(reg)
-                else:
-                    antes["qtd"] += reg["qtd"]
+                somar(reg["sap"], reg["descricao"], reg["qtd"], reg["origem"])
             avisos += [f"{cada.nome}: {a}" if len(self.montagens) > 1 else a
                        for a in recados]
+        # A BOCA EM QUE O RAMO NASCE E UMA JUNTA, e ela nao pertence a
+        # montagem nenhuma - nasce entre duas, e por isso escapava das duas
+        # listas. O desenho ja punha a ferragem dela; a lista nao comprava
+        # nenhuma, e o barrilete saia com tres derivações sem parafuso.
+        for ramo in arvore:
+            if not ramo.origem or not ramo.pecas:
+                continue
+            dona = self.dona_da_peca(ramo.origem.get("peca"))
+            if dona is None or dona not in arvore:
+                continue
+            dono = dona.achar(ramo.origem["peca"])
+            # a boca da derivação nao esta separada nas conexoes do cadastro:
+            # no te igual ela tem a mesma bitola e a mesma norma das outras,
+            # e e por isso que a saida serve de porta. Num te REDUZIDO isso
+            # aproxima - a derivação e a menor - e o aviso de bitola aparece
+            saida, entrada = dono.saida, ramo.pecas[0].entrada
+            if not saida or not entrada:
+                continue
+            acao, dados = regras.resolver_juncao(saida, entrada)
+            ferragem_de_juncao(
+                self.catalogo,
+                {"pos": 0, "acao": acao, "dados": dados,
+                 "de": dono, "para": ramo.pecas[0]},
+                somar, avisos, rotulo=f"{ramo.nome} nasce em {dona.nome}: ")
         for numero, reg in enumerate(bom.values(), 1):
             reg["item"] = numero
         return list(bom.values()), avisos

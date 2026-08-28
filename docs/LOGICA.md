@@ -396,7 +396,16 @@ norma da ponta de jusante — e é aí que a tabela ANSI entra.
 ### 4.2.1 Barra roscada
 
 Válvula wafer é presa por tirante. Porca e arruela saem da furação: **2 de cada
-por furo do flange** — uma em cada ponta do tirante. A regra de compra é
+por furo do flange** — uma em cada ponta do tirante.
+
+**E o tirante ocupa o furo, então a junta da wafer não leva parafuso nenhum.**
+A válvula não tem flange: ela é abraçada pelas duas vizinhas, e a furação
+inteira vai de tirante — não sobra furo. O desenho já sabia disso (as duas
+junções da wafer viram uma só, com barra roscada de ponta a ponta) e a lista
+não: ela cobrava os parafusos das duas faces *além* das barras. Num recalque
+de 6" isso eram 16 parafusos comprados para uma válvula que não usa nenhum.
+Hoje a exceção mora num lugar só (`linha.ferragem_de_juncao`), lido pelas duas
+projeções. A regra de compra é
 **3 barras roscadas inteiras por válvula** de retenção ou borboleta — o corte acontece na montagem e
 não reduz a quantidade comprada. De 10" para cima 3 barras não rendem um tirante
 por furo, e a quantidade sobe para cobrir a furação: **4 barras**.

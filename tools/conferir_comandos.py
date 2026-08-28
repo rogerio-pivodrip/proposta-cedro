@@ -402,6 +402,58 @@ def main():
                                                     svg).group(1)) - b[2])]
     certo("e nenhum cortado na borda da folha", not fora, str(fora[:2]))
 
+    print("\n== a wafer é apertada por tirante, e não por parafuso")
+    # A borboleta e a retencao wafer NAO tem flange: elas sao abraçadas pelas
+    # duas vizinhas, e a furacao inteira vai de tirante. O desenho ja fundia
+    # as duas juncoes numa so; a lista cobrava os parafusos assim mesmo, e a
+    # valvula saia com tirante E parafuso - o dobro do que se aperta
+    linha = Linha(catalogo)
+    flangeado = catalogo.melhor("TUBO", 8, material=None, norma="NBR PN16")
+    borboleta = catalogo.melhor("VALVULA_BORBOLETA", 8, material=None)
+    for item in (flangeado, borboleta, flangeado):
+        linha.inserir(Peca(item))
+    bom, _avisos = linha.lista_materiais()
+    parafusos = [r for r in bom if "PARAFUSO" in r["descricao"].upper()]
+    barras = [r for r in bom if "BARRA ROSCA" in r["descricao"].upper()]
+    juntas = [r for r in bom if "JUNTA PLANA" in r["descricao"].upper()]
+    certo("a válvula wafer não leva parafuso nenhum", not parafusos,
+             str([r["descricao"] for r in parafusos]))
+    certo("leva as três barras roscadas", barras and barras[0]["qtd"] == 3,
+             str([(r["qtd"], r["descricao"]) for r in barras]))
+    certo("e uma junta de cada lado", juntas and juntas[0]["qtd"] == 2,
+             str([(r["qtd"], r["descricao"]) for r in juntas]))
+
+    print("\n== a boca em que o ramo nasce é uma junta, e ela se compra")
+    from motor.projeto import Projeto                      # noqa: E402
+    projeto = Projeto(catalogo)
+    tronco = Linha(catalogo, nome="Barrilete")
+    projeto.criar(tronco)
+    for familia in ("TUBO", "TE", "TUBO"):
+        item = (flangeado if familia == "TUBO"
+                else catalogo.melhor("TE", 8, material=None))
+        tronco.inserir(Peca(item))
+    te = next(p for p in tronco.pecas if p.familia == "TE")
+    sozinho, _avisos = projeto.lista_materiais(tronco)
+    juntas_antes = sum(r["qtd"] for r in sozinho
+                       if "JUNTA PLANA" in r["descricao"].upper())
+    ramo = projeto.ramificar(te.id, nome="Saída 1")
+    ramo.inserir(Peca(flangeado))
+    com_ramo, _avisos = projeto.lista_materiais(tronco)
+    juntas_depois = sum(r["qtd"] for r in com_ramo
+                        if "JUNTA PLANA" in r["descricao"].upper())
+    certo("o ramo trouxe a junta da boca em que ele nasceu",
+             juntas_depois == juntas_antes + 1,
+             f"{juntas_antes} antes, {juntas_depois} depois")
+    # 8" NBR PN16 tem 12 furos, e a boca do te e uma flange dessas
+    furos = 12
+    parafusos_antes = sum(r["qtd"] for r in sozinho
+                          if "PARAFUSO" in r["descricao"].upper())
+    parafusos_depois = sum(r["qtd"] for r in com_ramo
+                           if "PARAFUSO" in r["descricao"].upper())
+    certo("e os parafusos dela também",
+             parafusos_depois == parafusos_antes + furos,
+             f"{parafusos_antes} antes, {parafusos_depois} depois")
+
     print("\n== várias peças de uma vez, e um desfazer só")
     linha, _faltando = templates.recalque(catalogo, 6)
     antes = retrato(linha)

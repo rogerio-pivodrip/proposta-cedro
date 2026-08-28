@@ -276,6 +276,56 @@ class Comando:
         return f"<{self.nome} {self.alvo or ''}>".replace(" >", ">")
 
 
+def ferragem_de_juncao(catalogo, junc, somar, avisos, rotulo=""):
+    """Os itens derivados de UMA juncao flangeada, somados na lista.
+
+    Sai da `Linha` porque o PROJETO tambem precisa: a boca em que um ramo
+    nasce e uma juncao flangeada como qualquer outra, e ela nao pertence a
+    montagem nenhuma - nasce entre duas. Enquanto esta conta so existia dentro
+    da Linha, o desenho punha parafuso ali e a lista nao comprava nenhum.
+
+    **A WAFER E A EXCECAO.** Ela nao tem flange: e abraçada pelas duas
+    vizinhas, e o que aperta sao as barras roscadas de ponta a ponta - toda a
+    furacao vai de tirante, e nao sobra furo para parafuso. O desenho ja sabia
+    disso (`desenhar_linha` funde as duas juncoes da wafer numa so); a lista
+    cobrava os parafusos assim mesmo, e a valvula saia com tirante E parafuso.
+    Fica so a junta, uma de cada lado.
+    """
+    onde = f"{rotulo}juncao {junc['pos']}"
+    if junc["acao"] == "recusada":
+        avisos.append(f"{onde} ({junc['de'].familia} -> "
+                      f"{junc['para'].familia}): {junc['dados']['motivo']}")
+        return
+    if junc["acao"] != "direta":
+        avisos.append(f"{onde}: precisa de {junc['acao']} {junc['dados']}")
+        return
+    dados = junc["dados"]
+    if dados["junta"] not in regras.TIPOS_FLANGE:
+        return                # rosca, solda, ponta lisa: sem ferragem
+    contexto = regras.contexto_da_junta(junc["de"].material,
+                                        junc["para"].material)
+    if regras.contexto_sem_regra(contexto):
+        avisos.append(f"{onde} ({junc['de'].material} x "
+                      f"{junc['para'].material}): combinacao sem regra de "
+                      "parafuso - conferir")
+    try:
+        itens = regras.ferragem_da_junta(
+            dados["dn"], dados["norma"], junc["de"].unidade_dn, contexto)
+    except regras.Incompatibilidade as erro:
+        avisos.append(str(erro))
+        return
+    aperta_barra = any(p.familia in regras.BARRAS_ROSCADAS_POR_PECA
+                       for p in (junc["de"], junc["para"]))
+    for papel, esp, qtd in itens:
+        if aperta_barra and papel != "JUNTA_PLANA":
+            continue          # a barra roscada da peca ja traz o que aperta
+        item = ferragem.resolver(catalogo, papel, esp)
+        if not item:
+            avisos.append(f"sem SAP para {papel} {esp}")
+            continue
+        somar(item["sap"], item["descricao"], qtd, "ferragem")
+
+
 class Linha:
     # o que `alterar` pode mudar sem trocar a peca. Fora desta lista o
     # comando recusa: mudar familia ou SAP nao e alterar, e substituir
@@ -883,39 +933,7 @@ class Linha:
                     )
 
         for junc in self.juncoes():
-            if junc["acao"] == "recusada":
-                avisos.append(f"juncao {junc['pos']} "
-                              f"({junc['de'].familia} -> {junc['para'].familia}): "
-                              f"{junc['dados']['motivo']}")
-                continue
-            if junc["acao"] != "direta":
-                avisos.append(
-                    f"juncao {junc['pos']}: precisa de {junc['acao']} {junc['dados']}"
-                )
-                continue
-            dados = junc["dados"]
-            if dados["junta"] not in regras.TIPOS_FLANGE:
-                continue  # rosca, solda, ponta lisa: sem ferragem
-            contexto = regras.contexto_da_junta(junc["de"].material,
-                                                junc["para"].material)
-            if regras.contexto_sem_regra(contexto):
-                avisos.append(
-                    f"juncao {junc['pos']} ({junc['de'].material} x "
-                    f"{junc['para'].material}): combinacao sem regra de "
-                    "parafuso - conferir"
-                )
-            try:
-                itens = regras.ferragem_da_junta(
-                    dados["dn"], dados["norma"], junc["de"].unidade_dn, contexto)
-            except regras.Incompatibilidade as erro:
-                avisos.append(str(erro))
-                continue
-            for papel, esp, qtd in itens:
-                item = ferragem.resolver(self.catalogo, papel, esp)
-                if not item:
-                    avisos.append(f"sem SAP para {papel} {esp}")
-                    continue
-                somar(item["sap"], item["descricao"], qtd, "ferragem")
+            ferragem_de_juncao(self.catalogo, junc, somar, avisos)
 
         for t in self.trechos_retos():
             if t["ok"]:
