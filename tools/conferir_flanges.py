@@ -109,6 +109,42 @@ def main():
         if not (ok_alto and ok_largo):
             problemas.append(f'{dn:g}" a chapa desenhada não é a da ficha')
 
+    print("\n== o parafuso da tabela fecha a junta?")
+    # o desenho saiu em escala de verdade - o parafuso no comprimento do codigo
+    # que a lista compra - e escala de verdade da para MEDIR
+    from motor import regras                            # noqa: E402
+    curtos = []
+    for dn in BITOLAS:
+        ficha = regras.parafuso_da_junta(dn, "AZ_AZ")
+        esp = s.flange(dn)["espessura"]
+        _el, sobra = s.parafuso_sextavado(-esp, esp, 0.0, ficha["bitola_mm"],
+                                          ficha["comprimento_mm"])
+        marca = "ok" if sobra >= 2 * 25.4 / 10 else " !"
+        print(f'  {marca} {dn:>4g}"  chapa {esp:.0f}+{esp:.0f}  '
+              f'{ficha["bitola_pol"]}" x {ficha["comprimento_pol"]}"  '
+              f'→ sobra {sobra:+.1f} mm depois da porca')
+        if sobra < 2 * 25.4 / 10:
+            curtos.append(f'{dn:g}"')
+    if curtos:
+        print("     ↑ estas o programa AVISA, e não conserta: a tabela de "
+              "ferragem é regra da casa.\n"
+              "       " + ", ".join(curtos)
+              + " pedem um parafuso mais longo.")
+
+    print("\n== o desenho e a lista contam a mesma arruela")
+    desenhado = sum(1 for e in s.parafuso_sextavado(-16, 16, 0, 19.05, 63.5)[0]
+                    if e.get("classe") == "arruela")
+    da_lista = next(q for papel, _e, q in regras.ferragem_da_junta(8, "NBR PN16")
+                    if papel == "ARRUELA")
+    furos = s.flange(8)["furos"]
+    if desenhado * furos == da_lista:
+        print(f"  ok {desenhado} arruela por parafuso, no desenho e na compra "
+              f"({da_lista} numa junta de 8\")")
+    else:
+        problemas.append("o desenho e a lista contam arruelas diferentes")
+        print(f"  ! o desenho poe {desenhado} por parafuso "
+              f"({desenhado * furos} na junta) e a lista compra {da_lista}")
+
     if divergem:
         print("\n== onde a folha e o catálogo discordam")
         for dn, e_folha, e_cat in divergem:

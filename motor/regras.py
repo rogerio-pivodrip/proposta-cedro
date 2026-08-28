@@ -88,6 +88,14 @@ BARRAS_ROSCADAS_POR_PECA = {
     "VALVULA_RETENCAO": 3,
     "VALVULA_BORBOLETA": 3,
 }
+# Arruela por parafuso. UMA, do lado da PORCA: a cabeca assenta direto na
+# chapa, e quem precisa de arruela e o lado que gira no aperto.
+#
+# Este numero e lido em dois lugares - a lista de materiais, que compra, e o
+# desenho, que mostra. E de proposito: se cada um tivesse o seu, a folha
+# mostraria duas e a compra traria uma, e ninguem veria a diferenca ate a obra.
+ARRUELAS_POR_PARAFUSO = 1
+
 # Porca do tirante: 2 por furo do flange - uma em cada ponta. A arruela segue a
 # mesma conta, uma sob cada porca.
 PORCAS_POR_FURO = 2
@@ -311,6 +319,37 @@ def especificacao_parafuso(dn_pol, contexto):
     return faixas[-1]
 
 
+def polegada_em_mm(texto):
+    """'2 1/2' -> 63.5. A tabela da casa fala em polegada, o desenho em mm."""
+    import re as _re
+    m = _re.match(r"\s*(?:(\d+)\s+)?(?:(\d+)/(\d+)|(\d+(?:[.,]\d+)?))\s*$",
+                  str(texto))
+    if not m:
+        return None
+    inteiro = float(m.group(1) or 0)
+    if m.group(2):
+        inteiro += float(m.group(2)) / float(m.group(3))
+    elif m.group(4):
+        inteiro += float(m.group(4).replace(",", "."))
+    return inteiro * 25.4
+
+
+def parafuso_da_junta(dn_pol, contexto="AZ_AZ"):
+    """O parafuso que a casa poe nesta junta, em milimetro.
+
+    A tabela e a mesma que a lista de materiais usa - data/regras_ferragem.csv,
+    a regra da casa - so que convertida. E o que permite desenhar o parafuso no
+    tamanho de verdade em vez de num tamanho plausivel: um desenho em escala em
+    que o parafuso nao esta em escala mente exatamente onde mais se olha.
+    """
+    ficha = especificacao_parafuso(dn_pol, contexto)
+    return {"bitola_mm": polegada_em_mm(ficha["bitola_pol"]),
+            "comprimento_mm": polegada_em_mm(ficha["comprimento_pol"]),
+            "bitola_pol": ficha["bitola_pol"],
+            "comprimento_pol": ficha["comprimento_pol"],
+            "homologado": ficha["homologado"]}
+
+
 def ferragem_da_junta(dn, norma, unidade="in", contexto="AZ_AZ"):
     """Itens derivados de UMA junta flangeada: (papel, especificacao, qtd)."""
     dn_pol = dn_em_polegada(dn, unidade)
@@ -333,7 +372,7 @@ def ferragem_da_junta(dn, norma, unidade="in", contexto="AZ_AZ"):
         ("PARAFUSO", {"bitola_pol": bit,
                       "comprimento_pol": esp["comprimento_pol"]}, n),
         ("PORCA", {"bitola_pol": bit}, n),
-        ("ARRUELA", {"bitola_pol": bit}, 2 * n),
+        ("ARRUELA", {"bitola_pol": bit}, ARRUELAS_POR_PARAFUSO * n),
     ]
 
 

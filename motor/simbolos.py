@@ -3846,35 +3846,51 @@ def encaixa(a, b):
 
 
 def sanduiche_wafer(x_entrada, x_saida, y=0.0, direcao=0.0, dn_pol=8,
-                    barras=3, norma="NBR PN16"):
+                    barras=3, norma="NBR PN16", comprimento_mm=None,
+                    bitola_mm=None):
     """A wafer nao tem flange: ela e abracada pelas duas flanges vizinhas.
 
     Entao nao ha duas juntas, ha uma so - e a barra roscada atravessa o
     conjunto inteiro, da porca de um lado ate a do outro, passando pela
     flange, pelo corpo da valvula e pela outra flange. E por isso que a lista
     conta barra roscada, e nao parafuso, nessas pecas.
+
+    A barra e ROSCADA DE PONTA A PONTA - nao tem cabeca. Entao ela leva porca
+    e arruela nos DOIS lados, e sobra ponta depois das duas. Um parafuso sobra
+    de um lado so; uma barra sobra dos dois, e e assim que se reconhece uma da
+    outra no desenho.
     """
     f = flange(dn_pol, norma)
     esp = f["espessura"]
     raio_furo = f["circulo"] / 2
-    d = f["furo"] * 0.85
-    porca = d * 1.6
-    x0 = x_entrada - esp - porca * 0.75
-    comprimento = (x_saida - x_entrada) + 2 * esp + 2 * porca * 0.75
+    d = bitola_mm or f["furo"] * 0.85
+    chave = d * CHAVE
+    porca = d * PORCA_ALT
+    arruela = max(d * ARRUELA, 1.5)
+    # o aperto: chapa, valvula, chapa, mais arruela e porca dos dois lados
+    aperto = (x_saida - x_entrada) + 2 * esp + 2 * (arruela + porca)
+    comprimento = comprimento_mm or (aperto + d)
+    sobra = max((comprimento - aperto) / 2, 0.0)
+    a0 = x_entrada - esp - arruela - porca - sobra     # a ponta de tras
+    a1 = x_saida + esp + arruela + porca + sobra       # a ponta da frente
     el = []
-    for lado, x in (("entrada", x_entrada), ("saida", x_saida)):
+    for _lado, x in (("entrada", x_entrada), ("saida", x_saida)):
         el.append(_p(f"M{x:.1f} {y - f['externo']/2:.1f} "
                      f"V{y + f['externo']/2:.1f}", "junta"))
     for altura in alturas_de_furo(raio_furo, barras * 2):
         yy = y + altura
-        # a barra some nas duas chapas das vizinhas e reaparece sobre o corpo
-        # da valvula, que e por onde ela passa de fato
-        el += haste_aparente(x0, x0 + comprimento,
+        # a barra some nas duas chapas e reaparece sobre o corpo da valvula,
+        # que e por onde ela passa de fato
+        el += haste_aparente(a0, a1,
                              [(x_entrada - esp, x_entrada),
                               (x_saida, x_saida + esp)], yy, d, "barra")
-        for xn in (x0, x0 + comprimento - porca * 0.75):
-            el.append({"tipo": "rect", "x": xn, "y": yy - porca / 2,
-                       "w": porca * 0.75, "h": porca, "classe": "porca"})
+        # a barra tem porca nos dois lados, entao arruela nos dois: nao ha
+        # cabeca que assente direto
+        el.append(_arruela(x_entrada - esp - arruela, arruela, yy, chave))
+        el += _sextavado(x_entrada - esp - arruela - porca, porca, yy, chave,
+                         "porca")
+        el.append(_arruela(x_saida + esp, arruela, yy, chave))
+        el += _sextavado(x_saida + esp + arruela, porca, yy, chave, "porca")
     if direcao:
         for e in el:
             e["girar"] = (direcao, x_entrada, y)
@@ -3957,7 +3973,79 @@ def haste_aparente(x0, x1, dentro, y, espessura, classe="parafuso"):
     return el
 
 
-def junta_flangeada(x, y=0.0, direcao=0.0, dn_pol=8, norma="NBR PN16"):
+# Proporcoes do parafuso sextavado UNC, em funcao do diametro nominal d.
+# A chave e a MEDIDA DE CHAVE - o entre-faces - e ela e 1,5 d: a lista compra
+# "PORCA SX AC UNC 3/4" CHV 1 1/8"", e 1 1/8" e exatamente 1,5 x 3/4".
+CHAVE = 1.5           # entre-faces
+CABECA = 0.65         # altura da cabeca
+PORCA_ALT = 0.875     # altura da porca
+ARRUELA = 0.16        # espessura da arruela lisa
+ARRUELA_FORA = 1.35   # o diametro dela, em chaves: e MAIOR que a porca
+CHANFRO = 0.26        # onde a aresta do chanfro cai, medida do centro
+
+
+def _sextavado(x, largura, y, chave, classe="porca"):
+    """Cabeca ou porca vista DE LADO, pelo entre-faces.
+
+    O sextavado visto de lado e um retangulo com duas arestas: o chanfro que
+    mata os cantos aparece como duas linhas paralelas ao eixo. Sem elas o
+    desenho tem um quadrado, e quadrado nao e sextavado - e a diferenca entre
+    "tem porca aqui" e "esta porca e sextavada, chave tanto".
+    """
+    el = [{"tipo": "rect", "x": x, "y": y - chave / 2, "w": largura,
+           "h": chave, "classe": classe}]
+    for sinal in (-1, 1):
+        yy = y + sinal * chave * CHANFRO
+        el.append(_p(f"M{x:.1f} {yy:.1f} h{largura:.1f}", "furo"))
+    return el
+
+
+def _arruela(x, espessura, y, chave):
+    """A arruela lisa, vista de lado. Ela e MAIOR que a porca - e por isso que
+    ela existe: espalha o aperto numa area que a chave nao alcanca."""
+    return {"tipo": "rect", "x": x, "y": y - chave * ARRUELA_FORA / 2,
+            "w": espessura, "h": chave * ARRUELA_FORA, "classe": "arruela"}
+
+
+def parafuso_sextavado(x0, x1, y, d, comprimento=None, arruelas=None):
+    """Parafuso passante: arruela, cabeca, porca, e a rosca que sobra.
+
+    `x0` e `x1` sao as faces EXTERNAS do que ele aperta - as duas chapas
+    encostadas. Entre elas o parafuso esta no furo e nao se ve; o que aparece
+    e o que fica de fora, e e por isso que o desenho pode dizer se ele serve.
+
+    `comprimento` e o do CODIGO da lista, medido de baixo da cabeca, como todo
+    parafuso se mede. Com ele o desenho fica em escala de verdade: da para
+    medir na folha se sobra rosca depois da porca, e quanto. Sem ele, desenha-
+    se o minimo que fecha, e a folha nao promete o que nao sabe.
+    """
+    from . import regras
+    if arruelas is None:
+        arruelas = regras.ARRUELAS_POR_PARAFUSO
+    chave = d * CHAVE
+    cabeca, porca = d * CABECA, d * PORCA_ALT
+    arruela = max(d * ARRUELA, 1.5)
+    # arruela SO do lado da porca quando a regra diz uma: a cabeca assenta
+    # direto na chapa, e quem precisa dela e o lado que gira no aperto
+    sob_cabeca = arruela if arruelas >= 2 else 0.0
+    aperto = (x1 - x0) + sob_cabeca + arruela + porca
+    comprimento = comprimento or (aperto + d * 0.5)
+    sobra = comprimento - aperto
+    el = []
+    # na ordem em que se monta: cabeca, [arruela], chapas, arruela, porca, rosca
+    el += _sextavado(x0 - sob_cabeca - cabeca, cabeca, y, chave, "porca")
+    if sob_cabeca:
+        el.append(_arruela(x0 - sob_cabeca, arruela, y, chave))
+    el.append(_arruela(x1, arruela, y, chave))
+    el += _sextavado(x1 + arruela, porca, y, chave, "porca")
+    if sobra > 0.3:
+        el.append({"tipo": "rect", "x": x1 + arruela + porca, "y": y - d / 2,
+                   "w": sobra, "h": d, "classe": "parafuso"})
+    return el, sobra
+
+
+def junta_flangeada(x, y=0.0, direcao=0.0, dn_pol=8, norma="NBR PN16",
+                    comprimento_mm=None, bitola_mm=None):
     """Os parafusos e a junta que fecham o encontro de duas flanges.
 
     Nao pertencem a nenhuma das duas pecas - pertencem a juncao, do mesmo jeito
@@ -3972,20 +4060,13 @@ def junta_flangeada(x, y=0.0, direcao=0.0, dn_pol=8, norma="NBR PN16"):
     f = flange(dn_pol, norma)
     esp = f["espessura"]
     raio_furo = f["circulo"] / 2
-    d = f["furo"] * 0.85                      # a haste, nao o furo
-    porca = d * 1.6
-    comprimento = 2 * esp + 2 * porca * 0.75
-    x0 = x - esp - porca * 0.75
+    # a haste, e nao o furo: o parafuso e uma bitola abaixo do furo que o passa
+    d = bitola_mm or f["furo"] * 0.85
     el = [_p(f"M{x:.1f} {y - f['externo']/2:.1f} V{y + f['externo']/2:.1f}",
              "junta")]
     for altura in alturas_de_furo(raio_furo, f["furos"]):
-        yy = y + altura
-        # as duas chapas encostadas escondem a haste: so as pontas aparecem
-        el += haste_aparente(x0, x0 + comprimento, [(x - esp, x + esp)],
-                             yy, d)
-        for xn in (x0, x0 + comprimento - porca * 0.75):
-            el.append({"tipo": "rect", "x": xn, "y": yy - porca / 2,
-                       "w": porca * 0.75, "h": porca, "classe": "porca"})
+        el += parafuso_sextavado(x - esp, x + esp, y + altura, d,
+                                 comprimento_mm)[0]
     if direcao:
         for e in el:
             e["girar"] = (direcao, x, y)

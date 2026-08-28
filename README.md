@@ -237,6 +237,33 @@ painel e vira aviso na folha — *"desenhado com 2,35 m, cortado da barra de 6 m
 que o código traz"*. Sem isso o desenho vai para a obra dizendo 2,35 e a lista
 vai para a compra dizendo 6, e as duas estão certas cada uma por si.
 
+### O parafuso em escala
+
+O parafuso sai no **comprimento do código** que a lista vai comprar — a mesma
+tabela dos dois lados (`data/regras_ferragem.csv`, a regra da casa). Desenhar
+um comprimento plausível mentiria exatamente onde mais se olha.
+
+E escala de verdade tem um efeito colateral útil: **dá para medir**. Se depois
+da porca não sobra rosca, o parafuso não fecha, e isso é uma compra errada que
+só apareceria na obra. `conferir_flanges.py` percorre a tabela inteira:
+
+```
+  ok    8"  chapa 16+16  3/4" x 2 1/2"  → sobra +11.8 mm depois da porca
+   !   12"  chapa 21+21  3/4" x 2 1/2"  → sobra  +1.8 mm depois da porca
+   !   18"  chapa 28+28  3/4" x 2 1/2"  → sobra -11.2 mm depois da porca
+```
+
+De 12" para cima o 2½" da tabela não fecha — o programa **avisa e não
+conserta**, porque a tabela de ferragem é regra da casa.
+
+O sextavado visto de lado é um retângulo com duas arestas: o chanfro que mata
+os cantos aparece como duas linhas paralelas ao eixo. Sem elas o desenho tem um
+quadrado, e quadrado não é sextavado. E a **arruela é uma só, do lado da
+porca** — a cabeça assenta direto na chapa, e quem precisa dela é o lado que
+gira no aperto. Esse número é lido em dois lugares, o desenho e a compra: se
+cada um tivesse o seu, a folha mostraria duas e a compra traria uma, e ninguém
+veria a diferença até a obra.
+
 ### A cota
 
 Ela fica **no eixo da peça**, e o eixo abre para ela passar — as duas coisas

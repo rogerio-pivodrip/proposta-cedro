@@ -10,7 +10,7 @@ motor/desenho.de_item, e o id da peca vai junto para o grupo do SVG.
 """
 import math
 
-from . import desenho, simbolos as s
+from . import desenho, regras, simbolos as s
 from .svg import (DEFS, ESTILO, ESTILO_LINHA, cor_de,  # noqa: F401
                   desenhar, desenhar_peca, luz_de, texto_no_eixo)
 
@@ -98,6 +98,55 @@ def porta_livre(simbolo):
     """
     return next((p for p in simbolo.portas
                  if p.papel not in s.ENTRADA + s.SAIDA), None)
+
+
+def parafusos_curtos(linha):
+    """Junta em que o parafuso da tabela NAO fecha.
+
+    O desenho passou a sair em escala de verdade - o parafuso no comprimento do
+    codigo que a lista compra - e escala de verdade tem um efeito colateral
+    util: da para MEDIR. Se depois da porca nao sobra rosca, o parafuso nao
+    fecha, e isso e uma compra errada que so apareceria na obra.
+
+    A conta e a mesma que o simbolo faz para desenhar, e de proposito: quem
+    avisa e quem desenha veem o mesmo parafuso.
+    """
+    prontos, _recusadas = simbolos_da_linha(linha)
+    fora = []
+    for (peca, simbolo), (vizinha, adiante) in zip(prontos, prontos[1:]):
+        saida = s.porta(simbolo, s.SAIDA)
+        ok, _motivo = s.encaixa(simbolo, adiante)
+        if not ok or saida is None or _os_dois_pead(simbolo, adiante):
+            continue
+        contexto = regras.contexto_da_junta(simbolo.params.get("material"),
+                                            adiante.params.get("material"))
+        ficha = regras.parafuso_da_junta(saida.dn_pol, contexto)
+        esp = s.flange(saida.dn_pol)["espessura"]
+        _el, sobra = s.parafuso_sextavado(-esp, esp, 0.0, ficha["bitola_mm"],
+                                          ficha["comprimento_mm"])
+        # menos de dois fios de rosca aparentes ja e aperto sem garantia; UNC
+        # de 3/4" tem 10 fios por polegada, entao um fio e 2,54 mm
+        if sobra < 2 * 25.4 / 10:
+            fora.append({"de": peca.id, "para": vizinha.id,
+                         "dn_pol": saida.dn_pol, "contexto": contexto,
+                         "sobra_mm": sobra, "bitola_pol": ficha["bitola_pol"],
+                         "comprimento_pol": ficha["comprimento_pol"]})
+    return fora
+
+
+def parafusos_curtos_por_caso(linha):
+    """O mesmo, agrupado - o aviso e sobre a COMPRA, e nao sobre cada junta.
+
+    Numa linha de 14" com tres juntas iguais, o problema e um so e a resposta e
+    uma so: trocar o comprimento na tabela. Repetir tres vezes so faz a folha
+    parecer cheia de defeito.
+    """
+    casos = {}
+    for c in parafusos_curtos(linha):
+        chave = (c["dn_pol"], c["contexto"], c["comprimento_pol"])
+        registro = casos.setdefault(chave, dict(c, juntas=0))
+        registro["juntas"] += 1
+    return list(casos.values())
 
 
 def postos_da_linha(linha, giro=None):
@@ -325,8 +374,17 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
                     p.saida[0], p.saida[1], direcao,
                     p.simbolo.params.get("dn_mm") or 225))
             else:
-                guardar(s.junta_flangeada(p.saida[0], p.saida[1], direcao,
-                                          saida.dn_pol))
+                # o parafuso sai no tamanho do CODIGO que a lista vai comprar
+                # - a mesma tabela dos dois lados. Desenhar um comprimento
+                # plausivel mentiria exatamente onde mais se olha
+                ficha = regras.parafuso_da_junta(
+                    saida.dn_pol,
+                    regras.contexto_da_junta(p.simbolo.params.get("material"),
+                                             vizinho.params.get("material")))
+                guardar(s.junta_flangeada(
+                    p.saida[0], p.saida[1], direcao, saida.dn_pol,
+                    comprimento_mm=ficha["comprimento_mm"],
+                    bitola_mm=ficha["bitola_mm"]))
         else:
             ruins.append((p, motivo))
     for i in sorted(wafer):

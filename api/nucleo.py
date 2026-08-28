@@ -56,7 +56,14 @@ class Sessao:
                 f'{d["peca"].descricao}: desenhado com '
                 f'{d["desenhado_mm"]/1000:g} m, cortado da barra de '
                 f'{d["do_codigo_mm"]/1000:g} m que o código traz'
-                for d in linha.divergencias()],
+                for d in linha.divergencias()] + [
+                f'{c["juntas"]} junta{"s" if c["juntas"] > 1 else ""} de '
+                f'{c["dn_pol"]:g}": o parafuso {c["bitola_pol"]}" x '
+                f'{c["comprimento_pol"]}" da tabela não fecha - '
+                + (f'faltam {-c["sobra_mm"]:.0f} mm' if c["sobra_mm"] < 0
+                   else f'sobram só {c["sobra_mm"]:.0f} mm de rosca '
+                        f'depois da porca')
+                for c in vista.parafusos_curtos_por_caso(linha)],
             "divergencias": [{"id": d["peca"].id, "sap": d["peca"].sap,
                               "desenhado_mm": d["desenhado_mm"],
                               "do_codigo_mm": d["do_codigo_mm"]}
