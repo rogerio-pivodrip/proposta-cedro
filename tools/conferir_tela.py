@@ -210,6 +210,38 @@ async def rodar(porta):
                 conferir("o DXF tem os blocos e os inserts da linha",
                          "INSERT" in texto and "BLOCK" in texto)
 
+        print("\n== a tira de montagens: o projeto inteiro numa linha")
+        # a sessao ja vem com o que as secoes anteriores montaram: o que se
+        # confere e a DIFERENCA, e nao um numero absoluto
+        tinha = len(await pagina.query_selector_all(".abas button:not(.nova)"))
+        await pagina.select_option("#prontas", "RECALQUE")
+        await pagina.click("#succao")
+        await pagina.wait_for_timeout(900)
+        abas = await pagina.query_selector_all(".abas button:not(.nova)")
+        conferir("montar de novo abre outra aba, e não apaga a primeira",
+                 len(abas) == tinha + 1, f"{len(abas)} abas, eram {tinha}")
+        ativa = await pagina.query_selector_all(".abas button.ativa")
+        conferir("a nova é a aberta", len(ativa) == 1)
+        pecas_recalque = len(await pagina.query_selector_all("g.peca[data-id]"))
+        await abas[0].click()
+        await pagina.wait_for_timeout(700)
+        conferir("clicar na aba troca o desenho",
+                 len(await pagina.query_selector_all("g.peca[data-id]"))
+                 != pecas_recalque)
+        await pagina.click(".abas .nova")
+        await pagina.wait_for_timeout(700)
+        conferir("o + abre uma montagem em branco",
+                 len(await pagina.query_selector_all(
+                     ".abas button:not(.nova)")) == tinha + 2)
+        # apagar a aba em branco e voltar ao recalque
+        fechar = await pagina.query_selector_all(".abas button.ativa .fechar")
+        if fechar:
+            await fechar[0].click()
+            await pagina.wait_for_timeout(700)
+        conferir("o × apaga a montagem",
+                 len(await pagina.query_selector_all(
+                     ".abas button:not(.nova)")) == tinha + 1)
+
         print("\n== escolher várias, e mudar as três de uma vez")
         await pagina.click("#succao")
         await pagina.wait_for_timeout(900)

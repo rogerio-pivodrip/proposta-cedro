@@ -102,6 +102,51 @@ def main():
     executar(sessao, {"nome": "refazer"})
     conferir("refazer volta ao posterior", _conteudo(sessao) == depois)
 
+    print("\n== o projeto tem VÁRIAS montagens, e o ctrl+Z atravessa todas")
+    sessao = Sessao()
+    for montagem in ("SUCCAO", "RECALQUE", "PEAD"):
+        resposta = executar(sessao, {"nome": "template",
+                                     "template": montagem, "dn": 6})
+        conferir(f"{montagem.lower()} entra no projeto", resposta["ok"],
+                 resposta.get("erro", ""))
+    tira = executar(sessao, {"nome": "documento"})["documento"]["montagens"]
+    conferir("as três convivem", len(tira) == 3,
+             str([m["nome"] for m in tira]))
+    conferir("e a folha em branco do começo não virou aba órfã",
+             not [m for m in tira if not m["pecas"]],
+             str([m["nome"] for m in tira]))
+    # o tipo e um ROTULO: a casa monta o que quiser, sem pedir licenca
+    resposta = executar(sessao, {"nome": "montagem", "acao": "criar",
+                                 "rotulo": "Barrilete", "tipo": "BARRILETE"})
+    conferir("uma montagem de tipo novo entra sem o motor conhecê-lo",
+             resposta["ok"] and resposta.get("rotulo") == "Barrilete",
+             str(resposta.get("erro")))
+
+    # editar numa, trocar de aba, e desfazer: volta o que se ACABOU de fazer
+    executar(sessao, {"nome": "montagem", "acao": "escolher", "alvo": "Pead"})
+    antes = [m["pecas"] for m in
+             executar(sessao, {"nome": "documento"})["documento"]["montagens"]]
+    alvo_peca = executar(sessao, {"nome": "documento"})["documento"]["pecas"][0]["id"]
+    executar(sessao, {"nome": "remover", "alvo": alvo_peca})
+    executar(sessao, {"nome": "montagem", "acao": "escolher", "alvo": "Succao"})
+    executar(sessao, {"nome": "desfazer"})
+    depois = [m["pecas"] for m in
+              executar(sessao, {"nome": "documento"})["documento"]["montagens"]]
+    conferir("desfazer de outra aba devolve a edição certa", antes == depois,
+             f"{antes} contra {depois}")
+
+    # e o arquivo leva o projeto inteiro
+    salvo = executar(sessao, {"nome": "exportar", "formato": "linha"})
+    outra = Sessao()
+    voltou = executar(outra, {"nome": "abrir", "texto": salvo["texto"]})
+    conferir("salvar e abrir levam as quatro montagens",
+             voltou["ok"] and voltou["montagens"] == 4,
+             str(voltou.get("montagens") or voltou.get("erro")))
+    conferir("com os mesmos nomes",
+             [m["nome"] for m in voltou["documento"]["montagens"]]
+             == [m["nome"] for m in
+                 executar(sessao, {"nome": "documento"})["documento"]["montagens"]])
+
     print("\n== trocar a bitola da linha inteira, num comando só")
     sessao = Sessao()
     executar(sessao, {"nome": "template", "template": "RECALQUE", "dn": 6})

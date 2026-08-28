@@ -24,7 +24,7 @@ import json
 from .linha import Linha, Peca
 
 FORMATO = "linha-pivodrip"
-VERSAO = 1
+VERSAO = 2      # 1 guardava UMA montagem; 2 guarda o projeto inteiro
 
 # o que a peca guarda de proprio. `comprimento_mm` NAO entra: o que entra e o
 # que foi pedido a mao (`_comprimento_pedido`), porque so isso e escolha - o
@@ -47,14 +47,33 @@ def _da_peca(peca):
     return ficha
 
 
-def guardar(linha):
-    """A montagem em JSON, pronta para gravar."""
-    return json.dumps({
-        "formato": FORMATO, "versao": VERSAO,
+def _da_montagem(linha):
+    return {
+        "id": linha.id, "nome": linha.nome,
         "tipo": linha.tipo, "area": linha.area,
         "giro": linha.giro, "espelho": linha.espelho,
         "ordem_baloes": list(linha.ordem_baloes),
         "pecas": [_da_peca(p) for p in linha.pecas],
+    }
+
+
+def guardar(projeto):
+    """O projeto inteiro em JSON, pronto para gravar.
+
+    Aceita tambem uma `Linha` solta - e o que a versao 1 gravava, e o que os
+    testes de motor montam. Uma montagem sozinha vira um projeto de uma.
+    """
+    montagens = getattr(projeto, "montagens", None)
+    if montagens is None:
+        montagens, ativa = [projeto], projeto.id
+        nome, area = projeto.nome, projeto.area
+    else:
+        ativa = projeto.ativa.id if montagens else None
+        nome, area = projeto.nome, projeto.area
+    return json.dumps({
+        "formato": FORMATO, "versao": VERSAO,
+        "nome": nome, "area": area, "ativa": ativa,
+        "montagens": [_da_montagem(m) for m in montagens],
     }, ensure_ascii=False, indent=1)
 
 
@@ -87,21 +106,10 @@ def _montar_peca(catalogo, ficha, avisos):
     return peca
 
 
-def abrir(catalogo, texto):
-    """O texto de volta a documento. (linha, avisos)"""
-    try:
-        dados = json.loads(texto)
-    except (ValueError, TypeError) as erro:
-        raise Recusado(f"não consegui ler o arquivo: {erro}") from erro
-    if not isinstance(dados, dict) or dados.get("formato") != FORMATO:
-        raise Recusado("este arquivo não é uma montagem deste programa")
-    if int(dados.get("versao") or 0) > VERSAO:
-        raise Recusado(
-            f'a montagem foi salva na versão {dados["versao"]} e este '
-            f"programa lê até a {VERSAO} - atualize o programa")
-    avisos = []
+def _montar_linha(catalogo, dados, avisos):
     linha = Linha(catalogo, tipo=dados.get("tipo") or "RECALQUE",
-                  area=dados.get("area") or "P01")
+                  area=dados.get("area") or "P01",
+                  nome=dados.get("nome"))
     for ficha in dados.get("pecas") or []:
         peca = _montar_peca(catalogo, ficha, avisos)
         if peca is None:
@@ -118,4 +126,41 @@ def abrir(catalogo, texto):
     # abrir nao e edicao: o desfazer comeca vazio, e nao desmontando a linha
     linha.feitos.clear()
     linha.desfeitos.clear()
-    return linha, avisos
+    return linha
+
+
+def abrir(catalogo, texto):
+    """O texto de volta a documento. (projeto, avisos)
+
+    Le tanto o formato do projeto (versao 2) quanto o da montagem sozinha
+    (versao 1), que virou um projeto de uma montagem. Arquivo salvo ontem tem
+    de abrir hoje: a versao existe para isso, e nao para dar erro.
+    """
+    from .projeto import Projeto
+
+    try:
+        dados = json.loads(texto)
+    except (ValueError, TypeError) as erro:
+        raise Recusado(f"não consegui ler o arquivo: {erro}") from erro
+    if not isinstance(dados, dict) or dados.get("formato") != FORMATO:
+        raise Recusado("este arquivo não é uma montagem deste programa")
+    if int(dados.get("versao") or 0) > VERSAO:
+        raise Recusado(
+            f'a montagem foi salva na versão {dados["versao"]} e este '
+            f"programa lê até a {VERSAO} - atualize o programa")
+    avisos = []
+    projeto = Projeto(catalogo, nome=dados.get("nome") or "Casa de bomba",
+                      area=dados.get("area") or "P01")
+    # versao 1: o arquivo E uma montagem, sem tira de montagens em volta
+    fichas = dados.get("montagens") or [dados]
+    for ficha in fichas:
+        projeto.criar(_montar_linha(catalogo, ficha, avisos), escolher=False)
+    guardado = dados.get("ativa")
+    for montagem, ficha in zip(projeto.montagens, fichas):
+        if ficha.get("id") and ficha["id"] == guardado:
+            projeto.escolher(montagem)
+    if not projeto._ativa and projeto.montagens:
+        projeto.escolher(projeto.montagens[0])
+    projeto.feitos.clear()
+    projeto.desfeitos.clear()
+    return projeto, avisos

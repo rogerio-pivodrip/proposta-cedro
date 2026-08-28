@@ -18,6 +18,7 @@ from motor import (arquivo, exportar as exportacao, folha, regras,
 from . import linguagem
 from motor.catalogo import Catalogo
 from motor.linha import Linha, Peca
+from motor.projeto import Projeto
 
 
 class Erro(Exception):
@@ -25,11 +26,23 @@ class Erro(Exception):
 
 
 class Sessao:
-    """Um documento aberto, com o catalogo que ele consulta."""
+    """Um projeto aberto, com o catalogo que ele consulta.
+
+    **A sessao guarda um PROJETO, e nao uma linha.** Uma casa de bomba tem a
+    sucção, o recalque, o barrilete e o trecho que sai para o campo - e com
+    duas bombas tem tudo isso duas vezes. `sessao.linha` continua existindo e
+    continua querendo dizer a mesma coisa: a montagem em que os comandos
+    caem. Por isso nenhum comando de edicao mudou - eles agem na ativa.
+    """
 
     def __init__(self, catalogo=None, tipo="RECALQUE", area="P01"):
         self.catalogo = catalogo or Catalogo()
-        self.linha = Linha(self.catalogo, tipo=tipo, area=area)
+        self.projeto = Projeto(self.catalogo, area=area)
+        self.projeto.criar(Linha(self.catalogo, tipo=tipo, area=area))
+        # a montagem em branco com que a sessao abre NAO e uma edicao: um
+        # ctrl+Z recem aberto o programa nao pode apagar a folha onde a pessoa
+        # ainda nem comecou
+        self.projeto.feitos.clear()
         # o tamanho da area de desenho da tela. Fica na sessao porque o SVG
         # sai pronto do motor, ja escalado - a tela nao redesenha nada, so
         # avisa de quanto espaco dispoe
@@ -37,6 +50,21 @@ class Sessao:
         # como o desenho e lido: tracado de projeto, preto e branco, ou
         # metalizado. E folha de estilo, nao geometria - a linha e a mesma
         self.modo = "traco"
+
+    @property
+    def linha(self):
+        """A montagem ativa. Escrever aqui TROCA a montagem ativa.
+
+        O `setter` existe por causa dos templates: eles montam uma linha nova
+        e a punham no lugar da anterior quando a sessao tinha uma so. Agora
+        isso acrescenta uma montagem ao projeto, que e o que a casa faz - a
+        sucção nao apaga o recalque.
+        """
+        return self.projeto.ativa
+
+    @linha.setter
+    def linha(self, montagem):
+        self.projeto.criar(montagem)
 
     # ------------------------------------------------------------------ ler
     def documento(self):
@@ -71,9 +99,12 @@ class Sessao:
                              for d in linha.divergencias()],
             "vista": vista.vista(linha, modo=self.modo, **self.janela),
             "pontas": vista.pontas_erradas(linha),
-            "pode_desfazer": bool(linha.feitos),
-            "pode_refazer": bool(linha.desfeitos),
-            "historico": [c.nome for c in linha.feitos],
+            "projeto": {"nome": self.projeto.nome, "area": self.projeto.area},
+            "montagens": self.projeto.resumo(),
+            "montagem": linha.id,
+            "pode_desfazer": self.projeto.pode_desfazer,
+            "pode_refazer": self.projeto.pode_refazer,
+            "historico": [c.nome for c in self.projeto.historico()],
         }
 
 
@@ -528,47 +559,98 @@ def _espelhar(sessao, comando):
 
 
 def _desfazer(sessao, comando):
-    feito = sessao.linha.desfazer()
+    """Desfaz o ULTIMO comando do projeto, esteja ele em que montagem estiver.
+
+    Nao e o ultimo da montagem aberta: quem edita a sucção, troca para o
+    recalque e aperta ctrl+Z quer de volta o que acabou de fazer. Ver
+    projeto.Projeto.desfazer e Comando.ordem.
+    """
+    feito = sessao.projeto.desfazer()
     if feito is None:
         raise Erro("nao ha o que desfazer")
     return {"comando": feito.nome, "peca": feito.alvo}
 
 
 def _refazer(sessao, comando):
-    feito = sessao.linha.refazer()
+    feito = sessao.projeto.refazer()
     if feito is None:
         raise Erro("nao ha o que refazer")
     return {"comando": feito.nome, "peca": feito.alvo}
 
 
 def _template(sessao, comando):
-    """Monta uma linha pronta - e o comeco de todo projeto real.
+    """Acrescenta ao projeto uma montagem pronta.
 
-    O `faltando` do template vem junto na resposta e nao vira excecao: a lista
-    nao ter a peca e informacao de projeto, do mesmo jeito que na folha de
-    simbolos. O template monta o que da e diz o que nao deu.
+    **Nao ha mais um `if` por montagem aqui.** Sucção e recalque foram as duas
+    primeiras e por um tempo pareceram ser as unicas; a casa monta adução,
+    barrilete, bomba em série, bomba em paralelo. Quem sabe quais existem e
+    motor/templates.MONTAGENS - uma montagem nova e uma funcao e uma linha na
+    tabela, e ela aparece sozinha aqui, na barra e na tela.
+
+    O `faltando` vem junto na resposta e nao vira excecao: a lista nao ter a
+    peca e informacao de projeto. O template monta o que da e diz o que nao deu.
     """
-    nome = comando.get("template", "SUCCAO")
-    dn = comando.get("dn")
-    if dn is None:
-        raise Erro("o template precisa da bitola da linha")
-    if nome == "SUCCAO":
-        linha, _reducao, faltando = templates.succao(
-            sessao.catalogo, dn, modelo_bomba=comando.get("bomba"),
-            curva=comando.get("curva"))
-        sessao.linha = linha
-    elif nome == "RECALQUE":
-        sessao.linha, faltando = templates.recalque(sessao.catalogo, dn)
-    elif nome == "PEAD":
-        itens, faltando = templates.trecho_pead(sessao.catalogo, dn)
-        for item, quantas in itens:
-            for _ in range(quantas):
-                sessao.linha.inserir(Peca(item))
-    else:
-        raise Erro(f"nao ha template {nome}")
-    return {"template": nome, "pecas": len(sessao.linha.pecas),
+    nome = (comando.get("template") or "SUCCAO").upper()
+    try:
+        linha, faltando = templates.montar(
+            sessao.catalogo, nome, comando.get("dn"),
+            bomba=comando.get("bomba"), curva=comando.get("curva"),
+            area=sessao.projeto.area, nome=comando.get("rotulo"))
+    except KeyError:
+        raise Erro(f"nao ha montagem {nome} - so "
+                   f'{", ".join(templates.MONTAGENS)}') from None
+    except ValueError as erro:
+        raise Erro(str(erro)) from None
+    # a folha em branco com que a sessao abriu nao vira aba orfa: se ninguem
+    # mexeu nela, a montagem nova ocupa o lugar dela
+    antiga = sessao.projeto.ativa
+    limpa = not antiga.pecas and not antiga.feitos
+    sessao.projeto.criar(linha)
+    if limpa and antiga in sessao.projeto.montagens:
+        sessao.projeto.remover(antiga)
+    return {"template": nome, "montagem": linha.id, "rotulo": linha.nome,
+            "pecas": len(linha.pecas),
             "faltando": [{"familia": f, "dn": d, "filtros": _limpo(e)}
                          for f, d, e in faltando]}
+
+
+def _montagem(sessao, comando):
+    """Cria, escolhe, renomeia ou apaga uma montagem do projeto.
+
+    Editar peca e da montagem; isto e do PROJETO - a pasta que as guarda. Sao
+    comandos como os outros (menos escolher, que nao edita nada) porque apagar
+    uma montagem por engano tem de poder voltar.
+    """
+    # `nome` e do COMANDO neste protocolo - o nome da MONTAGEM viaja como
+    # `rotulo`, senao o comando se chamaria pelo nome da coisa que ele cria
+    acao = (comando.get("acao") or "criar").lower()
+    projeto = sessao.projeto
+    if acao == "criar":
+        linha = Linha(sessao.catalogo,
+                      tipo=(comando.get("tipo") or "LIVRE").upper(),
+                      area=projeto.area, nome=comando.get("rotulo"))
+        projeto.criar(linha)
+        return {"montagem": linha.id, "rotulo": linha.nome}
+    if not comando.get("alvo") and acao != "renomear":
+        raise Erro(f"{acao} precisa dizer qual montagem")
+    try:
+        if acao == "escolher":
+            montagem = projeto.escolher(comando["alvo"])
+        elif acao == "renomear":
+            montagem = projeto.renomear(comando.get("alvo") or projeto.ativa.id,
+                                        comando.get("rotulo"),
+                                        comando.get("tipo"))
+        elif acao == "remover":
+            if len(projeto.montagens) < 2:
+                raise Erro("o projeto ficaria sem montagem nenhuma")
+            montagem = projeto.remover(comando["alvo"])
+        else:
+            raise Erro(f"nao sei {acao!r} - só criar, escolher, renomear "
+                       f"ou remover")
+    except KeyError as erro:
+        raise Erro(str(erro).strip("'")) from None
+    return {"montagem": montagem.id, "rotulo": montagem.nome,
+            "tipo": montagem.tipo}
 
 
 def _vocabulario(sessao, comando):
@@ -578,7 +660,8 @@ def _vocabulario(sessao, comando):
     na barra e um verbo removido continuaria sendo oferecido - a mesma
     divergencia que ela evita nao guardando documento.
     """
-    return {"verbos": linguagem.vocabulario()}
+    return {"verbos": linguagem.vocabulario(),
+            "montagens": templates.catalogo_de_montagens()}
 
 
 def _procurar(sessao, comando):
@@ -666,7 +749,7 @@ def _exportar(sessao, comando):
     # precisar, a recusa diz o que instalar em vez de estourar um traceback
     try:
         if formato == "linha":
-            conteudo = arquivo.guardar(sessao.linha)
+            conteudo = arquivo.guardar(sessao.projeto)
         elif formato == "dxf":
             conteudo, recusadas = exportacao.para_dxf(sessao.linha, rotulo)
         elif formato == "svg":
@@ -703,12 +786,13 @@ def _abrir(sessao, comando):
     if not texto:
         raise Erro("abrir precisa do arquivo da montagem")
     try:
-        linha, avisos = arquivo.abrir(sessao.catalogo, texto)
+        projeto, avisos = arquivo.abrir(sessao.catalogo, texto)
     except arquivo.Recusado as erro:
         raise Erro(str(erro)) from erro
-    sessao.linha = linha
-    return {"pecas": len(linha.pecas), "tipo": linha.tipo,
-            "area": linha.area, "recado": avisos}
+    sessao.projeto = projeto
+    return {"montagens": len(projeto.montagens),
+            "pecas": len(projeto.ativa.pecas), "nome": projeto.nome,
+            "area": projeto.area, "recado": avisos}
 
 
 def _folha(sessao, comando):
@@ -773,6 +857,7 @@ COMANDOS = {
     "balao": _balao, "numerar": _numerar, "bitola": _bitola,
     "desfazer": _desfazer, "refazer": _refazer,
     "template": _template, "catalogo": _catalogo, "janela": _janela,
+    "montagem": _montagem,
     "modo": _modo,
     "estilo": _estilo, "simular": _simular, "exportar": _exportar,
     "abrir": _abrir,

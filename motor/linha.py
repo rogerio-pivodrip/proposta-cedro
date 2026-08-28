@@ -22,6 +22,8 @@ from collections import OrderedDict
 from . import corte, cotas, ferragem, regras
 
 _contador = itertools.count(1)
+_montagens = itertools.count(1)
+_ordem = itertools.count(1)      # a ORDEM em que os comandos aconteceram
 
 # O BALAO E DO DESENHO, O NUMERO E DA LISTA - e e o mesmo numero. Numa vista
 # explodida o balao nao conta pecas, ele aponta para a LINHA da lista: duas
@@ -263,6 +265,12 @@ class Comando:
         self.fazer = fazer
         self.desfazer = desfazer
         self.alvo = alvo          # id da peca que o comando atingiu
+        # QUANDO ele aconteceu, na conta do programa inteiro. Sem isto o
+        # desfazer de um projeto com varias montagens teria de escolher em
+        # qual pilha mexer, e escolheria errado: quem aperta ctrl+Z quer
+        # desfazer O QUE ACABOU DE FAZER, e nao o ultimo comando da aba em
+        # que o olho esta
+        self.ordem = next(_ordem)
 
     def __repr__(self):
         return f"<{self.nome} {self.alvo or ''}>".replace(" >", ">")
@@ -274,10 +282,16 @@ class Linha:
     ALTERAVEIS = ("comprimento_mm", "sentido", "rotulo", "fonte", "pose",
                   "balao", "balao_angulo", "balao_distancia")
 
-    def __init__(self, catalogo, tipo="RECALQUE", area="P01"):
+    def __init__(self, catalogo, tipo="RECALQUE", area="P01", nome=None):
         self.catalogo = catalogo
-        self.tipo = tipo          # SUCCAO | RECALQUE
+        self.id = f"m{next(_montagens)}"   # estavel, como o da peca
+        # O TIPO E UM ROTULO, e nao uma chave. Foi sucção e recalque porque
+        # foram as duas primeiras; a casa monta adução, barrilete, bomba em
+        # série, bomba em paralelo - e nenhuma delas precisa de permissão do
+        # programa para existir. Quem quiser um tipo novo escreve o nome dele
+        self.tipo = tipo
         self.area = area
+        self.nome = nome or tipo.replace("_", " ").capitalize()
         self.pecas = []
         # a POSE da linha na folha: de quanto ela esta girada, e se esta
         # espelhada. Nao e geometria da peca - e como o conjunto se deita no

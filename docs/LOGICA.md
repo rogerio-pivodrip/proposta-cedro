@@ -29,6 +29,26 @@ diverge. Aqui:
 > dela.** Editar no desenho e editar na tabela são o mesmo comando atingindo o
 > mesmo objeto.
 
+**Uma casa de bomba não é uma linha.** Tem a sucção, o recalque, o barrilete,
+o trecho que sai para o campo — e com duas bombas, em série ou em paralelo,
+tem tudo isso duas vezes. Então o que a sessão guarda é um `Projeto`: N
+montagens, cada uma sendo a `Linha` de sempre. Nenhum comando de edição mudou
+de lugar — eles agem na montagem aberta. O projeto só sabe criar, escolher,
+renomear e apagar montagem, e essas quatro também são comandos, porque apagar
+por engano tem de poder voltar.
+
+**O tipo da montagem é um rótulo, e não uma chave.** Foi `SUCCAO` e `RECALQUE`
+porque foram as duas primeiras; adução, barrilete, bombeamento e o que a casa
+inventar não precisam de permissão do programa para existir. As montagens
+*prontas* vivem num registro (`templates.MONTAGENS`) — uma nova é uma função e
+uma linha na tabela, e ela aparece sozinha na barra de comando e na tela, pelo
+mesmo motivo que o vocabulário mora no motor.
+
+**Desfazer atravessa montagens.** Cada comando sabe *quando* aconteceu, e o
+`ctrl+Z` desfaz o mais recente do projeto inteiro — não o último da aba em que
+o olho está. Quem edita a sucção, troca para o recalque e desfaz quer de volta
+o que acabou de fazer.
+
 Comandos (única porta de escrita): `inserir`, `remover`, `substituir`,
 `alterar`, `mover`. Cada comando → valida → recalcula junções e ferragem →
 redesenha as duas views. Undo/redo é a pilha de comandos. O balão do desenho e a

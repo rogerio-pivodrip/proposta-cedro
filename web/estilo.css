@@ -259,3 +259,20 @@ tr.derivada td{color:var(--anota)}
   .vista{border-color:#31363d}
   .zoom{background:rgba(255,255,255,.94); border-color:#d7dade}
 }
+
+/* a tira de montagens: o projeto inteiro numa linha */
+.abas{display:flex; gap:2px; align-items:flex-end; margin:0 0 8px;
+  flex-wrap:wrap; min-height:26px}
+.abas button{border:1px solid var(--linha); border-bottom-color:transparent;
+  background:transparent; color:var(--anota); padding:4px 10px 5px;
+  border-radius:4px 4px 0 0; font:inherit; font-size:12px; cursor:pointer;
+  display:flex; gap:7px; align-items:center}
+.abas button:hover{color:var(--tinta)}
+.abas button.ativa{color:var(--tinta); border-color:var(--linha);
+  background:var(--chapa, #f4f5f7); font-weight:600}
+.abas button i{font-style:normal; font-size:10.5px; color:var(--anota);
+  font-family:"IBM Plex Mono",ui-monospace,monospace}
+.abas .fechar{color:transparent; font-size:13px; line-height:1}
+.abas button:hover .fechar{color:var(--anota)}
+.abas .fechar:hover{color:var(--perigo)}
+.abas .nova{border-style:dashed; color:var(--anota)}

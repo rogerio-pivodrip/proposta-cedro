@@ -49,6 +49,14 @@ def _busca(valores, sessao, campo="busca"):
     return achados[0]["sap"]
 
 
+def _montagem_alvo(valores):
+    """Nome, pedaco do nome ou numero - o que a pessoa lembrar."""
+    qual = (valores.get("qual") or "").strip()
+    if not qual:
+        raise Erro("diga qual montagem - o nome ou o número dela")
+    return int(qual) if qual.isdigit() else qual
+
+
 def _prancha(valores):
     """Formato e orientacao vem em qualquer ordem - e nem sempre os dois.
 
@@ -105,12 +113,30 @@ def _balao(valores):
 
 
 VERBOS = [
-    Verbo("montar", "monta uma linha pronta",
-          [_arg("template", "texto", "SUCCAO"), _arg("bitola", "numero")],
+    # a bitola deixou de ser obrigatoria: `montar livre` abre uma montagem em
+    # branco, e quem precisa de bitola e a montagem, nao o verbo
+    Verbo("montar", "acrescenta uma montagem pronta ao projeto",
+          [_arg("template", "texto", "SUCCAO"), _arg("bitola", "numero", "")],
           "montar recalque 6", False,
           lambda v, alvo, s: {"nome": "template",
                               "template": (v.get("template") or "SUCCAO").upper(),
-                              "dn": v.get("bitola")}),
+                              "dn": v.get("bitola") or None}),
+    Verbo("montagem", "troca de montagem - pelo nome ou pelo número",
+          # o exemplo tem de rodar em qualquer projeto, e nome de montagem
+          # depende do que a pessoa montou: o numero sempre existe
+          [_arg("qual", "resto")], "montagem 1", False,
+          lambda v, alvo, s: {"nome": "montagem", "acao": "escolher",
+                              "alvo": _montagem_alvo(v)}),
+    Verbo("nova", "abre uma montagem em branco no projeto",
+          [_arg("como", "resto")], "nova barrilete", False,
+          lambda v, alvo, s: {"nome": "montagem", "acao": "criar",
+                              "rotulo": (v.get("como") or "").strip() or None,
+                              "tipo": ((v.get("como") or "").strip()
+                                       or "LIVRE").upper()}),
+    Verbo("renomear", "muda o nome da montagem aberta",
+          [_arg("como", "resto")], "renomear sucção da bomba 2", False,
+          lambda v, alvo, s: {"nome": "montagem", "acao": "renomear",
+                              "rotulo": (v.get("como") or "").strip()}),
     Verbo("inserir", "acrescenta uma peça, por código ou por nome",
           [_arg("busca", "resto")], 'inserir curva 90 8', False,
           lambda v, alvo, s: {"nome": "inserir", "sap": _busca(v, s),

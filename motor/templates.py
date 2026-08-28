@@ -269,3 +269,106 @@ def _dn_pead_em_mm(dn_pol):
 # O flutuador bipartido existe no catalogo, de 3" a 16", mas a casa ainda nao
 # usa succao flutuante. Fica fora do template ate haver regra.
 FLUTUADOR_EM_USO = False
+
+
+# ---------------------------------------------------------------- montagens
+#
+# **A MONTAGEM NAO E UM `if` NA API.** Sucção e recalque foram as duas
+# primeiras, e por um tempo foram as duas unicas - a ponto de o tipo da linha
+# ser tratado como se so pudesse ser uma das duas. A casa monta muito mais que
+# isso: adução, barrilete, bomba em série, bomba em paralelo, e combinações
+# delas. Entao o que existe aqui e um REGISTRO: uma montagem nova e uma funcao
+# e uma linha nesta tabela, e ela aparece sozinha na barra de comando e na
+# tela, pelo mesmo motivo que o vocabulario mora no motor.
+#
+# Toda montagem devolve (linha, faltando). O que ela nao devolve e opiniao: o
+# que a lista nao tem entra em `faltando` e a linha sai montada com o resto.
+
+
+def _da_succao(catalogo, dn, **extra):
+    linha, _reducao, faltando = succao(
+        catalogo, dn, modelo_bomba=extra.get("bomba"),
+        curva=extra.get("curva"), area=extra.get("area") or "P01")
+    if extra.get("nome"):
+        linha.nome = extra["nome"]
+    return linha, faltando
+
+
+def _do_recalque(catalogo, dn, **extra):
+    linha, faltando = recalque(catalogo, dn, area=extra.get("area") or "P01")
+    if extra.get("nome"):
+        linha.nome = extra["nome"]
+    return linha, faltando
+
+
+def _do_pead(catalogo, dn, **extra):
+    """O trecho de PEAD como montagem propria, e nao como enxerto.
+
+    `trecho_pead` devolve itens porque ele nasceu para ser acrescentado a uma
+    linha que ja existia. Aqui ele vira montagem: o mesmo conjunto, numa linha
+    so dele, que se pode encostar noutra depois.
+    """
+    itens, faltando = trecho_pead(catalogo, dn)
+    linha = Linha(catalogo, tipo="PEAD", area=extra.get("area") or "P01",
+                  nome=extra.get("nome"))
+    for item, quantas in itens:
+        for _ in range(quantas):
+            linha.inserir(Peca(item))
+    return linha, faltando
+
+
+def _vazia(catalogo, dn=None, **extra):
+    """Uma montagem em branco, para quem vai montar a mao.
+
+    E a mais importante da tabela: sem ela o programa so sabe fazer o que ja
+    esta escrito, e quem quer uma adução de três bombas em paralelo teria de
+    esperar alguem escrever o template dela.
+    """
+    return Linha(catalogo, tipo=extra.get("tipo") or "LIVRE",
+                 area=extra.get("area") or "P01",
+                 nome=extra.get("nome") or "Montagem"), []
+
+
+MONTAGENS = {
+    "SUCCAO": {
+        "nome": "sucção",
+        "resumo": "poço → bomba: crivo, válvula de pé, tubo e a redução",
+        "monta": _da_succao, "precisa_bitola": True,
+    },
+    "RECALQUE": {
+        "nome": "recalque",
+        "resumo": "bomba → campo: válvula, hidrômetro, retenção, tê e ventosa",
+        "monta": _do_recalque, "precisa_bitola": True,
+    },
+    "PEAD": {
+        "nome": "trecho de PEAD",
+        "resumo": "tubos de PEAD com colar e flange solta nas duas pontas",
+        "monta": _do_pead, "precisa_bitola": True,
+    },
+    "LIVRE": {
+        "nome": "em branco",
+        "resumo": "uma montagem vazia, para montar peça por peça",
+        "monta": _vazia, "precisa_bitola": False,
+    },
+}
+
+
+def montar(catalogo, chave, dn=None, **extra):
+    """(linha, faltando) da montagem pedida. Ergue KeyError se ela nao existe.
+
+    `chave` e qual montagem - SUCCAO, RECALQUE, PEAD, LIVRE. O `nome` que vier
+    em `extra` e outro: e como ESTA montagem vai se chamar no projeto, e por
+    isso os dois nao podem ser o mesmo argumento.
+    """
+    ficha = MONTAGENS.get((chave or "").upper())
+    if ficha is None:
+        raise KeyError(chave)
+    if ficha["precisa_bitola"] and dn is None:
+        raise ValueError(f'{ficha["nome"]} precisa da bitola da linha')
+    return ficha["monta"](catalogo, dn, **extra)
+
+
+def catalogo_de_montagens():
+    """O que a tela e a barra oferecem - e nao uma lista copiada nelas."""
+    return [{"chave": chave, **{k: v for k, v in ficha.items() if k != "monta"}}
+            for chave, ficha in MONTAGENS.items()]

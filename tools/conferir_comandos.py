@@ -463,7 +463,9 @@ def main():
     linha.alterar(linha.pecas[2].id, comprimento_mm=1234)   # corte de campo
     linha.renumerar([linha.pecas[-1].sap])
     texto = arquivo.guardar(linha)
-    volta, avisos = arquivo.abrir(catalogo, texto)
+    # abrir devolve o PROJETO - uma montagem sozinha volta como projeto de uma
+    projeto, avisos = arquivo.abrir(catalogo, texto)
+    volta = projeto.ativa
     certo("abriu sem recado", not avisos, str(avisos))
     # o id NAO volta igual, e nao deve: ele nasce com a peca desta sessao. O
     # que tem de voltar igual e tudo o que se compra e tudo o que se desenha
@@ -484,14 +486,15 @@ def main():
     # o arquivo guarda a cota que valia, e ela NAO manda: manda a folha de
     # hoje. O que ele faz e dizer o que mudou desde entao
     adulterado = json.loads(texto)
-    adulterado["pecas"][0]["medido_mm"] = 999
-    _volta, avisos = arquivo.abrir(catalogo, json.dumps(adulterado))
+    adulterado["montagens"][0]["pecas"][0]["medido_mm"] = 999
+    _projeto, avisos = arquivo.abrir(catalogo, json.dumps(adulterado))
     certo("cota que a folha mudou desde o dia em que se salvou vira aviso",
              any("999" in a and "folha de hoje" in a for a in avisos),
              str(avisos))
     sumido = json.loads(texto)
-    sumido["pecas"][1]["sap"] = "00000-000000"
+    sumido["montagens"][0]["pecas"][1]["sap"] = "00000-000000"
     perdida, avisos = arquivo.abrir(catalogo, json.dumps(sumido))
+    perdida = perdida.ativa
     certo("código que saiu da lista não derruba a abertura",
              len(perdida.pecas) == len(linha.pecas) - 1
              and any("não está mais na lista" in a for a in avisos),

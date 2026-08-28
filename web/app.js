@@ -43,6 +43,7 @@ function recado(texto) {
 /* ---------------------------------------------------------------- pintar */
 function pintar() {
   if (!documento) return;
+  pintarAbas();
   pintarVista();
   pintarLista();
   pintarAvisos();
@@ -52,6 +53,50 @@ function pintar() {
   const modoDesenho = (documento.vista && documento.vista.modo) || "traco";
   document.querySelectorAll("[data-modo-desenho]").forEach((b) =>
     b.classList.toggle("ligado", b.dataset.modoDesenho === modoDesenho));
+}
+
+/* A TIRA DE MONTAGENS. Uma casa de bomba não é uma linha: tem a sucção, o
+   recalque, o barrilete, o trecho que sai para o campo - e com duas bombas
+   tem tudo isso duas vezes. Cada aba é uma montagem do projeto; os comandos
+   de edição caem na aba aberta, e o ctrl+Z atravessa todas, porque desfaz o
+   que se acabou de fazer e não o último comando desta aba. */
+function pintarAbas() {
+  const tira = $("abas");
+  tira.innerHTML = "";
+  (documento.montagens || []).forEach((m) => {
+    const b = document.createElement("button");
+    b.className = m.ativa ? "ativa" : "";
+    b.innerHTML = `<span>${m.nome}</span><i>${m.pecas}</i>` +
+      ((documento.montagens || []).length > 1
+        ? '<span class="fechar" title="apagar esta montagem">×</span>' : "");
+    b.addEventListener("click", (ev) => {
+      if (ev.target.classList.contains("fechar")) {
+        ev.stopPropagation();
+        soltarEscolha();
+        mandar({nome: "montagem", acao: "remover", alvo: m.id});
+        return;
+      }
+      if (m.ativa) return;
+      // trocar de montagem larga a seleção: o id escolhido era da outra
+      soltarEscolha();
+      mandar({nome: "montagem", acao: "escolher", alvo: m.id});
+    });
+    b.addEventListener("dblclick", () => {
+      const nome = prompt("nome da montagem", m.nome);
+      if (nome) mandar({nome: "montagem", acao: "renomear", alvo: m.id,
+                        rotulo: nome});
+    });
+    tira.appendChild(b);
+  });
+  const nova = document.createElement("button");
+  nova.className = "nova";
+  nova.textContent = "+";
+  nova.title = "montagem em branco";
+  nova.addEventListener("click", () => {
+    soltarEscolha();
+    mandar({nome: "montagem", acao: "criar"});
+  });
+  tira.appendChild(nova);
 }
 
 function pintarVista() {
@@ -111,13 +156,17 @@ function pintarLista() {
   // a lista mostra as peças da linha na ordem em que estão, e depois o que
   // elas puxaram - ferragem e contra-flange são consequência, não escolha
   const porSap = new Map();
-  documento.lista.forEach((r) => porSap.set(r.sap, r));
+  // o NÚMERO DO ITEM não se consome: duas curvas do mesmo código são a mesma
+  // linha da lista e levam o mesmo número, no desenho e aqui. Ele vinha do
+  // mesmo mapa de que a linha era apagada, e a segunda curva saía sem número
+  const numeros = new Map();
+  documento.lista.forEach((r) => { porSap.set(r.sap, r); numeros.set(r.sap, r.item); });
   documento.pecas.forEach((peca) => {
     const registro = porSap.get(peca.sap);
     corpo.appendChild(linhaDaTabela({
       id: peca.id, sap: peca.sap, descricao: peca.descricao,
       qtd: registro ? registro.qtd : 1,
-      item: registro ? registro.item : null, balao: peca.balao,
+      item: numeros.get(peca.sap) || null, balao: peca.balao,
     }));
     porSap.delete(peca.sap);
   });
@@ -809,9 +858,11 @@ function ligarBarra() {
 }
 
 function ligar() {
-  $("succao").addEventListener("click", () => mandar({
-    nome: "template", template: "SUCCAO", dn: Number($("bitola").value),
-  }));
+  $("succao").addEventListener("click", () => {
+    soltarEscolha();
+    mandar({nome: "template", template: $("prontas").value || "SUCCAO",
+            dn: Number($("bitola").value)});
+  });
   $("desfazer").addEventListener("click", () => mandar({nome: "desfazer"}));
   $("refazer").addEventListener("click", () => mandar({nome: "refazer"}));
   $("remover").addEventListener("click", () => apagar(escolhida));
@@ -996,7 +1047,12 @@ function avisarTamanho() {
 async function comecar() {
   const estilo = await mandar({nome: "estilo"});
   if (estilo.css) $("desenho").textContent = estilo.css;
-  verbos = (await mandar({nome: "vocabulario"})).verbos || [];
+  const vocabulario = await mandar({nome: "vocabulario"});
+  verbos = vocabulario.verbos || [];
+  // as montagens prontas vêm do motor, como os verbos: uma montagem nova
+  // aparece na lista sozinha, sem ninguém tocar nesta tela
+  (vocabulario.montagens || []).forEach((m) =>
+    $("prontas").add(new Option(m.nome, m.chave)));
   FAMILIAS.forEach((f) => $("familia").add(new Option(f.toLowerCase().replace(/_/g, " "), f)));
   ligar();
   ligarBarra();

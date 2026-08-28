@@ -12,7 +12,7 @@
 </head>
 <body>
 <header>
-  <h1>Sucção &amp; recalque</h1>
+  <h1>Casa de bomba</h1>
   <div class="barra">
     <label>linha
       <select id="bitola">
@@ -21,7 +21,11 @@
         <option>14</option>
       </select>"
     </label>
-    <button id="succao">montar sucção</button>
+    <!-- QUAIS MONTAGENS EXISTEM É DO MOTOR, e não desta lista: uma montagem
+         nova aparece aqui sozinha, pelo mesmo motivo que os verbos da barra
+         de comando vêm de lá -->
+    <select id="prontas"></select>
+    <button id="succao">acrescentar</button>
     <span class="separa"></span>
     <!-- a pose da linha na folha: girar é do conjunto, não de uma peça -->
     <button id="girar_esq" title="girar a linha 90° anti-horário">⟲</button>
@@ -53,13 +57,17 @@
 
 <main>
   <section class="desenho">
+    <!-- a tira de montagens: o projeto inteiro numa linha. Um projeto tem a
+         sucção, o recalque, o barrilete e o que mais a casa montar - e o
+         ctrl+Z atravessa todas, porque desfaz o que se acabou de fazer -->
+    <div class="abas" id="abas"></div>
     <!-- o palco: o motor desenha em milímetro real e já escalado para caber.
          O zoom e o pan são da TELA - uma transformação no palco, sem pedir
          nada ao motor. Por isso o traço não engorda: vector-effect faz a
          espessura ser em pixel, e ampliar mostra mais peça, não linha mais
          gorda -->
     <div id="vista" class="vista">
-      <div id="palco" class="palco"><p class="nada">Monte uma sucção para começar.</p></div>
+      <div id="palco" class="palco"><p class="nada">Escolha uma montagem e acrescente para começar.</p></div>
       <div class="zoom">
         <button id="menos" title="afastar (−)">−</button>
         <button id="zoom_texto" title="voltar ao enquadramento (0)">100%</button>
