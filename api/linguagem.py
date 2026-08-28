@@ -48,6 +48,35 @@ def _busca(valores, sessao, campo="busca"):
     return achados[0]["sap"]
 
 
+def _prancha(valores):
+    """Formato e orientacao vem em qualquer ordem - e nem sempre os dois.
+
+    `folha a4`, `folha retrato` e `folha retrato a4` sao os tres validos, e a
+    posicao nao decide qual e qual: o que estiver na lista de formatos e
+    formato, o que comecar por pais/retr e orientacao. E a mesma ideia do
+    argumento por tipo, um degrau mais fundo - aqui os dois sao texto, entao
+    quem separa e o VALOR.
+
+    O que nao for nem um nem outro e recusado, e nao ignorado: `folha a9`
+    calada sairia em A3 sem ninguem perceber.
+    """
+    from motor import folha as prancha
+    formato, orientacao = "A3", "paisagem"
+    for termo in (valores.get("formato"), valores.get("orientacao")):
+        termo = (termo or "").strip()
+        if not termo:
+            continue
+        if termo.upper() in prancha.FORMATOS:
+            formato = termo.upper()
+        elif termo.lower().startswith(("pais", "retr")):
+            orientacao = termo.lower()
+        else:
+            raise Erro(f"{termo!r} não é formato nem orientação - formatos: "
+                       + ", ".join(prancha.FORMATOS).lower()
+                       + "; orientação: paisagem ou retrato")
+    return {"formato": formato, "orientacao": orientacao}
+
+
 VERBOS = [
     Verbo("montar", "monta uma linha pronta",
           [_arg("template", "texto", "SUCCAO"), _arg("bitola", "numero")],
@@ -95,6 +124,10 @@ VERBOS = [
     Verbo("exportar", "dxf, svg, xlsx ou csv", [_arg("formato", "texto")],
           "exportar dxf", False,
           lambda v, alvo, s: {"nome": "exportar", "formato": v.get("formato")}),
+    Verbo("folha", "a prancha de impressão: escala, lista e carimbo",
+          [_arg("formato", "texto", ""), _arg("orientacao", "texto", "")],
+          "folha a3 paisagem", False,
+          lambda v, alvo, s: {"nome": "folha", **_prancha(v)}),
     Verbo("procurar", "lista o que a lista tem, sem inserir nada",
           [_arg("busca", "resto")], "procurar borboleta 8", False,
           lambda v, alvo, s: {"nome": "procurar", "texto": v.get("busca")}),

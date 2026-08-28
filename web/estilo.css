@@ -56,6 +56,28 @@ main{display:grid; grid-template-columns:1fr 330px; gap:0; align-items:start}
   flex:1; min-height:220px; cursor:grab;
 }
 .vista.arrastando_folha{cursor:grabbing}
+
+/* O ESPAÇO DE MODELO, escuro como no CAD. É só uma troca de tokens: o traço
+   vira claro, o papel vira quase preto, e o eixo continua vermelho - a
+   convenção não muda com a luz da sala.
+
+   Isto é da TELA e não do documento, e por isso não tem verbo na barra nem
+   entra no desfazer: ninguém imprime branco sobre preto, e o SVG exportado
+   sai como a folha, sempre. Os três modos (traço, P&B, metal) continuam
+   valendo por dentro - este é o fundo, não a leitura. */
+.vista.escuro{
+  --papel:#1b1d21; --fundo:#1b1d21; --tinta:#e8eaed; --titulo:#c6cbd2;
+  --anota:#8e959d; --linha:#33383f; --chapa:#2a2e34;
+  background:#1b1d21;
+}
+.vista.escuro .geo .malha,.vista.escuro .geo .furo,
+.vista.escuro .geo .solda{stroke:#7d848c}
+/* no escuro a peça escolhida não pode escurecer: ela clareia */
+.vista.escuro g.peca.escolhida *:not(.alvo):not(.centro){stroke:#7fb3f5}
+.vista.escuro .zoom{background:rgba(32,35,40,.94); border-color:#3a4048}
+.vista.escuro .zoom button{color:#c6cbd2}
+.vista.escuro .zoom button:hover,.vista.escuro .zoom button.ligado{
+  background:#25303e; color:#7fb3f5}
 .palco{position:absolute; inset:0; transform-origin:0 0;
   display:flex; align-items:center; justify-content:center;
   will-change:transform}

@@ -12,7 +12,7 @@ essa a decisao que evitou a sincronizacao - ver docs/LOGICA.md 2.
 O erro tambem e resposta, e nao excecao: `{"ok": false, "erro": ...}`. A tela
 precisa mostrar o motivo, e nao um traceback.
 """
-from motor import exportar as exportacao, templates, vista
+from motor import exportar as exportacao, folha, templates, vista
 
 from . import linguagem
 from motor.catalogo import Catalogo
@@ -351,6 +351,28 @@ def _exportar(sessao, comando):
     return saida
 
 
+def _folha(sessao, comando):
+    """A prancha de impressao: desenho em escala, lista e carimbo.
+
+    E o terceiro formato de saida, e o unico para quem vai ASSINAR - DXF e
+    planilha sao para quem vai continuar trabalhando no arquivo. Devolve HTML
+    porque o navegador imprime, e assim o programa continua rodando sem
+    instalar biblioteca de PDF.
+    """
+    if not sessao.linha.pecas:
+        raise Erro("a linha esta vazia")
+    formato = (comando.get("formato") or "A3").upper()
+    if formato not in folha.FORMATOS:
+        raise Erro(f"nao conheco o formato {formato} - so "
+                   f'{", ".join(folha.FORMATOS)}')
+    html, ficha = folha.montar(
+        sessao.linha, formato=formato,
+        orientacao=comando.get("orientacao") or "paisagem",
+        titulo=comando.get("titulo"), modo=sessao.modo)
+    return {"html": html, "arquivo": f"{sessao.linha.tipo.lower()}-"
+                                    f"{sessao.linha.area.lower()}.html", **ficha}
+
+
 def _estilo(sessao, comando):
     """O CSS do desenho, do motor. A tela pede uma vez e nao copia nada.
 
@@ -391,7 +413,7 @@ COMANDOS = {
     "template": _template, "catalogo": _catalogo, "janela": _janela,
     "modo": _modo,
     "estilo": _estilo, "simular": _simular, "exportar": _exportar,
-    "vocabulario": _vocabulario, "procurar": _procurar,
+    "vocabulario": _vocabulario, "procurar": _procurar, "folha": _folha,
     # ler nao muda nada, e por isso nao entra no historico
     "documento": lambda sessao, comando: {},
 }

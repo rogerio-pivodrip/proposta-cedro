@@ -16,6 +16,7 @@ python3 tools/conferir_pvc.py      # o desenho contra a folha da Plasson
 python3 tools/conferir_motor.py    # o motor contra o DXF da W22
 python3 tools/conferir_flanges.py  # a chapa da flange contra a folha Netafim
 python3 tools/conferir_barra.py    # a barra digitada e o botão dão no mesmo
+python3 tools/conferir_folha.py    # a escala da prancha é a maior que cabe
 ```
 
 ```bash
@@ -55,6 +56,8 @@ fundo do poço — e daí em diante clique numa peça, no desenho ou na lista.
 | apagar | tecla `Delete`, o **×** na linha da lista, ou **remover** no painel |
 | desfazer / refazer | `Ctrl+Z` e `Ctrl+Y` |
 | tudo isso digitando | a **barra de comando**, no pé do desenho |
+| fundo escuro | o **◐** no canto do desenho — como o espaço de modelo do CAD |
+| a prancha | **folha**; na barra, `folha a4 retrato` |
 | trocar a leitura | **traço · P&B · metal** na barra de cima |
 
 Girar é do conjunto e espelhar é da peça, e a diferença não é de interface: a
@@ -65,6 +68,50 @@ documento, entra no desfazer e sai junto no DXF.
 
 O zoom é da tela, e não do motor: o desenho continua saindo em milímetro real,
 e ampliar mostra mais peça em vez de traço mais gordo.
+
+### A folha de impressão
+
+O programa já entregava DXF e planilha — os dois formatos de quem vai
+**continuar trabalhando** no arquivo. A folha é o formato de quem vai
+**assinar**: uma prancha em escala, com moldura, lista de materiais e carimbo,
+que se imprime, se dobra e vai para a obra.
+
+Três coisas a separam da vista de tela:
+
+**A escala é nomeada.** Na tela o desenho é enquadrado — "o que couber" — e
+isso está certo, porque a janela muda de tamanho. Numa folha impressa não
+existe "o que couber": existe **1:25**, e quem mede com escalímetro tem de
+achar a cota. Então a folha escolhe a maior escala da NBR 8196 em que o
+desenho cabe e escreve qual foi no carimbo. `conferir_folha.py` cobra as duas
+metades — que cabe *e* que a escala imediatamente maior estouraria; sem a
+segunda, 1:1000 passaria em todo teste.
+
+**A unidade é o milímetro de papel.** O `viewBox` da tela é em pixel; o da
+folha é em milímetro, e a anotação encolhe junto — cota de 9 px na tela vira
+2,7 mm no papel, que é a altura de escrita da ISO 3098.
+
+**O formato e a moldura são da NBR 10068** — margem esquerda de 25 mm para
+arquivar, as demais de 7 (até A2) ou 10 (A1 e A0), e a legenda de 178 mm no
+canto inferior direito. Os 178 não são arbitrários: é a largura útil de uma A4
+em pé, e a legenda é a mesma em todos os formatos.
+
+No carimbo vai também **de onde vieram as cotas** — "3 estimativa · 2
+IRRIGAFOUR". É informação de projeto: uma folha em que metade das cotas é
+estimativa não vale o mesmo que uma em que todas são de fabricante, e quem
+assina precisa ver isso sem abrir o programa.
+
+A saída é HTML com `@page`, e não PDF: o navegador imprime, e o programa
+continua rodando sem instalar nada.
+
+### O fundo escuro
+
+O **◐** troca o papel branco pelo escuro do espaço de modelo. É só uma troca
+de tokens: o traço vira claro, o eixo continua vermelho — a convenção não muda
+com a luz da sala — e os três modos continuam valendo por dentro.
+
+Isto é da **tela** e não do documento, e por isso não tem verbo na barra nem
+entra no desfazer: ninguém imprime branco sobre preto, e o SVG exportado e a
+folha saem como papel, sempre.
 
 ### A barra de comando
 

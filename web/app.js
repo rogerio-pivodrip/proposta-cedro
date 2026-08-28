@@ -691,6 +691,20 @@ function ligar() {
   $("mais").addEventListener("click", () => ampliar(1.35));
   $("menos").addEventListener("click", () => ampliar(1 / 1.35));
   $("zoom_texto").addEventListener("click", ajustar);
+  // o fundo escuro é da TELA: não vai ao motor, não entra no desfazer e não
+  // sai no arquivo. Fica guardado no navegador porque é preferência de quem
+  // olha, e não estado do documento
+  $("fundo").addEventListener("click", () => {
+    const escuro = vista.classList.toggle("escuro");
+    $("fundo").classList.toggle("ligado", escuro);
+    try { localStorage.setItem("fundo_escuro", escuro ? "1" : ""); } catch (e) {}
+  });
+  try {
+    if (localStorage.getItem("fundo_escuro")) {
+      vista.classList.add("escuro");
+      $("fundo").classList.add("ligado");
+    }
+  } catch (e) {}
 
   addEventListener("keydown", (ev) => {
     const digitando = /^(INPUT|SELECT|TEXTAREA)$/.test(ev.target.tagName);
@@ -711,6 +725,8 @@ function ligar() {
       ev.preventDefault(); mandar({nome: "refazer"});
     }
   });
+  $("folha").addEventListener("click", async () =>
+    abrirFolha(await mandar({nome: "folha"})));
   document.querySelectorAll("[data-modo-desenho]").forEach((b) =>
     b.addEventListener("click", () => mandar({
       nome: "modo", modo: b.dataset.modoDesenho,

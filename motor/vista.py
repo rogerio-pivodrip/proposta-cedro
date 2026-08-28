@@ -104,7 +104,30 @@ def _girar_postos(postos, giro):
             for p in postos]
 
 
-def vista(linha, largura=940, altura_max=620, giro=None, modo="traco"):
+def extensao(postos):
+    """A caixa que a linha montada ocupa, em milimetro real. (largura, altura)
+
+    E a mesma conta que desenhar_linha faz para enquadrar - e sai daqui para
+    que a folha impressa possa ESCOLHER a escala antes de mandar desenhar. Sem
+    isso a folha teria de desenhar duas vezes: uma para medir, outra para
+    valer.
+    """
+    cantos = []
+    for p in postos:
+        x0, y0, w, h = p.simbolo.caixa
+        rad = math.radians(p.giro)
+        cos, sen = math.cos(rad), math.sin(rad)
+        for cx, cy in ((x0, y0), (x0 + w, y0), (x0, y0 + h), (x0 + w, y0 + h)):
+            cantos.append((p.dx + cx * cos - cy * sen,
+                           p.dy + cx * sen + cy * cos))
+    if not cantos:
+        return (1.0, 1.0)
+    return (max(c[0] for c in cantos) - min(c[0] for c in cantos),
+            max(c[1] for c in cantos) - min(c[1] for c in cantos))
+
+
+def vista(linha, largura=940, altura_max=620, giro=None, modo="traco",
+          escala=None, anota=1.0):
     """O SVG da linha, com cada peca marcada pelo id dela."""
     prontos, recusadas = simbolos_da_linha(linha)
     if not prontos:
@@ -114,7 +137,8 @@ def vista(linha, largura=940, altura_max=620, giro=None, modo="traco"):
     ids = [peca.id for peca, _ in prontos]
     svg, postos, fim = desenhar_linha([sim for _, sim in prontos],
                                       largura=largura, giro=giro,
-                                      altura_max=altura_max, ids=ids, modo=modo)
+                                      altura_max=altura_max, ids=ids, modo=modo,
+                                      escala=escala, anota=anota)
     return {"svg": svg, "pecas": len(prontos), "recusadas": recusadas,
             "fim": list(fim), "modo": modo}
 
@@ -129,8 +153,30 @@ def _os_dois_pead(a, b):
     return all(p.params.get("material") == "PEAD" for p in (a, b))
 
 
+# As escalas de reducao da NBR 8196 / ISO 5455. As de "2,5" e "25" a norma
+# admite em caso excepcional, e a casa usa as duas - casa de bomba de 6 m nao
+# cabe em 1:20 numa A3 e sobra demais em 1:50.
+ESCALAS = (1, 2, 2.5, 5, 10, 20, 25, 50, 100, 200, 500, 1000)
+
+
+def escala_que_cabe(largura_mm, altura_mm, extensao_x, extensao_y):
+    """A maior escala NORMALIZADA em que o desenho cabe na area util.
+
+    Escala de desenho nao e "o que couber": e um dos numeros da tabela, para
+    que quem mede a folha com escalimetro ache a cota. Entao a conta e ao
+    contrario do enquadramento de tela - acha-se o fator livre e sobe-se para
+    a proxima escala da lista, sempre para o lado de caber.
+    """
+    livre = min(largura_mm / max(extensao_x, 1e-6),
+                altura_mm / max(extensao_y, 1e-6))
+    for divisor in ESCALAS:
+        if 1 / divisor <= livre:
+            return divisor
+    return ESCALAS[-1]
+
+
 def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
-                   modo="traco"):
+                   modo="traco", escala=None, anota=1.0):
     """A linha inteira em SVG, encadeando os simbolos pelas portas.
 
     Cada peca e desenhada uma vez, na origem, olhando para +x. Encaixar e uma
@@ -164,12 +210,16 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
     maxx = max(c[0] for c in caixas)
     miny = min(c[1] for c in caixas)
     maxy = max(c[1] for c in caixas)
-    # cabe na largura E na altura: a sucção de bomba vertical é alta e
-    # estreita, e escalando só pela largura ela virava um poster
-    escala = min((largura - 2 * MARGEM) / max(maxx - minx, 1),
-                 (altura_max - 2 * MARGEM) / max(maxy - miny, 1))
-    largura = (maxx - minx) * escala + 2 * MARGEM
-    altura = (maxy - miny) * escala + 2 * MARGEM
+    # `escala` dada: a folha impressa manda, e o desenho sai no tamanho que
+    # der. Sem ela, enquadra-se na caixa - cabendo na largura E na altura,
+    # porque a sucção de bomba vertical é alta e estreita e escalando só pela
+    # largura ela virava um poster
+    margem = MARGEM * anota
+    if escala is None:
+        escala = min((largura - 2 * margem) / max(maxx - minx, 1),
+                     (altura_max - 2 * margem) / max(maxy - miny, 1))
+    largura = (maxx - minx) * escala + 2 * margem
+    altura = (maxy - miny) * escala + 2 * margem
 
     # o modo e uma CLASSE, e nao um desenho diferente: a geometria e uma so, em
     # milimetro real, e as tres leituras saem da mesma folha de estilo
@@ -178,11 +228,11 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
     # um degrade por (cor, angulo) que a linha realmente usa - nao por peca:
     # vinte tubos deitados na mesma cor compartilham o mesmo
     degrades = {}
-    partes = [f'<svg class="modo-{modo}" viewBox="0 0 {largura:.0f} '
-              f'{altura:.0f}" style="max-width:{largura:.0f}px" role="img" '
-              f'aria-label="linha montada">', DEFS, "@DEGRADES@",
-              f'<g class="geo" transform="translate({MARGEM - minx*escala:.2f} '
-              f'{MARGEM - miny*escala:.2f}) scale({escala:.5f})">']
+    partes = [f'<svg class="modo-{modo}" viewBox="0 0 {largura:.2f} '
+              f'{altura:.2f}" width="{largura:.2f}" height="{altura:.2f}" '
+              f'role="img" aria-label="linha montada">', DEFS, "@DEGRADES@",
+              f'<g class="geo" transform="translate({margem - minx*escala:.2f} '
+              f'{margem - miny*escala:.2f}) scale({escala:.5f})">']
     for i, p in enumerate(postos):
         cor = cor_de(p.simbolo)
         espelhada = bool(p.simbolo.params.get("espelhado"))
@@ -262,10 +312,10 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
             saida = saida or entrada
         comp = ((saida.x - entrada.x) ** 2 + (saida.y - entrada.y) ** 2) ** 0.5
         vao = comp * escala
-        if vao < 44:                 # peca curta: a cota nao cabe dentro dela
+        if vao < 44 * anota:         # peca curta: a cota nao cabe dentro dela
             continue
-        mx = MARGEM + ((p.entrada[0] + p.saida[0]) / 2 - minx) * escala
-        my = MARGEM + ((p.entrada[1] + p.saida[1]) / 2 - miny) * escala
+        mx = margem + ((p.entrada[0] + p.saida[0]) / 2 - minx) * escala
+        my = margem + ((p.entrada[1] + p.saida[1]) / 2 - miny) * escala
         # a cota fica NO eixo da peca, com o eixo aparado atras dela
         vertical = abs(p.saida[1] - p.entrada[1]) > abs(p.saida[0] - p.entrada[0])
         gira = f' transform="rotate(-90 {mx:.1f} {my:.1f})"' if vertical else ""
@@ -275,21 +325,25 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
                   if p.simbolo.params.get("dn_mm")
                   else f'{(entrada.dn_pol or 0):g}"')
         rotulo = f"{comp:.0f}" if duas else f"{bitola}  {comp:.0f}"
-        partes.append(texto_no_eixo(mx, my, rotulo, "marca", 9.0, gira))
+        partes.append(texto_no_eixo(mx, my, rotulo, "marca", 9.0 * anota, gira))
         if duas:
             # a bitola de cada flange, na sua ponta
             for porta, ponto in ((entrada, p.entrada), (saida, p.saida)):
                 meia = s.flange(porta.dn_pol)["externo"] / 2 * escala
-                px = MARGEM + (ponto[0] - minx) * escala
-                py = MARGEM + (ponto[1] - miny) * escala - meia - 4
-                partes.append(f'<text class="marca" x="{px:.1f}" y="{py:.1f}">'
+                px = margem + (ponto[0] - minx) * escala
+                py = margem + (ponto[1] - miny) * escala - meia - 4 * anota
+                partes.append(f'<text class="marca" x="{px:.2f}" '
+                              f'y="{py:.2f}" '
+                              f'style="font-size:{9.0 * anota:.2f}px">'
                               f'{porta.dn_pol:g}"</text>')
     for p, motivo in ruins:
-        px = MARGEM + (p.saida[0] - minx) * escala
-        py = MARGEM + (p.saida[1] - miny) * escala
-        partes.append(f'<circle class="juncao ruim" cx="{px:.1f}" cy="{py:.1f}" r="4"/>')
+        px = margem + (p.saida[0] - minx) * escala
+        py = margem + (p.saida[1] - miny) * escala
+        partes.append(f'<circle class="juncao ruim" cx="{px:.1f}" cy="{py:.1f}" '
+                      f'r="{4 * anota:.2f}"/>')
     partes.append("</g></svg>")
     saida = "".join(partes)
-    return (saida.replace("@DEGRADES@",
+    saida = saida.replace("@DEGRADES@",
                           f'<defs>{"".join(degrades.values())}</defs>'
-                          if degrades else ""), postos, fim)
+                          if degrades else "")
+    return saida, postos, fim

@@ -69,10 +69,18 @@ def texto_no_eixo(x, y, texto, classe="cota", tamanho=8.0, gira=""):
     """
     largura = len(texto) * tamanho * 0.62 + tamanho * 0.8
     altura = tamanho * 1.3
-    return (f'<g{gira}><rect class="trim" x="{x - largura/2:.1f}" '
-            f'y="{y - altura/2:.1f}" width="{largura:.1f}" '
-            f'height="{altura:.1f}"/>'
-            f'<text class="{classe}" x="{x:.1f}" y="{y:.1f}" '
+    # o tamanho vai no TEXTO tambem, e nao so no retangulo atras dele. A
+    # folha impressa desenha num viewBox em milimetro, e ali a regra de CSS
+    # `font-size:9px` vale 9 MILIMETROS - a cota saia do tamanho do tubo.
+    #
+    # E vai no `style`, e nao num atributo: regra de CSS vence atributo de
+    # apresentacao, entao `font-size="2.7"` continuaria perdendo para a folha.
+    # Estilo em linha e o unico que ganha dela sem !important
+    return (f'<g{gira}><rect class="trim" x="{x - largura/2:.2f}" '
+            f'y="{y - altura/2:.2f}" width="{largura:.2f}" '
+            f'height="{altura:.2f}"/>'
+            f'<text class="{classe}" x="{x:.2f}" y="{y:.2f}" '
+            f'style="font-size:{tamanho:.2f}px" '
             f'dominant-baseline="central">{texto}</text></g>')
 
 
