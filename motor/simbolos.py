@@ -73,16 +73,21 @@ def flange(dn_pol, norma="NBR PN16"):
                          espessura=float(r["esp_flange_mm"]))
         _flanges[norma] = tabela
     ficha = dict(_flanges[norma].get(float(dn_pol), {}))
-    folha = flange_netafim(dn_pol)
+    folha = flange_netafim(dn_pol) or _folha_vizinha(dn_pol)
     if folha:
         # a folha do fabricante manda: alem do ressalto e da espessura, que a
         # tabela de furacao nem tem, ela corrige o EXTERNO. No 14" o catalogo
         # Irrigafour traz 533 sob o rotulo DIN 2533 PN16, e 533,4 e o externo
         # ASME B16.5 Classe 150 de NPS 14 - a cota americana com nome europeu.
         # A folha, a DIN e a EN dizem 520, e as tres concordam
-        ficha.update(externo=folha["d_externo_mm"],
-                     ressalto=folha["d_ressalto_mm"],
-                     espessura=folha["esp_mm"], fonte="netafim")
+        # o EXTERNO nao se herda da vizinha: ele e o diametro da chapa, e o
+        # da bitola de cima nao serve. So a espessura e o ressalto
+        if not folha.get("interpolada"):
+            ficha["externo"] = folha["d_externo_mm"]
+            ficha["ressalto"] = folha["d_ressalto_mm"]
+        ficha["espessura"] = folha["esp_mm"]
+        ficha["fonte"] = ("netafim" if not folha.get("interpolada")
+                          else "netafim (chapa da bitola de cima)")
     ficha.setdefault("externo", (DE_TUBO.get(dn_pol, 100) * 1.7))
     ficha.setdefault("circulo", ficha["externo"] * 0.85)
     ficha.setdefault("furos", 8)
@@ -91,6 +96,28 @@ def flange(dn_pol, norma="NBR PN16"):
     ficha.setdefault("ressalto", ficha["externo"] * 0.78)
     ficha.setdefault("fonte", "estimativa")
     return ficha
+
+
+def _folha_vizinha(dn_pol):
+    """A folha da bitola de cima, para quem a folha nao cota.
+
+    So o 2 1/2" cai aqui. Sem isso ele herdava a espessura da tabela de
+    FURACAO, que cota outra peca com o mesmo nome - a flange integral de uma
+    valvula de ferro fundido, mais grossa. O 2 1/2" saia com 21 mm de chapa
+    entre um 2" e um 3" de 16, e o parafuso da tabela deixava de fechar por
+    causa de um numero que nao era dele.
+
+    A vizinha de CIMA, e nao a de baixo: chapa a mais engrossa a junta e o
+    parafuso continua fechando; chapa a menos faz o contrario.
+    """
+    flange_netafim(2)                      # garante a tabela carregada
+    acima = sorted(d for tipo, d in _netafim if tipo == "SOLDAR"
+                   and d > float(dn_pol))
+    if not acima:
+        return None
+    folha = dict(_netafim[("SOLDAR", acima[0])])
+    folha["interpolada"] = True
+    return folha
 
 
 _netafim = None

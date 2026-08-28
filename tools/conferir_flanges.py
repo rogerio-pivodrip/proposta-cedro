@@ -131,6 +131,38 @@ def main():
               "       " + ", ".join(curtos)
               + " pedem um parafuso mais longo.")
 
+    print("\n== toda linha da tabela de ferragem tem codigo na lista")
+    # A tabela e regra da casa, mas ela COMPRA - e nao adianta a regra pedir
+    # 7/8" x 4 1/2" se a lista so tem 4" e 5". Um comprimento que nao existe
+    # so aparece quando alguem vai comprar, e ai o desenho ja saiu. Aqui cada
+    # linha da csv e resolvida em SAP como a lista de materiais resolve.
+    from motor import ferragem                          # noqa: E402
+    from motor.catalogo import Catalogo                 # noqa: E402
+    cat = Catalogo()
+    sem_codigo = []
+    for contexto, faixas in sorted(regras.FERRAGENS.items()):
+        for faixa in faixas:
+            bit, comp = faixa["bitola_pol"], faixa["comprimento_pol"]
+            achados = {
+                "PARAFUSO": ferragem.resolver(
+                    cat, "PARAFUSO",
+                    {"bitola_pol": bit, "comprimento_pol": comp}),
+                "PORCA": ferragem.resolver(cat, "PORCA", {"bitola_pol": bit}),
+                "ARRUELA": ferragem.resolver(cat, "ARRUELA",
+                                             {"bitola_pol": bit}),
+            }
+            faltam = [papel for papel, item in achados.items() if not item]
+            marca = " !" if faltam else "ok"
+            saps = " ".join(i["sap"] for i in achados.values() if i)
+            print(f'  {marca} {contexto:>16} ate {faixa["dn_max"]:>4g}   '
+                  f'{bit}" x {comp}"  {saps}'
+                  + (f'  SEM CODIGO: {", ".join(faltam)}' if faltam else ""))
+            if faltam:
+                sem_codigo.append(f'{contexto} ate {faixa["dn_max"]:g}": '
+                                  f'{bit}" x {comp}" não tem '
+                                  + ", ".join(faltam) + " na lista")
+    problemas.extend(sem_codigo)
+
     print("\n== o desenho e a lista contam a mesma arruela")
     desenhado = sum(1 for e in s.parafuso_sextavado(-16, 16, 0, 19.05, 63.5)[0]
                     if e.get("classe") == "arruela")

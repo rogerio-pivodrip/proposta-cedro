@@ -110,6 +110,13 @@ def parafusos_curtos(linha):
 
     A conta e a mesma que o simbolo faz para desenhar, e de proposito: quem
     avisa e quem desenha veem o mesmo parafuso.
+
+    **So vale em AZ_AZ.** A conta soma DUAS chapas, e so na junta aco-aco o
+    programa conhece as duas: as duas saem da folha Netafim. Contra a bomba a
+    outra chapa e do fabricante da bomba e nao ha ficha dela aqui; contra
+    Plasson nao ha espessura de flange solta no programa. Medir esses casos com
+    a espessura do aco dos dois lados daria um veredito sobre um sanduiche que
+    nao existe - e um "fecha" falso vale menos que nao dizer nada.
     """
     prontos, _recusadas = simbolos_da_linha(linha)
     fora = []
@@ -120,6 +127,8 @@ def parafusos_curtos(linha):
             continue
         contexto = regras.contexto_da_junta(simbolo.params.get("material"),
                                             adiante.params.get("material"))
+        if contexto != "AZ_AZ":
+            continue
         ficha = regras.parafuso_da_junta(saida.dn_pol, contexto)
         esp = s.flange(saida.dn_pol)["espessura"]
         _el, sobra = s.parafuso_sextavado(-esp, esp, 0.0, ficha["bitola_mm"],
