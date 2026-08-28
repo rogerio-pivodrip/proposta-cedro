@@ -812,6 +812,78 @@ def te(dn_pol, dn_derivacao=None, entrada="linha"):
 _crivos = None
 
 
+def _grade_da_tela(x0, x1, meia_altura, tela, colunas=6, fileiras=9):
+    """A gaiola da valvula de pe NR-010, em ripas.
+
+    A tela dela NAO e chapa perfurada de furo redondo como a do crivo AZ: e
+    uma gaiola de inox com abertura RETANGULAR entre nervuras, e e assim que
+    ela aparece na folha e na peca. Desenhar furo redondo aqui poria as duas
+    telas com a mesma cara sendo que sao duas coisas diferentes.
+
+    O numero de aberturas e de DESENHO e nao de folha - o furo real e de 3 ou
+    6 mm e no tamanho da peca some. O que a folha da e a area aberta (33% ou
+    62%), e e ela que decide a grossura da nervura: quanto mais aberta a tela,
+    mais fina a nervura.
+    """
+    aberta = float(tela.get("area_aberta_pct") or 33) / 100
+    vao_x = (x1 - x0) / colunas
+    vao_y = (2 * meia_altura * 0.86) / fileiras
+    # a nervura fica com o que a area aberta nao leva, repartido nos dois eixos
+    nervura = 1 - aberta ** 0.5
+    el = []
+    for i in range(colunas):
+        for j in range(fileiras):
+            x = x0 + vao_x * (i + nervura / 2)
+            y = -meia_altura * 0.86 + vao_y * (j + nervura / 2)
+            el.append({"tipo": "rect", "x": x, "y": y,
+                       "w": vao_x * (1 - nervura), "h": vao_y * (1 - nervura),
+                       "classe": "furo"})
+    return el
+
+
+def _esticar_do_pe(elemento, fator, y_pe):
+    """Afasta o elemento do pe na razao dada - o pe fica, o resto sobe."""
+    if elemento["tipo"] != "rect":
+        return
+    elemento["y"] = y_pe + (elemento["y"] - y_pe) * fator
+    elemento["h"] *= fator
+
+
+def _nervuras(x0, x1, meia_altura, banda, colunas=3, fileiras=None):
+    """As nervuras do corpo de polimero, com uma banda livre no meio.
+
+    O corpo da NR-010 nao e liso: e uma casca nervurada, e e assim que ela
+    aparece na foto e no catalogo. Desenhada lisa, ela vira um bloco e perde a
+    unica coisa que diz "isto e plastico moldado e nao ferro fundido".
+
+    A BANDA no meio nao e enfeite - e onde mora a seta de fluxo, que vem
+    moldada no proprio corpo. Deixar a faixa livre e o que faz a seta se ler:
+    sobre a grade ela sumiria.
+
+    Sao TRES colunas de bolsos, contadas no desenho do catalogo. O numero de
+    fileiras sai da proporcao - o catalogo nao cota nervura - mas a coluna e
+    contada, e nao estimada.
+    """
+    largura, altura = x1 - x0, 2 * meia_altura
+    # a celula e mais LARGA que alta na peca - a nervura horizontal e a que
+    # trava o corpo contra a pressao, entao ela se repete mais
+    lado = largura / colunas
+    fileiras = fileiras or max(4, round(altura / (lado * 0.78)))
+    vao_x, vao_y = largura / colunas, altura / fileiras
+    nervura = 0.15                       # o quanto da celula e parede
+    el = []
+    for i in range(colunas):
+        for j in range(fileiras):
+            y = -meia_altura + vao_y * (j + nervura / 2)
+            h = vao_y * (1 - nervura)
+            if y < banda and y + h > -banda:     # a faixa da seta fica livre
+                continue
+            el.append({"tipo": "rect", "x": x0 + vao_x * (i + nervura / 2),
+                       "y": y, "w": vao_x * (1 - nervura), "h": h,
+                       "classe": "malha"})
+    return el
+
+
 def ficha_crivo(dn_pol):
     """A folha do crivo - pagina 14 do caderno."""
     global _crivos
@@ -2527,7 +2599,7 @@ def valvula_hidraulica(dn_pol, serie="47"):
                    el, portas, fonte)
 
 
-def medidor(dn_pol):
+def medidor(dn_pol, marca=None):
     """Woltmann: corpo cilindrico, torre e o registrador de tampa articulada.
 
     O bloco da casa desenha o ombro do corpo entrando na flange, e o
@@ -2637,7 +2709,10 @@ def medidor(dn_pol):
     el.append(_p(f"M-60 0 H{comp+60:.0f}", "centro"))
     el.append(_p(f"M{meio:.1f} {topo - 40:.1f} V{fundo+40:.1f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol), Porta("saida", comp, 0, 0, dn_pol)]
-    return _montar("MEDIDOR", f'medidor {dn_pol:g}"', el, portas, fonte)
+    # a marca decide a COR: o ARAD que a casa compra e verde, o tangencial WI
+    # da Akvometer e azul por ficha. O padrao e o ARAD, que e o da lista
+    return _montar("MEDIDOR", f'medidor {dn_pol:g}"', el, portas, fonte,
+                   {"marca": marca or "ARAD"})
 
 
 def curva_saida(dn_pol, angulo=90, dn_saida=2, sentido=1, gomos=4):
@@ -2731,6 +2806,232 @@ def valvula_retencao(dn_pol):
     # vizinhas, e a barra roscada atravessa o conjunto inteiro
     return _montar("VALVULA_RETENCAO", f'retenção wafer {dn_pol:g}"', el, portas,
                    "MP" if ficha else None, {"wafer": True})
+
+
+_nr010 = None
+_telas_nr010 = None
+
+
+def ficha_nr010(dn_pol, modelo=""):
+    """A folha da retencao A.R.I. NR-010, por (bitola, modelo)."""
+    global _nr010
+    if _nr010 is None:
+        _nr010 = {}
+        with open(f"{DADOS}/retencao_nr010_ari.csv", encoding="utf-8") as fh:
+            for r in csv.DictReader(l for l in fh if not l.startswith("#")):
+                _nr010[(float(r["dn_pol"]), r["modelo"].strip())] = {
+                    "A_mm": float(r["A_mm"]), "B_mm": float(r["B_mm"]),
+                    "C_mm": float(r["C_mm"]), "peso_kg": float(r["peso_kg"])}
+    return _nr010.get((float(dn_pol), (modelo or "").strip().upper()))
+
+
+def tela_nr010(dn_pol, furo_mm=3):
+    """A tela da valvula de pe NR-010 FV. De 8" para cima ha duas, e a
+    diferenca nao e acabamento: a area aberta vai de 33% para 62%."""
+    global _telas_nr010
+    if _telas_nr010 is None:
+        _telas_nr010 = {}
+        with open(f"{DADOS}/telas_nr010_ari.csv", encoding="utf-8") as fh:
+            for r in csv.DictReader(l for l in fh if not l.startswith("#")):
+                _telas_nr010[(float(r["dn_pol"]), float(r["furo_mm"]))] = {
+                    "furo_mm": float(r["furo_mm"]),
+                    "comprimento_mm": float(r["comprimento_mm"]),
+                    "diametro_mm": float(r["diametro_mm"]),
+                    "area_aberta_pct": float(r["area_aberta_pct"])}
+    return _telas_nr010.get((float(dn_pol), float(furo_mm)))
+
+
+def retencao_nr010(dn_pol, modelo="", furo_tela=3):
+    """Retencao A.R.I. NR-010: wafer de nylon reforcado, mola assistida.
+
+    Nao e a wafer de ferro que o programa ja desenhava - e outra peca, de
+    polimero, e a lista compra as duas. 660 gramas em 3" contra 2,4 kg da MP
+    diz o bastante. Ela entra pela folha, e a folha da tres letras:
+
+        A  diametro do corpo - a altura da peca na vista lateral
+        C  face a face - a largura dela
+        B  altura TOTAL, do fundo do corpo ao alto do bujao da mola. B - A e
+           o alojamento da mola, que e o que sobra por cima do corpo e o que
+           diferencia esta valvula de um anel espacador visto de lado
+
+    Tres modelos, e os tres saem daqui:
+
+        ""   a wafer pura, abracada pelas flanges das duas vizinhas
+        LS   com limit switch - mesmo corpo, a chave sobe no bujao e B cresce
+        FV   Foot Valve: a MESMA valvula com a tela na entrada e flange
+             propria. E a valvula de pe da succao, a peca com que a linha
+             comeca, e ai C passa a incluir a tela
+
+    A portinhola e UNICA e articulada em cima - "Flap Assembly" na folha, de 3"
+    a 10". Nao confundir com a dupla portinhola da wafer de ferro: sao dois
+    mecanismos, e desenha-los iguais apagaria a diferenca.
+    """
+    modelo = (modelo or "").strip().upper()
+    ficha = ficha_nr010(dn_pol, modelo) or ficha_nr010(dn_pol) or {}
+    A = ficha.get("A_mm") or DE_TUBO.get(dn_pol, 100) * 1.25
+    B = ficha.get("B_mm") or A * 1.3
+    C = ficha.get("C_mm") or A * 0.6
+    tela = tela_nr010(dn_pol, furo_tela) if modelo == "FV" else None
+
+    # onde o CORPO comeca: no FV a tela vem antes dele, e C e o conjunto
+    x0 = tela["comprimento_mm"] if tela else 0.0
+    corpo_c = (C - x0) if tela else C
+    r = A / 2
+    # o corpo da valvula: no FV o que manda a altura e a flange (A), e o corpo
+    # em si e mais estreito
+    r_corpo = r * 0.62 if tela else r
+    bocal = min(DE_TUBO.get(dn_pol, 100), r_corpo * 1.7)
+
+    el = caixa(x0, corpo_c, r_corpo, r_corpo)
+    # os dois ABAS: as faces de vedacao, que sao a chapa cheia do wafer. Entre
+    # elas o corpo e casca nervurada, e e essa diferenca que da a silhueta da
+    # peca - sem as abas ela vira uma caixa com risquinhos
+    aba = corpo_c * 0.13
+    # a faixa livre no meio e a da PROPRIA SETA, medida dela e nao arbitrada.
+    # Com um valor chutado sobrava um vao branco em volta que fazia a peca
+    # parecer partida em duas
+    x_ini, x_fim = x0 + aba + corpo_c * 0.10, x0 + corpo_c - aba * 1.2
+    vao = x_fim - x_ini
+    cabeca, meia = vao * 0.46, vao * 0.21
+    banda = meia * 1.12
+    el += _nervuras(x0 + aba, x0 + corpo_c - aba, r_corpo, banda)
+    el.append(_p(f"M{x0+aba:.1f} {-r_corpo:.1f} V{r_corpo:.1f}", "malha"))
+    el.append(_p(f"M{x0+corpo_c-aba:.1f} {-r_corpo:.1f} V{r_corpo:.1f}",
+                 "malha"))
+    # a seta, moldada no corpo: ela ocupa quase toda a largura util, com a
+    # cabeca valendo perto de metade dela. E o que a peca tem de mais visivel
+    # depois da propria forma, e desenha-la timida seria desenhar outra coisa
+    # a seta e MOLDADA, e nao cotada: a cabeca dela e curta e gorda, quase
+    # metade do comprimento e quase tao alta quanto comprida. _seta desenha a
+    # ponta fina de cota, que aqui leria como outra coisa
+    el.append(_p(f"M{x_ini:.1f} {-meia*0.34:.1f} H{x_fim-cabeca:.1f} "
+                 f"V{-meia:.1f} L{x_fim:.1f} 0 L{x_fim-cabeca:.1f} {meia:.1f} "
+                 f"V{meia*0.34:.1f} H{x_ini:.1f} Z", "fluxo"))
+    # o pe: a base chata em que ela se apoia na bancada
+    el.append({"tipo": "rect", "x": x0 + aba * 0.4, "y": r_corpo - aba * 0.5,
+               "w": corpo_c - aba * 0.8, "h": aba * 0.5, "classe": "corpo"})
+    # A PORTINHOLA NAO VAI DESENHADA. Ela e interna - "Flap Assembly", nylon
+    # reforcado com selo de EPDM - e a vista aqui e a de fora, que e o que se
+    # ve na obra e na foto. Sobre a casca nervurada uma diagonal atravessada
+    # nao lia como obturador: lia como vinco. Quem diz que a peca e retencao,
+    # nessa vista, e a SETA - que e o que a propria peca faz, moldada no corpo.
+
+    # O BUJAO E INCLINADO, e a cota B vai ate a ponta dele. Nao e efeito da
+    # perspectiva do catalogo: o alojamento da mola sai do corpo caido para a
+    # MONTANTE, e o alto da peca e o canto de cima da tampa - que e onde a
+    # seta de B termina no desenho da folha.
+    #
+    # Isso muda a conta. Um bujao de pe subiria `alto` e pronto; inclinado de
+    # T graus, ele sobe `L cos T` pelo eixo dele mais `b sen T` do canto, com
+    # b a meia largura. Entao o comprimento que fecha a cota e
+    #
+    #     L = (alto - b sen T) / cos T
+    #
+    # e desenha-lo com o comprimento de um bujao de pe faria a peca sair mais
+    # alta que a ficha - justamente na cota que a folha cota.
+    topo = B - A / 2
+    alto = topo - r_corpo
+    if alto > 1:
+        meio = x0 + corpo_c * 0.42
+        colo_l, tampa_l = corpo_c * 0.44, corpo_c * 0.33
+        inclina = 16.0
+        rad = math.radians(inclina)
+        # o bujao nasce DENTRO do corpo, e nao encostado nele. Girado em volta
+        # da borda, o canto de tras dele levantava e sobrava uma cunha branca
+        # entre os dois - a peca aparecia partida no ponto em que ela e
+        # inteirica. Afundar meia largura vezes o seno do angulo fecha a cunha
+        afundar = (colo_l / 2) * abs(math.sin(rad))
+        pe = -r_corpo + afundar
+        comp_bujao = (alto + afundar) / math.cos(rad)
+        # a chave fim de curso, quando ha, mora DENTRO de B: a folha ja a
+        # contou, e por isso ela reparte o comprimento em vez de somar-se a ele
+        fatia = (0.26, 0.30, 0.44) if modelo == "LS" else (0.42, 0.58, 0.0)
+        bujao, y = [], pe
+        colo = {"tipo": "rect", "x": meio - colo_l / 2,
+                "y": y - comp_bujao * fatia[0], "w": colo_l,
+                "h": comp_bujao * fatia[0], "classe": "corpo"}
+        y -= comp_bujao * fatia[0]
+        tampa = {"tipo": "rect", "x": meio - tampa_l / 2,
+                 "y": y - comp_bujao * fatia[1], "w": tampa_l,
+                 "h": comp_bujao * fatia[1], "classe": "corpo"}
+        bujao += [colo, tampa]
+        y -= comp_bujao * fatia[1]
+        topo_do_serrilhado = tampa
+        if fatia[2]:
+            caixa_ls = tampa_l * 0.72
+            bujao.append({"tipo": "rect", "x": meio - tampa_l * 0.10,
+                          "y": y - comp_bujao * fatia[2] * 0.45,
+                          "w": tampa_l * 0.20,
+                          "h": comp_bujao * fatia[2] * 0.45, "classe": "haste"})
+            bujao.append({"tipo": "rect", "x": meio - caixa_ls / 2,
+                          "y": y - comp_bujao * fatia[2],
+                          "w": caixa_ls, "h": comp_bujao * fatia[2] * 0.55,
+                          "classe": "corpo"})
+        # inclina o conjunto em volta do pe dele, dentro do corpo
+        for e in bujao:
+            e["girar"] = (inclina, meio, pe)
+        # e AFERE ITERANDO. Uma correcao de uma passada nao fecha: esticar a
+        # partir do pe muda o canto que chega mais alto, e o novo canto pede
+        # outra correcao. Tres voltas convergem em decimo de milimetro, e isso
+        # e mais curto que a formula fechada de cada variante.
+        # So RECT entra aqui - por isso o serrilhado so nasce depois: linha
+        # nao se estica na mesma conta, e antes ela ficava para tras e virava
+        # o ponto mais alto da peca, estourando a cota B por 2 a 3 mm
+        for _volta in range(6):
+            subiu = -limites(bujao)[1]
+            if abs(subiu - topo) < 0.05:
+                break
+            # `subiu` e ALTURA acima do eixo e `pe` e um y COM SINAL - a
+            # razao tem de ser feita na mesma unidade, e a altura do pe e -pe
+            for e in bujao:
+                _esticar_do_pe(e, (topo + pe) / (subiu + pe), pe)
+        # o serrilhado da tampa rosqueada, ja na medida final dela
+        for k in range(1, 4):
+            xk = topo_do_serrilhado["x"] + topo_do_serrilhado["w"] * k / 4
+            bujao.append(dict(
+                _p(f"M{xk:.1f} {topo_do_serrilhado['y']:.1f} "
+                   f"v{topo_do_serrilhado['h']:.1f}", "malha"),
+                girar=(inclina, meio, pe)))
+        el += bujao
+
+    if tela:
+        # a tela: cilindro perfurado de inox, fundo ABERTO - a agua entra por
+        # ele e pela parede. E o contrario do crivo AZ, que tem fundo de chapa
+        rt = tela["diametro_mm"] / 2
+        el += [_p(f"M0 {-rt:.1f} H{x0:.1f}"), _p(f"M0 {rt:.1f} H{x0:.1f}"),
+               _p(f"M0 {-rt:.1f} V{rt:.1f}")]
+        el += _grade_da_tela(6.0, x0 - 6.0, rt, tela)
+        # a flange propria - a FV nao e wafer, ela aparafusa. A furacao e a da
+        # linha ("manufactured according to any standard flange requirement"),
+        # mas o EXTERNO e o A da folha e nao o da flange de aco: esta e de PVC
+        # e sai maior - 324 contra 285 em 6". Quem manda no diametro e a folha
+        # da peca; quem manda nos furos e a norma da linha
+        chapa = placa(C, dn_pol, lado="saida")
+        for e in chapa:
+            if e["tipo"] == "rect":
+                e["y"], e["h"] = -A / 2, A
+        el += chapa
+
+    # o eixo entra ANTES da seta na ordem de desenho - ele e convencao de
+    # folha, ela e relevo da peca, e o traco-ponto vermelho cruzando a seta
+    # cinza fazia as duas brigarem. Quem esta na peca fica por cima
+    eixo_linha = _p(f"M{-40 if not tela else -20} 0 H{C+40:.0f}", "centro")
+    el.insert(0, eixo_linha)
+    portas = ([Porta("saida", C, 0, 0, dn_pol)] if tela else
+              [Porta("entrada", 0, 0, 180, dn_pol),
+               Porta("saida", C, 0, 0, dn_pol)])
+    rotulo = {"": "retenção", "LS": "retenção c/ fim de curso",
+              "FV": "válvula de pé"}[modelo if modelo in ("LS", "FV") else ""]
+    params = {"marca": "ARI", "material": "NYLON", "modelo": modelo or "NR-010",
+              "peso_kg": ficha.get("peso_kg")}
+    if not tela:
+        # wafer nao tem flange: e abracada pelas flanges das duas vizinhas
+        params["wafer"] = True
+    else:
+        params["tela"] = tela
+    return _montar("VALVULA_RETENCAO",
+                   f'{rotulo} NR-010 {dn_pol:g}"', el, portas,
+                   "ari" if ficha else None, params)
 
 
 def valvula_pe(dn_pol):

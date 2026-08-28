@@ -426,7 +426,18 @@ def _desenhar(item, pose=None):
         "VALVULA_HIDRAULICA": lambda: s.valvula_hidraulica(
             maior, item.get("serie") or "47"),
         "MEDIDOR": lambda: s.medidor(maior),
-        "VALVULA_RETENCAO": lambda: s.valvula_retencao(maior),
+        # duas retencoes diferentes com a mesma familia: a wafer de FERRO
+        # (UNIFLAP, ficha MP) e a A.R.I. NR-010, de NYLON reforcado. Nao sao
+        # variantes uma da outra - 660 g contra 2,4 kg em 3" - e quem diz qual
+        # e a descricao, como na ventosa. O LS e o FV entram pelo mesmo texto
+        "VALVULA_RETENCAO": lambda: (
+            s.retencao_nr010(
+                maior,
+                "FV" if re.search(r"\bFV\b|PE\b", item["descricao"], re.I)
+                else "LS" if re.search(r"\bLS\b", item["descricao"], re.I)
+                else "")
+            if re.search(r"NR\s*-?\s*010", item["descricao"] or "", re.I)
+            else s.valvula_retencao(maior)),
         "VALVULA_PE": lambda: s.valvula_pe(maior),
     }
     if familia in POR_MILIMETRO and familia not in despacho:

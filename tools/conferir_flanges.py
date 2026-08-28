@@ -206,6 +206,32 @@ def main():
     else:
         print("\n  ok toda flange Plasson que a casa compra casa com uma de aço")
 
+    print("\n== a retenção A.R.I. NR-010 sai na medida da folha")
+    # O bujao dela e INCLINADO e a cota B vai ate a ponta dele - entao a altura
+    # da peca nao e "corpo mais bujao", e a projecao do bujao caido mais o
+    # canto de cima da tampa. O simbolo resolve isso iterando, e este caso e
+    # quem garante que a iteracao converge em toda bitola e nas duas variantes
+    fora_nr = []
+    print(f'  {"pol":>5} {"mod":>4}  {"desenhado":>13}  {"folha C x B":>13}')
+    for dn in (3, 4, 6, 8, 10):
+        for modelo in ("", "LS"):
+            ficha = s.ficha_nr010(dn, modelo)
+            sim = s.retencao_nr010(dn, modelo)
+            _x, _y, larg, alt = s.caixa_do_corpo(sim)
+            # no LS o bujao caido passa da largura do corpo, e isso e a peca:
+            # so a altura e comparavel nos dois
+            ok_alt = abs(alt - ficha["B_mm"]) < 0.5
+            ok_larg = modelo == "LS" or abs(larg - ficha["C_mm"]) < 0.5
+            marca = "ok" if ok_alt and ok_larg else " !"
+            print(f'  {marca} {dn:>3g}" {modelo or "—":>4}  '
+                  f'{larg:>5.1f} x {alt:>5.1f}  '
+                  f'{ficha["C_mm"]:>5g} x {ficha["B_mm"]:<5g}')
+            if not (ok_alt and ok_larg):
+                fora_nr.append(f'NR-010 {dn:g}" {modelo or "liso"}')
+    if fora_nr:
+        problemas.append("a NR-010 não sai na medida da folha em "
+                         + ", ".join(fora_nr))
+
     print("\n== a furação do medidor e a da linha")
     # O medidor entra no meio do recalque e nao declara norma na descricao da
     # lista - o motor faz a ponta sem norma adotar a do vizinho. A folha do WI

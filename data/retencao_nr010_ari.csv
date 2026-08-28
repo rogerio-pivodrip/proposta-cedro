@@ -1,0 +1,54 @@
+# Valvula de retencao A.R.I. NR-010 - wafer, mola assistida, NYLON REFORCADO.
+# Catalogo Aquestia ARI.NR010.IRG.CAT.EN.0626, em
+# data/fichas/ARI_NR010_retencao_irrigacao_0626.pdf.
+#
+# Nao e valvula de ferro: o corpo e polimero reforcado, e o peso denuncia - 660
+# gramas em 3", 3,7 kg em 8". A ficha de wafer que o programa ja tinha
+# (data/valvulas_wafer.csv) e da MP em ferro fundido, e as duas nao se
+# substituem. Esta e a que a lista compra: 70420-006040 a 70420-006110, em 3",
+# 4", 6", 8" e 10", PN10 e PN16.
+#
+# As letras sao as do catalogo, pagina 4:
+#
+#   A  diametro do corpo. E ele que tem de caber DENTRO do circulo de furacao
+#      da flange - 256 em 8" contra 295 de circulo, com furo de 22
+#   B  altura total, do fundo do corpo ao alto do bujao da mola. Sempre maior
+#      que A: o que sobra e o alojamento da mola, que cresce ~30% de A
+#   C  face a face - a espessura do wafer, no sentido do fluxo
+#
+# Tres modelos:
+#
+#   (vazio)  a retencao wafer pura
+#   LS       com limit switch: mesmo corpo, B cresce (a chave sobe no bujao).
+#            A nota do catalogo pede mais 2 a 3 cm de espaco por causa dela
+#   FV       Foot Valve: a MESMA retencao com uma tela perfurada na entrada, e
+#            flange propria em vez de wafer. E a valvula de pe da succao - a
+#            peca com que a linha comeca. C passa a incluir a tela: em 8",
+#            132 de corpo + 440 de tela = 572, e a ficha diz 575
+#
+# A tela do FV esta em data/telas_nr010_ari.csv.
+#
+# "All product weights and dimensions are approximate, due to the differences
+# in flange standards, materials and variable accessories" - palavras da ficha.
+modelo,dn_pol,A_mm,B_mm,C_mm,peso_kg
+,1.5,65,149,133,0.63
+LS,1.5,65,258,133,0.89
+FV,1.5,65,149,225,0.95
+,2,76,157,133,0.65
+LS,2,76,267,133,0.92
+FV,2,76,157,267,1.0
+,3,131,172,80,0.66
+LS,3,131,308,80,0.77
+FV,3,207,207,226,1.3
+,4,151,190,90,0.9
+LS,4,151,325,90,1.17
+FV,4,233,233,286,2.17
+,6,220,291,112,2.6
+LS,6,220,380,112,3.0
+FV,6,324,324,414,5.5
+,8,256,323,132,3.7
+LS,8,256,415,132,3.8
+FV,8,340,365,575,8.0
+,10,308,399,145,5.2
+LS,10,308,465,145,5.7
+FV,10,410,425,688,11.0

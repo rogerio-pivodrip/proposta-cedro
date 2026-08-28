@@ -128,6 +128,16 @@ DEFS = """<defs>
 <stop offset=".36" stop-color="#f6f8fa"/><stop offset=".60" stop-color="#e2e6eb"/>
 <stop offset=".84" stop-color="#bcc3cb"/><stop offset="1" stop-color="#9aa2ab"/>
 </linearGradient>
+<linearGradient id="nylon" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#2b2f34"/><stop offset=".18" stop-color="#4d545b"/>
+<stop offset=".40" stop-color="#6b737b"/><stop offset=".64" stop-color="#474e55"/>
+<stop offset="1" stop-color="#282c31"/>
+</linearGradient>
+<linearGradient id="verde" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#11582a"/><stop offset=".16" stop-color="#2a9247"/>
+<stop offset=".36" stop-color="#4fbc6c"/><stop offset=".60" stop-color="#2c8c48"/>
+<stop offset=".84" stop-color="#186234"/><stop offset="1" stop-color="#104b27"/>
+</linearGradient>
 <linearGradient id="chapa" x1="0" y1="0" x2="0" y2="1">
 <stop offset="0" stop-color="#99a0a8"/><stop offset=".3" stop-color="#e4e8eb"/>
 <stop offset=".7" stop-color="#c7cdd3"/><stop offset="1" stop-color="#8a9198"/>
@@ -144,9 +154,24 @@ DEFS = """<defs>
 # E conhecimento de campo, do mesmo tipo que uma cota - por isso mora numa
 # tabela e nao espalhado no CSS. A tubulacao continua aco; so o EQUIPAMENTO
 # tem cor, que e como se ve numa casa de bomba de verdade.
-LIVREA_MARCA = {"KSB": "azul_medio", "EBARA": "claro"}
+# O medidor tem cor de FABRICANTE, e nao de familia: o ARAD que a casa compra e
+# verde, o tangencial WI da Akvometer e azul - "pintura eletrostatica epoxi
+# anticorrosiva (azul)", nas palavras da folha dele. Por isso os dois entram
+# aqui em cima, onde a marca manda, e nao na tabela de familia.
+LIVREA_MARCA = {"KSB": "azul_medio", "EBARA": "claro",
+                "ARAD": "verde", "DOROT": "verde", "AKVOMETER": "azul",
+                # A.R.I. e polimero preto - ventosa e retencao NR-010. Ela
+                # precisa entrar pela MARCA e nao pelo material: a familia
+                # VALVULA_RETENCAO manda azul, e a marca e quem passa na frente
+                # nylon e nao `pead`: o degrade do tubo de PEAD e quase
+                # chapado de preto, e sobre ele a nervura do corpo sumia. Esta
+                # peca e casca moldada e precisa do relevo aparecendo
+                "ARI": "nylon"}
 LIVREA_FAMILIA = {"VALVULA_RETENCAO": "azul", "VALVULA_BORBOLETA": "azul",
-                  "VALVULA_HIDRAULICA": "azul", "VALVULA_GAVETA": "escuro"}
+                  "VALVULA_HIDRAULICA": "azul", "VALVULA_GAVETA": "escuro",
+                  # sem marca conhecida o medidor cai em azul, que e a cor da
+                  # unica folha que diz a cor em texto
+                  "MEDIDOR": "azul"}
 # plastico nao brilha como aco: o PVC sai cinza fosco e o PEAD, preto
 LIVREA_MATERIAL = {"PVC": "pvc", "PEAD": "pead"}
 
@@ -310,6 +335,9 @@ figcaption{padding:0 14px}
 .geo .parafuso,.geo .porca{stroke-width:.65}
 .geo .junta{stroke:var(--eixo);stroke-width:.9}
 .geo .fluxo{fill:#8f949c;stroke:none}
+/* a haste da seta: e traco, e nao area - por isso ela nao pode herdar o
+   fill:none da seta cheia nem o stroke do corpo */
+.geo .fluxo_haste{fill:none;stroke:#8f949c;stroke-width:2.4}
 text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .cota{font-size:8px;text-anchor:middle}
 .marca{font-size:9px;text-anchor:middle}
@@ -374,6 +402,7 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .modo-metal .geo .centro{stroke:var(--eixo)}
 .modo-metal .geo .junta{stroke:var(--eixo)}
 .modo-metal .geo .fluxo{fill:#6f757d;stroke:none}
+.modo-metal .geo .fluxo_haste{fill:none;stroke:#6f757d;stroke-width:2.4}
 /* No metalizado a cota nao cai sobre o papel: cai sobre o CORPO pintado, que
    e claro. Entao o halo dela e claro tambem - ele tem de ser da cor do que
    esta atras, e nao da cor do papel. Com halo escuro em volta de letra escura
@@ -397,6 +426,7 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .modo-pb .geo .parafuso,.modo-pb .geo .porca{fill:#fff}
 .modo-pb .geo .tubulo{fill:none;stroke:none}
 .modo-pb .geo .fluxo{fill:#000;stroke:none}
+.modo-pb .geo .fluxo_haste{fill:none;stroke:#000;stroke-width:2.4}
 .modo-pb text{fill:#000}
 .modo-pb .cota,.modo-pb .marca{stroke:#fff}
 .lista{display:flex;gap:8px;align-items:baseline;margin:1px 0 3px;

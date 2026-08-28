@@ -1,0 +1,19 @@
+# Tela da valvula de pe A.R.I. NR-010 FV - catalogo Aquestia, pagina 8.
+#
+# A tela e de aco inox 316 e o flange e de PVC (3" e 4" trazem "Nylon
+# Reinforced Flange"; 6" a 10", "PVC Flange" - as duas grafias sao da ficha).
+#
+# De 8" para cima ha DUAS telas para a mesma bitola: furo de 3 e furo de 6 mm.
+# Nao e detalhe de acabamento - a area aberta quase dobra, de 33% para 62% em
+# 8". Quem capta agua suja escolhe pela area, e o furo tem de ir no pedido.
+#
+# area_mm2       area total da tela (a superficie do cilindro)
+# area_aberta_mm2 e area_aberta_pct   o que sobra depois dos furos
+dn_pol,furo_mm,area_mm2,area_aberta_mm2,area_aberta_pct,comprimento_mm,diametro_mm
+3,3,41684,13756,33,145,90
+4,3,60936,20109,33,195,115
+6,3,118771,39194,33,300,170
+8,3,153311,50592,33,440,210
+8,6,153311,95053,62,440,210
+10,3,204905,71717,35,540,295
+10,6,204905,127041,62,540,295
