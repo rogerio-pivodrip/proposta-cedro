@@ -138,6 +138,12 @@ def conferir_sequencia(familias):
     """Confere a ordem filtro -> valvula hidraulica -> medidor.
 
     Recebe a lista de familias na ordem da linha e devolve os problemas.
+
+    Quem chama e `Projeto.lista_materiais`, sobre a ARVORE inteira - a ordem
+    em que a arvore se le e a ordem do fluxo, porque o ramo nasce na boca de
+    quem vem antes dele. Uma `Linha` solta confere a si mesma; dentro do
+    projeto ela cala, senao um filtro no tronco acusaria falta da valvula que
+    esta um ramo adiante.
     """
     problemas = []
     posicoes = {}
@@ -148,11 +154,11 @@ def conferir_sequencia(familias):
         depois = [j for j in posicoes.get("VALVULA_HIDRAULICA", []) if j > i]
         if not depois:
             problemas.append(
-                "filtro sem valvula hidraulica na saida - e ali que ela fica")
+                "filtro sem válvula hidráulica na saída - é ali que ela fica")
             continue
         medidores = [j for j in posicoes.get("MEDIDOR", []) if j > i]
         if medidores and medidores[0] < depois[0]:
             problemas.append(
-                "medidor antes da valvula hidraulica - a ordem e filtro, "
-                "valvula, medidor")
+                "medidor antes da válvula hidráulica - a ordem é filtro, "
+                "válvula, medidor")
     return problemas

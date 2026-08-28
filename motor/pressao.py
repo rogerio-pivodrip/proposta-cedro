@@ -162,6 +162,11 @@ def da_peca(descricao, material=None):
     return min(achados, key=lambda c: c["valor"])
 
 
+# Pecas que nao conduzem pressao - elas APERTAM a peca que conduz. A classe
+# delas ser mais alta que a do tubo e o par normal, e nao um conflito.
+SO_APERTAM = ("FLANGE", "COLAR_PEAD", "JUNTA_PLANA", "COLAR_TOMADA")
+
+
 def na_juncao(a, b):
     """As duas classes que se encontram numa junta. (veredito, frase)
 

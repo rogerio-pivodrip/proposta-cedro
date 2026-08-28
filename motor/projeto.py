@@ -272,7 +272,7 @@ class Projeto:
         """A lista da arvore inteira. (itens, avisos)"""
         from collections import OrderedDict
 
-        from . import regras
+        from . import fluxo, hidraulica, regras
         from .linha import ferragem_de_juncao
 
         bom, avisos = OrderedDict(), []
@@ -284,7 +284,7 @@ class Projeto:
 
         arvore = self.arvore(montagem or self.ativa)
         for cada in arvore:
-            itens, recados = cada.lista_materiais()
+            itens, recados = cada.lista_materiais(sequencia=False)
             for reg in itens:
                 somar(reg["sap"], reg["descricao"], reg["qtd"], reg["origem"])
             avisos += [f"{cada.nome}: {a}" if len(self.montagens) > 1 else a
@@ -313,6 +313,16 @@ class Projeto:
                 {"pos": 0, "acao": acao, "dados": dados,
                  "de": dono, "para": ramo.pecas[0]},
                 somar, avisos, rotulo=f"{ramo.nome} nasce em {dona.nome}: ")
+        # A ORDEM HIDRAULICA E DA ARVORE, e nao de cada montagem: o filtro
+        # fica no tronco e a valvula costuma nascer num ramo, e conferir a
+        # montagem sozinha acusaria "filtro sem valvula" que existe uma boca
+        # adiante. A ordem em que a arvore se le E a ordem do fluxo - o ramo
+        # nasce na boca de quem vem antes dele, e por isso vem depois aqui
+        avisos += hidraulica.conferir_sequencia(
+            [p.familia for cada in arvore for p in cada.todas_as_pecas()])
+        avisos += fluxo.conferir(
+            [p for cada in arvore for p in cada.pecas],
+            [a for cada in arvore for p in cada.pecas for a in p.acessorios])
         for numero, reg in enumerate(bom.values(), 1):
             reg["item"] = numero
         return list(bom.values()), avisos

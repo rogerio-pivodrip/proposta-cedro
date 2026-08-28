@@ -136,7 +136,7 @@ def fragmento(dn):
 
     figuras = []
     for nome, detalhe, pecas, giro in linhas:
-        svg, postos, fim = desenhar_linha(pecas, giro=giro)
+        svg, postos, fim, _colisoes = desenhar_linha(pecas, giro=giro)
         figuras.append(
             f'<figure class="linha"><figcaption><b>{nome}</b>'
             f'<em>{detalhe}</em><span>{len(postos)} peças · fecha em '

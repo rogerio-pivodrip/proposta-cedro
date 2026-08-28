@@ -75,6 +75,19 @@ class Sessao:
         # coisa. Lista so do tronco ao lado de desenho com os ramos seria a
         # divergencia que este programa existe para nao ter
         lista, avisos = self.projeto.lista_materiais(linha)
+        # A COLISAO SO SE SABE DEPOIS DE DESENHAR: e a pose que ocupa lugar, e
+        # a pose nasce no encadeamento dos simbolos. Entao a vista se monta
+        # aqui, uma vez, e o aviso dela entra na mesma lista dos outros - quem
+        # le os conflitos le todos no mesmo lugar
+        desenho_da_vez = vista.vista(linha, modo=self.modo,
+                                     projeto=self.projeto, **self.janela)
+        nomes = {p.id: p.descricao
+                 for m in self.projeto.arvore(linha)
+                 for p in m.todas_as_pecas()}
+        avisos = list(avisos) + [
+            f'{nomes.get(a, a)} e {nomes.get(b, b)} ocupam o mesmo lugar no '
+            f"desenho ({fracao:.0%} da menor) - conferir a pose ou a posição"
+            for a, b, fracao in desenho_da_vez.get("colisoes", [])]
         return {
             "tipo": linha.tipo,
             "area": linha.area,
@@ -101,8 +114,7 @@ class Sessao:
                               "desenhado_mm": d["desenhado_mm"],
                               "do_codigo_mm": d["do_codigo_mm"]}
                              for d in linha.divergencias()],
-            "vista": vista.vista(linha, modo=self.modo,
-                                 projeto=self.projeto, **self.janela),
+            "vista": desenho_da_vez,
             "pontas": vista.pontas_erradas(linha),
             "projeto": {"nome": self.projeto.nome, "area": self.projeto.area},
             "montagens": self.projeto.resumo(),

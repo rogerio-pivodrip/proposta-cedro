@@ -10,7 +10,7 @@ motor/desenho.de_item, e o id da peca vai junto para o grupo do SVG.
 """
 import math
 
-from . import desenho, regras, simbolos as s
+from . import colisao, desenho, regras, simbolos as s
 from .svg import (DEFS, ESTILO, ESTILO_LINHA, cor_de,  # noqa: F401
                   desenhar, desenhar_peca, luz_de, texto_no_eixo)
 
@@ -338,7 +338,8 @@ def vista(linha, largura=940, altura_max=620, giro=None, modo="traco",
                          projeto=projeto)
     prontos, recusadas = simbolos_da_linha(linha)
     if not prontos:
-        return {"svg": "", "pecas": 0, "recusadas": recusadas, "modo": modo}
+        return {"svg": "", "pecas": 0, "recusadas": recusadas, "modo": modo,
+                "colisoes": []}
     if giro is None:
         giro = getattr(linha, "giro", 0.0)
     ids = [peca.id for peca, _ in prontos]
@@ -353,13 +354,13 @@ def vista(linha, largura=940, altura_max=620, giro=None, modo="traco",
     else:
         numerados = {b["id"]: b for b in linha.baloes()}
         ramos = None
-    svg, postos, fim = desenhar_linha(
+    svg, postos, fim, colisoes = desenhar_linha(
         [sim for _, sim in prontos], largura=largura, giro=giro,
         altura_max=altura_max, ids=ids, modo=modo, escala=escala, anota=anota,
         acessorios=[por_peca.get(peca.id, []) for peca, _ in prontos],
         baloes=numerados, ramos=ramos, montagem=linha.id)
     return {"svg": svg, "pecas": len(prontos), "recusadas": recusadas,
-            "fim": list(fim), "modo": modo,
+            "fim": list(fim), "modo": modo, "colisoes": colisoes,
             "baloes": [{"id": b["id"], "item": b["n"]}
                        for b in numerados.values()]}
 
@@ -576,6 +577,11 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
     # boca olha. E a mesma transformacao rigida de `montar`, uma peca so
     postos_extra = []
     juntas_extra = []
+    # OS PARES QUE SE ENCOSTAM DE PROPOSITO. A conferencia de colisao precisa
+    # deles: duas pecas encadeadas se tocam face a face, e a chapa da flange e
+    # desenhada para dentro do corpo - sem esta lista todo par vizinho viraria
+    # aviso. Ver motor/colisao.py
+    encostam = [(a, b) for a, b in zip(ids or [], (ids or [])[1:])]
     de_ramo = {}          # id da peca -> id da montagem, para as de ramo
     for i, posto in enumerate(postos):
         # OS ACESSORIOS SE EMPILHAM. O primeiro entra na boca livre da peca da
@@ -588,6 +594,7 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
         # chamou `montagem`, e o nome colidiu com a montagem do documento
         # quando ela passou a ser marcada em cada grupo do SVG.)
         empilhada = posto
+        anterior_id = (ids or [None] * len(postos))[i]
         desta = []
         for identidade, simbolo in ((acessorios or [None] * len(postos))[i]
                                     or []):
@@ -613,6 +620,8 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
             # que ela esta enfiada. Entao a cadeia se monta para frente e se
             # pinta para tras
             desta.insert(0, (identidade, empilhada))
+            encostam.append((anterior_id, identidade))
+            anterior_id = identidade
             # a boca em que ele entrou: e ela que diz se ha JUNTA FLANGEADA
             # ali. A luva e rosca e nao leva parafuso; a derivacao do te e
             # flange e leva - e sem isto a flange cega saia sem ferragem
@@ -670,6 +679,9 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
              for p in filhos], levar, volta)
         marcas = ramo.get("ids") or [None] * len(colocados)
         postos_extra.extend(zip(marcas, colocados))
+        # o ramo encosta em quem o carrega, e as pecas dele encostam entre si
+        encostam.append((identidades[i], marcas[0]))
+        encostam.extend(zip(marcas, marcas[1:]))
         # a peca do ramo nao e acessorio, e e de OUTRA montagem: quem clicar
         # nela tem de cair na montagem dela, e nao numa peca que a aba aberta
         # nao conhece
@@ -700,6 +712,13 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
             for identidade, p in postos_extra]
         juntas_extra = [(*vira(x, y), d + giro, boca, sim)
                         for x, y, d, boca, sim in juntas_extra]
+    # DUAS PECAS NO MESMO LUGAR. So aqui isso se pode saber: e a pose que
+    # colide, e a pose so existe depois de encadear os simbolos e girar a
+    # folha. Ver motor/colisao.py - le os postos ja colocados, os mesmos que
+    # viram SVG, para nao criar uma terceira geometria
+    colisoes = colisao.conferir(
+        list(zip(ids or [None] * len(postos), postos)) + list(postos_extra),
+        encostam)
     caixas = []
     for p in list(postos) + [p for _i, p in postos_extra]:
         x0, y0, w, h = p.simbolo.caixa
@@ -1001,4 +1020,4 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
     saida = saida.replace("@DEGRADES@",
                           f'<defs>{"".join(degrades.values())}</defs>'
                           if degrades else "")
-    return saida, postos, fim
+    return saida, postos, fim, colisoes

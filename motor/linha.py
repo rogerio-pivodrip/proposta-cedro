@@ -19,7 +19,7 @@ import contextlib
 import itertools
 from collections import OrderedDict
 
-from . import corte, cotas, ferragem, pressao, regras
+from . import corte, cotas, ferragem, fluxo, hidraulica, pressao, regras
 
 _contador = itertools.count(1)
 _montagens = itertools.count(1)
@@ -467,10 +467,21 @@ def _avisar_classe(junc, avisos, onde):
     Cala quando uma das duas nao declara classe. Ver `motor/pressao.py`: um
     numero inventado aqui pareceria resposta.
     """
-    veredito, frase = pressao.na_juncao(junc["de"].classe_pressao(),
-                                        junc["para"].classe_pressao())
-    if veredito in ("menor", "outra familia"):
-        avisos.append(f"{onde}: classe de pressão - {frase}")
+    de, para = junc["de"], junc["para"]
+    veredito, frase = pressao.na_juncao(de.classe_pressao(),
+                                        para.classe_pressao())
+    if veredito not in ("menor", "outra familia"):
+        return
+    # O FLANGE E O COLAR NAO CONDUZEM: eles APERTAM. Um colar PN 16 num tubo
+    # de PEAD PN 6 e o par normal - o colar e a ferragem daquele tubo, e nao
+    # um elo a mais na linha - e dizer ali "a junta so vale PN 6" seria repetir
+    # a classe do tubo em cada ponta dele, em toda linha de PEAD que a casa
+    # monta. O aviso perde o sentido quando ele aparece sempre
+    if veredito == "menor":
+        forte = max((de, para), key=lambda p: p.classe_pressao()["valor"])
+        if forte.familia in pressao.SO_APERTAM:
+            return
+    avisos.append(f"{onde}: classe de pressão - {frase}")
 
 
 def ferragem_de_juncao(catalogo, junc, somar, avisos, rotulo=""):
@@ -1074,10 +1085,15 @@ class Linha:
         return pontos
 
     # ---------------- saidas ------------------------------------------------
-    def lista_materiais(self):
+    def lista_materiais(self, sequencia=True):
         """BOM final: pecas da linha + ferragem derivada, agregada por SAP.
 
         Formato de saida = as colunas da aba Orcamento (Area, Cod. SAP, Qtd).
+
+        `sequencia=False` cala a conferencia de ordem hidraulica. Quem passa
+        isso e o `Projeto`, que faz a MESMA conferencia sobre a arvore
+        inteira: o filtro pode estar no tronco e a valvula num ramo, e ai a
+        montagem sozinha acusaria "filtro sem valvula" que existe.
         """
         bom = OrderedDict()
         avisos = []
@@ -1191,6 +1207,17 @@ class Linha:
                 f"{t['exige_depois_mm']/1000:.2f} m depois; o desenho tem "
                 f"{t['antes_mm']/1000:.2f} m e {t['depois_mm']/1000:.2f} m"
             )
+
+        # A ORDEM HIDRAULICA: filtro -> valvula -> medidor. A conferencia
+        # existia em `motor/hidraulica.py` desde que a ordem foi confirmada
+        # nos tres projetos, e nao era chamada por ninguem - sabia a resposta
+        # e nunca era perguntada
+        if sequencia:
+            avisos += hidraulica.conferir_sequencia(
+                [p.familia for p in self.todas_as_pecas()])
+            avisos += fluxo.conferir(
+                self.pecas,
+                [a for p in self.pecas for a in p.acessorios])
 
         # o NUMERO DO ITEM sai daqui, e nao do desenho: e a posicao da linha
         # na lista, e o balao so a repete. Fosse ao contrario, uma peca sem

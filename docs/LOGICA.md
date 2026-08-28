@@ -557,6 +557,68 @@ O campo é do cadastro: `tools/normalizar.py` lê a descrição e grava
 guarda os casos que já enganaram, um a um, e varre o catálogo atrás de leitura
 fora das séries conhecidas.
 
+### 4.2.4 As outras três análises de conflito
+
+A furação pergunta se duas faces parafusam; a classe, se o que sai dali
+aguenta. Faltavam três, e as três têm a mesma assinatura: **não dão erro**. O
+desenho fecha, a lista fecha, a peça é comprada e a linha é montada.
+
+**Ordem hidráulica** (`motor/hidraulica.py::conferir_sequencia`) — filtro →
+válvula hidráulica → medidor. A regra estava escrita desde que foi confirmada
+nos três projetos e **não era chamada por ninguém**: o programa sabia a
+resposta e nunca era perguntado. Agora é `Projeto.lista_materiais` quem
+pergunta, sobre a **árvore inteira** — o filtro fica no tronco e a válvula
+costuma nascer num ramo, e conferir a montagem sozinha acusaria falta de uma
+válvula que existe uma boca adiante. A ordem em que a árvore se lê *é* a ordem
+do fluxo: o ramo nasce na boca de quem vem antes dele.
+
+**Sentido do fluxo** (`motor/fluxo.py`) — que peça só serve de um lado, e de
+que lado ela está:
+
+| o que acusa | por quê |
+|---|---|
+| crivo/válvula de pé fora do começo | a boca que fica na água é o começo da linha |
+| crivo depois da bomba | ele protege o rotor; depois dele não há o que proteger |
+| redução excêntrica depois da bomba | a excêntrica é peça de sucção — lado plano em cima, sem bolsa de ar antes do rotor. No recalque a casa usa concêntrica (`bomba.reducoes`) |
+| retenção no meio da sucção | a retenção da casa é a do pé (junto ao crivo) ou a do recalque; no meio ela segura a coluna onde a escorva precisa dela solta |
+| ventosa na corrente | a ventosa sobe de uma derivação no ponto alto, não passa a linha por dentro dela |
+
+O que este módulo **não** faz é adivinhar a orientação da bomba. Ela não está
+no modelo: `bomba.orientacao_pelo_desenho` a deduz *a partir da redução*, que
+é o único lugar onde ela ficou registrada. Conferir a redução contra uma
+orientação lida da própria redução seria conferir uma coisa contra ela mesma.
+
+**Colisão geométrica** (`motor/colisao.py`) — duas peças no mesmo lugar. Este
+não se confere peça a peça: **o conflito é da pose**, e a pose só existe
+depois de encadear os símbolos. Por isso mora onde o desenho já colocou tudo
+(`vista.desenhar_linha`), lendo os mesmos `Posto` que viram SVG — refazer a
+colocação para conferir criaria uma terceira geometria para brigar com as
+duas que o programa já concilia (ver 5).
+
+Duas decisões fazem a diferença entre um aviso e um alarme falso:
+
+- **Vizinho não colide.** Peças encadeadas se encostam face a face, e a chapa
+  da flange é desenhada *para dentro* do corpo (`simbolos.placa`): as caixas
+  se mordem alguns milímetros por construção. A vista já sabe quem encosta em
+  quem — vizinhos na corrente, peça e acessório, dono e primeira peça do ramo
+  — e passa a lista adiante.
+- **A conta é contra a seção, não contra a área.** A fração de área engana no
+  caso que mais importa: dois tubos de 6 m de 6" cruzados de fio a fio se
+  sobrepõem em 285×285 mm — uma peça atravessando a outra de lado a lado — e
+  isso dá 5% da área da caixa, *menos* que a mordida de uma flange. Medido
+  contra a seção da peça mais estreita, o mesmo cruzamento dá 100% e a
+  mordida da chapa de 16 mm dá 6%.
+
+O teste é o do eixo separador (SAT) sobre os quatro cantos girados, com
+recorte de Sutherland–Hodgman para a área. Não é excesso: a curva de 45° põe
+caixas inclinadas, e comparar retângulos alinhados ali acusaria colisão onde
+há só uma diagonal passando perto.
+
+`tools/conferir_analise.py` roda as três. Cada seção começa mostrando que as
+montagens padrão da casa passam limpas — um conferidor que acusa o que a casa
+monta todo dia não vale nada — e depois monta de propósito o erro que ele
+existe para pegar.
+
 ### 4.2.1 Barra roscada
 
 Válvula wafer é presa por tirante. Porca e arruela saem da furação: **2 de cada
