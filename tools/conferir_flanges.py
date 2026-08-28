@@ -206,6 +206,31 @@ def main():
     else:
         print("\n  ok toda flange Plasson que a casa compra casa com uma de aço")
 
+    print("\n== a boca do tê é a interseção dos dois cilindros")
+    # Nao e traco reto: e a curva em que o ramo corta o corpo. Com o ramo IGUAL
+    # ao corpo ela vira duas retas a 45 graus que se encontram no eixo - o V do
+    # te de tres bocas iguais. Com o ramo menor e uma hiperbole, e o fundo dela
+    # para em sqrt(R² - r²), acima do eixo
+    import math as _m
+    fora_te = []
+    print(f'  {"corpo":>7} {"ramo":>6}  {"fundo":>8} {"√(R²-r²)":>10}  o que se vê')
+    for dn, dd in ((6, 6), (6, 4), (6, 3), (8, 8), (8, 4), (12, 6)):
+        R = s.DE_TUBO[dn] / 2
+        r = s.DE_TUBO[dd] / 2
+        pontos = s.sela(0.0, R, r)
+        fundo = -max(y for _x, y in pontos)
+        esperado = _m.sqrt(max(R * R - r * r, 0.0))
+        ok = abs(fundo - esperado) < 0.2
+        # e as pontas tem de chegar na geratriz do corpo
+        pontas = abs(-pontos[0][1] - R) < 0.2 and abs(-pontos[-1][1] - R) < 0.2
+        print(f'  {"ok" if ok and pontas else " !"} {dn:>4g}" {dd:>5g}"  '
+              f'{fundo:>8.1f} {esperado:>10.1f}  '
+              f'{"V até o eixo" if dd == dn else "arco"}')
+        if not (ok and pontas):
+            fora_te.append(f'{dn:g}"×{dd:g}"')
+    if fora_te:
+        problemas.append("a boca do tê não fecha em " + ", ".join(fora_te))
+
     print("\n== a ventosa sai na medida, e a medida que saiu")
     # A combinada de 2" estava em 483,6 x 518 - o extent de um bloco do DXF que
     # tinha pego uma CIRCUNFERENCIA DE CONSTRUCAO. Este caso guarda a medida

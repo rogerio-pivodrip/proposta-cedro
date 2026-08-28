@@ -776,6 +776,41 @@ def reducao(dn_maior, dn_menor, tipo="CONCENTRICA", lado_plano="topo",
                     "lado_plano": lado_plano, "crescente": crescente})
 
 
+def sela(x_ramo, r_corpo, r_ramo, y=0.0, passos=18):
+    """A boca que o ramo abre no corpo - a linha de encontro dos dois tubos.
+
+    E a interseccao de DOIS CILINDROS perpendiculares, e ela nao e um traco
+    reto. Com o corpo de raio R no eixo x e o ramo de raio r no eixo y, um
+    ponto pertence aos dois quando
+
+        y² + z² = R²      (esta no corpo)
+        x² + z² = r²      (esta no ramo)
+
+    Eliminando z:  y = sqrt(R² - r² + x²), com |x| <= r.
+
+    Duas leituras saem dai, e as duas se veem na peca:
+
+      RAMO IGUAL AO CORPO (r = R). Vira y = |x| - duas RETAS a 45 graus que
+      se encontram no eixo. E o V do te de tres bocas iguais, e o encontro
+      desce ate o centro do tubo.
+
+      RAMO MENOR (r < R). E uma hiperbole: em x = ±r ela chega em y = R, na
+      geratriz do corpo, e no meio para em sqrt(R² - r²), acima do eixo. E o
+      corte arredondado do te reduzido - quanto menor o ramo, mais raso.
+
+    Antes as duas paredes do ramo simplesmente paravam na geratriz do corpo e
+    a boca nao era desenhada: o te de tres bocas iguais saia com o ramo
+    encostado no tubo, sem o V que qualquer serralheiro corta.
+    """
+    r_ramo = min(r_ramo, r_corpo)
+    pontos = []
+    for k in range(passos + 1):
+        dx = -r_ramo + 2 * r_ramo * k / passos
+        dentro = r_corpo * r_corpo - r_ramo * r_ramo + dx * dx
+        pontos.append((x_ramo + dx, y - math.sqrt(max(dentro, 0.0))))
+    return pontos
+
+
 def te(dn_pol, dn_derivacao=None, entrada="linha"):
     """Te flangeado. `entrada` diz por qual boca a linha CHEGA.
 
@@ -817,9 +852,18 @@ def te(dn_pol, dn_derivacao=None, entrada="linha"):
     r = DE_TUBO.get(dn_pol, 100) / 2
     rd = DE_TUBO.get(dn_derivacao, 60) / 2
     meio = comp / 2
-    el = eixo(0, comp, dn_pol)
+    # o corpo, com a geratriz de CIMA interrompida onde o ramo abre a boca:
+    # ali nao ha parede, ha o furo por onde o ramo sai
+    el = [e for e in eixo(0, comp, dn_pol)
+          if not (e.get("tipo") == "path" and e["d"].startswith(f"M0.0 {-r:.1f}"))]
+    el += [_p(f"M0 {-r:.1f} H{meio-rd:.1f}"),
+           _p(f"M{meio+rd:.1f} {-r:.1f} H{comp:.1f}")]
+    # as paredes do ramo, do bocal ate a boca que ele abre
     el += [_p(f"M{meio-rd:.1f} {-r:.1f} V{-alt:.1f}"),
            _p(f"M{meio+rd:.1f} {-r:.1f} V{-alt:.1f}")]
+    # e A BOCA: a interseccao dos dois cilindros. V quando o ramo e igual ao
+    # corpo, arco quando ele e menor - ver `sela`
+    el.append(_polilinha(sela(meio, r, rd)))
     el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
     bocal = placa(meio, dn_derivacao, -alt, lado="saida")
     for e in bocal:
