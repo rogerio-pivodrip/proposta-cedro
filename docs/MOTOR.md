@@ -310,6 +310,45 @@ manifold (44, variantes de derivação ainda não mapeadas), flange cega (23) e
 curva (11 — as sete de 30°, que o caderno não desenha, mais quatro sem ângulo
 na descrição).
 
+### A conferência que faltava: o documento contra o desenho
+
+O programa mede a mesma peça **duas vezes**, por caminhos diferentes. O
+documento soma cotas (`Peca.avancos()`, `Peca.giro_interno()`,
+`Linha.geometria()`) — daí saem o esquema, a cota geral e a conferência de
+trecho reto. O desenho encadeia símbolos pelas portas (`simbolos.montar`) —
+daí saem a tela, a prancha assinada e o DXF. As duas leem as mesmas tabelas,
+então têm de dar no mesmo número.
+
+Nada comparava as duas até `tools/conferir_cota.py` existir, e quatro coisas
+viviam divergindo em **toda** linha montada:
+
+| o que | documento | desenho |
+|---|---|---|
+| válvula hidráulica (qualquer bitola) | 0 mm | 307–587 mm |
+| crivo 8" | 300 mm (linha chapada) | 250 mm (folha Netafim, p. 14) |
+| curva, sob giro | vira para +90° | vira para −90° |
+| tê de pé | segue reto 1000 mm | vira 90° e desce meio corpo |
+
+A da válvula é a mais instrutiva. A cota do corpo sai da **série**, e o
+código da Bermad não declara série nenhuma — a busca não achava linha e
+sobrava zero. O desenho, do outro lado, caía num `462` escrito à mão dentro
+do símbolo. Ou seja: **a casa não tem folha dessa válvula**, e cada metade do
+programa inventava um número diferente para esconder isso. Agora as duas
+chamam `cotas.serie_da_valvula`, que empresta a folha da Dorot básica e
+**declara o empréstimo** — a peça sai na lista com um aviso e no carimbo com
+a procedência `DOROT`, em vez de sair calada.
+
+A do tê é a que mostra por que o giro tem de morar na peça: o tê montado
+sobre a derivação vira a linha 90° sem ser curva. Enquanto `geometria()`
+perguntava "isto é uma curva?", ele passava reto — e o esquema carregava
+1.000 mm de tubo que o desenho não tinha.
+
+Varrendo o catálogo inteiro (`--tudo`), a conferência vira uma **lista de
+trabalho**: as linhas que o programa monta hoje fecham, e o que sobra é peça
+que ainda não entrou em template nenhum — manifold, redução excêntrica (que
+desloca o eixo e o documento trata como reta), PVC de bolsa, bomba. Cada
+linha da lista é uma tabela contra outra, e some quando as duas virarem uma.
+
 ### A quarta chave: o fabricante
 
 O catálogo Irrigafour (43 páginas de tabela de cota, em `data/fichas/`) responde

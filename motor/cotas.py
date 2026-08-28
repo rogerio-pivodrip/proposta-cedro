@@ -279,6 +279,55 @@ def leituras_da_casa():
             for chave, (v, c, n, lo, hi, ok) in _carregar_casa().items()}
 
 
+_crivos = None
+
+
+def ficha_crivo(dn_pol):
+    """A folha do crivo - pagina 14 do caderno Netafim.
+
+    Mora aqui, e nao no desenho, porque **as duas metades do programa tem de
+    ler a MESMA folha**. Enquanto ela morava so no simbolo, o desenho media o
+    crivo de 8" em 250 mm (a folha) e o documento em 300 (uma linha de cota
+    chapada, igual para toda bitola) - e ninguem comparava os dois.
+    """
+    global _crivos
+    if _crivos is None:
+        caminho = os.path.join(os.path.dirname(TABELA),
+                               "crivos_netafim.csv")
+        with open(caminho, encoding="utf-8") as fh:
+            _crivos = {float(r["dn_pol"]): r for r in csv.DictReader(fh)}
+    return _crivos.get(float(dn_pol))
+
+
+# A serie da valvula hidraulica manda na cota do corpo, e a casa so tem folha
+# da DOROT. A Bermad da lista nao traz serie na descricao e nao tem folha aqui:
+# o corpo dela sai desenhado com o da Dorot basica, que e o que havia. Isso NAO
+# e uma escolha calada - `Linha.lista_materiais` avisa peca por peca, e a
+# alternativa (deixar a valvula medir zero) era pior: o esquema fechava a cota
+# geral sem ela, e o desenho a mostrava com 390 mm.
+SERIE_PADRAO_VALVULA = "47"
+
+
+def serie_da_valvula(item, dn_pol=None):
+    """(serie que vale, ela foi emprestada?) - a mesma resposta dos dois lados.
+
+    A serie declarada so vale se a folha TIVER aquela serie naquela bitola.
+    Duas coisas caem aqui: a Bermad, que nao declara serie nenhuma, e a Dorot
+    de plastico, cujo cadastro traz "75" na serie - o DN em milimetro que o
+    interpretador leu como serie. Nos dois casos a peca acaba medida pela
+    Dorot basica; o que nao pode e cada lado do programa cair num numero
+    diferente, que era o que acontecia: o documento em zero e o desenho num
+    462 escrito a mao dentro do simbolo.
+    """
+    serie = (item.get("serie") or "").strip()
+    if serie and dn_pol is not None:
+        tem, _fonte = cota_com_fonte("VALVULA_HIDRAULICA", dn_pol, serie,
+                                     "face_a_face_mm", "DOROT")
+        if tem is None:
+            serie = ""
+    return (serie, False) if serie else (SERIE_PADRAO_VALVULA, True)
+
+
 def cota_com_fonte(familia, dn_pol, variante="", significado="face_a_face_mm",
                    fonte=None, dn_menor_pol=None):
     """Devolve (valor, fonte_usada). Cai para o outro fabricante se o padrao

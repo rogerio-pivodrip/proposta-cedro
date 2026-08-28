@@ -50,6 +50,10 @@ class Peca:
         # e da instancia, como o sentido da curva
         self.pose = pose
         self.fonte_cota = None               # de quem veio a cota que entrou
+        # o espelho da LINHA entra no giro desta peca: `Linha` o poe aqui ao
+        # montar a geometria. Nasce em 1 para a peca solta continuar sabendo
+        # se virar sozinha, que e o que os testes de simbolo pedem
+        self._espelho_da_linha = 1
         self._comprimento_pedido = comprimento_mm
         self.comprimento_mm = (comprimento_mm or item.get("comprimento_mm")
                                or self._da_tabela() or self._face_a_face() or 0)
@@ -93,17 +97,60 @@ class Peca:
         if self.familia in ("MANIFOLD", "ARTICULADOR"):
             return self.familia, "", "comprimento_mm"
         if self.familia == "VALVULA_HIDRAULICA":
-            # a cota do corpo sai da serie do fabricante, nao do codigo
-            return self.familia, self.item.get("serie") or "", "face_a_face_mm"
+            # A COTA DO CORPO SAI DA SERIE, e nao do codigo - e quando o
+            # codigo nao declara serie ela vem emprestada da Dorot basica, que
+            # e a unica folha que a casa tem. Esta linha era
+            # `item.get("serie") or ""`, e o "" nao acha linha nenhuma: toda
+            # Bermad media ZERO no documento enquanto o desenho a mostrava com
+            # 390 mm. Ver cotas.serie_da_valvula, que os dois lados chamam
+            bitolas = [d for d in (self.item["dn"] or [])
+                       if isinstance(d, (int, float))]
+            serie, _emprestada = cotas.serie_da_valvula(
+                self.item, max(bitolas) if bitolas else None)
+            return self.familia, serie, "face_a_face_mm"
         if self.familia == "VALVULA_BORBOLETA":
             # a ficha separa alavanca de caixa redutora: o corpo tambem muda
             return self.familia, self.item.get("acionamento") or "", "face_a_face_mm"
         return self.familia, "", "face_a_face_mm"
 
     def _da_tabela(self):
-        """A cota do fabricante. E aqui que o padrao da casa entra no desenho."""
+        """A cota do fabricante. E aqui que o padrao da casa entra no desenho.
+
+        **Milimetro tem cota tambem.** Esta funcao devolvia None para toda
+        peca cadastrada em mm - PVC, CPVC, Plasson, PEAD - e elas acabavam
+        medindo ZERO no documento enquanto o desenho as desenhava com a cota
+        do DXF da casa. Meia linha de Plasson nao ocupava espaco nenhum no
+        esquema. A tabela e a mesma que o simbolo le (cotas.cota_da_casa); o
+        que este lado nao sabe e a decisao de junta que o desenho faz - bolsa
+        contra soldavel - e onde as duas caem em linhas diferentes, quem
+        acusa e tools/conferir_cota.py.
+        """
         if self.unidade_dn != "in":
-            return None
+            bitolas = [d for d in (self.item["dn"] or [])
+                       if isinstance(d, (int, float))]
+            if not bitolas:
+                return None
+            familia, variante, significado = self._chave_de_cota()
+            menor = min(bitolas) if len(bitolas) > 1 else None
+            valor = cotas.cota_da_casa(familia, max(bitolas), variante,
+                                       significado, menor)
+            if valor is None and significado == "face_a_face_mm":
+                # em milimetro a casa mediu "comprimento", e nao face a face:
+                # o DXF nao separa os dois em peca de bolsa
+                valor = cotas.cota_da_casa(familia, max(bitolas), variante,
+                                           "comprimento_mm", menor)
+            self.fonte_cota = "CASA" if valor is not None else None
+            return valor
+        # FOLHA DE FABRICANTE VEM ANTES DA TABELA, sempre - e no crivo as duas
+        # discordam: a folha Netafim cota 250 mm em 8", e a tabela traz 300
+        # para toda bitola, que e numero chapado e nao medida. O desenho ja
+        # lia a folha; o documento nao lia, e os dois mediam o mesmo cesto
+        # diferente
+        if self.familia == "CRIVO" and self.item["dn"]:
+            ficha = cotas.ficha_crivo(self.item["dn"][0])
+            if ficha and ficha.get("comprimento_mm"):
+                self.fonte_cota = "NETAFIM"
+                return float(ficha["comprimento_mm"])
         bitolas = [d for d in (self.item["dn"] or []) if isinstance(d, (int, float))]
         if not bitolas:
             return None
@@ -114,15 +161,57 @@ class Peca:
         self.fonte_cota = fonte
         return valor
 
+    def de_pe(self):
+        """O te montado sobre a derivacao: a linha entra pela boca do meio.
+
+        E uma POSE, nao outra peca - o mesmo codigo SAP - e e assim que ele
+        sobe no pe do recalque: a ponta de cima recebe a flange cega com a
+        luva da ventosa, a de baixo desce para a curva.
+        """
+        return self.familia in ("TE", "TE_REDUZIDO") and self.pose == "derivacao"
+
+    def giro_interno(self):
+        """De quanto ESTA peca vira a direcao da linha, em graus de folha.
+
+        **O sinal e o do desenho.** `sentido` +1 SOBE, e subir no papel e y
+        negativo - entao a curva vira para -90, e nao para +90. Enquanto esta
+        conta estava escrita direto em `geometria()`, com o sinal trocado, o
+        esquema saia ESPELHADO do desenho em toda linha com curva, e nada
+        comparava os dois. Ver tools/conferir_cota.py.
+
+        O te de pe vira para o outro lado, e nao e engano: ele e o simbolo
+        girado -90, e a boca por onde a linha sai e a de BAIXO. Por isso o
+        giro e da peca e nao uma formula so - cada uma sabe do seu.
+        """
+        mao = self.sentido * (self._espelho_da_linha or 1)
+        if self.familia == "CURVA" and self.angulo:
+            return -self.angulo * mao
+        if self.de_pe():
+            return 90.0 * mao
+        return 0.0
+
     def avancos(self):
         """Quanto a peca avanca antes e depois de girar a direcao.
 
-        So a curva tem duas pernas - entra por uma e sai pela outra, e o giro
-        acontece no meio. O resto avanca tudo antes e nao gira nada.
+        A curva tem duas pernas - entra por uma e sai pela outra, e o giro
+        acontece no meio. **O te de pe tambem**: a linha chega pela derivacao,
+        anda ate o eixo do corpo, vira 90 e desce meio corpo ate a ponta de
+        baixo. Ele nao e curva, mas anda como uma, e enquanto isso nao estava
+        escrito aqui o esquema seguia RETO por dentro dele - 1000 mm de tubo
+        que o desenho nao tinha.
+
+        O resto avanca tudo antes e nao gira nada.
         """
         comp = self.comprimento_mm or 0
         if self.familia == "CURVA" and self.angulo:
             return comp, comp
+        if self.de_pe():
+            # a perna da derivacao vem da mesma folha que o simbolo le - a
+            # cota `derivacao_mm` do te - e o corpo se parte no meio
+            alt, _fonte = cotas.cota_com_fonte(
+                "TE", max(self.item["dn"] or [0]), "", "derivacao_mm",
+                self.fonte)
+            return (alt or comp / 5), comp / 2
         return comp, 0.0
 
     def _face_a_face(self):
@@ -132,7 +221,12 @@ class Peca:
                 regras.BARRAS_ROSCADAS_POR_PECA:
             return None
         ficha = regras.ficha_wafer(self.item["dn"][0])
-        return ficha["esp_corpo_mm"] if ficha else None
+        if not ficha:
+            return None
+        # a ficha da MP e folha de fabricante como qualquer outra: sem dizer
+        # de onde veio, o carimbo contava esta cota como estimativa
+        self.fonte_cota = "MP"
+        return ficha["esp_corpo_mm"]
 
     def _portas(self):
         portas = []
@@ -662,6 +756,7 @@ class Linha:
         pontos = []                  # esquema nao pode discordar do desenho
 
         for peca in self.pecas:
+            peca._espelho_da_linha = self.espelho
             antes, depois = peca.avancos()
             nx = x + antes * math.cos(math.radians(direcao))
             ny = y + antes * math.sin(math.radians(direcao))
@@ -670,8 +765,12 @@ class Linha:
                      "canto": None, "fonte_cota": peca.fonte_cota}
             x, y = nx, ny
 
-            if peca.familia == "CURVA" and peca.angulo:
-                direcao += peca.angulo * peca.sentido * self.espelho
+            # QUEM SABE DE QUANTO VIRA E A PECA, e nao esta funcao. Aqui
+            # estava escrito "se for curva, some o angulo" - e o te de pe, que
+            # vira a linha 90 sem ser curva, passava reto
+            gira = peca.giro_interno()
+            if gira:
+                direcao += gira
                 ponto["direcao_saida"] = direcao
                 if depois:
                     ponto["canto"] = (x, y)
@@ -698,6 +797,20 @@ class Linha:
 
         for peca in self.todas_as_pecas():
             somar(peca.sap, peca.descricao, 1, "linha")
+            # A FOLHA EMPRESTADA SE DECLARA. A casa so tem dimensional da
+            # Dorot; a Bermad da lista nao traz serie e a Dorot de plastico
+            # traz o DN no lugar dela. As duas acabam desenhadas com o corpo
+            # da Dorot basica - o que nao pode e isso passar calado numa folha
+            # que alguem assina
+            if peca.familia == "VALVULA_HIDRAULICA" and peca.item["dn"]:
+                _serie, emprestada = cotas.serie_da_valvula(
+                    peca.item, max(peca.item["dn"]))
+                if emprestada:
+                    avisos.append(
+                        f"{peca.descricao}: a casa não tem folha desta "
+                        f"válvula - o corpo saiu da Dorot básica "
+                        f"({peca.comprimento_mm:.0f} mm de face a face). "
+                        f"Confira antes de fechar a cota geral")
             # flange de PVC puxa a contra-flange que a prende no tubo
             for papel, esp, qtd in regras.contra_flange_de(peca.item):
                 item = ferragem.resolver(self.catalogo, papel, esp)

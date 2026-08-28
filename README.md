@@ -11,6 +11,8 @@ A lógica completa está em [`docs/LOGICA.md`](docs/LOGICA.md).
 ```bash
 python3 tools/conferir_tela.py     # o programa inteiro, num navegador de verdade
 python3 tools/conferir_comandos.py # desfazer devolve o documento exato
+python3 tools/conferir_cota.py     # o documento e o desenho medem a mesma peça
+python3 tools/conferir_cota.py --tudo   # ...no catálogo inteiro, como lista de trabalho
 python3 tools/conferir_bitola.py   # os três bugs de bitola, e o catálogo inteiro
 python3 tools/conferir_pvc.py      # o desenho contra a folha da Plasson
 python3 tools/conferir_motor.py    # o motor contra o DXF da W22

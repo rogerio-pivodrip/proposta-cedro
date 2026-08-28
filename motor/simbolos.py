@@ -997,12 +997,14 @@ def _nervuras(x0, x1, meia_altura, banda, colunas=3, fileiras=None):
 
 
 def ficha_crivo(dn_pol):
-    """A folha do crivo - pagina 14 do caderno."""
-    global _crivos
-    if _crivos is None:
-        with open(f"{DADOS}/crivos_netafim.csv", encoding="utf-8") as fh:
-            _crivos = {float(r["dn_pol"]): r for r in csv.DictReader(fh)}
-    return _crivos.get(float(dn_pol))
+    """A folha do crivo - pagina 14 do caderno.
+
+    A folha subiu para motor/cotas.py: o DOCUMENTO tambem precisa dela, e
+    enquanto ela morava so aqui o desenho media o crivo pela folha e a lista
+    media por uma linha de cota chapada. Aqui ficou o nome, que e por onde o
+    resto do desenho a chama.
+    """
+    return cotas.ficha_crivo(dn_pol)
 
 
 def chapa_perfurada(x0, x1, meia_altura, ficha=None, limite=2600):

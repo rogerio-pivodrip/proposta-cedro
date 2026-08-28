@@ -155,7 +155,7 @@ def _pead(item, familia, maior):
         pol = s.PEAD_POL.get(maior)
         if not pol:
             raise SemSimbolo(f"DN{maior:g} sem equivalência de polegada")
-        return s.valvula_hidraulica(pol, item.get("serie") or "47")
+        return s.valvula_hidraulica(pol, cotas.serie_da_valvula(item, pol)[0])
     if familia == "ADAPTADOR":
         if "FL" in descricao.upper() and "P/" in descricao.upper():
             return s.adaptador_flange(maior)
@@ -423,8 +423,9 @@ def _desenhar(item, pose=None):
             next((m for m in ("NAVC", "NETAFIM", "EMEK", "DOROT", "BERMAD",
                               "ARI", "BD")
                   if m in (item["descricao"] or "").upper()), None)),
+        # a serie e a MESMA que o documento usa - ver cotas.serie_da_valvula
         "VALVULA_HIDRAULICA": lambda: s.valvula_hidraulica(
-            maior, item.get("serie") or "47"),
+            maior, cotas.serie_da_valvula(item, maior)[0]),
         "MEDIDOR": lambda: s.medidor(maior),
         # duas retencoes diferentes com a mesma familia: a wafer de FERRO
         # (UNIFLAP, ficha MP) e a A.R.I. NR-010, de NYLON reforcado. Nao sao

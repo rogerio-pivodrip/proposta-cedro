@@ -69,7 +69,14 @@ def _fontes(linha):
     """
     contagem = {}
     for peca in linha.pecas:
-        chave = peca.fonte_cota or "estimativa"
+        # o TUBO nao e estimativa: o comprimento dele e o do CODIGO que se
+        # compra, que e a fonte mais firme que existe nesta folha. Contá-lo
+        # como estimativa fazia a tarja pintar de duvidosa a única cota que
+        # nao tem duvida nenhuma
+        if peca.familia == "TUBO" and peca.item.get("comprimento_mm"):
+            chave = "código"
+        else:
+            chave = peca.fonte_cota or "estimativa"
         contagem[chave] = contagem.get(chave, 0) + 1
     return " · ".join(f"{n} {fonte}" for fonte, n in
                       sorted(contagem.items(), key=lambda t: -t[1]))
