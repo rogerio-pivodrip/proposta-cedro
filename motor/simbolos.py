@@ -1082,6 +1082,32 @@ def perfil_ventosa():
     return _perfil_ventosa
 
 
+_contorno_ventosa = None
+
+
+def contorno_ventosa():
+    """O contorno da ventosa combinada: (raio_rosca_rel, [(x, y), ...]).
+
+    Uma linha so, normalizada pela ALTURA - as duas colunas sao fracao dela.
+    Sai do DXF vetorial do desenho do fabricante, reduzido por Douglas-Peucker.
+    Ver data/ventosa_contorno.csv.
+    """
+    global _contorno_ventosa
+    if _contorno_ventosa is None:
+        pontos, r_rosca = [], 0.12
+        with open(f"{DADOS}/ventosa_contorno.csv", encoding="utf-8") as fh:
+            for linha in fh:
+                if linha.startswith("#") or not linha.strip():
+                    continue
+                a, b = linha.strip().split(",")
+                if a == "raio_rosca_rel":
+                    r_rosca = float(b)
+                elif a != "x":
+                    pontos.append((float(a), float(b)))
+        _contorno_ventosa = (r_rosca, pontos)
+    return _contorno_ventosa
+
+
 def ventosa(dn_pol=2, classe="COMBINADA", marca=None):
     """A ventosa, em pe sobre a ROSCA que a recebe.
 
@@ -1127,52 +1153,39 @@ def ventosa(dn_pol=2, classe="COMBINADA", marca=None):
     if classe != "COMBINADA":
         return _ventosa_em_faixas(dn_pol, classe, marca, largura, altura,
                                   corpo_d, r_rosca, fonte)
-    perfil = perfil_ventosa()
-    # o perfil foi lido no 2"; noutra bitola ele escala pela altura e pelo raio
-    y_base, r_base = perfil[0][0], max(r for _y, r in perfil)
-    k_y = altura / (abs(perfil[-1][0]) / 0.745)     # o corpo e 74,5% da altura
-    k_r = (corpo_d / 2) / r_base
-    pontos = [(y * k_y, r * k_r) for y, r in perfil]
-    # A ROSCA VEM DA NORMA, e nao do desenho. O desenho de onde o perfil saiu e
-    # cotado mas nao esta em escala - a rosca nele mede o equivalente a 86 mm
-    # onde a norma da 59,6 - entao o trecho dela e substituido pelo diametro
-    # BSP de verdade. O resto do perfil e proporcao, e proporcao o desenho da.
-    #
-    # Onde ela acaba se acha pelo PRIMEIRO DEGRAU: subindo da base, o ponto em
-    # que o raio salta mais de 15% e o ombro que sai da rosca. Achar por raio
-    # nao serviria, justamente porque o raio ali esta errado
-    fim = len(pontos) - 1
-    for k in range(1, len(pontos)):
-        if pontos[k][1] > pontos[k - 1][1] * 1.15:
-            fim = k - 1
-            break
-    pontos = [(y, r_rosca if k <= fim else r)
-              for k, (y, r) in enumerate(pontos)]
-    el = []
-    # as duas geratrizes, espelhadas
-    for lado in (-1, 1):
-        el.append(_polilinha([(lado * r, y) for y, r in pontos]))
-    el.append(_p(f"M{-pontos[0][1]:.1f} {pontos[0][0]:.1f} "
-                 f"H{pontos[0][1]:.1f}"))
-    # o filete da rosca, so no trecho em que o raio ainda e o dela
-    fim_rosca = max((y for y, r in pontos if abs(r - r_rosca) < 0.6),
-                    default=pontos[0][0])
+    r_rosca_rel, contorno = contorno_ventosa()
+    # PARAMETRICO: o contorno esta em fracao da altura, entao basta multiplicar
+    # pela altura da ficha. A mesma forma serve a qualquer bitola
+    k = altura
+    pontos = [(x * k, y * k) for x, y in contorno]
+    # A ROSCA VEM DA NORMA. O desenho de origem e cotado mas nao esta em escala
+    # consigo mesmo - a rosca nele mede o equivalente a 86 mm onde ele proprio
+    # anota 59,6 - entao os pontos dela sao levados ao raio BSP de verdade. O
+    # resto do contorno e proporcao, e proporcao o desenho da bem
+    r_desenhada = r_rosca_rel * k
+    if r_desenhada > 0.1:
+        ajuste = r_rosca / r_desenhada
+        pontos = [(x * ajuste if abs(x) > r_desenhada * 0.80 and
+                   y > -altura * 0.16 else x, y) for x, y in pontos]
+    el = [{"tipo": "path", "classe": "corpo",
+           "d": "M" + " L".join(f"{x:.1f} {y:.1f}" for x, y in pontos) + " Z"}]
+    # o filete da rosca, no trecho em que ela e a rosca
+    fim_rosca = -altura * 0.135
     fios = max(int(abs(fim_rosca) / (r_rosca * 0.22)), 3)
-    for k in range(1, fios):
-        yy = fim_rosca * k / fios
-        el.append(_p(f"M{-r_rosca:.1f} {yy:.1f} H{r_rosca:.1f}", "malha"))
-    # o serrilhado do colar de aperto, na secao mais larga
-    r_max = max(r for _y, r in pontos)
-    largos = [y for y, r in pontos if r > r_max * 0.93]
-    if len(largos) > 1:
-        for k in (0.30, 0.55, 0.80):
-            yy = largos[0] + (largos[-1] - largos[0]) * k
-            el.append(_p(f"M{-r_max:.1f} {yy:.1f} H{r_max:.1f}", "malha"))
-    y = pontos[-1][0]
-    r_barril = pontos[-1][1]
-    h_topo = altura - abs(y)
-    return _ventosa_topo(el, y, r_barril, h_topo, largura, altura, corpo_d,
-                         classe, dn_pol, marca, fonte)
+    for kk in range(1, fios):
+        el.append(_p(f"M{-r_rosca:.1f} {fim_rosca*kk/fios:.1f} "
+                     f"H{r_rosca:.1f}", "malha"))
+    y_fim = min(y for _x, y in pontos)
+    el.append(_p(f"M0 {altura*0.08:.1f} V{y_fim - altura*0.06:.1f}", "centro"))
+    el.append({"tipo": "nota", "x": largura / 2 + largura * 0.14,
+               "y": -altura * 0.55, "texto": f'{classe.lower()} {dn_pol:g}"'})
+    portas = [Porta("entrada", 0, 0, 90, dn_pol)]
+    return _montar("VENTOSA", f'ventosa {classe.lower()} {dn_pol:g}"',
+                   el, portas, fonte,
+                   {"dn_pol": dn_pol, "classe": classe, "marca": marca,
+                    "material": "PLASTICO", "ponta": "ROSCA_MACHO_BSP",
+                    "altura_total_mm": altura, "largura_mm": largura})
+
 
 
 def _ventosa_em_faixas(dn_pol, classe, marca, largura, altura, corpo_d,
