@@ -868,6 +868,23 @@ function ligar() {
     })));
   document.querySelectorAll("[data-exportar]").forEach((b) =>
     b.addEventListener("click", () => exportar(b.dataset.exportar)));
+  // salvar é exportar como qualquer outro formato - o que muda é que este
+  // volta a ser documento. Abrir troca o documento inteiro, e por isso a
+  // seleção cai: o id escolhido era do projeto anterior
+  $("salvar").addEventListener("click", () => exportar("linha"));
+  $("abrir").addEventListener("click", () => $("arquivo").click());
+  $("arquivo").addEventListener("change", async (ev) => {
+    const ficheiro = ev.target.files[0];
+    ev.target.value = "";     // reabrir o MESMO arquivo tem de disparar de novo
+    if (!ficheiro) return;
+    escolhida = null;
+    const resposta = await mandar({nome: "abrir", texto: await ficheiro.text()});
+    // o que mudou desde o dia em que se salvou: peça que saiu da lista, cota
+    // que a folha corrigiu. Aparece por escrito, e não calado
+    if (resposta.ok && (resposta.recado || []).length) {
+      recado(resposta.recado.join(" · "));
+    }
+  });
   addEventListener("resize", avisarTamanho);
 }
 

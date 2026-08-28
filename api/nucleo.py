@@ -12,7 +12,8 @@ essa a decisao que evitou a sincronizacao - ver docs/LOGICA.md 2.
 O erro tambem e resposta, e nao excecao: `{"ok": false, "erro": ...}`. A tela
 precisa mostrar o motivo, e nao um traceback.
 """
-from motor import exportar as exportacao, folha, regras, templates, vista
+from motor import (arquivo, exportar as exportacao, folha, regras,
+                   templates, vista)
 
 from . import linguagem
 from motor.catalogo import Catalogo
@@ -500,7 +501,9 @@ def _exportar(sessao, comando):
     # hora. Quem so quer montar e ver a linha nao instala nada - e quando
     # precisar, a recusa diz o que instalar em vez de estourar um traceback
     try:
-        if formato == "dxf":
+        if formato == "linha":
+            conteudo = arquivo.guardar(sessao.linha)
+        elif formato == "dxf":
             conteudo, recusadas = exportacao.para_dxf(sessao.linha, rotulo)
         elif formato == "svg":
             conteudo, recusadas = exportacao.para_svg(sessao.linha,
@@ -522,6 +525,26 @@ def _exportar(sessao, comando):
         saida["texto"] = conteudo
         saida["bytes"] = len(conteudo.encode("utf-8"))
     return saida
+
+
+def _abrir(sessao, comando):
+    """Poe no lugar do documento aberto a montagem que veio do arquivo.
+
+    Nao entra no historico, e por um motivo so: o historico e do DOCUMENTO, e
+    este e outro documento. Um `desfazer` que voltasse ao projeto anterior
+    misturaria duas linhas na mesma pilha, e a peca que o comando de tras
+    aponta ja nao existiria.
+    """
+    texto = comando.get("texto")
+    if not texto:
+        raise Erro("abrir precisa do arquivo da montagem")
+    try:
+        linha, avisos = arquivo.abrir(sessao.catalogo, texto)
+    except arquivo.Recusado as erro:
+        raise Erro(str(erro)) from erro
+    sessao.linha = linha
+    return {"pecas": len(linha.pecas), "tipo": linha.tipo,
+            "area": linha.area, "recado": avisos}
 
 
 def _folha(sessao, comando):
@@ -588,6 +611,7 @@ COMANDOS = {
     "template": _template, "catalogo": _catalogo, "janela": _janela,
     "modo": _modo,
     "estilo": _estilo, "simular": _simular, "exportar": _exportar,
+    "abrir": _abrir,
     "vocabulario": _vocabulario, "procurar": _procurar, "folha": _folha,
     # ler nao muda nada, e por isso nao entra no historico
     "documento": lambda sessao, comando: {},

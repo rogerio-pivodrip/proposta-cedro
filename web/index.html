@@ -39,6 +39,12 @@
     <button id="refazer" disabled>refazer</button>
     <span class="separa"></span>
     <button id="folha" title="a prancha em escala, com carimbo — na barra: folha a4 retrato">folha</button>
+    <!-- salvar e a unica saida que VOLTA a ser documento: o arquivo guarda a
+         escolha - codigo, corte, pose - e a cota se recalcula ao abrir. As
+         outras tres sao entrega -->
+    <button id="salvar" title="salvar a montagem para reabrir depois">salvar</button>
+    <button id="abrir">abrir…</button>
+    <input type="file" id="arquivo" accept=".json,.linha" hidden>
     <button data-exportar="dxf">DXF</button>
     <button data-exportar="xlsx">planilha</button>
     <button data-exportar="svg">SVG</button>

@@ -210,6 +210,37 @@ async def rodar(porta):
                 conferir("o DXF tem os blocos e os inserts da linha",
                          "INSERT" in texto and "BLOCK" in texto)
 
+        print("\n== salvar e abrir devolvem a mesma montagem")
+        antes = await retrato(pagina)
+        async with pagina.expect_download() as espera:
+            await pagina.click("#salvar")
+        salvo = await espera.value
+        caminho = await salvo.path()
+        conferir("salvou a montagem",
+                 salvo.suggested_filename.endswith(".linha.json"),
+                 salvo.suggested_filename)
+        # mexe na linha ANTES de reabrir, senao abrir nao teria o que provar
+        # uma peca que ainda NAO esta escolhida: clicar na escolhida
+        # desmarca, e o painel fecharia junto
+        await (await pagina.query_selector(
+            "g.peca[data-id]:not(.escolhida)")).click()
+        await pagina.wait_for_timeout(400)
+        await pagina.click("#remover")
+        await pagina.wait_for_timeout(600)
+        conferir("mexer na linha muda o desenho e a lista",
+                 await retrato(pagina) != antes)
+        await pagina.set_input_files("#arquivo", str(caminho))
+        await pagina.wait_for_timeout(1200)
+        depois = await retrato(pagina)
+        # o id nasce com a peca da sessao, e reabrir cria pecas novas: o que
+        # tem de voltar igual e a LISTA, que e o que se compra
+        conferir("abrir devolve a mesma lista de materiais",
+                 depois[1] == antes[1],
+                 f"{len(depois[1])} linhas contra {len(antes[1])}")
+        conferir("e o mesmo tanto de peças no desenho",
+                 len(depois[0]) == len(antes[0]),
+                 f"{len(depois[0])} contra {len(antes[0])}")
+
         print("\n== o console fica limpo")
         conferir("nenhum erro de JavaScript", not erros, " · ".join(erros[:3]))
         await navegador.close()

@@ -99,6 +99,9 @@ def para_xlsx(linha):
 
 
 FORMATOS = {
+    # a montagem em si - a unica saida que VOLTA a ser documento. As outras
+    # quatro sao entrega: quem abre um DXF abre um desenho, e nao a linha
+    "linha": ("text", "linha.json", "application/json"),
     "dxf": ("text", "dxf", "application/dxf"),
     "svg": ("text", "svg", "image/svg+xml"),
     "csv": ("text", "csv", "text/csv"),

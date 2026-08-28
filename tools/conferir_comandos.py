@@ -23,12 +23,13 @@ iguais se tudo que depende delas voltou.
 
 Uso: python3 tools/conferir_comandos.py
 """
+import json
 import math
 import re
 import sys
 
 sys.path.insert(0, ".")
-from motor import vista                      # noqa: E402
+from motor import arquivo, vista             # noqa: E402
 from motor.catalogo import Catalogo          # noqa: E402
 from motor.linha import Linha, Peca          # noqa: E402
 
@@ -400,6 +401,54 @@ def main():
             if not (b[2] <= b[0] <= float(re.search(r'width="([\d.]+)"',
                                                     svg).group(1)) - b[2])]
     certo("e nenhum cortado na borda da folha", not fora, str(fora[:2]))
+
+    print("\n== salvar e abrir: o arquivo guarda a escolha, não o resultado")
+    linha, _faltando = templates.recalque(catalogo, 6)
+    linha.alterar(linha.pecas[2].id, comprimento_mm=1234)   # corte de campo
+    linha.renumerar([linha.pecas[-1].sap])
+    texto = arquivo.guardar(linha)
+    volta, avisos = arquivo.abrir(catalogo, texto)
+    certo("abriu sem recado", not avisos, str(avisos))
+    # o id NAO volta igual, e nao deve: ele nasce com a peca desta sessao. O
+    # que tem de voltar igual e tudo o que se compra e tudo o que se desenha
+    sem_id = lambda r: (r[0], [g[1:] for g in r[1]], r[3])
+    conferir("a lista, a geometria e os avisos voltam iguais",
+             sem_id(retrato(linha)), sem_id(retrato(volta)))
+    certo("o corte de campo volta com a peça",
+             volta.pecas[2].comprimento_mm == 1234,
+             str(volta.pecas[2].comprimento_mm))
+    certo("a numeração volta como estava",
+             volta.ordem_baloes == linha.ordem_baloes)
+    certo("e o acessório volta dentro da peça que o carrega",
+             [len(p.acessorios) for p in volta.pecas]
+             == [len(p.acessorios) for p in linha.pecas])
+    certo("abrir não é edição: o desfazer começa vazio",
+             not volta.feitos and not volta.desfeitos)
+
+    # o arquivo guarda a cota que valia, e ela NAO manda: manda a folha de
+    # hoje. O que ele faz e dizer o que mudou desde entao
+    adulterado = json.loads(texto)
+    adulterado["pecas"][0]["medido_mm"] = 999
+    _volta, avisos = arquivo.abrir(catalogo, json.dumps(adulterado))
+    certo("cota que a folha mudou desde o dia em que se salvou vira aviso",
+             any("999" in a and "folha de hoje" in a for a in avisos),
+             str(avisos))
+    sumido = json.loads(texto)
+    sumido["pecas"][1]["sap"] = "00000-000000"
+    perdida, avisos = arquivo.abrir(catalogo, json.dumps(sumido))
+    certo("código que saiu da lista não derruba a abertura",
+             len(perdida.pecas) == len(linha.pecas) - 1
+             and any("não está mais na lista" in a for a in avisos),
+             str(avisos))
+    for ruim, motivo in (('{"formato": "outro"}', "não é uma montagem"),
+                         ("nem json", "não consegui ler"),
+                         ('{"formato": "linha-pivodrip", "versao": 99}',
+                          "atualize o programa")):
+        try:
+            arquivo.abrir(catalogo, ruim)
+            certo(f"recusa {motivo!r}", False, "abriu assim mesmo")
+        except arquivo.Recusado as erro:
+            certo(f"recusa e explica: {motivo}", motivo in str(erro), str(erro))
 
     print("\n== editar depois de desfazer apaga o refazer")
     linha = monta(catalogo)
