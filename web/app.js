@@ -30,6 +30,13 @@ async function mandar(comando) {
   // o documento vem junto até no erro: a tela que pediu algo inválido
   // continua mostrando o que existe
   if (corpo.documento) { documento = corpo.documento; pintar(); }
+  // A FICHA ENVELHECE COM A EDIÇÃO. Ela é buscada quando a escolha muda, e
+  // depois de `comprimento 1500` continuava mostrando os 3 m do código - o
+  // dado certo ao lado do dado velho, que é pior que dado nenhum. Todo
+  // comando que mexe no documento a busca de novo, e é uma peça só
+  if (comando.nome !== "ficha" && corpo.documento && escolhidas.length === 1) {
+    pedirFicha(escolhida);
+  }
   // O ERRO ENTRA DEPOIS DE PINTAR, e não antes: `pintar` é quem escreve os
   // recados do documento - peça sem símbolo, ponta no lugar errado - e
   // limpar o recado aqui embaixo apagava todos eles. Uma bomba fora das
@@ -353,6 +360,7 @@ function pintarPainel() {
   // com várias escolhidas o painel continua mostrando UMA - a última - e
   // avisa que o botão vale para todas. Mostrar campo em branco "porque são
   // várias" esconderia o que a pessoa acabou de clicar
+  pintarFicha();
   const varias = $("painel_varias");
   varias.hidden = escolhidas.length < 2;
   varias.textContent = `${escolhidas.length} peças escolhidas — o que mudar `
@@ -396,6 +404,30 @@ function pintarModo() {
     modo === "substituir" ? "trocar por" : "acrescentar";
 }
 
+/* A FICHA DA PEÇA vem do motor, e não daqui: a norma de cada boca, a furação,
+   a chapa, o parafuso da junta e a folha de onde cada coisa saiu moram lá.
+   Não viaja no `documento` porque numa linha de sessenta peças seriam
+   sessenta fichas a cada comando - e quem lê uma ficha olha UMA peça. */
+let ficha = null;
+
+async function pedirFicha(id) {
+  if (!id) { ficha = null; pintarFicha(); return; }
+  const r = await mandar({nome: "ficha", alvo: id});
+  ficha = r.ok ? {id, linhas: r.linhas || []} : null;
+  pintarFicha();
+}
+
+function pintarFicha() {
+  const caixa = $("ficha");
+  const valem = ficha && ficha.id === escolhida && escolhidas.length === 1;
+  caixa.hidden = !valem;
+  if (!valem) return;
+  caixa.innerHTML = ficha.linhas.map((l) =>
+    `<div${l.fonte === "divergência" ? ' class="duvida"' : ""}>` +
+    `<dt>${l.rotulo}</dt><dd>${l.valor}` +
+    (l.fonte ? `<i>${l.fonte}</i>` : "") + "</dd></div>").join("");
+}
+
 function escolher(id, junto) {
   if (junto) {
     // shift ou ctrl: acrescenta, e clicar de novo tira - é o gesto de
@@ -407,6 +439,7 @@ function escolher(id, junto) {
   }
   escolhida = escolhidas.length ? escolhidas[escolhidas.length - 1] : null;
   pintar();
+  pedirFicha(escolhidas.length === 1 ? escolhida : null);
 }
 
 /* Os alvos de um comando: a seleção inteira. O comando é o mesmo para uma e

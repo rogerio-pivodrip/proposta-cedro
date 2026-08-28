@@ -12,8 +12,8 @@ essa a decisao que evitou a sincronizacao - ver docs/LOGICA.md 2.
 O erro tambem e resposta, e nao excecao: `{"ok": false, "erro": ...}`. A tela
 precisa mostrar o motivo, e nao um traceback.
 """
-from motor import (arquivo, desenho, exportar as exportacao, folha,
-                   regras, templates, vista)
+from motor import (arquivo, desenho, exportar as exportacao, ficha,
+                   folha, regras, templates, vista)
 
 from . import linguagem
 from motor.catalogo import Catalogo
@@ -661,6 +661,22 @@ def _ramificar(sessao, comando):
             "peca": peca.id}
 
 
+def _ficha(sessao, comando):
+    """O que o programa sabe da peca escolhida, com a fonte de cada linha.
+
+    Nao entra no `documento` de proposito: numa linha de sessenta pecas seriam
+    sessenta fichas viajando a cada comando, e quem le uma ficha esta olhando
+    UMA peca. A tela pede quando a escolha muda.
+    """
+    alvo = comando.get("alvo")
+    if not alvo:
+        raise Erro("ficha de qual peça?")
+    dona = sessao.projeto.dona_da_peca(alvo if isinstance(alvo, str) else None)
+    peca = (dona or sessao.linha).achar(alvo)
+    return {"peca": peca.id, "descricao": peca.descricao,
+            "linhas": ficha.da_peca(peca, sessao.catalogo)}
+
+
 def _montagem(sessao, comando):
     """Cria, escolhe, renomeia ou apaga uma montagem do projeto.
 
@@ -926,6 +942,7 @@ COMANDOS = {
     "acoplar": _acoplar,
     "girar": _girar, "espelhar": _espelhar,
     "balao": _balao, "numerar": _numerar, "bitola": _bitola,
+    "ficha": _ficha,
     "desfazer": _desfazer, "refazer": _refazer,
     "template": _template, "catalogo": _catalogo, "janela": _janela,
     "montagem": _montagem, "ramificar": _ramificar,

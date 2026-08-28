@@ -210,6 +210,57 @@ async def rodar(porta):
                 conferir("o DXF tem os blocos e os inserts da linha",
                          "INSERT" in texto and "BLOCK" in texto)
 
+        print("\n== a ficha da peça escolhida")
+        await pagina.select_option("#prontas", "SUCCAO")
+        await pagina.click("#succao")
+        await pagina.wait_for_timeout(800)
+        await pagina.fill("#comando", "inserir ksb metb 150-125-250")
+        await pagina.keyboard.press("Enter")
+        await pagina.wait_for_timeout(900)
+        bomba = await pagina.query_selector('g.peca[data-familia="BOMBA"]')
+        conferir("a bomba entrou na linha", bomba is not None)
+        if bomba:
+            await bomba.click()
+            await pagina.wait_for_timeout(900)
+            conferir("a ficha aparece ao escolher a peça",
+                     await pagina.is_visible("#ficha"))
+            texto = await pagina.inner_text("#ficha")
+            # o que uma ficha de bomba tem de dizer: as duas bocas com a
+            # NORMA de cada uma, e de onde essa norma veio
+            for esperado in ('6" flange · ANSI 150', '5" flange · ANSI 150',
+                             "CL 125", "METB150-125-250"):
+                conferir(f"a ficha diz {esperado!r}", esperado in texto,
+                         texto[:90].replace("\n", " · "))
+            conferir("e não inventa a chapa de uma norma que a casa não tem",
+                     "não tem a folha desta norma" in texto)
+        # a ficha ENVELHECE com a edicao: depois de cortar o tubo ela tem de
+        # dizer o corte, e nao o comprimento do codigo
+        tubo = await pagina.query_selector('g.peca[data-familia="TUBO"]')
+        if tubo:
+            await tubo.click()
+            await pagina.wait_for_timeout(400)
+            await pagina.fill("#comando", "comprimento 1500")
+            await pagina.keyboard.press("Enter")
+            await pagina.wait_for_timeout(900)
+            texto = await pagina.inner_text("#ficha")
+            conferir("a ficha segue a edição do comprimento",
+                     "1500 mm" in texto, texto[:90].replace("\n", " · "))
+            conferir("e diz que aquilo é corte, e de que barra",
+                     "corte" in texto and "barra de" in texto,
+                     texto[:110].replace("\n", " · "))
+
+        # com duas escolhidas a ficha some: ela e de UMA peca
+        pecas = await pagina.query_selector_all("g.peca[data-id]")
+        await pecas[0].click()
+        await pagina.wait_for_timeout(300)
+        pecas = await pagina.query_selector_all("g.peca[data-id]")
+        await pecas[1].click(modifiers=["Shift"])
+        await pagina.wait_for_timeout(600)
+        conferir("e some quando há mais de uma escolhida",
+                 not await pagina.is_visible("#ficha"))
+        await pagina.keyboard.press("Escape")
+        await pagina.wait_for_timeout(300)
+
         print("\n== a tira de montagens: o projeto inteiro numa linha")
         # a sessao ja vem com o que as secoes anteriores montaram: o que se
         # confere e a DIFERENCA, e nao um numero absoluto

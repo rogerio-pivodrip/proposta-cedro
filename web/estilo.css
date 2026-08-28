@@ -280,3 +280,19 @@ tr.derivada td{color:var(--anota)}
    e nao com uma lista separada - as duas coisas sao montagens */
 .abas .ramo .galho{color:var(--anota); font-size:11px; margin-right:-3px}
 .abas .ramo{margin-left:10px}
+
+/* a ficha da peça: o que o programa sabe dela, e de onde */
+.ficha{margin:2px 0 12px; padding:8px 10px; background:var(--chapa);
+  border-radius:4px; font-size:11.5px; line-height:1.5}
+.ficha div{display:flex; gap:8px; align-items:baseline;
+  padding:1.5px 0; border-bottom:1px solid rgba(0,0,0,.04)}
+.ficha div:last-child{border-bottom:0}
+.ficha dt{flex:0 0 84px; color:var(--anota)}
+.ficha dd{flex:1; margin:0; color:var(--tinta)}
+/* a FONTE nunca some: uma ficha que mistura folha de fabricante com
+   estimativa vale menos que nenhuma */
+/* a fonte quebra junto com o valor: nome de folha e comprido, e cortar
+   justamente a procedencia seria cortar a parte que importa */
+.ficha dd i{font-style:normal; color:var(--anota); font-size:10.5px;
+  margin-left:6px; overflow-wrap:anywhere}
+.ficha .duvida dd{color:var(--perigo)}

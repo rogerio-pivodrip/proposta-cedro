@@ -89,6 +89,37 @@ inteira (ou só o que estiver escolhido) por *a mesma peça noutro tamanho* — 
 diz por escrito o que a lista não tinha naquele tamanho, em vez de escolher um
 código parecido calado.
 
+### A ficha da peça: o que o programa sabe, e de onde
+
+O motor sabe muito de cada peça — a furação da flange, a espessura da chapa, o
+parafuso que fecha a junta, o face a face, a folha de onde a cota saiu — e por
+muito tempo isso só aparecia de esguelha: um pedaço no desenho, outro num
+aviso da lista, outro em lugar nenhum. Quem escolhia a peça via o código e o
+comprimento.
+
+`motor/ficha.py` junta tudo numa ficha, e **cada linha diz de onde veio** — a
+mesma ordem de sempre: folha de fabricante, desenho de projeto, norma,
+estimativa. Uma ficha que mistura o que a folha diz com o que o programa supôs
+vale menos que nenhuma, porque quem lê não sabe em que confiar.
+
+Ela não calcula nada de novo: tudo já era sabido em outro lugar do motor. E
+por isso mesmo, ao juntar, ela **acusa divergência**: numa BRAY 250LB de 6" a
+ficha diz que o corpo mede 56 mm e que o tirante foi dimensionado pela ficha
+da MP, que é de um corpo de 98 — duas fontes para a mesma peça, que ninguém
+tinha posto lado a lado.
+
+Duas decisões pequenas com consequência:
+
+- **A chapa só sai quando a folha é daquela norma.** `s.flange` tira a furação
+  da norma pedida, mas o externo e a espessura vêm sempre da folha Netafim,
+  que é NBR. Numa face ANSI isso seria a chapa errada dita com cara de certa —
+  uma ANSI 150 de 6" é ⌀279,4 × 25,4, e não a ⌀285 × 16 da NBR. O desenho pode
+  viver com isso; uma ficha que alguém lê antes de comprar, não.
+- **A ficha não viaja no `documento`.** Numa linha de sessenta peças seriam
+  sessenta fichas a cada comando, e quem lê uma ficha olha *uma* peça. A tela
+  pede quando a escolha muda — e de novo depois de cada edição, senão ela
+  mostra o dado velho ao lado do dado novo, que é pior que dado nenhum.
+
 ### A tela não guarda o documento
 
 `web/` é o programa: desenho à esquerda, lista de materiais à direita, painel
