@@ -167,10 +167,19 @@ def main():
              not recusa["ok"] and "nao e tubo" in (recusa["erro"] or ""),
              recusa.get("erro", "passou"))
     barras = tubo["barras"]
-    conferir("o tubo traz as barras que a lista tem", len(barras) > 2,
-             str(barras))
+    from motor import regras                          # noqa: E402
+    conferir("o seletor traz as barras padrão da casa",
+             tuple(barras) == regras.BARRAS_PADRAO_MM, str(barras))
+    todas = sessao.catalogo.barras_irmas(
+        sessao.catalogo.por_sap[tubo["sap"]])
+    conferir("e só as que a lista tem código para este tubo",
+             set(barras) <= set(todas),
+             f"{sorted(set(barras) - set(todas))} sem código")
+    conferir("a encomenda fica de fora do degrau",
+             set(todas) - set(barras),
+             "a lista não tem nada além do padrão neste tubo")
     subiu = executar(sessao, {"nome": "esticar", "alvo": tubo["id"]})
-    conferir("esticar sobe uma barra",
+    conferir("esticar sobe um DEGRAU, e não para na encomenda",
              subiu["ok"] and subiu["para_mm"] == barras[barras.index(
                  tubo["comprimento_mm"]) + 1],
              f'{subiu.get("para_mm")} depois de {tubo["comprimento_mm"]}')

@@ -41,6 +41,35 @@ PERTURBAM_FLUXO = {"CURVA", "TE", "TE_REDUZIDO", "Y", "REDUCAO_CONCENTRICA",
                    "BOMBA", "MANIFOLD", "FILTRO", "CRIVO", "ARTICULADOR"}
 
 
+# As barras que a casa monta, em milimetro. Nao e o que a lista tem - a lista
+# tem tambem 1,2 · 2,5 · 4 · 12 m, que sao encomenda e nao estoque de projeto.
+# Estes sao os degraus do desenho, e e por eles que esticar anda.
+BARRAS_PADRAO_MM = (500, 1000, 1500, 2000, 3000, 6000)
+
+
+def escada_de_barras(disponiveis, atual=None):
+    """Os degraus que a tela oferece, do menor ao maior.
+
+    E a INTERSECAO de duas coisas, e as duas mandam: os comprimentos que a
+    casa usa (BARRAS_PADRAO_MM) e os que a lista tem codigo para aquele tubo.
+    So o padrao ofereceria barra que ninguem vende; so a lista encheria o
+    seletor de encomenda - 1,2 m e 2,5 m aparecem em 8" e nao aparecem em
+    K10, e um seletor que muda de tamanho conforme a ponta do tubo confunde
+    mais do que ajuda.
+
+    O comprimento ATUAL entra sempre, mesmo fora do padrao: a peca que esta
+    na linha tem de estar no seletor, senao a tela mostraria selecionado um
+    degrau que nao e o dela.
+    """
+    tem = {round(float(c)) for c in disponiveis}
+    escada = sorted(tem & set(BARRAS_PADRAO_MM))
+    if atual is not None:
+        atual = round(float(atual))
+        if atual in tem and atual not in escada:
+            escada = sorted(escada + [atual])
+    return escada
+
+
 def trecho_reto_exigido(familia, dn, unidade="in"):
     """(antes_mm, depois_mm) que a peca exige de tubo reto, ou None."""
     regra = TRECHO_RETO.get(familia)

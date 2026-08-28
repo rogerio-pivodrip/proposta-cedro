@@ -12,7 +12,7 @@ essa a decisao que evitou a sincronizacao - ver docs/LOGICA.md 2.
 O erro tambem e resposta, e nao excecao: `{"ok": false, "erro": ...}`. A tela
 precisa mostrar o motivo, e nao um traceback.
 """
-from motor import exportar as exportacao, folha, templates, vista
+from motor import exportar as exportacao, folha, regras, templates, vista
 
 from . import linguagem
 from motor.catalogo import Catalogo
@@ -76,7 +76,8 @@ def _peca(p, catalogo=None):
     # sempre uma medida que tem codigo
     barras = []
     if catalogo is not None and p.familia == "TUBO":
-        barras = list(catalogo.barras_irmas(p.item))
+        barras = regras.escada_de_barras(catalogo.barras_irmas(p.item),
+                                         p.item.get("comprimento_mm"))
     return {
         "barras": barras,
         "id": p.id, "sap": p.sap, "descricao": p.descricao,
@@ -190,8 +191,11 @@ def _esticar(sessao, comando):
         raise Erro(f"{peca.descricao} nao e tubo - so o tubo se estica, "
                    f"porque so ele se corta")
     irmas = sessao.catalogo.barras_irmas(peca.item)
-    tamanhos = list(irmas)
     atual = peca.item.get("comprimento_mm") or peca.comprimento_mm or 0
+    # a escada e o padrao da casa CRUZADO com o que a lista tem - ver
+    # regras.escada_de_barras. Andar pela lista inteira faria `esticar` parar
+    # em 1,2 e 2,5 m, que sao encomenda e nao degrau de projeto
+    tamanhos = regras.escada_de_barras(irmas, atual)
     lista = " · ".join(f"{c/1000:g}" for c in tamanhos) + " m"
     if len(tamanhos) < 2:
         raise Erro(f"a lista so tem uma barra deste tubo: {lista}")
@@ -200,7 +204,11 @@ def _esticar(sessao, comando):
         # E o ponto todo - a medida do desenho tem de ser a medida que se
         # compra, e um numero sem codigo atras nao e uma barra, e um corte
         pedido = float(comando["para_mm"])
-        exato = next((c for c in tamanhos if abs(c - pedido) < 1), None)
+        # aqui vale a lista INTEIRA, e nao so a escada: quem digitou 2,5 m
+        # sabe o que quer, e o codigo existe. A escada e para andar de degrau
+        exato = next((c for c in irmas if abs(c - pedido) < 1), None)
+        if exato is not None and exato not in tamanhos:
+            tamanhos = sorted(tamanhos + [exato])
         if exato is None:
             raise Erro(f"a lista nao tem barra de {pedido/1000:g} m deste "
                        f"tubo - ela tem {lista}. Para cortar uma barra maior, "
