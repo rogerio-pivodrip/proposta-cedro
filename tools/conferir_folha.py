@@ -102,6 +102,32 @@ def main():
              [(str(r["qtd"]), r["sap"]) for r in itens])
     conferir("o carimbo conta os mesmos itens", ficha["itens"] == len(itens))
 
+    print("\n== a cota cai no eixo da peça, e não na corda")
+    # Numa curva o meio entre as duas portas cai na CORDA, que passa por fora
+    # do tubo - a cota ia parar no ar ao lado da peca. E o defeito que
+    # meio_do_eixo existe para nao ter.
+    from motor import simbolos as s                    # noqa: E402
+    curva = s.curva(8, 90)
+    entrada, saida = s.porta(curva, s.ENTRADA), s.porta(curva, s.SAIDA)
+    corda = ((entrada.x + saida.x) / 2, (entrada.y + saida.y) / 2)
+    eixo = s.meio_do_eixo(curva)
+    raio = s.DE_TUBO[8] / 2
+    conferir("na curva o meio do eixo não é o meio da corda",
+             ((eixo[0] - corda[0]) ** 2 + (eixo[1] - corda[1]) ** 2) ** .5 > raio,
+             f"eixo {eixo[:2]} · corda {corda}")
+    reto = s.meio_do_eixo(s.tubo(8, 1000))
+    conferir("no tubo reto os dois coincidem", abs(reto[0] - 500) < 1
+             and abs(reto[1]) < 1, str(reto))
+    conferir("e o eixo diz a direção dele ali, para a cota deitar junto",
+             abs(eixo[2] + 30) < 1 and abs(reto[2]) < 1,
+             f"curva {eixo[2]:.1f}° · tubo {reto[2]:.1f}°")
+
+    linha, _r, _f = templates.succao(catalogo, 8, curva=90)
+    html, _ficha = folha.montar(linha, "A3", "paisagem")
+    conferir("a cota não leva mais tarja atrás dela", "trim" not in html)
+    conferir("ela abre o eixo por um halo na letra",
+             "paint-order:stroke" in html and "stroke-width:" in html)
+
     print("\n== a prancha recusa o que não dá para desenhar")
     sessao = Sessao()
     vazia = executar(sessao, {"nome": "folha"})

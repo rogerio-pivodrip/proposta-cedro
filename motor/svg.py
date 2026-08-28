@@ -59,28 +59,27 @@ def texto_no_eixo(x, y, texto, classe="cota", tamanho=8.0, gira=""):
 
     E a convencao de CAD, e a casa pediu as duas coisas juntas: a cota fica
     centrada no eixo e o eixo abre para ela passar. As duas andam juntas mesmo
-    - encostada no eixo sem trim a cota fica ilegivel, e fugindo do eixo para o
+    - encostada no eixo sem aparo a cota fica ilegivel, e fugindo do eixo para o
     lado ela deixa de dizer a que peca pertence.
 
-    O trim e um retangulo da cor do papel desenhado ANTES do texto: nao da para
-    cortar um path em SVG, e mascara custa mais do que vale numa folha com
-    trezentas pecas. Por isso o giro vai no grupo e nao no texto - o retangulo
-    tem de girar com ele.
+    O APARO E UM HALO NA LETRA, e nao um retangulo atras dela. O retangulo era
+    pintado da cor do papel, e isso valia enquanto a cota caia sobre papel: no
+    modo metalizado ela passou a cair sobre o corpo PINTADO, e um retangulo cor
+    de papel em cima de metal claro virou um buraco - no fundo escuro, uma
+    tarja preta atravessada no desenho.
+
+    O halo nao tem esse problema porque ele acompanha a LETRA: abre o eixo
+    justo onde a letra passa, e some no resto. Sai por `paint-order: stroke`,
+    que manda desenhar o contorno antes do preenchimento - sem isso o contorno
+    comeria metade da letra por dentro.
     """
-    largura = len(texto) * tamanho * 0.62 + tamanho * 0.8
-    altura = tamanho * 1.3
-    # o tamanho vai no TEXTO tambem, e nao so no retangulo atras dele. A
-    # folha impressa desenha num viewBox em milimetro, e ali a regra de CSS
-    # `font-size:9px` vale 9 MILIMETROS - a cota saia do tamanho do tubo.
-    #
-    # E vai no `style`, e nao num atributo: regra de CSS vence atributo de
-    # apresentacao, entao `font-size="2.7"` continuaria perdendo para a folha.
-    # Estilo em linha e o unico que ganha dela sem !important
-    return (f'<g{gira}><rect class="trim" x="{x - largura/2:.2f}" '
-            f'y="{y - altura/2:.2f}" width="{largura:.2f}" '
-            f'height="{altura:.2f}"/>'
-            f'<text class="{classe}" x="{x:.2f}" y="{y:.2f}" '
-            f'style="font-size:{tamanho:.2f}px" '
+    # o tamanho vai no `style`, e nao num atributo: regra de CSS vence
+    # atributo de apresentacao, entao `font-size="2.7"` perderia para a
+    # folha - e na prancha impressa o viewBox e em MILIMETRO, onde o
+    # `font-size:9px` da folha valeria 9 mm e a cota sairia maior que o tubo
+    return (f'<g{gira}><text class="{classe}" x="{x:.2f}" y="{y:.2f}" '
+            f'style="font-size:{tamanho:.2f}px;'
+            f'stroke-width:{tamanho * 0.16:.2f}px" '
             f'dominant-baseline="central">{texto}</text></g>')
 
 
@@ -314,8 +313,10 @@ figcaption{padding:0 14px}
 text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .cota{font-size:8px;text-anchor:middle}
 .marca{font-size:9px;text-anchor:middle}
-/* o trim: a cota nao foge do eixo, o eixo abre para ela */
-.trim{fill:var(--papel);stroke:none}
+/* o aparo do eixo: um halo da cor do papel em volta da LETRA, e nao um
+   retangulo atras dela. `paint-order:stroke` desenha o contorno antes do
+   preenchimento - sem isso ele comeria metade da letra por dentro */
+.cota,.marca{paint-order:stroke;stroke:var(--papel);stroke-linejoin:round}
 /* a area de clique da peca na tela: invisivel no papel, alvo no programa */
 .alvo{fill:transparent;stroke:none;pointer-events:all}
 /* a anotacao nao e alvo de nada. Ela vive FORA da escala, por cima do
@@ -373,6 +374,8 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .modo-metal .geo .centro{stroke:var(--eixo)}
 .modo-metal .geo .junta{stroke:var(--eixo)}
 .modo-metal .geo .fluxo{fill:#6f757d;stroke:none}
+/* sobre o corpo pintado a cota precisa de mais contraste que sobre o papel */
+.modo-metal .cota,.modo-metal .marca{fill:#464c54}
 
 /* peca escura pede traco claro, senao o contorno some dentro dela */
 .modo-metal .peca[data-cor="escuro"] *:not(.alvo):not(.centro):not(.oculto){
@@ -392,7 +395,7 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .modo-pb .geo .tubulo{fill:none;stroke:none}
 .modo-pb .geo .fluxo{fill:#000;stroke:none}
 .modo-pb text{fill:#000}
-.modo-pb .trim{fill:#fff}
+.modo-pb .cota,.modo-pb .marca{stroke:#fff}
 .lista{display:flex;gap:8px;align-items:baseline;margin:1px 0 3px;
   font:400 10.5px/1.4 "IBM Plex Mono",ui-monospace,monospace;
   color:var(--anota,#8a8f98)}

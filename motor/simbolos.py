@@ -454,7 +454,7 @@ def _rodar(x, y, angulo, cx=0.0, cy=0.0):
 
 
 def meio_do_eixo(simbolo):
-    """O ponto no MEIO do eixo da peca, medido pelo comprimento dele.
+    """O meio do eixo da peca: (x, y, graus), medido pelo COMPRIMENTO dele.
 
     Na peca reta isso e o meio dela e nada muda. Na curva muda tudo: o meio
     entre as duas portas cai na corda, fora do tubo, e a cota ia parar no ar ao
@@ -476,17 +476,20 @@ def meio_do_eixo(simbolo):
     if eixo.get("espelhar"):
         pontos = [(x, -y) for x, y in pontos]
     if len(pontos) < 2:
-        return pontos[0] if pontos else None
+        return (pontos[0][0], pontos[0][1], 0.0) if pontos else None
     passos = [math.dist(a, b) for a, b in zip(pontos, pontos[1:])]
     metade = sum(passos) / 2
     andado = 0.0
     for (a, b), passo in zip(zip(pontos, pontos[1:]), passos):
         if andado + passo >= metade and passo:
             fracao = (metade - andado) / passo
+            # a direcao do eixo AQUI, e nao a da corda: numa curva a cota tem
+            # de deitar junto com o trecho em que ela cai
             return (a[0] + (b[0] - a[0]) * fracao,
-                    a[1] + (b[1] - a[1]) * fracao)
+                    a[1] + (b[1] - a[1]) * fracao,
+                    math.degrees(math.atan2(b[1] - a[1], b[0] - a[0])))
         andado += passo
-    return pontos[-1]
+    return (pontos[-1][0], pontos[-1][1], 0.0)
 
 
 def posicao_da_nota(nota):

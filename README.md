@@ -194,6 +194,28 @@ cada uma:
 python3 tools/desenhar_simbolos.py --dn 8 --modo metal > folha.html
 ```
 
+### A cota
+
+Ela fica **no eixo da peça**, e o eixo abre para ela passar — as duas coisas
+andam juntas: encostada no eixo sem aparo a cota fica ilegível, e fugindo do
+eixo para o lado ela deixa de dizer a que peça pertence.
+
+Duas correções que valem registrar, porque as duas eram invisíveis até o
+desenho mudar de fundo:
+
+**O aparo é um halo na letra, e não um retângulo atrás dela.** O retângulo era
+pintado da cor do papel, e isso valia enquanto a cota caía sobre papel. No modo
+metalizado ela passou a cair sobre o corpo **pintado**, e um retângulo cor de
+papel em cima de metal claro virou um buraco — no fundo escuro, uma tarja preta
+atravessada no desenho. O halo acompanha a letra: abre o eixo justo onde ela
+passa e some no resto.
+
+**A cota cai no meio do EIXO, e não no meio entre as duas portas.** Numa peça
+reta é a mesma coisa. Numa curva não: o meio entre as portas cai na **corda**,
+que passa por fora do tubo, e a cota ia parar no ar ao lado da peça. E o eixo
+diz também a direção dele ali, que é como a cota sabe em que ângulo deitar —
+numa curva ela acompanha a volta.
+
 A **única marca no desenho é a peça selecionada**, e ela é o traço da própria
 peça em azul — nenhum retângulo, nenhum contorno, nenhuma tarja por cima. O
 eixo fica de fora: ele é vermelho por convenção e sai um pouco para além da

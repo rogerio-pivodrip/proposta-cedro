@@ -425,6 +425,7 @@ def celula(simbolo, altura=DESENHO, minimo=1):
         # a cota cai no MEIO DO EIXO, nao no meio entre as portas: na curva o
         # meio entre as portas fica na corda, fora do tubo
         meio = s.meio_do_eixo(simbolo)
+        meio = meio[:2] if meio else None
         if meio is None:
             pa, pb = ((pontas[0], pontas[-1]) if pontas
                       else (simbolo.portas[0],) * 2)

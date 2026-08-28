@@ -314,11 +314,33 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
         vao = comp * escala
         if vao < 44 * anota:         # peca curta: a cota nao cabe dentro dela
             continue
-        mx = margem + ((p.entrada[0] + p.saida[0]) / 2 - minx) * escala
-        my = margem + ((p.entrada[1] + p.saida[1]) / 2 - miny) * escala
-        # a cota fica NO eixo da peca, com o eixo aparado atras dela
-        vertical = abs(p.saida[1] - p.entrada[1]) > abs(p.saida[0] - p.entrada[0])
-        gira = f' transform="rotate(-90 {mx:.1f} {my:.1f})"' if vertical else ""
+        # A COTA CAI NO EIXO DA PECA, e nao no meio entre as duas portas.
+        # Numa curva o meio das portas cai na CORDA, que passa por fora do
+        # tubo - a cota ia parar no ar ao lado da peca. `meio_do_eixo` anda
+        # pelo eixo desenhado e para na metade do comprimento dele, que numa
+        # curva e dentro da volta. E devolve a direcao do eixo ALI, que e
+        # como a cota sabe em que angulo deitar.
+        meio = s.meio_do_eixo(p.simbolo)
+        rad = math.radians(p.giro)
+        cos, sen = math.cos(rad), math.sin(rad)
+        if meio is None:
+            local = ((p.entrada[0] + p.saida[0]) / 2,
+                     (p.entrada[1] + p.saida[1]) / 2)
+            direcao = math.degrees(math.atan2(p.saida[1] - p.entrada[1],
+                                              p.saida[0] - p.entrada[0]))
+        else:
+            local = (p.dx + meio[0] * cos - meio[1] * sen,
+                     p.dy + meio[0] * sen + meio[1] * cos)
+            direcao = meio[2] + p.giro
+        mx = margem + (local[0] - minx) * escala
+        my = margem + (local[1] - miny) * escala
+        # a cota deita junto com o eixo, mas nunca de cabeca para baixo: fora
+        # de -90..90 ela leria ao contrario, e ai vira meia volta
+        direcao = (direcao + 180) % 360 - 180
+        if direcao > 90 or direcao < -90:
+            direcao -= 180 if direcao > 0 else -180
+        gira = (f' transform="rotate({direcao:.1f} {mx:.2f} {my:.2f})"'
+                if abs(direcao) > 0.5 else "")
         duas = abs((entrada.dn_pol or 0) - (saida.dn_pol or 0)) > 0.01
         # no PEAD a bitola do papel e o DN em milimetro, que E o externo
         bitola = (f'DN{p.simbolo.params["dn_mm"]:g}'
