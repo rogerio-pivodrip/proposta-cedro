@@ -374,8 +374,11 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .modo-metal .geo .centro{stroke:var(--eixo)}
 .modo-metal .geo .junta{stroke:var(--eixo)}
 .modo-metal .geo .fluxo{fill:#6f757d;stroke:none}
-/* sobre o corpo pintado a cota precisa de mais contraste que sobre o papel */
-.modo-metal .cota,.modo-metal .marca{fill:#464c54}
+/* No metalizado a cota nao cai sobre o papel: cai sobre o CORPO pintado, que
+   e claro. Entao o halo dela e claro tambem - ele tem de ser da cor do que
+   esta atras, e nao da cor do papel. Com halo escuro em volta de letra escura
+   o numero virava um borrao. */
+.modo-metal .cota,.modo-metal .marca{fill:#3a4047;stroke:#eef0f3}
 
 /* peca escura pede traco claro, senao o contorno some dentro dela */
 .modo-metal .peca[data-cor="escuro"] *:not(.alvo):not(.centro):not(.oculto){

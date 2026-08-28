@@ -233,6 +233,66 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
               f'role="img" aria-label="linha montada">', DEFS, "@DEGRADES@",
               f'<g class="geo" transform="translate({margem - minx*escala:.2f} '
               f'{margem - miny*escala:.2f}) scale({escala:.5f})">']
+    # A FERRAGEM VAI POR BAIXO DA PECA, e nao por cima.
+    #
+    # O parafuso atravessa o furo da flange: por dentro da chapa ele nao se ve,
+    # e o que aparece de fora e so a porca e a sobra da haste nas duas pontas.
+    # Desenhado por cima, ele riscava a chapa de lado a lado - e nenhum
+    # parafuso e mais alto que a flange que ele aperta.
+    #
+    # A JUNTA e o contrario: e a linha de aperto entre as duas chapas, uma
+    # marca de convencao, e marca de convencao fica por cima de tudo. Por isso
+    # a ferragem sai em duas camadas, separadas pela classe.
+    #
+    # A wafer e a excecao da juncao: ela nao tem flange, e abracada pelas duas
+    # vizinhas, e entao as duas juncoes viram uma so, com barra roscada de
+    # ponta a ponta.
+    wafer = {i for i, p in enumerate(postos) if p.simbolo.params.get("wafer")}
+    ruins = []
+    sob, sobre = [], []
+
+    def guardar(elementos, embrulho=("", "")):
+        baixo = [e for e in elementos
+                 if e.get("classe") in ("parafuso", "porca")]
+        cima = [e for e in elementos
+                if e.get("classe") not in ("parafuso", "porca")]
+        for destino, lista in ((sob, baixo), (sobre, cima)):
+            if lista:
+                destino.append(embrulho[0]
+                               + "".join(desenhar(e) for e in lista)
+                               + embrulho[1])
+
+    for i, p in enumerate(postos[:-1]):
+        if i in wafer or (i + 1) in wafer:
+            continue
+        ok, motivo = s.encaixa(p.simbolo, postos[i + 1].simbolo)
+        saida = s.porta(p.simbolo, s.SAIDA)
+        if ok and saida is not None:
+            direcao = p.giro + (saida.direcao if saida.papel != "entrada" else 0)
+            vizinho = postos[i + 1].simbolo
+            # PEAD com PEAD e SOLDA e nao flange: nenhuma das duas pontas tem
+            # chapa, e o que sobra na juncao e o cordao de termofusao. A flange
+            # do PEAD aparece so onde o colar casa com a linha de aco
+            if _os_dois_pead(p.simbolo, vizinho):
+                guardar(s.solda_de_topo(
+                    p.saida[0], p.saida[1], direcao,
+                    p.simbolo.params.get("dn_mm") or 225))
+            else:
+                guardar(s.junta_flangeada(p.saida[0], p.saida[1], direcao,
+                                          saida.dn_pol))
+        else:
+            ruins.append((p, motivo))
+    for i in sorted(wafer):
+        p = postos[i]
+        entrada = s.porta(p.simbolo, s.ENTRADA)
+        comp = abs(s.porta(p.simbolo, s.SAIDA).x - entrada.x)
+        # a ferragem sai no eixo da propria peca e viaja com ela, no mesmo
+        # grupo de transformacao que o corpo - senao ela fica solta na folha
+        guardar(s.sanduiche_wafer(0.0, comp, 0.0, 0.0, entrada.dn_pol),
+                (f'<g transform="translate({p.dx:.1f} {p.dy:.1f}) '
+                 f'rotate({p.giro:g})">', "</g>"))
+    partes += sob
+
     for i, p in enumerate(postos):
         cor = cor_de(p.simbolo)
         espelhada = bool(p.simbolo.params.get("espelhado"))
@@ -250,9 +310,6 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
                      f'width="{max(cw, 1):.1f}" height="{max(ch, 1):.1f}"/>'
                      + corpo)
         # a librea vai no GRUPO da peca, e nao no traco: quem decide a cor e
-        # o motor (svg.cor_de), e a folha so aplica. Assim a valvula azul e
-        # azul no programa, no SVG exportado e em qualquer lugar que abra
-        # a librea vai no GRUPO da peca, e nao no traco: quem decide a cor e
         # o motor (svg.cor_de), a folha so aplica. E `luz_de` pre-gira o
         # degrade do tanto contrario ao giro da peca, para a luz continuar
         # vindo de cima da FOLHA - senao numa linha de pe o tubo fica claro de
@@ -265,47 +322,21 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
                       f' style="{estilo}" '
                       f'transform="translate({p.dx:.1f} {p.dy:.1f}) '
                       f'rotate({p.giro:g})">{corpo}</g>')
-    # cada ligacao tem duas flanges encostadas e os parafusos que as fecham -
-    # e a juncao que puxa a ferragem, entao e ela que desenha o parafuso.
-    # A wafer e a excecao: ela nao tem flange, e abracada pelas duas vizinhas,
-    # e entao as duas juncoes viram uma so, com barra roscada de ponta a ponta.
-    wafer = {i for i, p in enumerate(postos) if p.simbolo.params.get("wafer")}
-    ruins = []
-    for i, p in enumerate(postos[:-1]):
-        if i in wafer or (i + 1) in wafer:
-            continue
-        ok, motivo = s.encaixa(p.simbolo, postos[i + 1].simbolo)
-        saida = s.porta(p.simbolo, s.SAIDA)
-        if ok and saida is not None:
-            direcao = p.giro + (saida.direcao if saida.papel != "entrada" else 0)
-            vizinho = postos[i + 1].simbolo
-            # PEAD com PEAD e SOLDA e nao flange: nenhuma das duas pontas tem
-            # chapa, e o que sobra na juncao e o cordao de termofusao. A flange
-            # do PEAD aparece so onde o colar casa com a linha de aco
-            if _os_dois_pead(p.simbolo, vizinho):
-                ferragem = s.solda_de_topo(
-                    p.saida[0], p.saida[1], direcao,
-                    p.simbolo.params.get("dn_mm") or 225)
-            else:
-                ferragem = s.junta_flangeada(p.saida[0], p.saida[1], direcao,
-                                             saida.dn_pol)
-            partes.append("".join(desenhar(e) for e in ferragem))
-        else:
-            ruins.append((p, motivo))
-    for i in sorted(wafer):
-        p = postos[i]
-        entrada = s.porta(p.simbolo, s.ENTRADA)
-        comp = abs(s.porta(p.simbolo, s.SAIDA).x - entrada.x)
-        # a ferragem sai no eixo da propria peca e viaja com ela, no mesmo
-        # grupo de transformacao que o corpo - senao ela fica solta na folha
-        ferragem = s.sanduiche_wafer(0.0, comp, 0.0, 0.0, entrada.dn_pol)
-        partes.append(f'<g transform="translate({p.dx:.1f} {p.dy:.1f}) '
-                      f'rotate({p.giro:g})">'
-                      + "".join(desenhar(e) for e in ferragem) + "</g>")
+    partes += sobre
     partes.append("</g>")
-    # cada peca leva a bitola e a medida, em cinza claro, fora da escala
+    # A MEDIDA VAI SO NO TUBO - aco zincado, PVC, Plasson, PEAD.
+    #
+    # E a unica peca cuja medida alguem precisa ler no desenho, porque e a
+    # unica que se CORTA: o comprimento dela e decisao de projeto. O resto -
+    # curva, valvula, reducao, manifold - vem com a medida presa ao codigo
+    # SAP, e quem quiser conferir olha a lista, que esta na mesma folha.
+    #
+    # Cotar tudo enchia o desenho de numero que ninguem usa, e um desenho em
+    # que toda peca fala e um desenho em que nenhuma se ouve.
     partes.append('<g class="anota">')
     for p in postos:
+        if p.simbolo.familia != "TUBO":
+            continue
         entrada, saida = s.porta(p.simbolo, s.ENTRADA), s.porta(p.simbolo, s.SAIDA)
         if entrada is None or saida is None:
             entrada = entrada or saida

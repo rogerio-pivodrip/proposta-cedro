@@ -125,6 +125,14 @@ def main():
     linha, _r, _f = templates.succao(catalogo, 8, curva=90)
     html, _ficha = folha.montar(linha, "A3", "paisagem")
     conferir("a cota não leva mais tarja atrás dela", "trim" not in html)
+    # a medida vai so no TUBO: e a unica peca que se corta, e por isso a unica
+    # cujo comprimento e decisao de projeto. O resto vem preso ao codigo SAP
+    escrito = re.findall(r'class="marca"[^>]*>([^<]+)</text>', html)
+    tubos = [p for p in linha.pecas if p.familia == "TUBO"]
+    conferir("uma cota por tubo, e nenhuma nas outras peças",
+             len(escrito) == len(tubos),
+             f"{escrito} para {len(tubos)} tubo(s) em "
+             f"{[p.familia for p in linha.pecas]}")
     conferir("ela abre o eixo por um halo na letra",
              "paint-order:stroke" in html and "stroke-width:" in html)
 
