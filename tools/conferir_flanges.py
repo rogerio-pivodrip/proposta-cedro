@@ -206,6 +206,48 @@ def main():
     else:
         print("\n  ok toda flange Plasson que a casa compra casa com uma de aço")
 
+    print("\n== a furação do medidor e a da linha")
+    # O medidor entra no meio do recalque e nao declara norma na descricao da
+    # lista - o motor faz a ponta sem norma adotar a do vizinho. A folha do WI
+    # mostra os dois lugares em que isso nao basta.
+    from motor import hidraulica                        # noqa: E402
+    from motor import bitola as _bt                     # noqa: E402
+    duplas, so_en = [], []
+    print(f'  {"pol":>5}  {"folha WI (PN16)":>16}  {"linha NBR PN16":>18}  norma')
+    for dn in (2, 2.5, 3, 4, 5, 6, 8, 10, 12):
+        ficha = hidraulica.ficha_wi(dn)
+        if not ficha:
+            continue
+        linha = regras.FUROS.get(("NBR PN16", _bt.nominal(dn)))
+        normas = hidraulica.norma_do_medidor(dn)
+        casa = "NBR PN16" in normas
+        print(f'  {"ok" if casa else " !"} {dn:>3g}"  '
+              f'{ficha["furos"]:>3}x⌀{ficha["furo_mm"]:<12.0f}  '
+              f'{linha["furos"]:>3}x⌀{linha["furo_mm"]:.0f} em '
+              f'{linha["circulo_mm"]:<8.0f}  {", ".join(normas) or "NENHUMA"}')
+        if len(hidraulica.furacoes_do_medidor(dn)) > 1:
+            duplas.append((dn, hidraulica.furacoes_do_medidor(dn)))
+        if not casa:
+            so_en.append(dn)
+
+    for dn, furacoes in duplas:
+        versoes = ", ".join(f'PN{pn} com {n} furos'
+                            for pn, (n, _d) in furacoes.items())
+        comum = _mdc(*[n for _pn, (n, _d) in furacoes.items()])
+        print(f'\n  ! em {dn:g}" o medidor tem DUAS furações: {versoes}.\n'
+              f'    É a mesma peça - mesmo L, mesmo H, mesmo peso. A diferença\n'
+              f'    está no PEDIDO. A linha da casa é PN16; o PN10 chega com\n'
+              f'    8 furos contra 12, e 8 em 12 só coincidem em '
+              f'{comum} posições.')
+    if so_en:
+        print(f'\n  ! em {", ".join(f"{d:g}" for d in so_en)}" o medidor é '
+              "furado em EN PN16 e não na NBR\n"
+              "    da casa: M24 / furo 26 em 355 e 410, contra M20 / furo 22\n"
+              "    em 350 e 400. É a MESMA divergência da folha de flange da\n"
+              "    Netafim, que também vira EN de 10\" para cima - ver\n"
+              "    tools/conferir_flanges_netafim.py. De 2\" a 8\", que é onde\n"
+              "    a casa monta, as duas normas coincidem e a questão some.")
+
     print("\n== toda linha da tabela de ferragem tem codigo na lista")
     # A tabela e regra da casa, mas ela COMPRA - e nao adianta a regra pedir
     # 7/8" x 4 1/2" se a lista so tem 4" e 5". Um comprimento que nao existe

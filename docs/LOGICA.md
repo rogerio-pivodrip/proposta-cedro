@@ -740,6 +740,24 @@ aparecia em dois acessórios (`71680-008300` e `71680-008995`) — e agora
 aparece no catálogo do fabricante, com cota: **L = 580 mm, H = 495 mm**. A
 válvula existe na linha; o que falta é o código.
 
+**A furação do medidor tem de ser pedida.** A folha do tangencial WI
+(`data/medidores_wi.csv`, ficha em `data/fichas/`) mostra por que a regra "ponta
+sem norma adota a do vizinho" não basta:
+
+- **em 8" a mesma peça sai com 8 furos em PN10 e 12 em PN16** — mesmo L, mesmo
+  H, mesmo peso. Não é ANSI contra ISO: é PN contra PN, e a diferença está no
+  pedido. A linha da casa é PN16, de 12 furos; o PN10 chega com 8 contra 12, e
+  8 em 12 só coincidem em 4 posições;
+- **de 10" para cima o medidor é EN PN16 e não NBR** — M24 / furo 26 em 355 e
+  410, contra M20 / furo 22 em 350 e 400. É a mesma divergência da folha de
+  flange Netafim, pelo mesmo motivo. De 2" a 8", que é onde a casa monta, as
+  duas normas coincidem e a questão some.
+
+A conexão é flangeada NBR 7675 — está escrito em texto na folha. **Não há
+carretel de transição a comprar**: o medidor aparafusa direto na linha, desde
+que o PN case. `tools/conferir_flanges.py` mostra as nove bitolas e marca as
+duas.
+
 **Medidor** (`data/medidores.csv`). Usar só a linha **ARAD IRT analógica de
 pulso**, que já vem com cabo:
 

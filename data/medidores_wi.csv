@@ -1,0 +1,57 @@
+# Medidor tangencial WI - Akvometer / Hidrometer (Igor F. S. Viciana LTDA).
+# Folha 2025, "MEDIDOR TANGENCIAL WI - MEDIDOR DE AGUA BRUTA PARA IRRIGACAO",
+# em data/fichas/AKVOMETER_tangencial_WI_2025.pdf.
+#
+# Medidor de AGUA BRUTA - a folha diz "ate 30% de solidos em suspensao" e veda
+# o uso em agua potavel regulamentada (portaria INMETRO 155/22). E a aplicacao
+# da casa: captacao superficial com material organico e mineral.
+#
+# O QUE ESTA FOLHA RESOLVE, e por isso ela entrou:
+#
+#   O 8" TEM DUAS FURACOES. PN10 sai com 8 furos e PN16 com 12, no mesmo
+#   corpo, com o mesmo L e o mesmo H. Nao e ANSI contra ISO como se suspeitou:
+#   sao duas versoes da mesma peca, e a diferenca esta no PEDIDO. A linha da
+#   casa e PN16, de 12 furos - quem receber o 8" PN10 tem 8 furos contra 12, e
+#   8 em 12 so coincidem em 4 posicoes.
+#
+#   A CONEXAO E FLANGE, e nada de adaptador. Esta escrito em texto na folha:
+#   "Tipo de Conexoes Conforme ABNT NBR 7675 Flange - PN16" e "Conexoes
+#   flangeadas conforme NBR 7675 (PN10 ou PN16)". Nao ha ANSI no meio e nao ha
+#   carretel de transicao a comprar - o medidor aparafusa direto, desde que o
+#   PN case.
+#
+# A COLUNA "O - furo" DA FOLHA E O PARAFUSO, e nao o furo, apesar do rotulo. A
+# folha traz 16 / 20 / 24 onde a tabela de furacao traz 18 / 22. Lida como
+# bitola de parafuso - M16, M20, M24 - o furo implicado (parafuso + 2) cai
+# exato em cima da norma:
+#
+#   DN50 a DN200   M16/M20 -> furo 18/22, e NBR e EN concordam nessa faixa
+#   DN250 e DN300  M24     -> furo 26, que e EN PN16 (12x26 em 355 e 410)
+#                            e NAO a NBR da casa (12x22 em 350 e 400)
+#
+# Ou seja: o medidor e furado em EN PN16, e diverge da NBR de 10" para cima -
+# a MESMA divergencia que a folha de flange da Netafim ja tinha, pelo mesmo
+# motivo. Ver tools/conferir_flanges_netafim.py. De 2" a 8", que e onde a casa
+# monta, as duas normas coincidem e a questao nao existe.
+#
+# L bate com a folha da ARAD em SETE das oito bitolas em que as duas existem
+# (so o 3" difere, 225 contra 230) - o comprimento face a face do medidor
+# tangencial e de norma, nao de fabricante. O 5" (DN125), que o programa nao
+# tinha de fonte nenhuma, vem daqui.
+#
+# H diverge de -7,5% a +4,8% contra a ARAD: a altura e a forma do corpo e do
+# registrador, e essa e de cada um.
+#
+# parafuso_mm e a coluna da folha, como ela escreveu. furo_mm e o furo que ela
+# implica, e esta marcado como derivado - a folha nao o cota.
+dn_pol,dn_mm,pn,L_mm,H_mm,parafuso_mm,furo_mm,furo_derivado,furos,peso_kg
+2,50,16,200,252,16,18,SIM,4,10.5
+2.5,65,16,200,262,16,18,SIM,4,12.0
+3,80,16,225,280,16,18,SIM,8,15.5
+4,100,16,250,290,16,18,SIM,8,17.5
+5,125,16,250,310,16,18,SIM,8,25.0
+6,150,16,300,333,20,22,SIM,8,30.5
+8,200,10,350,386,20,22,SIM,8,42.5
+8,200,16,350,386,20,22,SIM,12,42.5
+10,250,16,450,442,24,26,SIM,12,60.0
+12,300,16,500,494,24,26,SIM,12,82.5
