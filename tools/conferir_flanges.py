@@ -337,6 +337,46 @@ def main():
               "    tools/conferir_flanges_netafim.py. De 2\" a 8\", que é onde\n"
               "    a casa monta, as duas normas coincidem e a questão some.")
 
+    print("\n== a norma da bomba contra a norma da linha")
+    # A FLANGE DA BOMBA NAO E A FLANGE DA LINHA. O fabricante entrega a boca
+    # dele em EN ou ANSI, a linha corre em NBR, e o que decide se as duas
+    # parafusam nao e o NOME da norma - e a furacao. Esta secao fixa em numero
+    # o que a casa ja sabia na pratica quando comprou 167 reducoes especificas
+    esperado = {
+        # (norma da bomba, bitola): as duas parafusam?
+        ("EN PN16", 6): True, ("EN PN16", 8): True,
+        ("EN PN16", 10): False, ("EN PN16", 12): False,
+        ("EN PN10", 6): True, ("EN PN10", 8): False,
+        ("ANSI 150", 4): False, ("ANSI 150", 6): False, ("ANSI 150", 8): False,
+    }
+    for (norma, dn), casa in sorted(esperado.items()):
+        obtido = regras.mesma_furacao(norma, "NBR PN16", dn)
+        a = regras.furacao(norma, dn)
+        b = regras.furacao("NBR PN16", dn)
+        conta = (f'{a[0]}×⌀{a[1]:g} em ⌀{a[2]:g} contra '
+                 f'{b[0]}×⌀{b[1]:g} em ⌀{b[2]:g}' if a and b else "sem tabela")
+        if obtido is casa:
+            print(f'  ok {norma:9} x NBR PN16 em {dn:>2}": '
+                  + ("parafusam" if casa else "NÃO fecham") + f"  ({conta})")
+        else:
+            problemas.append(f'{norma} x NBR PN16 em {dn}" deu {obtido}')
+            print(f'  ! {norma:9} x NBR PN16 em {dn:>2}": esperado '
+                  f"{casa}, deu {obtido}  ({conta})")
+
+    # e a peca que faz a ponte tem de existir na lista, senao o aviso manda
+    # procurar o que nao ha
+    from motor.catalogo import Catalogo as _Catalogo    # noqa: E402
+    achadas = 0
+    for dn_linha, norma, dn_bomba in ((8, "EN PN10", 4), (6, "ANSI 150", 5),
+                                      (10, "EN PN16", 8)):
+        pontes = _Catalogo().ponte(dn_linha, "NBR PN16", dn_bomba, norma)
+        achadas += bool(pontes)
+        print(f'  {"ok" if pontes else "!"} ponte {dn_linha}" NBR PN16 x '
+              f'{dn_bomba}" {norma}: '
+              + (pontes[0]["descricao"] if pontes else "a lista não tem"))
+    if achadas < 3:
+        problemas.append("faltou peça de ponte para uma boca de bomba")
+
     print("\n== toda linha da tabela de ferragem tem codigo na lista")
     # A tabela e regra da casa, mas ela COMPRA - e nao adianta a regra pedir
     # 7/8" x 4 1/2" se a lista so tem 4" e 5". Um comprimento que nao existe

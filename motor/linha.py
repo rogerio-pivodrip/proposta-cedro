@@ -321,6 +321,91 @@ class Comando:
         return f"<{self.nome} {self.alvo or ''}>".replace(" >", ">")
 
 
+def _explicar(catalogo, junc):
+    """O que falta nesta juncao, em palavras de obra.
+
+    Duas coisas entram aqui que a mensagem antiga calava:
+
+    **A norma, quando ela muda junto com a bitola.** Na boca da bomba as duas
+    mudam ao mesmo tempo - o fabricante entrega a flange em EN ou ANSI e a
+    linha corre em NBR - e "precisa de reducao" nao diz qual: a reducao comum
+    tem as DUAS faces em NBR e nao serve.
+
+    **A furacao, em numeros.** O nome da norma nao decide se duas faces
+    parafusam; a furacao decide. NBR PN16 e EN PN16 tem a mesma ate 8" e
+    divergem de 10" para cima; ANSI nunca casa com NBR. Dizer "8 furos contra
+    12" e uma frase que se confere com o paquimetro.
+    """
+    dados = junc["dados"]
+    acao = junc["acao"]
+    if acao == "adaptador":
+        return _duas_faces(catalogo, dados)
+    if acao != "reducao":
+        return f"precisa de {acao} {dados}"
+    de, para = dados["de"], dados["para"]
+    frase = f'reducao de {de:g}" para {para:g}"'
+    if not dados.get("normas_diferentes"):
+        return frase
+    a, b = dados["norma_de"], dados["norma_para"]
+    furos = []
+    for norma, dn in ((a, de), (b, para)):
+        ficha = regras.furacao(norma, dn)
+        furos.append(f'{norma} {dn:g}" '
+                     + (f"({ficha[0]} furos ⌀{ficha[1]:g} em ⌀{ficha[2]:g})"
+                        if ficha else "(sem furação tabelada)"))
+    frase += f" E de norma: {furos[0]} contra {furos[1]}"
+    pontes = catalogo.ponte(de, a, para, b) if catalogo else []
+    if pontes:
+        frase += (" - a lista tem "
+                  + "; ".join(f'{i["descricao"]} ({i["sap"]})'
+                              for i in pontes[:2]))
+    else:
+        frase += " - a lista nao tem peca com essas duas faces"
+    return frase
+
+
+def _duas_faces(catalogo, dados):
+    """Duas pontas da MESMA bitola que nao se declararam iguais.
+
+    Quando as duas sao flange e so a NORMA difere, a pergunta nao e o nome: e
+    a furacao. NBR PN16 e EN PN16 tem a mesma ate 8" - ali as duas parafusam,
+    e o que muda e a classe de pressao, nao o furo. De 10" para cima elas
+    divergem, e ai nao ha aperto que resolva.
+
+    A regra do motor continua conservadora - ela recusa pelo nome, e ninguem
+    monta por engano. O que mudou e que a MENSAGEM diz qual dos dois casos e,
+    em numeros que se conferem com o paquimetro.
+    """
+    tipo_a, norma_a = dados["de"]
+    tipo_b, norma_b = dados["para"]
+    dn = dados["dn"]
+    if tipo_a != tipo_b:
+        return (f'{tipo_a.lower()} contra {tipo_b.lower()} em {dn:g}" - '
+                f"precisa de adaptador")
+    iguais = regras.mesma_furacao(norma_a, norma_b, dn)
+    fa, fb = regras.furacao(norma_a, dn), regras.furacao(norma_b, dn)
+    # O CIRCULO ENTRA NA FRASE. Em 6" a ANSI 150 e a NBR PN16 tem os mesmos
+    # 8 furos de 22, e mesmo assim nao fecham: o circulo e outro. Sem ele a
+    # mensagem dizia "8 furos ⌀22 contra 8 furos ⌀22 - nao fecham", que parece
+    # erro do programa e e a verdade da peca
+    conta = (f"{fa[0]} furos ⌀{fa[1]:g} em ⌀{fa[2]:g}" if fa
+             else "sem furação tabelada")
+    contra = (f"{fb[0]} furos ⌀{fb[1]:g} em ⌀{fb[2]:g}" if fb
+              else "sem furação tabelada")
+    if iguais:
+        return (f'{norma_a} contra {norma_b} em {dn:g}": a furação é a mesma '
+                f"({conta}) e as duas parafusam - o que muda é a classe de "
+                f"pressão, não o furo. Conferir a vedação e o que a folha do "
+                f"fabricante manda")
+    cabeca = (f'{norma_a} contra {norma_b} em {dn:g}": {conta} contra '
+              f"{contra} - não fecham")
+    pontes = catalogo.ponte(dn, norma_a, dn, norma_b) if catalogo else []
+    if pontes:
+        return cabeca + " - a lista tem " + "; ".join(
+            f'{i["descricao"]} ({i["sap"]})' for i in pontes[:2])
+    return cabeca + " - a lista não tem peça com essas duas faces"
+
+
 def ferragem_de_juncao(catalogo, junc, somar, avisos, rotulo=""):
     """Os itens derivados de UMA juncao flangeada, somados na lista.
 
@@ -342,7 +427,7 @@ def ferragem_de_juncao(catalogo, junc, somar, avisos, rotulo=""):
                       f"{junc['para'].familia}): {junc['dados']['motivo']}")
         return
     if junc["acao"] != "direta":
-        avisos.append(f"{onde}: precisa de {junc['acao']} {junc['dados']}")
+        avisos.append(f"{onde}: {_explicar(catalogo, junc)}")
         return
     dados = junc["dados"]
     if dados["junta"] not in regras.TIPOS_FLANGE:
@@ -483,7 +568,26 @@ class Linha:
                 return peca
         raise KeyError(f"peca {alvo} nao esta na linha")
 
+    # A BOMBA DESCARREGA PARA O LADO EM QUE A LINHA CONTINUA. Numa sucção a
+    # linha sobe do poço e a bomba fica no alto; o recalque sai dali para o
+    # campo, e no papel a linha corre da esquerda para a direita. Entao numa
+    # linha DE PE a bomba nasce espelhada - com a boca de recalque para a
+    # direita - em vez de descarregar para tras do desenho.
+    #
+    # E so o nascimento: `espelhar` continua virando a peca para o outro lado,
+    # e quem virou manda.
+    NASCEM_ESPELHADAS_NA_VERTICAL = ("BOMBA",)
+
+    def _sentido_de_nascimento(self, peca):
+        de_pe = abs(abs(self.giro % 360) - 90) < 1 or \
+            abs(abs(self.giro % 360) - 270) < 1
+        if (de_pe and peca.sentido == 1
+                and peca.familia in self.NASCEM_ESPELHADAS_NA_VERTICAL):
+            return -1
+        return peca.sentido
+
     def inserir(self, peca, pos=None):
+        peca.sentido = self._sentido_de_nascimento(peca)
         pos = len(self.pecas) if pos is None else (
             pos if isinstance(pos, int) else self.posicao(pos))
         pos = max(0, min(pos, len(self.pecas)))

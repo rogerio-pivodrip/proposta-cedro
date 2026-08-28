@@ -393,6 +393,41 @@ degrau de diâmetro. Quando o motor insere uma redução ele já tem que decidir
 norma da ponta de jusante — e é aí que a tabela ANSI entra.
 `tools/relatorio_furacao.py` imprime esse cruzamento.
 
+### 4.2.2 A norma da bomba não é a norma da linha
+
+A flange que o fabricante entrega na boca da bomba é dele — EN 1092 (PN10,
+PN16, PN40) nas europeias, ANSI nas americanas — e a linha corre em NBR 7675.
+É por isso que a casa compra **redução concêntrica e excêntrica específica**,
+com uma face em cada norma: o catálogo tem **167 delas** (97 concêntricas, 70
+excêntricas): 86 contra ANSI, 58 contra EN e 23 entre classes NBR.
+
+**O que decide se duas faces parafusam não é o nome da norma — é a furação.**
+Medido na tabela da casa (`data/furacao.csv`), contra NBR PN16:
+
+| | 4" | 6" | 8" | 10" | 12" |
+|---|---|---|---|---|---|
+| **EN PN16** | casa | casa | casa | ⌀26 contra ⌀22 | ⌀26 contra ⌀22 |
+| **EN PN10** | casa | casa | 8 furos contra 12 | casa | casa |
+| **ANSI 150** | ⌀19 contra ⌀18 | ⌀241,3 contra ⌀240 | 8 furos contra 12 | — | — |
+
+Três leituras que valem para a obra:
+
+- **ANSI nunca casa com NBR**, em bitola nenhuma. Em 6" as duas têm os mesmos
+  8 furos de 22 mm e mesmo assim não fecham: o círculo de furação é 241,3
+  contra 240. É 1,3 mm que só aparece na montagem, e é exatamente para isso
+  que a peça específica existe.
+- **EN casa com NBR na maior parte das bitolas**, e para de casar em pontos
+  precisos: a PN10 em 8" (8 furos contra 12), a PN16 de 10" para cima.
+- **NBR PN10, PN16 e PN25 têm a mesma furação nas 16 bitolas** — entre elas
+  nunca é caso de peça específica.
+
+O motor continua **recusando pelo nome**, que é o lado conservador: ninguém
+monta por engano. O que mudou é que a mensagem agora diz qual dos dois casos
+é, em números que se conferem com o paquímetro, e aponta o código da peça que
+faz a ponte (`catalogo.ponte`). Antes ela dizia só "precisa de redução" — e
+calava a metade que decide *qual* redução, porque a redução comum tem as duas
+faces em NBR e não serve.
+
 ### 4.2.1 Barra roscada
 
 Válvula wafer é presa por tirante. Porca e arruela saem da furação: **2 de cada

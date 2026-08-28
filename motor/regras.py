@@ -292,8 +292,19 @@ def resolver_juncao(porta_a, porta_b):
         return "recusada", {"motivo": "engate K nao e usado nas montagens",
                             "dn": porta_a["dn"]}
     if porta_a["dn"] != porta_b["dn"]:
+        # A NORMA VAI JUNTO, e nao e detalhe: na boca da bomba a bitola E a
+        # norma mudam ao mesmo tempo - o fabricante entrega a flange dele em
+        # EN ou ANSI e a linha corre em NBR - e e por isso que a casa compra
+        # reducao ESPECIFICA, com uma face em cada norma. Enquanto a bitola
+        # saia daqui sozinha, a mensagem dizia "precisa de reducao" e calava a
+        # metade que decide qual reducao
         return "reducao", {"de": porta_a["dn"], "para": porta_b["dn"],
-                           "tipo": "CONCENTRICA"}
+                           "tipo": "CONCENTRICA",
+                           "norma_de": porta_a["norma"],
+                           "norma_para": porta_b["norma"],
+                           "normas_diferentes": bool(
+                               porta_a["norma"] and porta_b["norma"]
+                               and porta_a["norma"] != porta_b["norma"])}
     if porta_a["tipo"] == porta_b["tipo"] and porta_a["norma"] == porta_b["norma"]:
         return "direta", {"junta": porta_a["tipo"], "dn": porta_a["dn"],
                           "norma": porta_a["norma"]}
@@ -492,6 +503,28 @@ def ferragem_da_junta(dn, norma, unidade="in", contexto="AZ_AZ"):
         ("PORCA", {"bitola_pol": bit}, n),
         ("ARRUELA", {"bitola_pol": bit}, ARRUELAS_POR_PARAFUSO * n),
     ]
+
+
+def furacao(norma, dn, unidade="in"):
+    """(furos, furo_mm, circulo_mm) da norma nessa bitola. None se nao houver.
+
+    E o que decide se duas faces PARAFUSAM: o nome da norma nao decide nada
+    sozinho - NBR PN16 e EN PN16 tem a mesma furacao ate DN200 e divergem de
+    DN250 para cima, e ANSI nunca casa com NBR. Ver docs/LOGICA.md 4.2.
+    """
+    dn_nom = dn_nominal(dn, unidade)
+    reg = FUROS.get((norma, dn_nom)) if dn_nom else None
+    if not reg:
+        return None
+    return (reg["furos"], reg["furo_mm"], reg["circulo_mm"])
+
+
+def mesma_furacao(norma_a, norma_b, dn, unidade="in"):
+    """As duas faces parafusam uma na outra? None quando falta tabela."""
+    a, b = furacao(norma_a, dn, unidade), furacao(norma_b, dn, unidade)
+    if a is None or b is None:
+        return None
+    return a == b
 
 
 def ficha_wafer(dn_pol, figura=None):

@@ -208,6 +208,26 @@ class Catalogo:
         return achado or self.melhor(item["familia"], dn,
                                      **{**busca, "norma": None})
 
+    def ponte(self, dn_a, norma_a, dn_b, norma_b, limite=6):
+        """As pecas que casam DUAS faces diferentes - uma em cada norma.
+
+        E a reducao especifica da boca da bomba: o fabricante entrega a flange
+        dele em EN ou ANSI, a linha corre em NBR, e a peca que junta as duas
+        tem uma face de cada. O catalogo tem 167 delas, e antes de existir
+        esta busca o programa dizia "precisa de reducao" sem saber apontar
+        qual - e sao duas coisas diferentes, porque a reducao comum tem as
+        DUAS faces em NBR.
+        """
+        alvo = {(float(dn_a), norma_a), (float(dn_b), norma_b)}
+        achados = []
+        for item in self.itens:
+            faces = {(float(c["dn"]), c["norma"])
+                     for c in (item["conexoes"] or []) if c["dn"] is not None}
+            if alvo <= faces:
+                achados.append(item)
+        achados.sort(key=lambda i: (len(i["descricao"]), i["sap"]))
+        return achados[:limite]
+
     def barras_irmas(self, item):
         """As barras do MESMO tubo em outros comprimentos, por comprimento.
 
