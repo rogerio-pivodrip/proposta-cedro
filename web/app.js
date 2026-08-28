@@ -30,19 +30,32 @@ async function mandar(comando) {
   // o documento vem junto até no erro: a tela que pediu algo inválido
   // continua mostrando o que existe
   if (corpo.documento) { documento = corpo.documento; pintar(); }
-  recado(corpo.ok ? "" : corpo.erro);
+  // O ERRO ENTRA DEPOIS DE PINTAR, e não antes: `pintar` é quem escreve os
+  // recados do documento - peça sem símbolo, ponta no lugar errado - e
+  // limpar o recado aqui embaixo apagava todos eles. Uma bomba fora das
+  // folhas dimensionais entrava na lista, não entrava no desenho, e não
+  // dizia por quê.
+  if (!corpo.ok) recado(corpo.erro);
   return corpo;
 }
 
-function recado(texto) {
+/* Os recados de uma pintura se JUNTAM. Antes cada um escrevia por cima do
+   anterior: a peça sem símbolo era apagada pela ponta no lugar errado, e as
+   duas pelo `ok` do comando seguinte. Quem lê precisa das duas. */
+let recados = [];
+
+function recado(texto, junta) {
   const p = $("recado");
-  p.textContent = texto || "";
-  p.hidden = !texto;
+  if (!junta) recados = [];
+  if (texto) recados.push(texto);
+  p.textContent = recados.join(" · ");
+  p.hidden = !recados.length;
 }
 
 /* ---------------------------------------------------------------- pintar */
 function pintar() {
   if (!documento) return;
+  recado("");                // a pintura recomeça a lista de recados
   pintarAbas();
   pintarVista();
   pintarLista();
@@ -161,7 +174,7 @@ function pintarVista() {
   aplicarZoom();
   const recusadas = (documento.vista && documento.vista.recusadas) || [];
   if (recusadas.length) {
-    recado(recusadas.map((r) => `${r.sap}: ${r.motivo}`).join(" · "));
+    recado(recusadas.map((r) => `${r.sap}: ${r.motivo}`).join(" · "), true);
   }
 }
 
@@ -227,7 +240,7 @@ function pintarAvisos() {
   // peça de uma ponta só no lugar errado: o motor descobre, a tela mostra por
   // extenso. Um ponto vermelho na junção não diz o que está errado
   const pontas = documento.pontas || [];
-  if (pontas.length) recado(pontas.map((p) => p.motivo).join(" · "));
+  if (pontas.length) recado(pontas.map((p) => p.motivo).join(" · "), true);
 }
 
 /* ------------------------------------------------------ zoom e pan
@@ -420,13 +433,16 @@ function seguir(antigo, novo) {
 /* -------------------------------------------------------------- comandos */
 async function acrescentar(familia, dnPedido) {
   const dn = dnPedido !== undefined ? dnPedido : Number($("bitola").value);
-  const resposta = await mandar({nome: "catalogo", familia, dn, limite: 12});
+  const semBitola = SEM_BITOLA.includes(familia);
+  const resposta = await mandar({nome: "catalogo", familia, dn,
+                                 limite: semBitola ? 40 : 12});
   const caixa = $("candidatos");
   caixa.innerHTML = "";
   const itens = resposta.itens || [];
   if (!itens.length) {
-    caixa.innerHTML =
-      `<p class="nada">a lista não tem ${familia} de ${dn}"</p>`;
+    caixa.innerHTML = semBitola
+      ? `<p class="nada">a lista não tem ${familia.toLowerCase()}</p>`
+      : `<p class="nada">a lista não tem ${familia} de ${dn}"</p>`;
     return;
   }
   itens.forEach((item) => {
@@ -899,7 +915,7 @@ function ligar() {
       escolhidas = r.pecas && r.pecas.length ? r.pecas : escolhidas;
       escolhida = escolhidas[escolhidas.length - 1] || null;
       pintar();
-      if ((r.recado || []).length) recado(r.recado.join(" · "));
+      if ((r.recado || []).length) recado(r.recado.join(" · "), true);
     }
   });
   // sem ângulo nem distância o comando ALTERNA - é o gesto da caixinha
@@ -924,7 +940,7 @@ function ligar() {
         // as peças novas vêm na ordem das antigas: a seleção anda junto
         (r.pecas || []).forEach((novo, i) => seguir(saindo[i], novo));
         pintar();
-        if ((r.recado || []).length) recado(r.recado.join(" · "));
+        if ((r.recado || []).length) recado(r.recado.join(" · "), true);
         return r;
       });
   };
@@ -1046,7 +1062,7 @@ function ligar() {
     // o que mudou desde o dia em que se salvou: peça que saiu da lista, cota
     // que a folha corrigiu. Aparece por escrito, e não calado
     if (resposta.ok && (resposta.recado || []).length) {
-      recado(resposta.recado.join(" · "));
+      recado(resposta.recado.join(" · "), true);
     }
   });
   addEventListener("resize", avisarTamanho);
@@ -1055,7 +1071,12 @@ function ligar() {
 const FAMILIAS = ["TUBO", "CURVA", "TE", "REDUCAO_CONCENTRICA",
   "REDUCAO_EXCENTRICA", "VALVULA_BORBOLETA", "VALVULA_GAVETA",
   "VALVULA_RETENCAO", "VALVULA_HIDRAULICA", "MEDIDOR", "CRIVO", "MANIFOLD",
-  "FLANGE_CEGA", "ADAPTADOR"];
+  "FLANGE_CEGA", "ADAPTADOR", "BOMBA"];
+// a BOMBA não se escolhe por bitola: ela tem tamanho (65-200), rotor e
+// potência, e quem tem bitola são as bocas dela - uma de sucção e outra de
+// recalque, quase sempre diferentes. O motor devolve `sem_bitola` e a lista
+// vem inteira; para filtrar, digita-se o nome na barra
+const SEM_BITOLA = ["BOMBA"];
 
 let tamanhoPendente = null;
 function avisarTamanho() {

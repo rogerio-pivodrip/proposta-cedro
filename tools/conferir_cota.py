@@ -83,6 +83,12 @@ def do_desenho(simbolo):
 
 
 def comparar(peca, simbolo):
+    # A BOMBA E O CASO EM QUE OS DOIS LADOS LEEM A MESMA FONTE. A cota dela so
+    # existe na folha dimensional do fabricante, e quem a le e o simbolo:
+    # `Peca.PELO_SIMBOLO` manda o documento perguntar ali. Entao esta linha
+    # nao e uma conferencia independente - ela so garante que o documento nao
+    # voltou a inventar um numero proprio, que era o que fazia a bomba medir
+    # zero e o desenho 100.
     """None quando as duas medidas batem; o quanto erram quando nao."""
     doc, gira_doc = do_documento(peca)
     des, gira_des = do_desenho(simbolo)

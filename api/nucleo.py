@@ -721,10 +721,34 @@ def _procurar(sessao, comando):
                        "dn": list(i["dn"] or [])} for i in achados]}
 
 
+# Familias que NAO se escolhem por bitola. A bomba nao tem DN: ela tem
+# tamanho (65-200), rotor e potencia, e as bocas dela e que tem bitola - uma
+# de sucção e outra de recalque, quase sempre diferentes. Pedir "bomba de 8"
+# nao quer dizer nada, e enquanto o painel so sabia perguntar familia+bitola
+# a bomba nao aparecia nele: so dava para chamar pelo nome, na barra.
+SEM_BITOLA = ("BOMBA", "QUADRO", "FILTRO")
+
+
 def _catalogo(sessao, comando):
     """O que a lista tem para essa familia e bitola - para a tela oferecer."""
     familia, dn = comando.get("familia"), comando.get("dn")
-    if not familia or dn is None:
+    if not familia:
+        raise Erro("informe a familia")
+    if (familia or "").upper() in SEM_BITOLA:
+        texto = (comando.get("texto") or "").strip()
+        achados = [i for i in sessao.catalogo.itens
+                   if i["familia"] == familia.upper()]
+        if texto:
+            procurados = {i["sap"] for i in
+                          sessao.catalogo.procurar(texto, 200)}
+            achados = [i for i in achados if i["sap"] in procurados]
+        achados.sort(key=lambda i: i["descricao"])
+        return {"itens": [{"sap": i["sap"], "descricao": i["descricao"],
+                           "dn": list(i["dn"] or []),
+                           "material": i["material"], "angulo": i["angulo"]}
+                          for i in achados[:comando.get("limite", 40)]],
+                "sem_bitola": True}
+    if dn is None:
         raise Erro("informe a familia e o dn")
     achados = sessao.catalogo.buscar(familia, dn,
                                      material=comando.get("material"))

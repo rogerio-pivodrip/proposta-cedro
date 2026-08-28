@@ -172,6 +172,44 @@ class Peca:
         """
         return self.familia in ("TE", "TE_REDUZIDO") and self.pose == "derivacao"
 
+    # As familias cuja geometria SO existe na folha do fabricante, lida pelo
+    # simbolo. Nao ha segunda fonte para conferir com a primeira - e inventar
+    # uma seria pior que nao ter: a bomba entra pela sucção na horizontal e
+    # sai pelo recalque para cima, e enquanto isso nao estava escrito aqui o
+    # esquema seguia reto por dentro dela, com comprimento zero.
+    PELO_SIMBOLO = ("BOMBA",)
+
+    def _pernas_do_simbolo(self):
+        """(antes, depois, giro) medidos nas portas do proprio simbolo.
+
+        A peca entra olhando para +x e sai onde a porta de saida disser. Se
+        ela vira, o caminho e o mesmo da curva: uma perna, o giro, outra perna
+        - e as duas se acham resolvendo o deslocamento da entrada ate a saida.
+        """
+        import math
+
+        from . import desenho
+
+        try:
+            simbolo = desenho.de_item(self.item, self.pose,
+                                      self._comprimento_pedido)
+        except Exception:                                   # noqa: BLE001
+            return None
+        portas = simbolo.portas
+        entrada = next((p for p in portas if p.papel in ("entrada", "maior")),
+                       None)
+        saida = next((p for p in portas if p.papel in ("saida", "menor")), None)
+        if saida is None:
+            return None
+        ex, ey = (entrada.x, entrada.y) if entrada else (0.0, 0.0)
+        dx, dy = saida.x - ex, saida.y - ey
+        gira = float(saida.direcao or 0.0)
+        seno = math.sin(math.radians(gira))
+        if abs(seno) < 1e-6:
+            return (dx, 0.0, 0.0)
+        depois = dy / seno
+        return (dx - depois * math.cos(math.radians(gira)), depois, gira)
+
     def giro_interno(self):
         """De quanto ESTA peca vira a direcao da linha, em graus de folha.
 
@@ -190,6 +228,9 @@ class Peca:
             return -self.angulo * mao
         if self.de_pe():
             return 90.0 * mao
+        if self.familia in self.PELO_SIMBOLO:
+            pernas = self._pernas_do_simbolo()
+            return (pernas[2] if pernas else 0.0) * mao
         return 0.0
 
     def avancos(self):
@@ -205,6 +246,10 @@ class Peca:
         O resto avanca tudo antes e nao gira nada.
         """
         comp = self.comprimento_mm or 0
+        if self.familia in self.PELO_SIMBOLO:
+            pernas = self._pernas_do_simbolo()
+            if pernas:
+                return pernas[0], pernas[1]
         if self.familia == "CURVA" and self.angulo:
             return comp, comp
         if self.de_pe():

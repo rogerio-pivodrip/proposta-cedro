@@ -57,9 +57,15 @@ def simbolos_da_linha(linha):
                 simbolo = s.espelhado(simbolo)
             prontos.append((peca, simbolo))
         except Exception as erro:                       # noqa: BLE001
+            # recusa DELIBERADA - peca sem simbolo, tamanho fora da folha -
+            # sai so com o motivo; o nome da excecao ali so serviria para
+            # assustar quem esta montando. O tipo fica para o que e defeito
+            # de verdade, que e onde ele ajuda a achar o erro
+            proposital = isinstance(erro, (desenho.SemSimbolo, ValueError))
             recusadas.append({"id": peca.id, "sap": peca.sap,
                               "descricao": peca.descricao,
-                              "motivo": f"{type(erro).__name__}: {erro}"})
+                              "motivo": (str(erro) if proposital
+                                         else f"{type(erro).__name__}: {erro}")})
     return prontos, recusadas
 
 

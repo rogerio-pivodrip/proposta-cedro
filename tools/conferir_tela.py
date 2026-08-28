@@ -295,6 +295,35 @@ async def rodar(porta):
         conferir("Escape solta a escolha",
                  not await pagina.query_selector_all("g.peca.escolhida"))
 
+        print("\n== a bomba entra por nome e pelo painel, e diz quando não desenha")
+        await pagina.select_option("#prontas", "SUCCAO")
+        await pagina.click("#succao")
+        await pagina.wait_for_timeout(800)
+        antes = len(await pagina.query_selector_all("g.peca[data-id]"))
+        await pagina.fill("#comando", "inserir ebara gsd 125-250")
+        await pagina.keyboard.press("Enter")
+        await pagina.wait_for_timeout(900)
+        conferir("a bomba com folha dimensional entra e desenha",
+                 len(await pagina.query_selector_all("g.peca[data-id]"))
+                 == antes + 1)
+        await pagina.select_option("#familia", "BOMBA")
+        await pagina.wait_for_timeout(800)
+        conferir("e o painel oferece bomba, que não tem bitola",
+                 len(await pagina.query_selector_all("#candidatos button")) > 5,
+                 str(len(await pagina.query_selector_all("#candidatos button"))))
+        # a que a folha nao traz NAO pode entrar calada: ela some do desenho
+        await pagina.fill("#comando", "inserir ebara gsd 100-200")
+        await pagina.keyboard.press("Enter")
+        await pagina.wait_for_timeout(900)
+        recado = (await pagina.inner_text("#recado")).strip()
+        conferir("a bomba sem folha dimensional diz por que não desenhou",
+                 "folha dimensional" in recado, recado[:80])
+        conferir("e o motivo vem sem nome de exceção",
+                 "ValueError" not in recado and "Error" not in recado,
+                 recado[:80])
+        await pagina.click("#desfazer")
+        await pagina.wait_for_timeout(600)
+
         print("\n== ramificar: o barrilete com duas saídas, numa folha só")
         await pagina.select_option("#prontas", "LIVRE")
         await pagina.click("#succao")
