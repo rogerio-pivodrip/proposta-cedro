@@ -1,0 +1,48 @@
+# A flange da boca da bomba, da folha do fabricante.
+#
+# A TABELA "MODELO DO FLANGE" DA KSB, para material G (ferro fundido), diz
+# que a mesma maquina sai com uma de tres furacoes, conforme o pedido:
+#
+#   Europa/Asia/America  EN 1092-2 PN 16
+#                        EN 1092-2 "perfurada ASME B16.1" Classe 125
+#   America              ASME B16.1 Classe 125  ou  Classe 250
+#
+# Ou seja: a furacao e ESCOLHA DE PEDIDO, e nao propriedade do modelo - a
+# mesma carcaca vem furada de tres jeitos. Por isso `Peca.flange_bomba` deixa
+# dizer qual veio, e estas linhas so guardam o que a folha DAQUELA maquina
+# trouxe. Sem folha e sem alguem dizer, o programa assume a Classe 125 (que
+# fura como a ANSI 150) e avisa que assumiu.
+#
+# KSB e EBARA entregam a boca em ASME B16.1 - a norma da flange de FERRO
+# FUNDIDO - e a classe vem na folha da maquina: CL 125 ou CL 250. As duas
+# furam como as classes 150 e 300 da B16.5, que e o nome pelo qual a casa
+# pede, e por isso a coluna `furacao` traz o equivalente que o programa usa
+# para contar parafuso.
+#
+# E NENHUMA DELAS CASA COM A NBR DA LINHA: em 6" a ANSI 150 tem os mesmos 8
+# furos de 22 e o circulo e 241,3 contra 240. Toda boca de bomba pede a peca
+# de ponte - ver catalogo.ponte e docs/LOGICA.md 4.2.2.
+#
+# `succao_pol` e `recalque_pol` sao conferencia: o programa ja deduz as duas
+# do NOME (METB<succao>-<recalque>-<rotor>), e estas linhas provam que a
+# deducao bate com a folha.
+# A NOTA DE RODAPE DA EBARA fecha o resto:
+#
+#   "As conexoes de succao e descarga das bombas ATE O TAMANHO 65-200 podem
+#    ser rosqueadas ou flangeadas conforme rosca BSP ou Flange ANSI B16.1
+#    125#FF, EXCETO os tamanhos 050-032-250.1, 050-032-250 e 065-040-250, que
+#    sao fornecidos somente flangeados conforme ANSI B16.1 250#FF"
+#
+# Ela nomeia a bomba por succao-recalque-rotor em milimetro, e o catalogo da
+# casa nomeia por recalque-rotor: 065-040-250 e a GSD 40-250 (succao DN65,
+# recalque DN40), que o programa ja deduz assim pelo nome. Das tres excecoes,
+# so essa esta na lista da casa - as outras duas ficam registradas aqui para
+# quando entrarem.
+#
+# Da nota saem duas regras: bomba pequena PODE VIR ROSQUEADA (e ai nao ha
+# junta flangeada nenhuma, nem parafuso), e as tres excecoes sao 250#, e nao
+# 125# - o contrario do que o programa assumiria sozinho.
+linha,tamanho,succao_pol,recalque_pol,classe,norma,furacao,ficha
+METB,150-125-250,6,5,CL 125,ASME B16.1,ANSI 150,KSB METB150-125-250 GG A 02204A v1
+METN,125-100-315,5,4,CL 250,ASME B16.1,ANSI 300,KSB METN125-100-315 GG NP1 03004A v1
+GSD,40-250,2.5,1.5,CL 250,ASME B16.1,ANSI 300,EBARA nota 1 - 065-040-250 so flangeada 250#FF

@@ -75,6 +75,12 @@ class Peca:
         self.balao = True
         self.balao_angulo = BALAO_ANGULO
         self.balao_distancia = None
+        # COM QUE FURACAO A BOMBA VEIO. A mesma maquina sai furada em ASME
+        # B16.1 Classe 125, Classe 250 ou EN 1092-2 PN16 conforme o pedido -
+        # ver regras.FURACOES_DE_BOMBA - e so quem tem a folha da maquina em
+        # maos sabe qual. None deixa valer a folha, quando ha, e a Classe 125
+        # quando nao ha
+        self.flange_bomba = None
         self.portas = self._portas()
 
     def recalcular(self):
@@ -210,6 +216,24 @@ class Peca:
         depois = dy / seno
         return (dx - depois * math.cos(math.radians(gira)), depois, gira)
 
+    def _bocas_do_simbolo(self):
+        """As bocas da bomba, da folha do fabricante, na norma da casa."""
+        from . import desenho
+
+        try:
+            simbolo = desenho.de_item(self.item, self.pose)
+        except Exception:                                   # noqa: BLE001
+            return []
+        ficha = regras.flange_da_bomba(self.descricao)
+        furacao = self.flange_bomba or ficha["furacao"]
+        saida = []
+        for porta in simbolo.portas:
+            if porta.dn_pol is None:
+                continue
+            saida.append({"dn": porta.dn_pol, "tipo": "FLANGE",
+                          "norma": furacao})
+        return saida
+
     def giro_interno(self):
         """De quanto ESTA peca vira a direcao da linha, em graus de folha.
 
@@ -276,6 +300,16 @@ class Peca:
         return ficha["esp_corpo_mm"]
 
     def _portas(self):
+        # A BOMBA NAO TEM CONEXAO NO CADASTRO - ela entra na lista sem bitola
+        # nenhuma - e por isso ela ficava SEM PORTA no documento. Sem porta
+        # nao ha juncao, e `juncoes()` pulava a bomba inteira: a ligacao mais
+        # critica da casa, a que sempre pede reducao especifica, era a unica
+        # que o programa nao conferia. As bocas dela vem da folha dimensional,
+        # que quem le e o simbolo, e a norma vem da regra da casa
+        if self.familia in self.PELO_SIMBOLO:
+            do_simbolo = self._bocas_do_simbolo()
+            if do_simbolo:
+                return do_simbolo
         portas = []
         for con in self.item["conexoes"]:
             if con["dn"] is None:
@@ -460,7 +494,8 @@ class Linha:
     # o que `alterar` pode mudar sem trocar a peca. Fora desta lista o
     # comando recusa: mudar familia ou SAP nao e alterar, e substituir
     ALTERAVEIS = ("comprimento_mm", "sentido", "rotulo", "fonte", "pose",
-                  "balao", "balao_angulo", "balao_distancia")
+                  "balao", "balao_angulo", "balao_distancia",
+                  "flange_bomba")
 
     def __init__(self, catalogo, tipo="RECALQUE", area="P01", nome=None):
         self.catalogo = catalogo
@@ -667,20 +702,23 @@ class Linha:
         # recalcular() da fonte apagaria o que a pessoa digitou
         pedido_antes = peca._comprimento_pedido
 
+        # ALTERAR SEMPRE RECALCULA. Antes so a `fonte` disparava o recalculo,
+        # e por isso mudar a furacao da flange da bomba nao mexia nas portas
+        # dela - elas tinham sido montadas no nascimento da peca e ficavam com
+        # a norma antiga. `recalcular` e barato e idempotente: refaz a cota a
+        # partir do que foi pedido e remonta as portas
         def fazer():
             for campo, valor in campos.items():
                 setattr(peca, campo, valor)
             if "comprimento_mm" in campos:
                 peca._comprimento_pedido = campos["comprimento_mm"]
-            elif "fonte" in campos:
-                peca.recalcular()
+            peca.recalcular()
 
         def desfazer():
             for campo, valor in antes.items():
                 setattr(peca, campo, valor)
             peca._comprimento_pedido = pedido_antes
-            if "fonte" in campos and "comprimento_mm" not in campos:
-                peca.recalcular()
+            peca.recalcular()
 
         self._executar(Comando("alterar", fazer, desfazer, peca.id))
         return peca
@@ -1022,6 +1060,32 @@ class Linha:
             # traz o DN no lugar dela. As duas acabam desenhadas com o corpo
             # da Dorot basica - o que nao pode e isso passar calado numa folha
             # que alguem assina
+            if peca.familia in Peca.PELO_SIMBOLO:
+                ficha = regras.flange_da_bomba(peca.descricao)
+                bocas = [p["dn"] for p in peca.portas]
+                succao = bocas[0] if bocas else None
+                if regras.pode_vir_roscada(succao, peca.descricao):
+                    avisos.append(
+                        f"{peca.descricao}: até o tamanho 65-200 a boca pode "
+                        f"vir ROSQUEADA (BSP) em vez de flangeada - e rosca "
+                        f"não leva junta nem parafuso. Confira o pedido")
+                if peca.flange_bomba:
+                    pass                    # alguem leu a folha e disse qual
+                elif ficha["assumida"]:
+                    avisos.append(
+                        f"{peca.descricao}: a casa não tem a folha desta "
+                        f"bomba. A mesma máquina sai furada em "
+                        f"{', '.join(regras.FURACOES_DE_BOMBA)} conforme o "
+                        f"pedido, e o desenho assumiu "
+                        f"{ficha['furacao']} (ASME B16.1 Classe 125). Diga "
+                        f"qual veio na folha antes de pedir a peça de ponte")
+                else:
+                    da_folha = [ficha["succao_pol"], ficha["recalque_pol"]]
+                    if bocas and da_folha != bocas:
+                        avisos.append(
+                            f"{peca.descricao}: a folha diz "
+                            f'{da_folha[0]:g}"×{da_folha[1]:g}" e o desenho '
+                            f'saiu {bocas[0]:g}"×{bocas[1]:g}" - conferir')
             if peca.familia == "VALVULA_HIDRAULICA" and peca.item["dn"]:
                 _serie, emprestada = cotas.serie_da_valvula(
                     peca.item, max(peca.item["dn"]))

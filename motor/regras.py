@@ -505,6 +505,83 @@ def ferragem_da_junta(dn, norma, unidade="in", contexto="AZ_AZ"):
     ]
 
 
+# A FLANGE DA BOMBA E DO FABRICANTE, E ELA E ANSI. KSB e EBARA entregam a boca
+# em ANSI 150 ou ANSI 300 conforme a classe de pressao da maquina - quem disse
+# foi a casa, que compra as duas. O cadastro nao traz essa informacao (a bomba
+# entra na lista sem conexao nenhuma), e por isso ela mora aqui.
+#
+# E ANSI NUNCA CASA COM NBR: nem quando os furos e o diametro batem, porque o
+# CIRCULO e outro - em 6" sao 241,3 contra 240. Entao toda boca de bomba pede
+# a peca especifica, e e por isso que a casa tem 86 reducoes com uma face ANSI.
+# Qual das duas classes vale sai da folha da maquina; o programa assume a 150,
+# que e a comum, e AVISA para conferir.
+NORMA_FLANGE_BOMBA = "ANSI 150"
+# As tres furacoes com que a mesma bomba pode vir, conforme o pedido - a
+# tabela "Modelo do flange" da KSB, material G. A do meio e a que engana: uma
+# flange EN 1092-2 PERFURADA em ASME B16.1, ou seja, com corpo europeu e furo
+# americano. E a prova de que quem manda e a FURACAO, e nao o nome da norma.
+FURACOES_DE_BOMBA = {
+    "ANSI 150": "ASME B16.1 Classe 125 (ou EN 1092-2 perfurada B16.1)",
+    "ANSI 300": "ASME B16.1 Classe 250",
+    "EN PN16": "EN 1092-2 PN 16",
+}
+CLASSES_FLANGE_BOMBA = tuple(FURACOES_DE_BOMBA)
+FLANGES_BOMBA = os.path.join(RAIZ, "data", "flanges_bomba.csv")
+_flanges_bomba = None
+
+
+def _carregar_flanges_bomba():
+    global _flanges_bomba
+    if _flanges_bomba is None:
+        _flanges_bomba = {}
+        for reg in _carregar(FLANGES_BOMBA):
+            chave = (reg["linha"].strip().upper(),
+                     reg["tamanho"].strip().replace(" ", ""))
+            _flanges_bomba[chave] = reg
+    return _flanges_bomba
+
+
+# Ate o tamanho 65-200 a EBARA entrega a boca ROSQUEADA (BSP) ou flangeada,
+# conforme o pedido - e rosca nao tem junta flangeada nenhuma, nem parafuso.
+# O criterio pratico e a succao: DN65 e 2 1/2".
+SUCCAO_QUE_PODE_SER_ROSCADA_POL = 2.5
+
+
+def pode_vir_roscada(succao_pol, descricao=""):
+    """A boca desta bomba pode ter vindo em rosca BSP em vez de flange?
+
+    So as pequenas, e so quando a folha nao disser o contrario: as tres
+    excecoes da nota (050-032-250.1, 050-032-250 e 065-040-250) saem somente
+    flangeadas, em 250#.
+    """
+    if succao_pol is None or succao_pol > SUCCAO_QUE_PODE_SER_ROSCADA_POL:
+        return False
+    ficha = flange_da_bomba(descricao)
+    return ficha["assumida"] or ficha["furacao"] != "ANSI 300"
+
+
+def flange_da_bomba(descricao):
+    """A flange da boca desta bomba: norma, classe e de onde veio.
+
+    Com folha, sai a classe da maquina - CL 125 ou CL 250, que furam como as
+    ANSI 150 e 300. Sem folha, o programa assume a 150, que e a comum, e diz
+    que assumiu: e a mesma regra da valvula sem serie - emprestar e permitido,
+    calar nao.
+    """
+    texto = (descricao or "").upper()
+    for (linha, tamanho), reg in _carregar_flanges_bomba().items():
+        if linha in texto and tamanho in texto.replace(" ", ""):
+            return {"furacao": reg["furacao"].strip(),
+                    "classe": reg["classe"].strip(),
+                    "norma": reg["norma"].strip(),
+                    "succao_pol": float(reg["succao_pol"]),
+                    "recalque_pol": float(reg["recalque_pol"]),
+                    "fonte": reg["ficha"].strip(), "assumida": False}
+    return {"furacao": NORMA_FLANGE_BOMBA, "classe": None,
+            "norma": "ASME B16.1", "succao_pol": None, "recalque_pol": None,
+            "fonte": None, "assumida": True}
+
+
 def furacao(norma, dn, unidade="in"):
     """(furos, furo_mm, circulo_mm) da norma nessa bitola. None se nao houver.
 

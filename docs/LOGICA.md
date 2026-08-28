@@ -428,6 +428,49 @@ faz a ponte (`catalogo.ponte`). Antes ela dizia só "precisa de redução" — e
 calava a metade que decide *qual* redução, porque a redução comum tem as duas
 faces em NBR e não serve.
 
+#### A boca da bomba, pelas folhas do fabricante
+
+Três folhas da KSB e uma nota da EBARA fecharam a questão, e nenhuma delas diz
+"ANSI" sozinha:
+
+| folha | bocas | classe |
+|---|---|---|
+| KSB METB150-125-250 GG | NPS 6 / NPS 5 · ASME B16.1 | **CL 125** |
+| KSB METN125-100-315 GG | NPS 5 / NPS 4 · ASME B16.1 | **CL 250** |
+
+E a tabela *Modelo do flange* da KSB, para ferro fundido, diz que a **mesma
+máquina** sai de três jeitos conforme o pedido: `EN 1092-2 PN 16`, `EN 1092-2
+perfurada ASME B16.1 Classe 125`, ou `ASME B16.1 Classe 125 / 250`. A do meio
+é a que ensina: uma flange de corpo europeu **furada em americano** — prova de
+que quem manda é a **furação**, e não o nome da norma.
+
+A nota da EBARA acrescenta duas regras: até o tamanho 65-200 a boca **pode vir
+rosqueada (BSP)** — e rosca não leva junta nem parafuso —, exceto
+`050-032-250.1`, `050-032-250` e `065-040-250`, que saem **somente flangeadas
+em 250#**. A última é a `GSD 40-250` da lista da casa, e o programa a lê assim
+pelo próprio nome: a nota nomeia sucção-recalque-rotor (065-040-250) e o
+catálogo nomeia recalque-rotor (40-250) — DN65 e DN40, que é o que o desenho
+deduz.
+
+Por isso a furação da bomba é **campo da peça** (`flange_bomba`), com a folha
+como padrão quando há uma (`data/flanges_bomba.csv`) e a Classe 125 assumida
+quando não há — dizendo que assumiu. As três leituras saem assim:
+
+```
+boca em ANSI 150 → NBR PN16 contra ANSI 150 em 6": 8 furos ⌀22 em ⌀240 contra
+                   8 furos ⌀22 em ⌀241,3 — não fecham — a lista tem
+                   ADAPT AZ 6" FL NBRPN16X6" FL ANSI150 (01523-013020)
+boca em ANSI 300 → 8 furos ⌀22 em ⌀240 contra 12 furos ⌀22 em ⌀269,9 …
+boca em EN PN16  → a furação é a mesma (8 furos ⌀22 em ⌀240) e as duas
+                   parafusam — o que muda é a classe de pressão, não o furo
+```
+
+**O defeito que isso desenterrou:** a bomba entrava na lista sem conexão
+nenhuma no cadastro, então `Peca.portas` vinha vazia e `juncoes()` **pulava a
+bomba inteira**. A ligação mais crítica da casa — a que sempre pede peça de
+ponte — era a única que o programa não conferia. As bocas agora vêm da folha
+dimensional (que o símbolo lê) e a furação, da regra acima.
+
 ### 4.2.1 Barra roscada
 
 Válvula wafer é presa por tirante. Porca e arruela saem da furação: **2 de cada

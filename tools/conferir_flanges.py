@@ -338,6 +338,7 @@ def main():
               "    a casa monta, as duas normas coincidem e a questão some.")
 
     print("\n== a norma da bomba contra a norma da linha")
+    from motor.catalogo import Catalogo as _Catalogo    # noqa: E402
     # A FLANGE DA BOMBA NAO E A FLANGE DA LINHA. O fabricante entrega a boca
     # dele em EN ou ANSI, a linha corre em NBR, e o que decide se as duas
     # parafusam nao e o NOME da norma - e a furacao. Esta secao fixa em numero
@@ -365,7 +366,6 @@ def main():
 
     # e a peca que faz a ponte tem de existir na lista, senao o aviso manda
     # procurar o que nao ha
-    from motor.catalogo import Catalogo as _Catalogo    # noqa: E402
     achadas = 0
     for dn_linha, norma, dn_bomba in ((8, "EN PN10", 4), (6, "ANSI 150", 5),
                                       (10, "EN PN16", 8)):
@@ -376,6 +376,44 @@ def main():
               + (pontes[0]["descricao"] if pontes else "a lista não tem"))
     if achadas < 3:
         problemas.append("faltou peça de ponte para uma boca de bomba")
+
+    print("\n== a boca da bomba: a mesma máquina, três furações")
+    from motor.linha import Linha, Peca                  # noqa: E402
+    lista = _Catalogo()
+    bomba = next((i for i in lista.itens if i["familia"] == "BOMBA"
+                  and "METB 150-125-250" in i["descricao"]), None)
+    if bomba is None:
+        problemas.append("nao achei a KSB METB 150-125-250 no catalogo")
+    else:
+        ficha = regras.flange_da_bomba(bomba["descricao"])
+        # a folha (KSB METB150-125-250 GG) diz NPS 6 / NPS 5, CL 125
+        if (ficha["succao_pol"], ficha["recalque_pol"]) == (6.0, 5.0) \
+                and ficha["classe"] == "CL 125":
+            print("  ok a folha da METB 150-125-250 diz 6\"×5\" CL 125")
+        else:
+            problemas.append("a ficha da METB 150-125-250 nao bate com a folha")
+            print(f"  ! ficha diz {ficha}")
+        peca = Peca(bomba)
+        bocas = [p["dn"] for p in peca.portas]
+        if bocas == [6.0, 5.0]:
+            print('  ok e o desenho deduz as mesmas 6"×5" pelo nome da máquina')
+        else:
+            problemas.append(f"as bocas da bomba sairam {bocas}")
+            print(f"  ! o desenho deduziu {bocas}")
+        # as tres furacoes, contra a linha em NBR PN16 de 6"
+        esperado = {"ANSI 150": False, "ANSI 300": False, "EN PN16": True}
+        for furacao, fecha in esperado.items():
+            obtido = regras.mesma_furacao("NBR PN16", furacao, 6)
+            sinal = "ok" if obtido is fecha else "!"
+            if obtido is not fecha:
+                problemas.append(f"NBR PN16 x {furacao} em 6\" deu {obtido}")
+            print(f'  {sinal} boca em {furacao:9} contra a linha NBR PN16 6": '
+                  + ("parafusa direto" if fecha else "pede peça de ponte"))
+        ponte = lista.ponte(6, "NBR PN16", 6, "ANSI 150")
+        if ponte:
+            print(f'  ok e a peça de ponte existe: {ponte[0]["descricao"]}')
+        else:
+            problemas.append("sem peca de ponte para a boca ANSI 150 de 6\"")
 
     print("\n== toda linha da tabela de ferragem tem codigo na lista")
     # A tabela e regra da casa, mas ela COMPRA - e nao adianta a regra pedir
