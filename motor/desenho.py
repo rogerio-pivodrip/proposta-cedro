@@ -358,9 +358,14 @@ def gsd_da_lista(dn_pol):
     return max(abaixo, key=lambda c: (c[0], -c[1]))[2] if abaixo else None
 
 
-def de_item(item):
-    """O simbolo do item, ja com o codigo e a descricao nos params."""
-    simbolo = _desenhar(item)
+def de_item(item, pose=None):
+    """O simbolo do item, ja com o codigo e a descricao nos params.
+
+    `pose` e da INSTANCIA e nao do item: o mesmo te de 6" e o mesmo codigo SAP
+    montado em linha ou de pe sobre a derivacao. Como o `sentido` da curva, ela
+    vive na peca e chega aqui na hora de desenhar.
+    """
+    simbolo = _desenhar(item, pose)
     # o material vem da LISTA, e nao do desenho: e ela que sabe se aquele
     # DN225 e PVC ou PEAD. Entra por baixo dos params do simbolo, para nao
     # apagar o que a peca ja declarou por conta propria
@@ -370,7 +375,7 @@ def de_item(item):
                                     "descricao": item["descricao"]})
 
 
-def _desenhar(item):
+def _desenhar(item, pose=None):
     familia = item["familia"]
     if familia == "BOMBA":
         return _bomba(item)
@@ -393,7 +398,8 @@ def _desenhar(item):
                                                  "CONCENTRICA"),
         "REDUCAO_EXCENTRICA": lambda: s.reducao(maior, menor or maior / 2,
                                                 "EXCENTRICA"),
-        "TE": lambda: s.te(maior, dn_derivacao=menor),
+        "TE": lambda: s.te(maior, dn_derivacao=menor,
+                           entrada=pose or "linha"),
         "CRIVO": lambda: s.crivo(maior),
         "FLANGE_CEGA": lambda: s.flange_cega(maior, menor),
         "FLANGE": lambda: s.flange_avulsa(maior),

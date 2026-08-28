@@ -80,7 +80,7 @@ def _prancha(valores):
 VERBOS = [
     Verbo("montar", "monta uma linha pronta",
           [_arg("template", "texto", "SUCCAO"), _arg("bitola", "numero")],
-          "montar succao 8", False,
+          "montar recalque 6", False,
           lambda v, alvo, s: {"nome": "template",
                               "template": (v.get("template") or "SUCCAO").upper(),
                               "dn": v.get("bitola")}),

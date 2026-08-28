@@ -83,7 +83,9 @@ def _peca(p, catalogo=None):
         "id": p.id, "sap": p.sap, "descricao": p.descricao,
         "familia": p.familia, "material": p.material,
         "dn": list(p.item.get("dn") or []), "unidade_dn": p.unidade_dn,
-        "angulo": p.angulo, "sentido": p.sentido,
+        "angulo": p.angulo, "sentido": p.sentido, "pose": p.pose,
+        "acessorios": [{"id": a.id, "sap": a.sap, "descricao": a.descricao,
+                        "familia": a.familia} for a in p.acessorios],
         "comprimento_mm": p.comprimento_mm,
         "fonte": p.fonte, "fonte_cota": p.fonte_cota,
         "rotulo": p.rotulo,
@@ -155,7 +157,15 @@ def _inserir(sessao, comando):
 
 
 def _remover(sessao, comando):
-    return {"peca": sessao.linha.remover(comando["alvo"]).id}
+    """Tira a peca da linha - ou o acessorio da peca que o carrega.
+
+    Quem usa nao distingue os dois, e nao deve: os dois estao no desenho e na
+    lista, e apagar e apagar. Quem sabe onde a peca esta e o documento.
+    """
+    try:
+        return {"peca": sessao.linha.remover(comando["alvo"]).id}
+    except KeyError:
+        return {"peca": sessao.linha.desacoplar(comando["alvo"]).id}
 
 
 def _substituir(sessao, comando):
@@ -231,6 +241,13 @@ def _esticar(sessao, comando):
             "para_mm": tamanhos[destino], "tamanhos": tamanhos}
 
 
+def _acoplar(sessao, comando):
+    """Poe uma peca terminal na boca que sobra do alvo - a do te, a do manifold."""
+    peca = Peca(_item(sessao, comando))
+    sessao.linha.acoplar(comando["alvo"], peca)
+    return {"peca": peca.id, "dono": comando["alvo"]}
+
+
 def _alterar(sessao, comando):
     campos = comando.get("campos") or {}
     if not campos:
@@ -304,6 +321,8 @@ def _template(sessao, comando):
             sessao.catalogo, dn, modelo_bomba=comando.get("bomba"),
             curva=comando.get("curva"))
         sessao.linha = linha
+    elif nome == "RECALQUE":
+        sessao.linha, faltando = templates.recalque(sessao.catalogo, dn)
     elif nome == "PEAD":
         itens, faltando = templates.trecho_pead(sessao.catalogo, dn)
         for item, quantas in itens:
@@ -491,6 +510,7 @@ def _janela(sessao, comando):
 COMANDOS = {
     "inserir": _inserir, "remover": _remover, "substituir": _substituir,
     "alterar": _alterar, "mover": _mover, "esticar": _esticar,
+    "acoplar": _acoplar,
     "girar": _girar, "espelhar": _espelhar,
     "desfazer": _desfazer, "refazer": _refazer,
     "template": _template, "catalogo": _catalogo, "janela": _janela,

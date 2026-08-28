@@ -725,8 +725,40 @@ def reducao(dn_maior, dn_menor, tipo="CONCENTRICA", lado_plano="topo",
                     "lado_plano": lado_plano, "crescente": crescente})
 
 
-def te(dn_pol, dn_derivacao=None):
+def te(dn_pol, dn_derivacao=None, entrada="linha"):
+    """Te flangeado. `entrada` diz por qual boca a linha CHEGA.
+
+    Em "linha" e o te de sempre: entra numa ponta do corpo, sai na outra, e a
+    derivacao sobe.
+
+    Em "derivacao" o te fica DE PE sobre a boca do meio: a linha chega pela
+    derivacao, o corpo vira vertical, e as duas pontas dele ficam uma para
+    cima e outra para baixo. E como se monta no pe do recalque - a de cima
+    recebe a flange cega com a luva da ventosa, e a de baixo desce para a
+    curva.
+
+    Toda peca e desenhada entrando pela ESQUERDA e olhando para +x, porque e
+    isso que `montar` encadeia. Entao a pose de derivacao nao e um desenho
+    novo: e o mesmo te girado -90, com as bocas trocadas de papel. O que era
+    derivacao vira entrada; o corpo, que era a linha, vira as duas pontas.
+    """
     dn_derivacao = dn_derivacao or dn_pol
+    if entrada == "derivacao":
+        base = te(dn_pol, dn_derivacao)
+        alt = -min(p.y for p in base.portas)          # a perna da derivacao
+        comp = max(p.x for p in base.portas)
+        virado = girado(base, -90)
+        # a linha chega pela derivacao, agora a esquerda; sai pela ponta de
+        # BAIXO do corpo, virando 90; a de cima fica livre para o acessorio
+        portas = [Porta("entrada", -alt, -comp / 2, 180, dn_derivacao),
+                  Porta("saida", 0.0, 0.0, 90, dn_pol),
+                  # a boca de cima olha para CIMA (-90 no local), que e para
+                  # onde o acessorio dela tem de sair
+                  Porta("derivacao", 0.0, -comp, -90, dn_pol)]
+        return Simbolo(base.familia,
+                       f'tê {dn_pol:g}"×{dn_derivacao:g}" de pé',
+                       virado.elementos, portas, virado.caixa, base.fonte,
+                       {**base.params, "pose": "derivacao"})
     comp, fonte = _cota("TE", dn_pol, "", "face_a_face_mm")
     comp = comp or 1000
     alt, _ = _cota("TE", dn_pol, "", "derivacao_mm")

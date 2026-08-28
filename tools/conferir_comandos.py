@@ -76,6 +76,14 @@ def main():
         else:
             print(f"  ok {caso}")
 
+    def certo(caso, condicao, detalhe=""):
+        """Para o que e sim ou nao - `conferir` compara dois retratos."""
+        if condicao:
+            print(f"  ok {caso}")
+        else:
+            problemas.append(caso)
+            print(f"  ! {caso}" + (f": {detalhe}" if detalhe else ""))
+
     linha = monta(catalogo)
     print(f"linha de {len(linha.pecas)} peças\n")
 
@@ -232,6 +240,53 @@ def main():
         else:
             problemas.append("crivo no começo ainda reclama")
             print("  ! crivo no começo ainda reclama")
+
+    print("\n== o acessório vive dentro da peça que o carrega")
+    from motor import templates                        # noqa: E402
+    linha, faltando = templates.recalque(catalogo, 6)
+    certo("o recalque monta inteiro", not faltando, str(faltando))
+    familias = [p.familia for p in linha.pecas]
+    certo("na ordem da casa",
+             familias == ["CURVA", "VALVULA_HIDRAULICA", "TUBO", "MEDIDOR",
+                          "TUBO", "VALVULA_RETENCAO", "TE", "CURVA", "TUBO"],
+             str(familias))
+    te = next(p for p in linha.pecas if p.familia == "TE")
+    certo("o tê fica de pé sobre a derivação", te.pose == "derivacao")
+    certo("e carrega a flange cega com a luva de 2\"",
+             len(te.acessorios) == 1 and "2" in te.acessorios[0].descricao,
+             str([a.descricao for a in te.acessorios]))
+    bom, _avisos = linha.lista_materiais()
+    certo("o acessório entra na lista de materiais",
+             any(r["sap"] == te.acessorios[0].sap for r in bom))
+
+    # o trecho reto do hidrometro e a unica cota calculada no template: a
+    # barra tem de COBRIR o exigido, nunca chegar perto
+    for t in linha.trechos_retos():
+        if t["peca"].familia != "MEDIDOR":
+            continue
+        certo(f'o medidor tem os {t["exige_antes_mm"]/152.4:.0f} D antes '
+                 f'e {t["exige_depois_mm"]/152.4:.0f} D depois', t["ok"],
+                 f'{t["antes_mm"]:.0f}/{t["exige_antes_mm"]:.0f} antes · '
+                 f'{t["depois_mm"]:.0f}/{t["exige_depois_mm"]:.0f} depois')
+
+    antes = retrato(linha)
+    item = catalogo.melhor("FLANGE_CEGA", 6, material=None)
+    linha.acoplar(te.id, Peca(item))
+    certo("acoplar muda o documento", retrato(linha) != antes)
+    linha.desfazer()
+    conferir("e desfazer devolve ao estado exato", antes, retrato(linha))
+    linha.refazer()
+    marca = retrato(linha)
+    linha.desfazer()
+    linha.refazer()
+    conferir("refazer também", marca, retrato(linha))
+
+    # o acessorio sai junto com a peca que o carrega - ele vive dentro dela
+    sap_acessorio = te.acessorios[0].sap
+    linha.remover(te.id)
+    bom, _avisos = linha.lista_materiais()
+    certo("tirar a peça leva o acessório junto",
+             not any(r["sap"] == sap_acessorio for r in bom))
 
     print("\n== editar depois de desfazer apaga o refazer")
     linha = monta(catalogo)

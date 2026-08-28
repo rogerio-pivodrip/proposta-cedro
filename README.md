@@ -42,6 +42,23 @@ python3 -m api.http --abrir          # abre o navegador no programa
 
 Se aparecer "porta em uso", troque: `--porta 8770`.
 
+Dois templates prontos: `montar succao 8` e `montar recalque 6`.
+
+O **recalque** é o que fica depois do filtro, na ordem que a casa monta:
+curva 90 · válvula hidráulica · tubo · hidrômetro · tubo · válvula de retenção ·
+**tê de pé** · curva 90 · tubo 1 m. Os dois trechos de tubo são a única cota
+calculada ali, e vêm em **diâmetros** — 10 D antes do hidrômetro e 5 D depois,
+que é o que a medição pede. A barra escolhida é a menor da escada que **cobre**
+o exigido: arredondar para a mais próxima poderia entregar 1 m onde a norma
+pede 1,5.
+
+O **tê fica de pé sobre a derivação**: a linha chega pela boca do meio, a de
+cima recebe a flange cega com a luva de 2" da ventosa, e a de baixo desce para
+a curva. É o único lugar do programa em que uma peça da corrente carrega outra
+— a boca que sobra não continua a linha, **termina**, e o que fecha ela é um
+**acessório**, não um ramo. Ele conta na lista como qualquer peça e sai junto
+quando a peça que o carrega sai.
+
 Na tela: escolha a bitola, **montar sucção** — ela nasce de pé, com o crivo no
 fundo do poço — e daí em diante clique numa peça, no desenho ou na lista.
 

@@ -30,7 +30,8 @@ def simbolos_da_linha(linha):
     espelho_da_linha = getattr(linha, "espelho", 1)
     for peca in linha.pecas:
         try:
-            simbolo = desenho.de_item(peca.item)
+            simbolo = desenho.de_item(peca.item,
+                                      getattr(peca, "pose", None))
             # o `sentido` da peca e o espelho da linha se multiplicam: a curva
             # que ja descia, numa linha espelhada, volta a subir. Espelhar o
             # SIMBOLO e o que faz a corrente inteira acompanhar - montar()
@@ -71,6 +72,32 @@ def pontas_erradas(linha):
                          "motivo": f"{peca.descricao} fecha a linha - "
                                    f"nada encaixa depois dela"})
     return fora
+
+
+def acessorios_da_linha(linha):
+    """[(id, simbolo)] por peca da corrente - o que fecha a boca que sobra."""
+    saida = []
+    for peca in linha.pecas:
+        desta = []
+        for acessorio in getattr(peca, "acessorios", ()):
+            try:
+                desta.append((acessorio.id,
+                              desenho.de_item(acessorio.item,
+                                              getattr(acessorio, "pose", None))))
+            except Exception:                           # noqa: BLE001
+                pass
+        saida.append(desta)
+    return saida
+
+
+def porta_livre(simbolo):
+    """A boca que a corrente NAO usa - a derivacao do te, o bocal do manifold.
+
+    `montar` encadeia por entrada e saida; o que sobra fica sem ninguem. E
+    nessa boca que o acessorio entra.
+    """
+    return next((p for p in simbolo.portas
+                 if p.papel not in s.ENTRADA + s.SAIDA), None)
 
 
 def postos_da_linha(linha, giro=None):
@@ -135,10 +162,12 @@ def vista(linha, largura=940, altura_max=620, giro=None, modo="traco",
     if giro is None:
         giro = getattr(linha, "giro", 0.0)
     ids = [peca.id for peca, _ in prontos]
-    svg, postos, fim = desenhar_linha([sim for _, sim in prontos],
-                                      largura=largura, giro=giro,
-                                      altura_max=altura_max, ids=ids, modo=modo,
-                                      escala=escala, anota=anota)
+    por_peca = {peca.id: lista for peca, lista in
+                zip(linha.pecas, acessorios_da_linha(linha))}
+    svg, postos, fim = desenhar_linha(
+        [sim for _, sim in prontos], largura=largura, giro=giro,
+        altura_max=altura_max, ids=ids, modo=modo, escala=escala, anota=anota,
+        acessorios=[por_peca.get(peca.id, []) for peca, _ in prontos])
     return {"svg": svg, "pecas": len(prontos), "recusadas": recusadas,
             "fim": list(fim), "modo": modo}
 
@@ -176,7 +205,7 @@ def escala_que_cabe(largura_mm, altura_mm, extensao_x, extensao_y):
 
 
 def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
-                   modo="traco", escala=None, anota=1.0):
+                   modo="traco", escala=None, anota=1.0, acessorios=None):
     """A linha inteira em SVG, encadeando os simbolos pelas portas.
 
     Cada peca e desenhada uma vez, na origem, olhando para +x. Encaixar e uma
@@ -189,6 +218,28 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
     saber desenhar nada para saber em quem o dedo caiu.
     """
     postos, fim = s.montar(pecas)
+    # o acessorio entra na boca livre da peca que o carrega, encaixado como
+    # qualquer outra: a entrada dele cai no ponto da boca, olhando para onde a
+    # boca olha. E a mesma transformacao rigida de `montar`, uma peca so
+    postos_extra = []
+    for i, posto in enumerate(postos):
+        for identidade, simbolo in ((acessorios or [None] * len(postos))[i]
+                                    or []):
+            boca = porta_livre(posto.simbolo)
+            if boca is None:
+                continue
+            rad = math.radians(posto.giro)
+            cos, sen = math.cos(rad), math.sin(rad)
+            px = posto.dx + boca.x * cos - boca.y * sen
+            py = posto.dy + boca.x * sen + boca.y * cos
+            direcao = posto.giro + boca.direcao
+            entrada = s.porta(simbolo, s.ENTRADA) or s.porta(simbolo, s.SAIDA)
+            ex, ey = (entrada.x, entrada.y) if entrada else (0.0, 0.0)
+            rad2 = math.radians(direcao)
+            c2, s2 = math.cos(rad2), math.sin(rad2)
+            postos_extra.append((identidade, s.Posto(
+                simbolo, px - (ex * c2 - ey * s2), py - (ex * s2 + ey * c2),
+                direcao, (px, py), (px, py))))
     if giro:
         # a sucção nasce no poço e sobe: a linha inteira gira para ficar de pé
         rad = math.radians(giro)
@@ -199,8 +250,12 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
                              entrada=vira(*p.entrada), saida=vira(*p.saida))
                   for p in postos]
         fim = (*vira(fim[0], fim[1]), fim[2] + giro)
+        postos_extra = [(identidade, p._replace(
+            dx=vira(p.dx, p.dy)[0], dy=vira(p.dx, p.dy)[1],
+            giro=p.giro + giro, entrada=vira(*p.entrada), saida=vira(*p.saida)))
+            for identidade, p in postos_extra]
     caixas = []
-    for p in postos:
+    for p in list(postos) + [p for _i, p in postos_extra]:
         x0, y0, w, h = p.simbolo.caixa
         rad = math.radians(p.giro)
         cos, sen = math.cos(rad), math.sin(rad)
@@ -312,6 +367,22 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
         partes.append(f'<g class="peca"{marca}{pintura}'
                       f' data-familia="{p.simbolo.familia}"'
                       f' style="{estilo}" '
+                      f'transform="translate({p.dx:.1f} {p.dy:.1f}) '
+                      f'rotate({p.giro:g})">{corpo}</g>')
+    for identidade, p in postos_extra:
+        cor = cor_de(p.simbolo)
+        espelhada = bool(p.simbolo.params.get("espelhado"))
+        corpo = desenhar_peca([e for e in p.simbolo.elementos
+                               if e["tipo"] != "texto_furos"],
+                              cor, p.giro, espelhada, degrades)
+        cx, cy, cw, ch = s.caixa_do_corpo(p.simbolo)
+        corpo = (f'<rect class="alvo" x="{cx:.1f}" y="{cy:.1f}" '
+                 f'width="{max(cw, 1):.1f}" height="{max(ch, 1):.1f}"/>' + corpo)
+        estilo, novos = luz_de(cor, p.giro, espelhada)
+        degrades.update(novos)
+        partes.append(f'<g class="peca acessorio" data-id="{identidade}"'
+                      f'{f" data-cor={chr(34)}{cor}{chr(34)}" if cor else ""}'
+                      f' data-familia="{p.simbolo.familia}" style="{estilo}" '
                       f'transform="translate({p.dx:.1f} {p.dy:.1f}) '
                       f'rotate({p.giro:g})">{corpo}</g>')
     partes += sobre

@@ -27,7 +27,7 @@ class Peca:
     """Uma peca instanciada na linha, com suas portas."""
 
     def __init__(self, item, comprimento_mm=None, rotulo=None, fonte=None,
-                 sentido=1):
+                 sentido=1, pose=None):
         self.id = f"p{next(_contador)}"       # estavel: sobrevive a mover
         self.item = item                      # registro do catalogo
         self.sap = item["sap"]
@@ -38,11 +38,21 @@ class Peca:
         self.angulo = item["angulo"]
         self.fonte = fonte or cotas.PADRAO   # fabricante da peca comprada
         self.sentido = sentido               # +1 sobe, -1 desce: espelha a curva
+        # como a peca esta MONTADA, quando ela tem mais de um jeito. O te em
+        # linha e o te de pe sobre a derivacao sao o mesmo codigo SAP - a pose
+        # e da instancia, como o sentido da curva
+        self.pose = pose
         self.fonte_cota = None               # de quem veio a cota que entrou
         self._comprimento_pedido = comprimento_mm
         self.comprimento_mm = (comprimento_mm or item.get("comprimento_mm")
                                or self._da_tabela() or self._face_a_face() or 0)
         self.rotulo = rotulo
+        # o que fecha a boca que sobra desta peca. O te tem tres bocas e a
+        # corrente usa duas; a terceira nao e um ramo novo - e uma ponta, e o
+        # que entra nela e uma peca terminal: flange cega, ventosa, dreno.
+        # Guardar aqui, e nao numa lista paralela, e o que faz o acessorio
+        # sair junto quando a peca sai
+        self.acessorios = []
         self.portas = self._portas()
 
     def recalcular(self):
@@ -151,7 +161,7 @@ class Comando:
 class Linha:
     # o que `alterar` pode mudar sem trocar a peca. Fora desta lista o
     # comando recusa: mudar familia ou SAP nao e alterar, e substituir
-    ALTERAVEIS = ("comprimento_mm", "sentido", "rotulo", "fonte")
+    ALTERAVEIS = ("comprimento_mm", "sentido", "rotulo", "fonte", "pose")
 
     def __init__(self, catalogo, tipo="RECALQUE", area="P01"):
         self.catalogo = catalogo
@@ -295,6 +305,57 @@ class Linha:
 
         self._executar(Comando("pose", fazer, desfazer, None))
         return self
+
+    def acoplar(self, alvo, peca):
+        """Poe uma peca terminal na boca que sobra do alvo.
+
+        E o unico jeito honesto de desenhar um te de verdade numa corrente
+        linear. O te tem tres bocas: a corrente entra por uma e sai por outra,
+        e a terceira fica. O que vai nela - flange cega, ventosa, dreno - nao
+        continua a linha, TERMINA ali, e por isso nao precisa virar um ramo
+        com regras proprias.
+
+        O acessorio conta na lista de materiais como qualquer peca, e some
+        junto quando a peca que o carrega sai - ele vive DENTRO dela.
+        """
+        pos = self.posicao(alvo)
+        dono = self.pecas[pos]
+
+        def fazer():
+            dono.acessorios.append(peca)
+
+        def desfazer():
+            dono.acessorios.remove(peca)
+
+        self._executar(Comando("acoplar", fazer, desfazer, peca.id))
+        return peca
+
+    def desacoplar(self, alvo):
+        """Tira um acessorio da peca que o carrega."""
+        for dono in self.pecas:
+            for i, peca in enumerate(dono.acessorios):
+                if peca.id == alvo or peca is alvo:
+                    def fazer():
+                        dono.acessorios.pop(i)
+
+                    def desfazer():
+                        dono.acessorios.insert(i, peca)
+
+                    self._executar(Comando("desacoplar", fazer, desfazer,
+                                           peca.id))
+                    return peca
+        raise KeyError(f"acessorio {alvo} nao esta na linha")
+
+    def todas_as_pecas(self):
+        """As pecas da corrente e os acessorios delas, em ordem de leitura.
+
+        E o que a LISTA DE MATERIAIS conta: o acessorio se compra do mesmo
+        jeito que a peca que o carrega.
+        """
+        for peca in self.pecas:
+            yield peca
+            for acessorio in peca.acessorios:
+                yield acessorio
 
     def mover(self, alvo, para):
         """Tira a peca de onde ela esta e a poe em outra posicao da sequencia.
@@ -472,7 +533,7 @@ class Linha:
                                        "qtd": 0, "origem": origem})
             reg["qtd"] += qtd
 
-        for peca in self.pecas:
+        for peca in self.todas_as_pecas():
             somar(peca.sap, peca.descricao, 1, "linha")
             # flange de PVC puxa a contra-flange que a prende no tubo
             for papel, esp, qtd in regras.contra_flange_de(peca.item):
