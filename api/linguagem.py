@@ -21,6 +21,7 @@ motor nao sabe o que esta selecionado - `escolhida` e o unico estado que a
 tela tem. Entao ela manda junto, e o verbo que precisa e nao recebe recusa
 dizendo o que fazer, em vez de agir sobre a peca errada.
 """
+import unicodedata
 from collections import namedtuple
 
 Verbo = namedtuple("Verbo", "nome resumo argumentos exemplo precisa_alvo monta")
@@ -77,6 +78,32 @@ def _prancha(valores):
     return {"formato": formato, "orientacao": orientacao}
 
 
+# como se diz "mostra" e "esconde" o balao. Fica aqui, e nao num `if` dentro
+# do verbo, porque e vocabulario - e vocabulario mora neste arquivo
+BALAO_LIGA = ("sim", "s", "marcar", "marca", "mostrar", "mostra", "ligar")
+BALAO_DESLIGA = ("nao", "n", "desmarcar", "desmarca", "esconder", "esconde",
+                 "apagar", "tirar", "sem")
+BALAO_SOLTO = ("solto", "solta", "auto", "livre", "padrao")
+
+
+def _balao(valores):
+    """`balao`, `balao nao`, `balao 30`, `balao 30 80`, `balao solto`."""
+    estado = _sem_acento((valores.get("estado") or "").strip().lower())
+    pedido = {"mostrar": None, "solto": False}
+    if estado in BALAO_LIGA:
+        pedido["mostrar"] = True
+    elif estado in BALAO_DESLIGA:
+        pedido["mostrar"] = False
+    elif estado in BALAO_SOLTO:
+        pedido["solto"] = True
+    elif estado:
+        raise Erro(f"balão não entende {estado!r} - diga sim, não, solto, ou "
+                   f"o ângulo em graus")
+    for campo in ("angulo", "distancia"):
+        pedido[campo] = valores.get(campo) if valores.get(campo) != "" else None
+    return pedido
+
+
 VERBOS = [
     Verbo("montar", "monta uma linha pronta",
           [_arg("template", "texto", "SUCCAO"), _arg("bitola", "numero")],
@@ -122,6 +149,15 @@ VERBOS = [
     Verbo("espelhar", "vira a peça escolhida - ou a linha, sem peça escolhida",
           [], "espelhar", False,
           lambda v, alvo, s: {"nome": "espelhar", "alvo": alvo}),
+    Verbo("balao", "marca, desmarca ou move o balão da peça escolhida",
+          [_arg("estado", "texto", ""), _arg("angulo", "numero", ""),
+           _arg("distancia", "numero", "")],
+          "balao 45", True,
+          lambda v, alvo, s: {"nome": "balao", "alvo": alvo, **_balao(v)}),
+    Verbo("numerar", "põe a peça escolhida em outro número de item",
+          [_arg("item", "numero")], "numerar 3", True,
+          lambda v, alvo, s: {"nome": "numerar", "alvo": alvo,
+                              "item": v.get("item")}),
     Verbo("desfazer", "volta um comando", [], "desfazer", False,
           lambda v, alvo, s: {"nome": "desfazer"}),
     Verbo("refazer", "repete o que foi desfeito", [], "refazer", False,
@@ -143,9 +179,15 @@ VERBOS = [
 POR_NOME = {v.nome: v for v in VERBOS}
 
 
+def _sem_acento(palavra):
+    """`balão` e `balao` sao a mesma palavra. Quem digita nao escolhe qual."""
+    return unicodedata.normalize("NFKD", palavra).encode(
+        "ascii", "ignore").decode("ascii")
+
+
 def achar(palavra):
     """O verbo que a palavra nomeia. Prefixo basta, se for de um verbo so."""
-    palavra = (palavra or "").strip().lower()
+    palavra = _sem_acento((palavra or "").strip().lower())
     if not palavra:
         raise Erro("digite um comando")
     if palavra in POR_NOME:

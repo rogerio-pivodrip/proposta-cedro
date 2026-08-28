@@ -361,6 +361,23 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
    propria cota come o clique da peca que ela cota */
 .anota{pointer-events:none}
 
+/* o balao do detalhamento: pontinho na peca, fio e numero no circulo.
+   Diferente do resto da anotacao, ELE E ALVO - clicar nele e clicar na peca,
+   e arrastar move o balao dela. Por isso mora fora do grupo `anota`. */
+/* so o CIRCULO recebe o dedo. O pontinho pousa bem no meio da peca, e ele
+   comeria o clique de quem quer escolher a peca - que e o gesto de todo dia.
+   Quem arrasta o balao pega o circulo, que e o que se ve mexer */
+.baloes{pointer-events:none}
+.baloes .bola,.baloes .n{pointer-events:auto}
+.baloes .fio{fill:none;stroke:var(--anota)}
+.baloes .pouso{fill:var(--tinta);stroke:none}
+/* o circulo e opaco de proposito: pousado sobre o desenho, vazado, o traco
+   por baixo passaria pelo numero */
+.baloes .bola{fill:var(--papel);stroke:var(--tinta)}
+.baloes .n{text-anchor:middle;fill:var(--tinta);stroke:none}
+.balao .bola,.balao .n{cursor:move}
+.balao:hover .bola{stroke:var(--eixo)}
+
 /* ------------------------------------------------------------ os tres modos
 
    O mesmo desenho, tres leituras. O que muda e SO a folha de estilo: a
@@ -422,6 +439,10 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
    esta atras, e nao da cor do papel. Com halo escuro em volta de letra escura
    o numero virava um borrao. */
 .modo-metal .cota,.modo-metal .marca{fill:#3a4047;stroke:#eef0f3}
+.modo-metal .baloes .bola{fill:#fff;stroke:#3a4047}
+.modo-metal .baloes .n{fill:#3a4047}
+.modo-metal .baloes .pouso{fill:#3a4047}
+.modo-metal .baloes .fio{stroke:#6f757d}
 
 /* peca escura pede traco claro, senao o contorno some dentro dela */
 .modo-metal .peca[data-cor="escuro"] *:not(.alvo):not(.centro):not(.oculto){
@@ -443,6 +464,10 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .modo-pb .geo .fluxo_haste{fill:none;stroke:#000;stroke-width:2.4}
 .modo-pb text{fill:#000}
 .modo-pb .cota,.modo-pb .marca{stroke:#fff}
+.modo-pb .baloes .bola{fill:#fff;stroke:#000}
+.modo-pb .baloes .n{fill:#000}
+.modo-pb .baloes .pouso{fill:#000}
+.modo-pb .baloes .fio{stroke:#000}
 .lista{display:flex;gap:8px;align-items:baseline;margin:1px 0 3px;
   font:400 10.5px/1.4 "IBM Plex Mono",ui-monospace,monospace;
   color:var(--anota,#8a8f98)}

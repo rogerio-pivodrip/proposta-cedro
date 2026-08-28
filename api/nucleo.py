@@ -92,10 +92,13 @@ def _peca(p, catalogo=None):
         "dn": list(p.item.get("dn") or []), "unidade_dn": p.unidade_dn,
         "angulo": p.angulo, "sentido": p.sentido, "pose": p.pose,
         "acessorios": [{"id": a.id, "sap": a.sap, "descricao": a.descricao,
-                        "familia": a.familia} for a in p.acessorios],
+                        "familia": a.familia, "balao": a.balao}
+                       for a in p.acessorios],
         "comprimento_mm": p.comprimento_mm,
         "fonte": p.fonte, "fonte_cota": p.fonte_cota,
         "rotulo": p.rotulo,
+        "balao": p.balao, "balao_angulo": p.balao_angulo,
+        "balao_distancia": p.balao_distancia,
     }
 
 
@@ -253,6 +256,67 @@ def _acoplar(sessao, comando):
     peca = Peca(_item(sessao, comando))
     sessao.linha.acoplar(comando["alvo"], peca)
     return {"peca": peca.id, "dono": comando["alvo"]}
+
+
+def _balao(sessao, comando):
+    """Marca, desmarca ou move o balao de uma peca.
+
+    Sem nada, ALTERNA - marcado vira desmarcado. E o gesto de quem clica na
+    caixinha, e nao um comando diferente do de quem digita.
+
+    Mover e `alterar` como qualquer outro campo, e por isso desfaz junto com o
+    resto: o balao e da peca, do mesmo jeito que o sentido da curva. O que ele
+    NAO muda e o numero - esse e da lista, e mudar de lugar na folha nao muda
+    o item que se compra.
+    """
+    peca = sessao.linha.achar(comando["alvo"])
+    campos = {}
+    if comando.get("angulo") is not None:
+        campos["balao_angulo"] = float(comando["angulo"]) % 360
+    if comando.get("distancia") is not None:
+        # distancia negativa nao existe: o balao ficaria do lado oposto ao
+        # angulo pedido, e quem arrastou para tras quer o angulo de tras
+        campos["balao_distancia"] = max(float(comando["distancia"]), 0.0)
+    if comando.get("solto"):
+        campos["balao_distancia"] = None      # volta a achar a distancia dele
+    if comando.get("mostrar") is not None:
+        campos["balao"] = bool(comando["mostrar"])
+    elif not campos:
+        campos["balao"] = not peca.balao
+    elif not peca.balao:
+        # mover um balao apagado e pedir para ve-lo: ninguem arrasta o que
+        # nao esta na tela
+        campos["balao"] = True
+    sessao.linha.alterar(peca, **campos)
+    return {"peca": peca.id, "balao": peca.balao,
+            "angulo": peca.balao_angulo, "distancia": peca.balao_distancia}
+
+
+def _numerar(sessao, comando):
+    """Poe a peca escolhida noutro numero de item - e renumera o resto.
+
+    A tela arrasta a linha da tabela ou o balao; aqui se digita o numero de
+    destino. Nos dois casos e a MESMA `renumerar` do documento, que guarda a
+    ordem por codigo - ver linha.renumerar.
+    """
+    ordem = [reg["sap"] for reg in sessao.linha.lista_materiais()[0]]
+    if comando.get("ordem"):
+        return {"numeracao": _limpo(sessao.linha.renumerar(comando["ordem"]))}
+    if not comando.get("alvo"):
+        raise Erro("numerar age sobre uma peca - escolha uma antes, ou mande "
+                   "a ordem inteira")
+    peca = sessao.linha.achar(comando["alvo"])
+    if peca.sap not in ordem:
+        raise Erro(f"{peca.descricao} nao esta na lista")
+    destino = comando.get("item")
+    if destino is None:
+        raise Erro("numerar precisa do numero de destino")
+    destino = max(1, min(int(destino), len(ordem)))
+    ordem.remove(peca.sap)
+    ordem.insert(destino - 1, peca.sap)
+    numeracao = sessao.linha.renumerar(ordem)
+    return {"peca": peca.id, "item": numeracao[peca.sap],
+            "numeracao": _limpo(numeracao)}
 
 
 def _alterar(sessao, comando):
@@ -519,6 +583,7 @@ COMANDOS = {
     "alterar": _alterar, "mover": _mover, "esticar": _esticar,
     "acoplar": _acoplar,
     "girar": _girar, "espelhar": _espelhar,
+    "balao": _balao, "numerar": _numerar,
     "desfazer": _desfazer, "refazer": _refazer,
     "template": _template, "catalogo": _catalogo, "janela": _janela,
     "modo": _modo,

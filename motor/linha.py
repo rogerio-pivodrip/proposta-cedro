@@ -22,6 +22,12 @@ from . import corte, cotas, ferragem, regras
 
 _contador = itertools.count(1)
 
+# O BALAO E DO DESENHO, O NUMERO E DA LISTA - e e o mesmo numero. Numa vista
+# explodida o balao nao conta pecas, ele aponta para a LINHA da lista: duas
+# curvas do mesmo codigo levam o mesmo numero, e quem quer saber quantas sao
+# le a quantidade na lista, que e onde ela mora.
+BALAO_ANGULO = 45.0     # graus, anti-horario, 0 para a direita - o do croqui
+
 
 class Peca:
     """Uma peca instanciada na linha, com suas portas."""
@@ -53,6 +59,15 @@ class Peca:
         # Guardar aqui, e nao numa lista paralela, e o que faz o acessorio
         # sair junto quando a peca sai
         self.acessorios = []
+        # o balao desta peca: o pontinho, o traco e o numero. `balao` diz se
+        # ESTA peca mostra o dela - o numero continua na lista de qualquer
+        # jeito, e e isso que permite listar o acessorio sem balao nenhum.
+        # Angulo e distancia sao a POSE do balao, como `pose` e a da peca: 45
+        # graus e a convencao do croqui, e distancia None deixa o desenho
+        # achar a dele - que muda quando a peca muda de tamanho
+        self.balao = True
+        self.balao_angulo = BALAO_ANGULO
+        self.balao_distancia = None
         self.portas = self._portas()
 
     def recalcular(self):
@@ -161,7 +176,8 @@ class Comando:
 class Linha:
     # o que `alterar` pode mudar sem trocar a peca. Fora desta lista o
     # comando recusa: mudar familia ou SAP nao e alterar, e substituir
-    ALTERAVEIS = ("comprimento_mm", "sentido", "rotulo", "fonte", "pose")
+    ALTERAVEIS = ("comprimento_mm", "sentido", "rotulo", "fonte", "pose",
+                  "balao", "balao_angulo", "balao_distancia")
 
     def __init__(self, catalogo, tipo="RECALQUE", area="P01"):
         self.catalogo = catalogo
@@ -173,6 +189,11 @@ class Linha:
         # papel, e por isso vale para a tela E para o DXF exportado
         self.giro = 0.0           # graus, no sentido do SVG (y para baixo)
         self.espelho = 1          # +1 normal, -1 refletida no eixo da linha
+        # a ordem dos ITENS da lista - e com ela a numeracao dos baloes. Vazia
+        # e a ordem de leitura da linha; `renumerar` fixa outra. Guarda codigo
+        # SAP, e nao id de peca, porque o numero e da linha da lista: trocar a
+        # peca de lugar na corrente nao renumera nada
+        self.ordem_baloes = []
         self.feitos = []          # pilha de comandos aplicados
         self.desfeitos = []       # o que saiu do desfazer, esperando refazer
 
@@ -208,6 +229,23 @@ class Linha:
             raise IndexError(f"posicao {alvo} fora da linha de "
                              f"{len(self.pecas)} pecas")
         return alvo
+
+    def achar(self, alvo):
+        """A peca do id, esteja ela na corrente ou acoplada a alguem.
+
+        `posicao` so enxerga a corrente, porque indice de acessorio nao
+        existe - ele vive DENTRO da peca que o carrega. Quem precisa da peca,
+        e nao do lugar dela, pergunta aqui: e o que deixa `alterar` chegar no
+        acessorio para apagar o balao dele sem inventar um segundo comando.
+        """
+        if isinstance(alvo, Peca):
+            return alvo
+        if isinstance(alvo, int):
+            return self.pecas[self.posicao(alvo)]
+        for peca in self.todas_as_pecas():
+            if peca.id == alvo:
+                return peca
+        raise KeyError(f"peca {alvo} nao esta na linha")
 
     def inserir(self, peca, pos=None):
         pos = len(self.pecas) if pos is None else (
@@ -250,8 +288,7 @@ class Linha:
         Trocar a `fonte` e alterar de verdade: nao troca a peca, troca a folha
         de onde a cota dela sai - e a cota vem junto, por `recalcular()`.
         """
-        pos = self.posicao(alvo)
-        peca = self.pecas[pos]
+        peca = self.achar(alvo)
         fora = [c for c in campos if c not in self.ALTERAVEIS]
         if fora:
             raise ValueError(
@@ -305,6 +342,42 @@ class Linha:
 
         self._executar(Comando("pose", fazer, desfazer, None))
         return self
+
+    def renumerar(self, ordem):
+        """Poe os itens da lista na ordem pedida - e com eles os baloes.
+
+        Recebe codigo SAP ou id de peca (o id vira o codigo dela), porque quem
+        arrasta arrasta o balao, que e uma PECA, e quem arrasta na tabela
+        arrasta uma LINHA, que e um codigo. O que nao vier fica atras, na
+        ordem de leitura da linha: renumerar tres itens de trinta nao obriga
+        ninguem a listar os outros vinte e sete.
+
+        E comando como qualquer outro - a numeracao vai para o DXF e para a
+        folha assinada, e quem renumerou e desfez tem de voltar ao que
+        imprimiu antes.
+        """
+        pedida, vistos = [], set()
+        for alvo in ordem or []:
+            sap = alvo.sap if isinstance(alvo, Peca) else str(alvo)
+            if sap not in self.catalogo.por_sap:
+                achada = next((p for p in self.todas_as_pecas()
+                               if p.id == sap), None)
+                if achada is None:
+                    raise KeyError(f"{sap} nao e codigo nem peca desta linha")
+                sap = achada.sap
+            if sap not in vistos:
+                vistos.add(sap)
+                pedida.append(sap)
+        antes = list(self.ordem_baloes)
+
+        def fazer():
+            self.ordem_baloes = pedida
+
+        def desfazer():
+            self.ordem_baloes = antes
+
+        self._executar(Comando("renumerar", fazer, desfazer, None))
+        return self.numeracao()
 
     def acoplar(self, alvo, peca):
         """Poe uma peca terminal na boca que sobra do alvo.
@@ -630,4 +703,42 @@ class Linha:
                 f"{t['antes_mm']/1000:.2f} m e {t['depois_mm']/1000:.2f} m"
             )
 
-        return list(bom.values()), avisos
+        # o NUMERO DO ITEM sai daqui, e nao do desenho: e a posicao da linha
+        # na lista, e o balao so a repete. Fosse ao contrario, uma peca sem
+        # balao ficaria sem numero na lista, e a lista e quem se compra
+        itens = [bom[sap] for sap in self._ordem_dos_itens(list(bom))]
+        for numero, reg in enumerate(itens, 1):
+            reg["item"] = numero
+        return itens, avisos
+
+    def _ordem_dos_itens(self, saps):
+        """Os codigos na ordem que vale: a fixada primeiro, o resto atras.
+
+        Ordem fixada que perdeu a peca simplesmente sai - e o que faz a
+        numeracao se refazer sozinha quando alguem remove uma peca, em vez de
+        deixar um buraco no meio dos numeros.
+        """
+        fixa = [s for s in self.ordem_baloes if s in saps]
+        return fixa + [s for s in saps if s not in fixa]
+
+    def numeracao(self):
+        """{codigo SAP: numero do item}, na ordem em que a lista mostra."""
+        itens, _avisos = self.lista_materiais()
+        return OrderedDict((reg["sap"], reg["item"]) for reg in itens)
+
+    def baloes(self):
+        """O balao de cada peca que mostra o dela: id, numero e pose.
+
+        Duas pecas do mesmo codigo levam o MESMO numero - ver BALAO_ANGULO.
+        O acessorio entra como qualquer peca, e sai da lista de baloes (mas
+        nao da lista de materiais) quando alguem desmarca o balao dele.
+        """
+        numeros = self.numeracao()
+        saida = []
+        for peca in self.todas_as_pecas():
+            if not peca.balao or peca.sap not in numeros:
+                continue
+            saida.append({"id": peca.id, "n": numeros[peca.sap],
+                          "angulo": peca.balao_angulo,
+                          "distancia": peca.balao_distancia})
+        return saida

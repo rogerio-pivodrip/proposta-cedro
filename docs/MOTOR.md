@@ -443,6 +443,38 @@ tem por que disputar espaço com o traço. Dentro do desenho fica só o que é
 medida. Foi o que finalmente tirou o `⌀340` de cima da peça e o `12×⌀22` do
 canto.
 
+### O balão: o número é da lista, e não do desenho
+
+O balão é o de vista explodida de manual: um pontinho pousado na peça, um fio
+saindo dele a 45° e o número dentro de um círculo. Vive na camada de anotação,
+em pixel fixo — ele não engorda quando a linha muda de escala.
+
+**O número é o da linha da lista de materiais, e não um contador do desenho.**
+Duas curvas do mesmo código levam o mesmo número, e quem quer saber quantas
+são lê a quantidade na lista, que é onde ela mora. É a mesma decisão que o
+resto do programa: existe um documento, e quem numera é ele. Se o desenho
+contasse peças, girar a folha ou esconder um balão mudaria o número — e o
+desenho passaria a discordar da lista, que é exatamente o que este programa
+existe para não deixar acontecer.
+
+Daí saem três consequências que ninguém precisa programar duas vezes:
+
+- **acrescentar ou tirar peça renumera sozinho**, sem deixar buraco: a
+  numeração é derivada da lista, e a lista se refaz a cada comando;
+- **reordenar é reordenar a lista** (`renumerar`), e o balão acompanha;
+- **desmarcar o balão não tira o item da lista.** O acessório continua sendo
+  comprado; o que sai é o traço apontando para ele. Foi por isso que
+  `alterar` passou a achar a peça por id em vez de por índice — acessório
+  não tem índice, ele vive dentro da peça que o carrega.
+
+**Onde o balão cai é do documento também** (ângulo e distância), e não do
+navegador: quem arrastou um balão e exportou o DXF espera achá-lo onde
+deixou, e quem desfez espera vê-lo voltar. Sem distância, o fio anda até
+*sair do desenho* — da caixa da própria peça e de tudo que estiver encostado
+nela, ferragem da junta inclusive — e só então começa o círculo. É por isso
+que o balão continua fora do traço quando a linha muda de bitola: a distância
+não é um número guardado, é uma consequência do que há embaixo.
+
 Uma terceira, menor: **peça comprida ocupa duas colunas**. Um manifold de
 1,5 m ou uma barra de PEAD de 6 m numa célula de bitola vira fio de cabelo.
 A bomba ganha duas colunas por regra, porque é a âncora do desenho.

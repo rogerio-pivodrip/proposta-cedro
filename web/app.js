@@ -75,6 +75,21 @@ function pintarVista() {
     g.addEventListener("click", () => escolher(id));
     g.addEventListener("pointerdown", (ev) => comecarArrasto(ev, id));
   });
+  // o balão é da mesma peça que o traço - clicar num e noutro escolhe a
+  // mesma coisa. Arrastar o balão, porém, não move peça nenhuma: move o
+  // número dela na folha
+  alvo.querySelectorAll("g.balao[data-id]").forEach((g) => {
+    const id = g.dataset.id;
+    if (id === escolhida) g.classList.add("escolhida");
+    // soltar o arrasto dispara um `click` logo atrás. Sem isto, terminar de
+    // arrastar o balão trocava a seleção de brinde - e quem arrasta o balão
+    // não pediu para selecionar nada
+    g.addEventListener("click", () => {
+      if (balaoAndou) return;
+      escolher(id);
+    });
+    g.addEventListener("pointerdown", (ev) => comecarBalao(ev, id));
+  });
   aplicarZoom();
   const recusadas = (documento.vista && documento.vista.recusadas) || [];
   if (recusadas.length) {
@@ -94,6 +109,7 @@ function pintarLista() {
     corpo.appendChild(linhaDaTabela({
       id: peca.id, sap: peca.sap, descricao: peca.descricao,
       qtd: registro ? registro.qtd : 1,
+      item: registro ? registro.item : null, balao: peca.balao,
     }));
     porSap.delete(peca.sap);
   });
@@ -107,7 +123,11 @@ function linhaDaTabela(registro, derivada) {
   const tr = document.createElement("tr");
   if (derivada) tr.className = "derivada";
   if (registro.id === escolhida) tr.classList.add("escolhida");
+  // o número do item é o do balão: o mesmo número, nos dois lugares
+  const semBalao = registro.balao === false ? " class=\"sem\"" : "";
   tr.innerHTML =
+    `<td class="item">${registro.item
+      ? `<span${semBalao}>${registro.item}</span>` : ""}</td>` +
     `<td class="qtd">${registro.qtd}</td>` +
     `<td class="sap">${registro.sap || ""}</td>` +
     `<td>${registro.descricao || ""}</td>` +
@@ -188,7 +208,8 @@ function ampliar(fator, alvoX, alvoY) {
 let folha = null;
 
 function comecarFolha(ev) {
-  if (ev.button === 0 && ev.target.closest && ev.target.closest("g.peca")) return;
+  if (ev.button === 0 && ev.target.closest &&
+      ev.target.closest("g.peca, g.balao")) return;
   if (ev.button !== 0 && ev.button !== 1) return;
   ev.preventDefault();
   folha = {x: ev.clientX, y: ev.clientY, px: pan.x, py: pan.y};
@@ -238,6 +259,7 @@ function pintarPainel() {
   }
   fonte.value = peca.fonte || "IRRIGAFOUR";
   $("espelhar").classList.toggle("ligado", peca.sentido < 0);
+  $("balao").classList.toggle("ligado", peca.balao !== false);
   $("modo").hidden = false;
   pintarModo();
 }
@@ -380,6 +402,76 @@ async function moverArrasto(ev) {
   marcarArrasto();
   mostrarPrevisao(arrasto.recusa || veredicto(resposta.seria),
                   Boolean(arrasto.recusa));
+}
+
+/* ---------------------------------------------------------- mover o balão
+
+   Arrastar o balão não move peça nenhuma: move onde o número dela pousa na
+   folha. Por isso ele não pergunta nada ao motor no meio do caminho - não há
+   o que simular, nada pode ser recusado - e vira UM comando ao soltar, e não
+   um por pixel, senão desfazer teria de ser apertado sessenta vezes.
+
+   O que se vê enquanto o dedo está em cima é uma PRÉVIA, movida aqui na tela.
+   O desenho de verdade volta do motor ao soltar, com o fio parando na borda
+   do círculo como em toda folha. */
+let balao = null;
+let balaoAndou = false;      // o arrasto acabou de soltar: o clique não conta
+
+function comecarBalao(ev, id) {
+  if (ev.button !== 0) return;
+  ev.stopPropagation();
+  const g = ev.target.closest("g.balao");
+  const pouso = g.querySelector("circle.pouso");
+  balao = {id, g, svg: g.ownerSVGElement, centro: null,
+           pouso: {x: Number(pouso.getAttribute("cx")),
+                   y: Number(pouso.getAttribute("cy"))}};
+  addEventListener("pointermove", moverBalao);
+  addEventListener("pointerup", soltarBalao, {once: true});
+}
+
+function noDesenho(svg, x, y) {
+  // o palco tem zoom e rolagem, e o SVG tem viewBox: quem converte pixel de
+  // tela em unidade do desenho é a matriz do próprio SVG, e não uma conta
+  // paralela aqui, que envelheceria no primeiro ajuste do zoom
+  const ponto = svg.createSVGPoint();
+  ponto.x = x;
+  ponto.y = y;
+  return ponto.matrixTransform(svg.getScreenCTM().inverse());
+}
+
+function moverBalao(ev) {
+  if (!balao) return;
+  balao.centro = noDesenho(balao.svg, ev.clientX, ev.clientY);
+  const bola = balao.g.querySelector("circle.bola");
+  const numero = balao.g.querySelector("text.n");
+  const fio = balao.g.querySelector("line.fio");
+  const alto = Number(numero.getAttribute("y")) - Number(bola.getAttribute("cy"));
+  bola.setAttribute("cx", balao.centro.x);
+  bola.setAttribute("cy", balao.centro.y);
+  numero.setAttribute("x", balao.centro.x);
+  numero.setAttribute("y", balao.centro.y + alto);
+  const raio = Number(bola.getAttribute("r"));
+  const dx = balao.centro.x - balao.pouso.x;
+  const dy = balao.centro.y - balao.pouso.y;
+  const anda = Math.hypot(dx, dy) || 1;
+  fio.setAttribute("x2", balao.centro.x - (dx / anda) * raio);
+  fio.setAttribute("y2", balao.centro.y - (dy / anda) * raio);
+}
+
+function soltarBalao() {
+  removeEventListener("pointermove", moverBalao);
+  const solto = balao;
+  balao = null;
+  balaoAndou = Boolean(solto && solto.centro);
+  setTimeout(() => { balaoAndou = false; }, 0);
+  if (!solto || !solto.centro) return;
+  const dx = solto.centro.x - solto.pouso.x;
+  const dy = solto.centro.y - solto.pouso.y;
+  // o ângulo é o do croqui - anti-horário, 0 para a direita. O y do SVG
+  // cresce para BAIXO, e é por isso que ele entra negado
+  mandar({nome: "balao", alvo: solto.id,
+          angulo: Math.round(Math.atan2(-dy, dx) * 1800 / Math.PI) / 10,
+          distancia: Math.round(Math.hypot(dx, dy) * 10) / 10});
 }
 
 function marcarArrasto() {
@@ -670,6 +762,10 @@ function ligar() {
   $("remover").addEventListener("click", () => apagar(escolhida));
   $("espelhar").addEventListener("click", () => mandar({
     nome: "espelhar", alvo: escolhida,
+  }));
+  // sem ângulo nem distância o comando ALTERNA - é o gesto da caixinha
+  $("balao").addEventListener("click", () => mandar({
+    nome: "balao", alvo: escolhida,
   }));
   $("trocar").addEventListener("click", trocar);
   // esticar TROCA a peça - outro comprimento é outro código SAP - então a

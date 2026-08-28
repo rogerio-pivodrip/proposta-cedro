@@ -109,8 +109,11 @@ def montar(linha, formato="A3", orientacao="paisagem", titulo=None,
              "bitola": _bitola_da_linha(linha), "data": hoje,
              "recusadas": recusadas, "itens": len(itens)}
 
+    # o NUMERO DO ITEM abre a linha: e ele que o balao do desenho repete, e
+    # sem ele na lista o balao aponta para lugar nenhum
     linhas_lista = "".join(
-        f'<tr><td class="q">{r["qtd"]}</td><td class="c">{r["sap"]}</td>'
+        f'<tr><td class="i"><span>{r["item"]}</span></td>'
+        f'<td class="q">{r["qtd"]}</td><td class="c">{r["sap"]}</td>'
         f'<td>{r["descricao"]}</td></tr>' for r in itens)
     recado = ""
     if recusadas:
@@ -180,6 +183,14 @@ body{margin:0;padding:0;background:#8d9096;
 .materiais table{width:100%;border-collapse:collapse;font-size:2.5mm}
 .materiais td{padding:.5mm 1mm;border-bottom:.15mm solid #d8dade;
   vertical-align:top;line-height:1.25}
+/* o numero do item vem no circulo do balao: aqui ele repete o circulo, para
+   que o olho ache na lista o que achou na folha */
+.materiais td.i{width:6mm;padding:.4mm 0}
+/* o circulo e do SPAN, e nao da celula: com border-collapse a borda da
+   celula e da tabela, e nao arredonda */
+.materiais td.i span{display:block;width:3.8mm;height:3.8mm;margin:0 auto;
+  border:.2mm solid #16181d;border-radius:50%;text-align:center;
+  font-size:2.2mm;line-height:3.4mm;color:#16181d}
 .materiais td.q{text-align:right;width:6mm;color:#6d737b}
 .materiais td.c{font-family:ui-monospace,monospace;white-space:nowrap;
   width:22mm;color:#6d737b}

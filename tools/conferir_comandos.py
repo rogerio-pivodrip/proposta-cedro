@@ -23,9 +23,12 @@ iguais se tudo que depende delas voltou.
 
 Uso: python3 tools/conferir_comandos.py
 """
+import math
+import re
 import sys
 
 sys.path.insert(0, ".")
+from motor import vista                      # noqa: E402
 from motor.catalogo import Catalogo          # noqa: E402
 from motor.linha import Linha, Peca          # noqa: E402
 
@@ -311,6 +314,92 @@ def main():
     bom, _avisos = linha.lista_materiais()
     certo("tirar a peça leva o acessório junto",
              not any(r["sap"] == sap_acessorio for r in bom))
+
+    print("\n== o balão repete o número da lista, e não conta peças")
+    # o recalque tem DUAS curvas de 90 do mesmo codigo e TRES tubos, dois
+    # deles iguais: e ai que balao-por-peca e balao-por-item se separam
+    linha, _faltando = templates.recalque(catalogo, 6)
+    itens, _avisos = linha.lista_materiais()
+    numeros = {r["sap"]: r["item"] for r in itens}
+    certo("a lista numera de 1 a n, sem buraco",
+             [r["item"] for r in itens] == list(range(1, len(itens) + 1)),
+             str([r["item"] for r in itens]))
+    baloes = linha.baloes()
+    certo("cada peça desenhada tem balão",
+             len(baloes) == len(list(linha.todas_as_pecas())),
+             f'{len(baloes)} balões para '
+             f'{len(list(linha.todas_as_pecas()))} peças')
+    certo("e o número dele é o do item que se compra",
+             all(b["n"] == numeros[p.sap]
+                 for b, p in zip(baloes, linha.todas_as_pecas())))
+    curvas = [p for p in linha.pecas if p.familia == "CURVA"]
+    certo("duas peças do mesmo código levam o mesmo número",
+             len(curvas) == 2 and curvas[0].sap == curvas[1].sap
+             and numeros[curvas[0].sap] == numeros[curvas[1].sap])
+
+    # tirar uma peca renumera o resto sozinho, e sem deixar buraco
+    sobrando = next(p for p in linha.pecas if p.familia == "VALVULA_RETENCAO")
+    antes = retrato(linha)
+    linha.remover(sobrando.id)
+    depois, _avisos = linha.lista_materiais()
+    certo("tirar uma peça renumera o resto",
+             [r["item"] for r in depois] == list(range(1, len(depois) + 1))
+             and sobrando.sap not in {r["sap"] for r in depois})
+    linha.desfazer()
+    conferir("e desfazer devolve a numeração", antes, retrato(linha))
+
+    print("\n== marcar, desmarcar, reordenar")
+    tubo = next(p for p in linha.pecas if p.familia == "TUBO")
+    linha.alterar(tubo.id, balao=False)
+    itens, _avisos = linha.lista_materiais()
+    certo("peça sem balão continua na lista",
+             any(r["sap"] == tubo.sap for r in itens))
+    certo("e sai do desenho",
+             tubo.id not in {b["id"] for b in linha.baloes()})
+    linha.desfazer()
+    certo("e volta ao remarcar",
+             tubo.id in {b["id"] for b in linha.baloes()})
+
+    # o acessorio e o caso que motivou o desmarcar: ele se compra, mas nem
+    # sempre se aponta. `alterar` chega nele sem indice, por `achar`
+    ventosa = next(a for p in linha.pecas for a in p.acessorios
+                   if a.familia == "VENTOSA")
+    linha.alterar(ventosa.id, balao=False)
+    certo("o acessório também se desmarca, e ele não tem índice",
+             ventosa.id not in {b["id"] for b in linha.baloes()})
+    linha.desfazer()
+
+    antes = retrato(linha)
+    fim = [r["sap"] for r in linha.lista_materiais()[0]][-1]
+    numeracao = linha.renumerar([fim])
+    certo("renumerar põe o item pedido em 1", numeracao[fim] == 1)
+    certo("e o resto anda atrás, na ordem de leitura",
+             list(numeracao.values()) == list(range(1, len(numeracao) + 1)))
+    certo("e o balão da peça acompanha",
+             all(b["n"] == 1 for b in linha.baloes()
+                 if linha.achar(b["id"]).sap == fim))
+    linha.desfazer()
+    conferir("desfazer devolve a ordem", antes, retrato(linha))
+
+    print("\n== o balão no desenho")
+    desenhada = vista.vista(linha, largura=1100, altura_max=620)
+    svg = desenhada["svg"]
+    certo("o desenho traz um balão por peça",
+             svg.count('class="balao"') == len(linha.baloes()),
+             f'{svg.count(chr(34)+"balao"+chr(34))} no desenho, '
+             f'{len(linha.baloes())} no documento')
+    certo("cada um com o id da peça, que é o mesmo da lista",
+             {i for i in re.findall(r'class="balao" data-id="([^"]+)"', svg)}
+             == {b["id"] for b in linha.baloes()})
+    bolas = [(float(x), float(y), float(r)) for x, y, r in re.findall(
+        r'class="bola" cx="([-\d.]+)" cy="([-\d.]+)" r="([\d.]+)"', svg)]
+    encostados = [(a, b) for i, a in enumerate(bolas) for b in bolas[i + 1:]
+                  if math.dist(a[:2], b[:2]) < a[2] + b[2]]
+    certo("e nenhum por cima do outro", not encostados, str(encostados[:2]))
+    fora = [b for b in bolas
+            if not (b[2] <= b[0] <= float(re.search(r'width="([\d.]+)"',
+                                                    svg).group(1)) - b[2])]
+    certo("e nenhum cortado na borda da folha", not fora, str(fora[:2]))
 
     print("\n== editar depois de desfazer apaga o refazer")
     linha = monta(catalogo)

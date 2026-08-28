@@ -18,6 +18,19 @@ MODOS = ("traco", "pb", "metal")
 
 MARGEM = 46
 
+# O BALAO DE DETALHAMENTO, como o de vista explodida de manual: um pontinho
+# pousado na peca, um traco reto saindo dele e o numero do item num circulo.
+#
+# Tudo aqui e PIXEL de anotacao, e nao milimetro real - o balao nao cresce
+# quando a linha muda de escala, do mesmo jeito que a cota nao cresce. E a
+# distancia padrao nao e um numero fixo: o traco anda ate SAIR da peca em que
+# pousou, e so entao o circulo comeca. Numa peca grande ele anda mais, e e por
+# isso que o balao continua fora do desenho quando a linha muda de bitola.
+BALAO_R = 10.0          # raio do circulo do numero
+BALAO_FOLGA = 14.0      # do contorno da peca ate a borda do circulo
+BALAO_PONTO = 1.9       # o pontinho que pousa na peca
+BALAO_PASSO = 4.0       # o quanto um balao se afasta ao esbarrar no vizinho
+
 
 def simbolos_da_linha(linha):
     """(peca, simbolo) de cada peca que sabe se desenhar, e quem nao sabe.
@@ -276,12 +289,19 @@ def vista(linha, largura=940, altura_max=620, giro=None, modo="traco",
     ids = [peca.id for peca, _ in prontos]
     por_peca = {peca.id: lista for peca, lista in
                 zip(linha.pecas, acessorios_da_linha(linha))}
+    # o balao de cada peca vem do DOCUMENTO, com o numero que a lista deu -
+    # a vista nao numera nada. Fosse ela a contar, o numero mudaria ao girar a
+    # folha ou ao esconder um balao, e o desenho discordaria da lista
+    numerados = {b["id"]: b for b in linha.baloes()}
     svg, postos, fim = desenhar_linha(
         [sim for _, sim in prontos], largura=largura, giro=giro,
         altura_max=altura_max, ids=ids, modo=modo, escala=escala, anota=anota,
-        acessorios=[por_peca.get(peca.id, []) for peca, _ in prontos])
+        acessorios=[por_peca.get(peca.id, []) for peca, _ in prontos],
+        baloes=numerados)
     return {"svg": svg, "pecas": len(prontos), "recusadas": recusadas,
-            "fim": list(fim), "modo": modo}
+            "fim": list(fim), "modo": modo,
+            "baloes": [{"id": b["id"], "item": b["n"]}
+                       for b in numerados.values()]}
 
 
 def _os_dois_pead(a, b):
@@ -316,8 +336,141 @@ def escala_que_cabe(largura_mm, altura_mm, extensao_x, extensao_y):
     return ESCALAS[-1]
 
 
+def _pouso_do_balao(posto, escala, ox, oy):
+    """Onde o pontinho pousa na peca, e a caixa que o traco tem de vencer.
+
+    Devolve os dois em pixel de tela. A caixa e a do CORPO - a caixa cheia
+    inclui a linha de eixo, que sai 40 mm antes da peca e 60 depois, e o balao
+    ficaria pendurado longe, apontando para o vazio.
+    """
+    x0, y0, w, h = s.caixa_do_corpo(posto.simbolo)
+    # no tubo o pontinho nao pousa no meio: o meio ja e da cota, e o balao
+    # cairia bem em cima do numero do comprimento
+    fatia = 0.28 if posto.simbolo.familia == "TUBO" else 0.5
+    rad = math.radians(posto.giro)
+    cos, sen = math.cos(rad), math.sin(rad)
+
+    def na_tela(cx, cy):
+        return (ox + (posto.dx + cx * cos - cy * sen) * escala,
+                oy + (posto.dy + cx * sen + cy * cos) * escala)
+
+    cantos = [na_tela(cx, cy) for cx, cy in
+              ((x0, y0), (x0 + w, y0), (x0, y0 + h), (x0 + w, y0 + h))]
+    caixa = (min(c[0] for c in cantos), min(c[1] for c in cantos),
+             max(c[0] for c in cantos), max(c[1] for c in cantos))
+    return na_tela(x0 + w * fatia, y0 + h / 2), caixa
+
+
+def _saida_da_caixa(ponto, caixa, ux, uy):
+    """Quanto o traco anda, do pouso ate deixar a caixa da peca."""
+    andar = []
+    if abs(ux) > 1e-6:
+        andar.append(((caixa[2] if ux > 0 else caixa[0]) - ponto[0]) / ux)
+    if abs(uy) > 1e-6:
+        andar.append(((caixa[3] if uy > 0 else caixa[1]) - ponto[1]) / uy)
+    return max(min([a for a in andar if a > 0], default=0.0), 0.0)
+
+
+def _saida_do_desenho(ponto, propria, caixas, ux, uy):
+    """O mesmo, mas atravessando o que estiver ENCOSTADO na peca.
+
+    Sair da propria caixa nao basta quando ha peca em cima: a ventosa
+    enroscada na luva da flange cega ocupa o canto para onde o balao dela
+    ia, e o numero pousava sobre o desenho. Entao o traco segue enquanto o
+    proximo passo ainda cair dentro de alguma caixa, e para no primeiro vao.
+
+    Para no VAO, e nao na ultima peca da folha, de proposito: parar so no fim
+    faria o balao de um tubo do meio viajar a linha inteira.
+    """
+    anda = _saida_da_caixa(ponto, propria, ux, uy)
+    for _volta in range(len(caixas) + 1):
+        px = ponto[0] + ux * (anda + 0.5)
+        py = ponto[1] + uy * (anda + 0.5)
+        vizinha = next((c for c in caixas
+                        if c[0] <= px <= c[2] and c[1] <= py <= c[3]), None)
+        if vizinha is None:
+            return anda
+        anda = max(anda, _saida_da_caixa(ponto, vizinha, ux, uy))
+    return anda
+
+
+def lugares_dos_baloes(postos, baloes, escala, ox, oy, anota=1.0,
+                       estorvos=()):
+    """Onde cada balao cai. [(id, numero, pouso, centro)], em pixel.
+
+    O angulo e o do CROQUI - anti-horario, 0 para a direita - e nao o do SVG,
+    que tem o y para baixo. Quem digita "45" quer o balao para cima e para a
+    direita, e a conversao e aqui, num lugar so.
+
+    Dois baloes nunca se sobrepoem: o segundo anda mais pelo proprio traco ate
+    limpar o primeiro. Afastar pelo traco, e nao para o lado, mantem o balao
+    apontando para a mesma peca - so o fio fica um pouco mais longo.
+    """
+    raio = BALAO_R * anota
+    pousos = [(identidade, posto) + _pouso_do_balao(posto, escala, ox, oy)
+              for identidade, posto in postos]
+    # o que o traco tem de vencer: a caixa de cada peca E a da ferragem que
+    # nasce entre elas, que nao e de peca nenhuma
+    caixas = [caixa for _i, _p, _pouso, caixa in pousos] + [
+        (ox + x0 * escala, oy + y0 * escala,
+         ox + x1 * escala, oy + y1 * escala) for x0, y0, x1, y1 in estorvos]
+    lugares = []
+    for identidade, _posto, pouso, caixa in pousos:
+        ficha = (baloes or {}).get(identidade)
+        if not ficha:
+            continue
+        rad = math.radians(ficha.get("angulo") or 0.0)
+        ux, uy = math.cos(rad), -math.sin(rad)
+        anda = ficha.get("distancia")
+        if anda is None:
+            anda = (_saida_do_desenho(pouso, caixa, caixas, ux, uy)
+                    + (BALAO_FOLGA + BALAO_R) * anota)
+        else:
+            anda = float(anda) * anota
+        centro = (pouso[0] + ux * anda, pouso[1] + uy * anda)
+        # o desempate: enquanto encostar em quem ja esta posto, anda mais
+        for _volta in range(60):
+            perto = next((c for _i, _n, _p, c in lugares
+                          if math.dist(c, centro) < 2 * raio + 3 * anota), None)
+            if perto is None:
+                break
+            anda += (2 * raio + BALAO_PASSO * anota)
+            centro = (pouso[0] + ux * anda, pouso[1] + uy * anda)
+        lugares.append((identidade, ficha["n"], pouso, centro))
+    return lugares
+
+
+def _desenhar_balao(identidade, numero, pouso, centro, anota=1.0):
+    """O pontinho, o fio e o numero no circulo. Um grupo por balao.
+
+    O grupo leva o id da peca porque o balao E a peca: clicar nele seleciona,
+    arrastar move o balao dela. Por isso ele fica FORA do grupo `anota`, que
+    nao recebe clique nenhum.
+    """
+    raio = BALAO_R * anota
+    dx, dy = centro[0] - pouso[0], centro[1] - pouso[1]
+    dist = math.hypot(dx, dy) or 1.0
+    # o fio para na BORDA do circulo, e nao no centro: atravessado, ele
+    # cortaria o numero ao meio
+    fx = centro[0] - dx / dist * raio
+    fy = centro[1] - dy / dist * raio
+    traco = 0.8 * anota
+    return (f'<g class="balao" data-id="{identidade}" data-item="{numero}">'
+            f'<line class="fio" x1="{pouso[0]:.2f}" y1="{pouso[1]:.2f}" '
+            f'x2="{fx:.2f}" y2="{fy:.2f}" '
+            f'style="stroke-width:{traco:.2f}"/>'
+            f'<circle class="pouso" cx="{pouso[0]:.2f}" cy="{pouso[1]:.2f}" '
+            f'r="{BALAO_PONTO * anota:.2f}"/>'
+            f'<circle class="bola" cx="{centro[0]:.2f}" cy="{centro[1]:.2f}" '
+            f'r="{raio:.2f}" style="stroke-width:{traco:.2f}"/>'
+            f'<text class="n" x="{centro[0]:.2f}" '
+            f'y="{centro[1] + 3.4 * anota:.2f}" '
+            f'style="font-size:{9.5 * anota:.2f}px">{numero}</text></g>')
+
+
 def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
-                   modo="traco", escala=None, anota=1.0, acessorios=None):
+                   modo="traco", escala=None, anota=1.0, acessorios=None,
+                   baloes=None):
     """A linha inteira em SVG, encadeando os simbolos pelas portas.
 
     Cada peca e desenhada uma vez, na origem, olhando para +x. Encaixar e uma
@@ -410,6 +563,11 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
                      (altura_max - 2 * margem) / max(maxy - miny, 1))
     largura = (maxx - minx) * escala + 2 * margem
     altura = (maxy - miny) * escala + 2 * margem
+    # a origem do desenho na folha: e por ela que a anotacao converte
+    # milimetro real em pixel de tela, e nao pela margem - depois dos baloes a
+    # margem de cima ja nao e a de baixo
+    ox, oy = margem - minx * escala, margem - miny * escala
+
 
     # o modo e uma CLASSE, e nao um desenho diferente: a geometria e uma so, em
     # milimetro real, e as tres leituras saem da mesma folha de estilo
@@ -418,11 +576,11 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
     # um degrade por (cor, angulo) que a linha realmente usa - nao por peca:
     # vinte tubos deitados na mesma cor compartilham o mesmo
     degrades = {}
-    partes = [f'<svg class="modo-{modo}" viewBox="0 0 {largura:.2f} '
-              f'{altura:.2f}" width="{largura:.2f}" height="{altura:.2f}" '
-              f'role="img" aria-label="linha montada">', DEFS, "@DEGRADES@",
-              f'<g class="geo" transform="translate({margem - minx*escala:.2f} '
-              f'{margem - miny*escala:.2f}) scale({escala:.5f})">']
+    # o tamanho da folha e a origem do desenho so se sabem depois de por os
+    # baloes, e os baloes so se poem depois de saber o que ha na folha para
+    # eles desviarem. Entao o cabecalho fica marcado e se preenche no fim -
+    # o mesmo que ja se faz com os degrades
+    partes = ["@SVG@", DEFS, "@DEGRADES@", "@GEO@"]
     # A FERRAGEM FICA POR CIMA, e pode: nada dela cruza a chapa.
     #
     # O parafuso atravessa o furo da flange, e por dentro da chapa ele nao se
@@ -438,11 +596,19 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
     ruins = []
     sob, sobre = [], []
 
+    estorvos = []          # o que o balao tem de contornar, alem das pecas
+
     def guardar(elementos, embrulho=("", "")):
         if elementos:
             sobre.append(embrulho[0]
                          + "".join(desenhar(e) for e in elementos)
                          + embrulho[1])
+            # so o que sai em milimetro absoluto entra na conta do balao. O
+            # sanduiche da wafer vai embrulhado no proprio grupo da peca, e a
+            # caixa dele ja e a da peca
+            if embrulho == ("", ""):
+                x0, y0, w, h = s.limites(elementos)
+                estorvos.append((x0, y0, x0 + w, y0 + h))
 
     for i, p in enumerate(postos[:-1]):
         if i in wafer or (i + 1) in wafer:
@@ -554,6 +720,32 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
                       f'rotate({p.giro:g})">{corpo}</g>')
     partes += sobre
     partes.append("</g>")
+
+    # O BALAO ENTRA NO ENQUADRAMENTO. Ele sai do desenho para nao tapar peca
+    # nenhuma, e sair do desenho e sair da folha se a folha nao crescer junto:
+    # os de cima ficariam cortados na borda. Entao mede-se onde eles cairam e
+    # abre-se o tanto que falta, de cada lado.
+    #
+    # E so aqui, e nao la em cima, porque a FERRAGEM DA JUNTA nao pertence a
+    # peca nenhuma - ela nasce entre duas - e sem ela na conta o balao pousava
+    # em cima dos parafusos, que e justamente onde o desenho e mais cheio
+    lugares = lugares_dos_baloes(
+        [(ids[i] if ids and i < len(ids) else None, p)
+         for i, p in enumerate(postos)] + list(postos_extra),
+        baloes, escala, ox, oy, anota, estorvos)
+    if lugares:
+        raio = BALAO_R * anota + 2 * anota
+        esq = max(0.0, raio - min(c[0] for _i, _n, _p, c in lugares))
+        topo = max(0.0, raio - min(c[1] for _i, _n, _p, c in lugares))
+        dir_ = max(0.0, max(c[0] for _i, _n, _p, c in lugares) + raio - largura)
+        baixo = max(0.0, max(c[1] for _i, _n, _p, c in lugares) + raio - altura)
+        if esq or topo or dir_ or baixo:
+            largura += esq + dir_
+            altura += topo + baixo
+            ox, oy = ox + esq, oy + topo
+            lugares = [(i, n, (p[0] + esq, p[1] + topo),
+                        (c[0] + esq, c[1] + topo))
+                       for i, n, p, c in lugares]
     # A MEDIDA VAI SO NO TUBO - aco zincado, PVC, Plasson, PEAD.
     #
     # E a unica peca cuja medida alguem precisa ler no desenho, porque e a
@@ -593,8 +785,8 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
             local = (p.dx + meio[0] * cos - meio[1] * sen,
                      p.dy + meio[0] * sen + meio[1] * cos)
             direcao = meio[2] + p.giro
-        mx = margem + (local[0] - minx) * escala
-        my = margem + (local[1] - miny) * escala
+        mx = ox + local[0] * escala
+        my = oy + local[1] * escala
         # a cota deita junto com o eixo, mas nunca de cabeca para baixo: fora
         # de -90..90 ela leria ao contrario, e ai vira meia volta
         direcao = (direcao + 180) % 360 - 180
@@ -613,19 +805,33 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
             # a bitola de cada flange, na sua ponta
             for porta, ponto in ((entrada, p.entrada), (saida, p.saida)):
                 meia = s.flange(porta.dn_pol)["externo"] / 2 * escala
-                px = margem + (ponto[0] - minx) * escala
-                py = margem + (ponto[1] - miny) * escala - meia - 4 * anota
+                px = ox + ponto[0] * escala
+                py = oy + ponto[1] * escala - meia - 4 * anota
                 partes.append(f'<text class="marca" x="{px:.2f}" '
                               f'y="{py:.2f}" '
                               f'style="font-size:{9.0 * anota:.2f}px">'
                               f'{porta.dn_pol:g}"</text>')
     for p, motivo in ruins:
-        px = margem + (p.saida[0] - minx) * escala
-        py = margem + (p.saida[1] - miny) * escala
+        px = ox + p.saida[0] * escala
+        py = oy + p.saida[1] * escala
         partes.append(f'<circle class="juncao ruim" cx="{px:.1f}" cy="{py:.1f}" '
                       f'r="{4 * anota:.2f}"/>')
-    partes.append("</g></svg>")
+    partes.append("</g>")
+    if lugares:
+        partes.append('<g class="baloes">')
+        partes += [_desenhar_balao(i, n, pouso, centro, anota)
+                   for i, n, pouso, centro in lugares]
+        partes.append("</g>")
+    partes.append("</svg>")
     saida = "".join(partes)
+    saida = saida.replace(
+        "@SVG@", f'<svg class="modo-{modo}" viewBox="0 0 {largura:.2f} '
+                 f'{altura:.2f}" width="{largura:.2f}" '
+                 f'height="{altura:.2f}" role="img" '
+                 f'aria-label="linha montada">', 1)
+    saida = saida.replace(
+        "@GEO@", f'<g class="geo" transform="translate({ox:.2f} {oy:.2f}) '
+                 f'scale({escala:.5f})">', 1)
     saida = saida.replace("@DEGRADES@",
                           f'<defs>{"".join(degrades.values())}</defs>'
                           if degrades else "")

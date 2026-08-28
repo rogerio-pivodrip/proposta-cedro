@@ -125,6 +125,76 @@ async def rodar(porta):
             conferir("a previsão some depois de soltar",
                      not await pagina.is_visible("#previsao"))
 
+        print("\n== o balão é da peça, e arrastá-lo não move a peça")
+        baloes = await pagina.query_selector_all("g.balao[data-id]")
+        conferir("cada peça desenhada leva um balão",
+                 len(baloes) >= len(await pagina.query_selector_all(
+                     "g.peca[data-id]")), f"{len(baloes)}")
+        numeros = await pagina.eval_on_selector_all(
+            "#lista tbody tr td.item span", "s => s.map(e => e.textContent)")
+        conferir("e a tabela repete o mesmo número",
+                 set(await pagina.eval_on_selector_all(
+                     "g.balao[data-id]", "g => g.map(e => e.dataset.item)"))
+                 <= set(numeros), f"{numeros}")
+        if baloes:
+            balao = baloes[0]
+            id_balao = await balao.get_attribute("data-id")
+            ordem = await pagina.eval_on_selector_all(
+                "g.peca[data-id]", "gs => gs.map(g => g.dataset.id)")
+            bola = await balao.query_selector("circle.bola")
+            caixa = await bola.bounding_box()
+            await pagina.mouse.move(caixa["x"] + caixa["width"] / 2,
+                                    caixa["y"] + caixa["height"] / 2)
+            await pagina.mouse.down()
+            await pagina.mouse.move(caixa["x"] + 90, caixa["y"] + 60, steps=8)
+            await pagina.mouse.up()
+            await pagina.wait_for_timeout(700)
+            depois = await pagina.eval_on_selector_all(
+                "g.peca[data-id]", "gs => gs.map(g => g.dataset.id)")
+            conferir("arrastar o balão não mexe na linha", depois == ordem,
+                     f"{depois} contra {ordem}")
+            movido = await pagina.eval_on_selector(
+                f'g.balao[data-id="{id_balao}"] circle.bola',
+                "e => [Number(e.getAttribute('cx')), "
+                "Number(e.getAttribute('cy'))]")
+            conferir("e o desenho volta do motor com o balão no lugar novo",
+                     movido[0] > 0 and movido[1] > 0, str(movido))
+            # a prova de que o LUGAR foi para o documento, e nao ficou na
+            # tela: desfazer o traz de volta, como qualquer edicao
+            await pagina.click("#desfazer")
+            await pagina.wait_for_timeout(600)
+            voltou = await pagina.eval_on_selector(
+                f'g.balao[data-id="{id_balao}"] circle.bola',
+                "e => [Number(e.getAttribute('cx')), "
+                "Number(e.getAttribute('cy'))]")
+            conferir("e desfazer devolve o balão para onde ele estava",
+                     voltou != movido, f"{voltou} contra {movido}")
+            # o clique cai no NUMERO, que e o que fica por cima do circulo -
+            # e o que o dedo acerta quando alguem mira no balao
+            await pagina.click(f'g.balao[data-id="{id_balao}"] text.n')
+            await pagina.wait_for_timeout(400)
+            conferir("clicar no balão escolhe a peça dele",
+                     len(await pagina.query_selector_all(
+                         f'g.peca.escolhida[data-id="{id_balao}"]')) == 1)
+            linhas = len(await pagina.query_selector_all("#lista tbody tr"))
+            await pagina.click("#balao")
+            await pagina.wait_for_timeout(600)
+            conferir("desmarcar tira o balão do desenho",
+                     not await pagina.query_selector_all(
+                         f'g.balao[data-id="{id_balao}"]'))
+            # a peca desmarcada NAO sai da lista: o balao e do desenho, o
+            # item e da compra. Na tabela o circulo dela so muda de traco
+            conferir("e a peça continua na lista, com o círculo apagado",
+                     len(await pagina.query_selector_all(
+                         "#lista tbody tr")) == linhas
+                     and bool(await pagina.query_selector_all(
+                         "#lista tbody tr td.item span.sem")))
+            await pagina.click("#balao")
+            await pagina.wait_for_timeout(600)
+            conferir("e remarcar o traz de volta",
+                     bool(await pagina.query_selector_all(
+                         f'g.balao[data-id="{id_balao}"]')))
+
         print("\n== exportar dá arquivo, e o DXF sai em milímetro")
         for formato, esperado in (("dxf", ".dxf"), ("xlsx", ".xlsx")):
             async with pagina.expect_download() as espera:

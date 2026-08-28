@@ -165,6 +165,17 @@ td{padding:5px 6px; border-bottom:1px solid var(--linha); vertical-align:top}
 tr{cursor:pointer}
 tr:hover td{background:var(--realce)}
 tr.escolhida td{background:var(--realce); box-shadow:inset 2px 0 0 var(--marca)}
+/* o numero do item, no mesmo circulo do balao do desenho: o olho acha na
+   lista o que achou na folha, sem ler codigo nenhum */
+td.item{width:26px; padding-right:0}
+td.item span{display:block; width:17px; height:17px; margin:0 auto;
+  border:1px solid var(--anota); border-radius:50%; text-align:center;
+  font:400 10px/15px "IBM Plex Mono",ui-monospace,monospace;
+  color:var(--anota)}
+tr.escolhida td.item span{border-color:var(--tinta); color:var(--tinta)}
+/* item sem balao: continua na lista, mas o circulo se apaga - e o que a
+   folha mostra, e a tela nao pode mostrar outra coisa */
+td.item span.sem{border-style:dotted; opacity:.5}
 td.qtd{text-align:right; width:34px; color:var(--anota)}
 /* o × da linha: apagar a peça sem precisar selecionar e ir ao painel */
 td.apagar{width:20px; text-align:center; color:transparent; font-size:14px;
