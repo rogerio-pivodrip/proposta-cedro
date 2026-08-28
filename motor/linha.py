@@ -354,6 +354,36 @@ class Linha:
                         "de": self.pecas[i], "para": self.pecas[i + 1]})
         return out
 
+    def divergencias(self):
+        """Peca cuja MEDIDA DESENHADA nao e a medida do CODIGO comprado.
+
+        E a conferencia mais barata do programa e a que evita o erro mais
+        caro: um tubo desenhado com 2,35 m carregando o codigo da barra de
+        6 m. O desenho vai para a obra dizendo 2,35 e a lista vai para a
+        compra dizendo 6 - e as duas estao certas cada uma por si.
+
+        Isso acontece de proposito as vezes: barra de 6 m cortada no campo. Nao
+        e defeito, e decisao - mas tem de estar ESCRITA, e nao implicita no
+        fato de os dois numeros nunca serem comparados. Quem le a folha ve
+        "cortado de 6 m" e sabe o que pedir.
+
+        So o tubo entra: e a unica peca que se corta. Numa valvula os dois
+        numeros divergirem seria outra coisa - cota de fabricante contra cota
+        da casa - e isso ja e dito pela `fonte`.
+        """
+        fora = []
+        for peca in self.pecas:
+            if peca.familia != "TUBO":
+                continue
+            do_codigo = peca.item.get("comprimento_mm")
+            if not do_codigo:
+                continue
+            desenhado = peca.comprimento_mm or 0
+            if abs(desenhado - do_codigo) > 1:
+                fora.append({"peca": peca, "desenhado_mm": desenhado,
+                             "do_codigo_mm": do_codigo})
+        return fora
+
     def problemas(self):
         return [j for j in self.juncoes()
                 if j["acao"] in ("reducao", "adaptador", "recusada")]

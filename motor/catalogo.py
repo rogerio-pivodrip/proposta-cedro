@@ -148,6 +148,34 @@ class Catalogo:
         cand = self.buscar(*args, **kwargs)
         return cand[0] if cand else None
 
+    def barras_irmas(self, item):
+        """As barras do MESMO tubo em outros comprimentos, por comprimento.
+
+        Irma quer dizer: mesma familia, mesma bitola, mesmo material e as
+        MESMAS PONTAS. A ponta importa mais do que parece - a lista tem o
+        mesmo 8" em FL NBR PN16, em K10 e em ponta lisa, e trocar de
+        comprimento pulando para outra ponta entregaria uma barra que nao
+        encaixa em nada da linha. Entao a assinatura de conexao entra na
+        chave, e nao so o DN.
+
+        Devolve {comprimento_mm: item}, com o mais parecido quando ha mais de
+        um no mesmo comprimento - a descricao mais curta, que e a peca mais
+        limpa, como em `buscar`.
+        """
+        if item["familia"] != "TUBO" or not item["dn"]:
+            return {}
+        assinatura = _pontas(item)
+        familia = {}
+        for outro in self._indice.get(("TUBO", item["dn"][0]), []):
+            if (outro["material"] != item["material"]
+                    or not outro["comprimento_mm"]
+                    or _pontas(outro) != assinatura):
+                continue
+            atual = familia.get(outro["comprimento_mm"])
+            if atual is None or len(outro["descricao"]) < len(atual["descricao"]):
+                familia[outro["comprimento_mm"]] = outro
+        return dict(sorted(familia.items()))
+
     def comprimentos_tubo(self, dn, norma="NBR PN16", material="ACO_ZINCADO"):
         """Comprimentos de tubo disponiveis em estoque para esse DN (mm)."""
         comps = {
@@ -156,6 +184,17 @@ class Catalogo:
             if i["comprimento_mm"]
         }
         return sorted(comps)
+
+
+def _pontas(item):
+    """A assinatura das pontas: tipo e norma de cada conexao, em ordem.
+
+    E o que separa o 8" FL NBR PN16 do 8" K10 e do 8" de ponta lisa. Sem ela,
+    esticar um tubo flangeado podia devolver uma barra de ponta lisa - mesma
+    bitola, mesmo comprimento, e nada onde parafusar.
+    """
+    return tuple(sorted((c.get("tipo") or "", c.get("norma") or "")
+                        for c in (item.get("conexoes") or [])))
 
 
 def _numero(termo):

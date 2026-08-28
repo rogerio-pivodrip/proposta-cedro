@@ -230,6 +230,7 @@ function pintarPainel() {
     `${peca.sap} · ${peca.familia}` +
     (peca.fonte_cota ? ` · cota ${peca.fonte_cota}` : " · cota estimada");
   $("comprimento").value = Math.round(peca.comprimento_mm || 0);
+  pintarBarras(peca);
   const fonte = $("fonte");
   if (!fonte.options.length) {
     ["IRRIGAFOUR", "NETAFIM", "MP", "RAN", "ARAD", "DOROT", "SAINT-GOBAIN"]
@@ -239,6 +240,33 @@ function pintarPainel() {
   $("espelhar").classList.toggle("ligado", peca.sentido < 0);
   $("modo").hidden = false;
   pintarModo();
+}
+
+/* No tubo o comprimento é uma ESCOLHA entre as barras que a lista tem, e não
+   um número livre: a medida do desenho tem de ser a medida que se compra, e um
+   número sem código atrás não é uma barra - é um corte.
+
+   O campo livre continua ali, e cortar continua sendo legítimo. O que não é
+   legítimo é cortar CALADO: o documento passa a trazer a divergência, e ela
+   aparece aqui embaixo e nos avisos da folha. */
+function pintarBarras(peca) {
+  const barras = peca.barras || [];
+  $("rotulo_barras").hidden = barras.length < 2;
+  const caixa = $("barras");
+  caixa.innerHTML = "";
+  barras.forEach((mm) => caixa.add(new Option(`${mm / 1000} m`, mm)));
+  const doCodigo = (documento.divergencias || [])
+    .find((d) => d.id === peca.id);
+  caixa.value = String(doCodigo ? doCodigo.do_codigo_mm
+                                : Math.round(peca.comprimento_mm || 0));
+  const recado = $("painel").querySelector(".corte");
+  if (recado) recado.remove();
+  if (!doCodigo) return;
+  const p = document.createElement("p");
+  p.className = "corte";
+  p.textContent = `desenhado com ${doCodigo.desenhado_mm / 1000} m — corte da ` +
+    `barra de ${doCodigo.do_codigo_mm / 1000} m que o código traz`;
+  $("painel").appendChild(p);
 }
 
 function pintarModo() {
@@ -644,6 +672,17 @@ function ligar() {
     nome: "espelhar", alvo: escolhida,
   }));
   $("trocar").addEventListener("click", trocar);
+  // esticar TROCA a peça - outro comprimento é outro código SAP - então a
+  // seleção tem de seguir a peça nova, senão o painel fica apontando para
+  // uma peça que saiu da linha
+  const esticou = (r) => { if (r.ok && r.peca) { escolhida = r.peca; pintar(); } };
+  $("esticar").addEventListener("click", () =>
+    mandar({nome: "esticar", alvo: escolhida, passos: 1}).then(esticou));
+  $("encolher").addEventListener("click", () =>
+    mandar({nome: "esticar", alvo: escolhida, passos: -1}).then(esticou));
+  $("barras").addEventListener("change", (ev) =>
+    mandar({nome: "esticar", alvo: escolhida,
+            para_mm: Number(ev.target.value)}).then(esticou));
   // a pose da linha na folha. Girar é do conjunto: a peça de uma linha não
   // tem posição própria, ela cai onde a anterior deixou
   $("girar_esq").addEventListener("click", () => mandar({

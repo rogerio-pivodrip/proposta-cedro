@@ -85,6 +85,15 @@
     <div class="painel" id="painel" hidden>
       <h2 id="painel_nome">—</h2>
       <p class="sap" id="painel_sap"></p>
+      <!-- no tubo o comprimento é uma ESCOLHA entre as barras que a lista
+           tem, e não um número livre: a medida do desenho tem de ser a medida
+           que se compra. O campo livre continua ali para o corte, e aí o
+           documento passa a dizer que é corte -->
+      <label id="rotulo_barras" hidden>barra
+        <select id="barras"></select>
+        <button id="encolher" title="barra anterior">−</button>
+        <button id="esticar" title="próxima barra">+</button>
+      </label>
       <label>comprimento
         <input type="number" id="comprimento" step="10" min="0">
         <span>mm</span>

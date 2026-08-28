@@ -58,6 +58,7 @@ fundo do poço — e daí em diante clique numa peça, no desenho ou na lista.
 | tudo isso digitando | a **barra de comando**, no pé do desenho |
 | fundo escuro | o **◐** no canto do desenho — como o espaço de modelo do CAD |
 | a prancha | **folha**; na barra, `folha a4 retrato` |
+| esticar um tubo | o **−  barra  +** no painel; na barra, `esticar` / `encolher` |
 | trocar a leitura | **traço · P&B · metal** na barra de cima |
 
 Girar é do conjunto e espelhar é da peça, e a diferença não é de interface: a
@@ -193,6 +194,31 @@ cada uma:
 ```bash
 python3 tools/desenhar_simbolos.py --dn 8 --modo metal > folha.html
 ```
+
+### A medida do tubo bate com o código
+
+O tubo é a única peça que se **corta** — o comprimento dela é decisão de
+projeto, e não vem preso ao código. Por isso é a única que leva medida no
+desenho, e a única que se estica.
+
+**Esticar não é alterar, é substituir.** Um tubo de 8" de 1 m e um de 2 m são
+dois códigos SAP diferentes na lista da Netafim: o comprimento não é um
+parâmetro da mesma peça, é a peça. Então o id muda, como mudaria trocando a
+peça à mão.
+
+E os passos **vêm do que a lista tem** para aquele tubo, naquela bitola, com
+aquelas pontas — em 8" flangeado são 0,5 · 1 · 1,2 · 1,5 · 2 · 2,5 · 3 · 6 m;
+em K10 a lista não tem o 0,5 nem o 1,2, e aí o passo pula. Uma tabela fixa
+ofereceria barra que ninguém vende. A ponta entra na conta junto com a bitola:
+sem isso, esticar um tubo flangeado podia devolver uma barra de ponta lisa —
+mesma bitola, mesmo comprimento, e nada onde parafusar.
+
+**Cortar continua legítimo — calado é que não.** Para um comprimento que a
+lista não tem (a barra de 6 m cortada em 2,35), o campo `comprimento` mantém o
+código, e o documento passa a trazer a divergência: ela aparece em vermelho no
+painel e vira aviso na folha — *"desenhado com 2,35 m, cortado da barra de 6 m
+que o código traz"*. Sem isso o desenho vai para a obra dizendo 2,35 e a lista
+vai para a compra dizendo 6, e as duas estão certas cada uma por si.
 
 ### A cota
 

@@ -78,7 +78,11 @@ def main():
         executar(sessao, {"nome": "template", "template": "SUCCAO", "dn": 8})
         executar(sessao, {"nome": "inserir", "sap": "01523-134000"})
         executar(sessao, {"nome": "desfazer"})
-        alvo = sessao.documento()["pecas"][0]["id"]
+        # o alvo e o TUBO, e nao a primeira peca: `esticar` so vale em tubo,
+        # e o exemplo tem de rodar sobre uma peca em que ele faz sentido
+        pecas = sessao.documento()["pecas"]
+        alvo = next((p["id"] for p in pecas if p["familia"] == "TUBO"),
+                    pecas[0]["id"])
         resposta = executar(sessao, {"nome": "dizer", "texto": verbo.exemplo,
                                      "alvo": alvo})
         conferir(f'{verbo.nome}: "{verbo.exemplo}"', resposta["ok"],
@@ -151,6 +155,49 @@ def main():
         conferir(f"{verbo.nome} sem alvo recusa com motivo",
                  not resposta["ok"] and "escolha uma" in (resposta["erro"] or ""),
                  resposta.get("erro", "passou"))
+
+    print("\n== esticar só vale em tubo, e só nas barras que a lista tem")
+    sessao = Sessao()
+    executar(sessao, {"nome": "template", "template": "SUCCAO", "dn": 8})
+    pecas = sessao.documento()["pecas"]
+    tubo = next(p for p in pecas if p["familia"] == "TUBO")
+    outra = next(p for p in pecas if p["familia"] != "TUBO")
+    recusa = executar(sessao, {"nome": "esticar", "alvo": outra["id"]})
+    conferir("no que não é tubo, recusa dizendo por quê",
+             not recusa["ok"] and "nao e tubo" in (recusa["erro"] or ""),
+             recusa.get("erro", "passou"))
+    barras = tubo["barras"]
+    conferir("o tubo traz as barras que a lista tem", len(barras) > 2,
+             str(barras))
+    subiu = executar(sessao, {"nome": "esticar", "alvo": tubo["id"]})
+    conferir("esticar sobe uma barra",
+             subiu["ok"] and subiu["para_mm"] == barras[barras.index(
+                 tubo["comprimento_mm"]) + 1],
+             f'{subiu.get("para_mm")} depois de {tubo["comprimento_mm"]}')
+    conferir("e TROCA a peça - outro comprimento é outro código",
+             subiu.get("peca") != tubo["id"])
+    novo_tubo = next(p for p in subiu["documento"]["pecas"]
+                     if p["id"] == subiu["peca"])
+    conferir("a medida desenhada é a medida do código",
+             novo_tubo["comprimento_mm"] == subiu["para_mm"],
+             f'{novo_tubo["comprimento_mm"]} contra {subiu["para_mm"]}')
+    sem_codigo = executar(sessao, {"nome": "esticar", "alvo": subiu["peca"],
+                                   "para_mm": 2350})
+    conferir("medida sem código é recusada, dizendo as que existem",
+             not sem_codigo["ok"] and "2.35" in (sem_codigo["erro"] or ""),
+             sem_codigo.get("erro", "passou"))
+
+    print("\n== cortar é legítimo, mas nunca calado")
+    executar(sessao, {"nome": "alterar", "alvo": subiu["peca"],
+                      "campos": {"comprimento_mm": 2350}})
+    documento = sessao.documento()
+    conferir("o documento passa a trazer a divergência",
+             len(documento["divergencias"]) == 1
+             and documento["divergencias"][0]["desenhado_mm"] == 2350,
+             str(documento["divergencias"]))
+    conferir("e ela vira aviso, que é o que vai para a folha",
+             any("cortado da barra" in a for a in documento["avisos"]),
+             str(documento["avisos"][-1:]))
 
     print("\n== número solto é bitola, e não pedaço de texto")
     sessao = Sessao()

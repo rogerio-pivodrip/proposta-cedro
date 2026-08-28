@@ -47,12 +47,20 @@ class Sessao:
             "area": linha.area,
             "giro": linha.giro,
             "espelho": linha.espelho,
-            "pecas": [_peca(p) for p in linha.pecas],
+            "pecas": [_peca(p, self.catalogo) for p in linha.pecas],
             "geometria": [_ponto(g) for g in linha.geometria()],
             "juncoes": [_juncao(j) for j in linha.juncoes()],
             "trechos_retos": [_trecho(t) for t in linha.trechos_retos()],
             "lista": [dict(r) for r in lista],
-            "avisos": list(avisos),
+            "avisos": list(avisos) + [
+                f'{d["peca"].descricao}: desenhado com '
+                f'{d["desenhado_mm"]/1000:g} m, cortado da barra de '
+                f'{d["do_codigo_mm"]/1000:g} m que o código traz'
+                for d in linha.divergencias()],
+            "divergencias": [{"id": d["peca"].id, "sap": d["peca"].sap,
+                              "desenhado_mm": d["desenhado_mm"],
+                              "do_codigo_mm": d["do_codigo_mm"]}
+                             for d in linha.divergencias()],
             "vista": vista.vista(linha, modo=self.modo, **self.janela),
             "pontas": vista.pontas_erradas(linha),
             "pode_desfazer": bool(linha.feitos),
@@ -61,8 +69,16 @@ class Sessao:
         }
 
 
-def _peca(p):
+def _peca(p, catalogo=None):
+    # `barras` sao os comprimentos que a LISTA tem deste mesmo tubo. Vao no
+    # documento porque a tela precisa deles para oferecer a escolha - e vem do
+    # catalogo, e nao de uma tabela na tela, para que a medida oferecida seja
+    # sempre uma medida que tem codigo
+    barras = []
+    if catalogo is not None and p.familia == "TUBO":
+        barras = list(catalogo.barras_irmas(p.item))
     return {
+        "barras": barras,
         "id": p.id, "sap": p.sap, "descricao": p.descricao,
         "familia": p.familia, "material": p.material,
         "dn": list(p.item.get("dn") or []), "unidade_dn": p.unidade_dn,
@@ -146,6 +162,65 @@ def _substituir(sessao, comando):
                 comprimento_mm=comando.get("comprimento_mm"))
     antiga = sessao.linha.substituir(comando["alvo"], peca)
     return {"peca": peca.id, "saiu": antiga.id}
+
+
+def _esticar(sessao, comando):
+    """Sobe ou desce o tubo escolhido para a proxima BARRA da lista.
+
+    Esticar um tubo nao e alterar, e SUBSTITUIR - e a diferenca importa na
+    hora de comprar. Um tubo de 8" de 1 m e um de 2 m sao dois codigos SAP
+    diferentes na lista da Netafim; o comprimento nao e um parametro da mesma
+    peca, e a peca. Por isso o id muda, como mudaria trocando a peca a mao.
+
+    E os passos nao vem de uma tabela inventada aqui: vem do QUE A LISTA TEM
+    para aquele tubo, naquela bitola, com aquelas pontas. Em 8" flangeado sao
+    0,5 · 1 · 1,2 · 1,5 · 2 · 2,5 · 3 · 6 m; em K10 a lista nao tem o 0,5 nem
+    o 1,2, e ai o passo pula. Uma tabela fixa ofereceria barra que ninguem
+    vende.
+
+    Para um comprimento que a lista NAO tem - a barra de 6 m cortada em 2,35 -
+    o caminho e outro: `alterar` o comprimento, que mantem o codigo. Sao duas
+    coisas de verdade diferentes, e o programa nao as mistura.
+    """
+    alvo = comando.get("alvo")
+    if not alvo:
+        raise Erro("esticar age sobre uma peca - escolha um tubo antes")
+    peca = sessao.linha.pecas[sessao.linha.posicao(alvo)]
+    if peca.familia != "TUBO":
+        raise Erro(f"{peca.descricao} nao e tubo - so o tubo se estica, "
+                   f"porque so ele se corta")
+    irmas = sessao.catalogo.barras_irmas(peca.item)
+    tamanhos = list(irmas)
+    atual = peca.item.get("comprimento_mm") or peca.comprimento_mm or 0
+    lista = " · ".join(f"{c/1000:g}" for c in tamanhos) + " m"
+    if len(tamanhos) < 2:
+        raise Erro(f"a lista so tem uma barra deste tubo: {lista}")
+    if comando.get("para_mm") is not None:
+        # comprimento pedido de uma vez: so vale se a lista tiver o codigo.
+        # E o ponto todo - a medida do desenho tem de ser a medida que se
+        # compra, e um numero sem codigo atras nao e uma barra, e um corte
+        pedido = float(comando["para_mm"])
+        exato = next((c for c in tamanhos if abs(c - pedido) < 1), None)
+        if exato is None:
+            raise Erro(f"a lista nao tem barra de {pedido/1000:g} m deste "
+                       f"tubo - ela tem {lista}. Para cortar uma barra maior, "
+                       f"use `comprimento`, que mantem o codigo e escreve o "
+                       f"corte na folha")
+        destino = tamanhos.index(exato)
+        passos = 0
+    else:
+        passos = int(comando.get("passos") or 1)
+        perto = min(range(len(tamanhos)),
+                    key=lambda k: abs(tamanhos[k] - atual))
+        destino = perto + passos
+    if not 0 <= destino < len(tamanhos):
+        ponta = "maior" if passos > 0 else "menor"
+        raise Erro(f"a lista nao tem barra {ponta} que {atual/1000:g} m - "
+                   f"ela tem {lista}")
+    nova = Peca(irmas[tamanhos[destino]])
+    antiga = sessao.linha.substituir(alvo, nova)
+    return {"peca": nova.id, "saiu": antiga.id, "de_mm": atual,
+            "para_mm": tamanhos[destino], "tamanhos": tamanhos}
 
 
 def _alterar(sessao, comando):
@@ -407,7 +482,7 @@ def _janela(sessao, comando):
 
 COMANDOS = {
     "inserir": _inserir, "remover": _remover, "substituir": _substituir,
-    "alterar": _alterar, "mover": _mover,
+    "alterar": _alterar, "mover": _mover, "esticar": _esticar,
     "girar": _girar, "espelhar": _espelhar,
     "desfazer": _desfazer, "refazer": _refazer,
     "template": _template, "catalogo": _catalogo, "janela": _janela,
