@@ -1,0 +1,8 @@
+# Cotas que ESTAVAM no programa e foram tiradas, com o motivo.
+#
+# Existe para a medida errada nao voltar. Sem registro, a proxima pessoa que
+# abrir o DXF mede de novo, acha o mesmo numero, e o repoe achando que corrigiu
+# um buraco.
+familia,dn_pol,variante,significado,valor,fonte_antiga,motivo
+VENTOSA,2,COMBINADA/NAVC,largura_mm,483.6,DXF da casa,extent do bloco pegou uma circunferencia de construcao - ha 142 delas sobre as ventosas na prancha
+VENTOSA,2,COMBINADA/NAVC,altura_total_mm,518.0,DXF da casa,idem - a valvula tem 291 mm pela foto escalada na rosca de 2" BSP

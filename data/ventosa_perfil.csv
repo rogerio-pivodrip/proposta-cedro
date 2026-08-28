@@ -1,0 +1,45 @@
+# Perfil do CORPO da ventosa combinada 2" - Netafim/Dorot.
+#
+# Sai do DESENHO COTADO do fabricante (a vista lateral com "25" de altura e
+# "20" de largura), que e ortografico - sem perspectiva para corrigir. O perfil
+# e a silhueta da parte CINZA: a curva azul do alto e outra peca, um cotovelo
+# de 2" BSP femea que se enrosca na saida.
+#
+# ATENCAO - O DESENHO E COTADO MAS NAO ESTA EM ESCALA. Ele proprio anota a
+# rosca em ~59,6 mm (2" BSP macho, ISO 228), e a rosca desenhada nele mede
+# 86 mm na escala da cota de altura. Um fator de 1.45 entre as duas
+# leituras. Como forma ele serve - proporcao de silhueta e o que se tira dele -
+# e como cota vale o rotulo, que e o que o fabricante afirma.
+#
+# O QUE AS OUTRAS FONTES DIZEM DA ALTURA:
+#
+#   250 mm   este desenho, cota "25"
+#   291 mm   foto em tres quartos, escalada pela rosca
+#   295 mm   anti-vacuo 2" NETAFIM no DXF da casa, mesmo corpo
+#   306 mm   foto frontal, escalada pela rosca
+#   518 mm   REJEITADO - era circunferencia de construcao no bloco do DXF
+#
+# As quatro primeiras ficam entre 250 e 306; a quinta esta fora por 70%. Falta
+# folha de fabricante para fechar, e ate ela chegar vale a cota do desenho.
+#
+# y_mm     0 na base da rosca, negativo para cima
+# raio_mm  do eixo ate a geratriz
+y_mm,raio_mm
+-1.2,36.8
+-11.7,42.9
+-22.2,43.2
+-32.8,57.6
+-43.3,58.6
+-53.8,58.9
+-64.3,61.6
+-74.8,61.6
+-85.3,56.2
+-95.8,53.7
+-106.4,48.9
+-116.9,47.1
+-127.4,45.6
+-137.9,46.8
+-148.4,46.8
+-158.9,46.2
+-169.4,44.4
+-180.0,52.2

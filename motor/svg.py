@@ -171,7 +171,11 @@ LIVREA_FAMILIA = {"VALVULA_RETENCAO": "azul", "VALVULA_BORBOLETA": "azul",
                   "VALVULA_HIDRAULICA": "azul", "VALVULA_GAVETA": "escuro",
                   # sem marca conhecida o medidor cai em azul, que e a cor da
                   # unica folha que diz a cor em texto
-                  "MEDIDOR": "azul"}
+                  "MEDIDOR": "azul",
+                  # ventosa e polimero preto em toda marca da lista - ARI,
+                  # Dorot/Netafim, EMEK, Barak. Saia em aco, que e o padrao de
+                  # quem nao declara nada, e parecia peca usinada
+                  "VENTOSA": "nylon"}
 # plastico nao brilha como aco: o PVC sai cinza fosco e o PEAD, preto
 LIVREA_MATERIAL = {"PVC": "pvc", "PEAD": "pead"}
 

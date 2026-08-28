@@ -151,6 +151,24 @@ def flange_netafim(dn_pol, tipo="SOLDAR"):
 # onde o caderno a desenha - a flange cega (pagina 4) e o manifold (pagina 25).
 LUVA_BSP = {"dn_pol": 2, "comprimento_mm": 30.0, "externo_mm": 40.0}
 
+# Diametro MAIOR da rosca BSP (ISO 228 / BS 2779), em milimetro. Nao e o DN
+# nem o externo do tubo: a rosca de 2" mede 59,614 e nao 50 nem 60,3.
+#
+# Ela entra aqui por dois motivos. O desenho precisa dela para o bocal roscado
+# da ventosa sair na grossura certa; e ela e a unica cota de uma foto de
+# produto que NAO depende da foto - com a rosca a vista, uma foto vira medida.
+# Foi assim que a combinada de 2" foi remedida.
+BSP_MAIOR = {0.5: 20.955, 0.75: 26.441, 1: 33.249, 1.25: 41.910,
+             1.5: 47.803, 2: 59.614, 2.5: 75.184, 3: 87.884, 4: 113.030}
+
+
+def polegada_bsp(pol):
+    """Diametro maior da rosca BSP dessa bitola, em mm."""
+    p = float(pol)
+    if p in BSP_MAIOR:
+        return BSP_MAIOR[p]
+    return min(BSP_MAIOR.items(), key=lambda kv: abs(kv[0] - p))[1]
+
 
 # ---------------------------------------------------------------- primitivas
 def _p(d, classe="corpo"):
@@ -1017,71 +1035,246 @@ def luva(x, y=0.0, direcao=0.0, dn_pol=2, comprimento=None, externo=None):
     return el
 
 
-def ventosa(dn_pol=2, classe="COMBINADA", marca=None):
-    """A ventosa, em pe sobre a luva roscada que a recebe.
+_ventosas = None
 
-    A casa apontou que ela faltava, e ela faltava mesmo: a regra de ONDE a
-    ventosa entra ja existia (motor/ventosa.py) e a luva que a recebe tambem,
-    mas a valvula em si nunca tinha sido desenhada.
 
-    Sao duas pecas diferentes com o mesmo nome, e a medida da casa mostra a
-    diferenca sem margem para duvida: a combinada de 2" tem 518 mm de altura e
-    a anti-vacuo de 2" tem 122. Desenhar uma pela outra erraria por quatro
-    vezes. Por isso a classe entra como parametro e a cota e procurada por
-    CLASSE/MARCA - o DXF da casa mediu quatro modelos, de tres marcas.
+def ficha_ventosa(dn_pol, classe="COMBINADA", marca=None):
+    """A silhueta da ventosa: largura, altura, corpo e a rosca que a prende."""
+    global _ventosas
+    if _ventosas is None:
+        _ventosas = {}
+        with open(f"{DADOS}/ventosas.csv", encoding="utf-8") as fh:
+            for r in csv.DictReader(l for l in fh if not l.startswith("#")):
+                _ventosas[(r["classe"], float(r["dn_pol"]), r["marca"])] = {
+                    "largura": float(r["largura_mm"]),
+                    "altura": float(r["altura_mm"]),
+                    "corpo": float(r["corpo_mm"]),
+                    "rosca_pol": float(r["rosca_pol"]),
+                    "fonte": r["fonte"]}
+    dn = float(dn_pol)
+    for chave in ([(classe, dn, marca)] if marca else []) + [
+            (classe, dn, "NETAFIM"), (classe, dn, "EMEK")]:
+        if chave in _ventosas:
+            ficha = dict(_ventosas[chave])
+            if marca and chave[2] != marca:
+                ficha["fonte"] += f' ({chave[2]})'
+            return ficha
+    return None
 
-    Onde a marca do item nao esta medida, cai na outra marca da mesma classe,
-    e a tarja diz de onde veio. Estimativa so quando nao ha nenhuma das duas.
+
+_perfil_ventosa = None
+
+
+def perfil_ventosa():
+    """O contorno do corpo da ventosa, (y, raio) da base para cima.
+
+    Sai da silhueta da foto do produto escalada pela rosca - ver
+    data/ventosa_perfil.csv. Nao e faixa arbitrada: cada degrau ali e um
+    degrau da peca, e e isso que faz o desenho parecer a valvula em vez de
+    parecer uma pilha de caixas.
     """
-    tentativas = ([f"{classe}/{marca}"] if marca else []) + [
-        f"{classe}/NAVC", f"{classe}/NETAFIM", f"{classe}/EMEK", classe]
-    largura = altura = None
-    fonte = None
-    for variante in tentativas:
-        largura = cotas.cota_da_casa("VENTOSA", dn_pol, variante, "largura_mm")
-        altura = cotas.cota_da_casa("VENTOSA", dn_pol, variante,
-                                    "altura_total_mm")
-        if largura and altura:
-            fonte = "casa" if variante == tentativas[0] else f"casa ({variante})"
-            break
-    if not (largura and altura):
+    global _perfil_ventosa
+    if _perfil_ventosa is None:
+        with open(f"{DADOS}/ventosa_perfil.csv", encoding="utf-8") as fh:
+            _perfil_ventosa = [(float(r["y_mm"]), float(r["raio_mm"]))
+                               for r in csv.DictReader(
+                                   l for l in fh if not l.startswith("#"))]
+    return _perfil_ventosa
+
+
+def ventosa(dn_pol=2, classe="COMBINADA", marca=None):
+    """A ventosa, em pe sobre a ROSCA que a recebe.
+
+    Sao duas pecas diferentes com o mesmo nome, e a medida mostra a diferenca
+    sem margem para duvida: a combinada de 2" tem 291 mm de altura e a
+    anti-vacuo EMEK de 2" tem 122. Desenhar uma pela outra erraria por duas
+    vezes e meia. Por isso a classe entra como parametro.
+
+    **A combinada de 2" foi remedida.** Estava em 483,6 x 518, do extent do
+    bloco no DXF da casa - e esse extent tinha pego uma CIRCUNFERENCIA DE
+    CONSTRUCAO, dessas que a prancha tem 142 sobre a regiao das ventosas. Uma
+    valvula de ar de 2" com 483,6 de largura seria mais larga que um flange de
+    14", e o desenho saia um bloco quase quadrado. A medida nova sai da foto do
+    produto escalada pela ROSCA, que e a unica cota que nao depende de foto -
+    2" BSP macho tem 59,6 mm de diametro maior. Ver data/ventosas.csv, e
+    data/cotas_rejeitadas.csv para a que saiu.
+
+    A peca liga por ROSCA e nao por flange: ela e enroscada na luva de 2" da
+    flange cega ou da curva. E por isso que o pe dela e um bocal com filete
+    desenhado, e nao uma chapa.
+
+    A silhueta e lida da foto, de baixo para cima, e cada faixa esta ali
+    porque ela existe na peca:
+
+        rosca      o bocal BSP macho, com o filete a mostra
+        colar      o anel de aperto, que e a parte MAIS LARGA da peca
+        barril     o corpo, onde mora a boia grande
+        ombro      o afunilamento para o topo
+        curva      a saida de ar, virada 90 graus - so na combinada
+    """
+    ficha = ficha_ventosa(dn_pol, classe, marca)
+    if ficha:
+        largura, altura = ficha["largura"], ficha["altura"]
+        corpo_d, rosca_pol = ficha["corpo"], ficha["rosca_pol"]
+        fonte = ficha["fonte"]
+    else:
         # sem medida: a proporcao sai da anti-vacuo de 2", que e a menor
+        largura = altura = None
         largura, altura = dn_pol * 36.0, dn_pol * 61.0
-        fonte = "estimativa"
+        corpo_d, rosca_pol, fonte = largura, dn_pol, "estimativa"
 
-    rosca = DE_TUBO.get(dn_pol, 60) / 2
-    r = largura / 2
-    # o bocal roscado que entra na luva, a base sextavada, o corpo e o capuz
-    pe = altura * 0.10
-    base = altura * 0.06
-    capuz = altura * 0.22
-    corpo = altura - pe - base - capuz
-    el = [_p(f"M{-rosca:.1f} 0 V{-pe:.1f}"), _p(f"M{rosca:.1f} 0 V{-pe:.1f}")]
-    el += [_p(f"M{-rosca:.1f} {-i*pe/4:.1f} H{rosca:.1f}", "malha")
-           for i in range(1, 4)]
-    el.append({"tipo": "rect", "x": -r * 0.62, "y": -pe - base,
-               "w": r * 1.24, "h": base, "classe": "corpo"})
-    el.append({"tipo": "rect", "x": -r, "y": -pe - base - corpo, "w": 2 * r,
-               "h": corpo, "rx": r * 0.10, "classe": "corpo"})
-    # o capuz: cone truncado com a saida de ar em cima
-    topo = -altura
-    el += [_polilinha([(-r, -pe - base - corpo), (-r * 0.55, topo + capuz * 0.18),
-                       (-r * 0.55, topo)]),
-           _polilinha([(r, -pe - base - corpo), (r * 0.55, topo + capuz * 0.18),
-                       (r * 0.55, topo)]),
-           _p(f"M{-r*0.55:.1f} {topo:.1f} H{r*0.55:.1f}")]
-    # a fresta de saida do ar, que e o que faz dela ventosa e nao um cap
-    el += [_p(f"M{-r*0.55:.1f} {topo + capuz*0.30:.1f} H{r*0.55:.1f}", "malha"),
-           _p(f"M{-r*0.30:.1f} {topo:.1f} V{topo + capuz*0.30:.1f}", "malha"),
-           _p(f"M{r*0.30:.1f} {topo:.1f} V{topo + capuz*0.30:.1f}", "malha")]
-    el.append(_p(f"M0 {altura*0.10:.1f} V{topo - altura*0.06:.1f}", "centro"))
-    el.append({"tipo": "nota", "x": r + largura * 0.10, "y": -altura * 0.55,
-               "texto": f'{classe.lower()} {dn_pol:g}"'})
+    r_rosca = polegada_bsp(rosca_pol) / 2
+    if classe != "COMBINADA":
+        return _ventosa_em_faixas(dn_pol, classe, marca, largura, altura,
+                                  corpo_d, r_rosca, fonte)
+    perfil = perfil_ventosa()
+    # o perfil foi lido no 2"; noutra bitola ele escala pela altura e pelo raio
+    y_base, r_base = perfil[0][0], max(r for _y, r in perfil)
+    k_y = altura / (abs(perfil[-1][0]) / 0.745)     # o corpo e 74,5% da altura
+    k_r = (corpo_d / 2) / r_base
+    pontos = [(y * k_y, r * k_r) for y, r in perfil]
+    # A ROSCA VEM DA NORMA, e nao do desenho. O desenho de onde o perfil saiu e
+    # cotado mas nao esta em escala - a rosca nele mede o equivalente a 86 mm
+    # onde a norma da 59,6 - entao o trecho dela e substituido pelo diametro
+    # BSP de verdade. O resto do perfil e proporcao, e proporcao o desenho da.
+    #
+    # Onde ela acaba se acha pelo PRIMEIRO DEGRAU: subindo da base, o ponto em
+    # que o raio salta mais de 15% e o ombro que sai da rosca. Achar por raio
+    # nao serviria, justamente porque o raio ali esta errado
+    fim = len(pontos) - 1
+    for k in range(1, len(pontos)):
+        if pontos[k][1] > pontos[k - 1][1] * 1.15:
+            fim = k - 1
+            break
+    pontos = [(y, r_rosca if k <= fim else r)
+              for k, (y, r) in enumerate(pontos)]
+    el = []
+    # as duas geratrizes, espelhadas
+    for lado in (-1, 1):
+        el.append(_polilinha([(lado * r, y) for y, r in pontos]))
+    el.append(_p(f"M{-pontos[0][1]:.1f} {pontos[0][0]:.1f} "
+                 f"H{pontos[0][1]:.1f}"))
+    # o filete da rosca, so no trecho em que o raio ainda e o dela
+    fim_rosca = max((y for y, r in pontos if abs(r - r_rosca) < 0.6),
+                    default=pontos[0][0])
+    fios = max(int(abs(fim_rosca) / (r_rosca * 0.22)), 3)
+    for k in range(1, fios):
+        yy = fim_rosca * k / fios
+        el.append(_p(f"M{-r_rosca:.1f} {yy:.1f} H{r_rosca:.1f}", "malha"))
+    # o serrilhado do colar de aperto, na secao mais larga
+    r_max = max(r for _y, r in pontos)
+    largos = [y for y, r in pontos if r > r_max * 0.93]
+    if len(largos) > 1:
+        for k in (0.30, 0.55, 0.80):
+            yy = largos[0] + (largos[-1] - largos[0]) * k
+            el.append(_p(f"M{-r_max:.1f} {yy:.1f} H{r_max:.1f}", "malha"))
+    y = pontos[-1][0]
+    r_barril = pontos[-1][1]
+    h_topo = altura - abs(y)
+    return _ventosa_topo(el, y, r_barril, h_topo, largura, altura, corpo_d,
+                         classe, dn_pol, marca, fonte)
 
+
+def _ventosa_em_faixas(dn_pol, classe, marca, largura, altura, corpo_d,
+                       r_rosca, fonte):
+    """A anti-vacuo, que NAO tem o perfil da combinada.
+
+    O perfil lido da foto e o da combinada: colar largo de aperto, barril e
+    curva de saida. A anti-vacuo e outra peca - corpo unico, sem colar e sem
+    curva, e a EMEK de 2" tem 122 mm de altura contra 306 da combinada.
+    Emprestar o perfil de uma para a outra faria as duas parecerem a mesma
+    valvula em dois tamanhos, que e exatamente o erro que este programa ja
+    cometia antes de a classe entrar como parametro.
+    """
+    r_corpo = corpo_d / 2
+    h_rosca = altura * 0.22
+    h_ombro = altura * 0.10
+    h_capuz = altura * 0.26
+    h_barril = altura - h_rosca - h_ombro - h_capuz
+    y = 0.0
+    el = [_p(f"M{-r_rosca:.1f} {y:.1f} V{y-h_rosca:.1f}"),
+          _p(f"M{r_rosca:.1f} {y:.1f} V{y-h_rosca:.1f}"),
+          _p(f"M{-r_rosca:.1f} {y:.1f} H{r_rosca:.1f}")]
+    fios = max(int(h_rosca / (r_rosca * 0.22)), 3)
+    for k in range(1, fios):
+        el.append(_p(f"M{-r_rosca:.1f} {y - h_rosca*k/fios:.1f} "
+                     f"H{r_rosca:.1f}", "malha"))
+    y -= h_rosca
+    el += [_polilinha([(-r_rosca, y), (-r_corpo, y - h_ombro)]),
+           _polilinha([(r_rosca, y), (r_corpo, y - h_ombro)])]
+    y -= h_ombro
+    el.append({"tipo": "rect", "x": -r_corpo, "y": y - h_barril,
+               "w": 2 * r_corpo, "h": h_barril, "classe": "corpo"})
+    for k in (0.28, 0.55, 0.82):
+        el.append(_p(f"M{-r_corpo:.1f} {y - h_barril*k:.1f} H{r_corpo:.1f}",
+                     "malha"))
+    y -= h_barril
+    return _ventosa_topo(el, y, r_corpo, h_capuz, largura, altura, corpo_d,
+                         classe, dn_pol, marca, fonte)
+
+
+def _ventosa_topo(el, y, r_barril, h_topo, largura, altura, corpo_d,
+                  classe, dn_pol, marca, fonte):
+    """O alto da ventosa: capuz na anti-vacuo, curva de saida na combinada.
+
+    E o que separa as duas de longe. A anti-vacuo termina num capuz com a
+    fresta por onde o ar sai; a combinada tem a CURVA, que vira 90 graus e
+    entrega o ar de lado - e por isso a combinada e mais larga que o corpo
+    dela, e a anti-vacuo nao e.
+    """
+    if classe == "COMBINADA":
+        # A CURVA DE SAIDA. Ela sobe do ombro do corpo, vira 90 graus e entrega
+        # o ar de lado, terminando numa bolsa de 2" BSP FEMEA - e nela que o
+        # cotovelo azul se enrosca. O cotovelo NAO e desenhado: e outra peca,
+        # com codigo proprio, e desenha-lo junto poria na figura da ventosa uma
+        # conexao que a lista dela nao compra.
+        # a bolsa de 2" BSP femea, com a parede: e onde o cotovelo azul enrosca
+        r_saida = polegada_bsp(2) / 2 * 1.10
+        topo = y - h_topo
+        # o pescoco: sai do corpo e sobe. Ele e MAIS ESTREITO que o braco - e
+        # esse degrau que faz o conjunto ler como joelho e nao como bloco
+        colo = r_saida * 0.82
+        el.append({"tipo": "rect", "x": -colo, "y": topo + r_saida * 0.4,
+                   "w": 2 * colo, "h": y - (topo + r_saida * 0.4),
+                   "rx": colo * 0.30, "classe": "corpo"})
+        # o braco horizontal, ate a boca. Ele para na LARGURA da ficha - no
+        # desenho do fabricante a boca da curva cai junto com a geratriz do
+        # corpo, e quem passa dali e o cotovelo azul, que e outra peca
+        alcance = largura / 2
+        el.append({"tipo": "rect", "x": -colo, "y": topo,
+                   "w": alcance + colo, "h": 2 * r_saida,
+                   "rx": r_saida * 0.42, "classe": "corpo"})
+        # a boca: a face da bolsa femea, com a parede a mostra
+        el.append(_p(f"M{alcance:.1f} {topo:.1f} v{2*r_saida:.1f}"))
+        for lado in (-1, 1):
+            yy = topo + r_saida + lado * r_saida * 0.62
+            el.append(_p(f"M{alcance - r_saida*0.72:.1f} {yy:.1f} "
+                         f"H{alcance:.1f}", "malha"))
+        y_fim = topo
+    else:
+        # o capuz, com a fresta de saida do ar
+        capuz = h_topo
+        topo = y - capuz
+        el += [_polilinha([(-r_barril, y), (-r_barril * 0.55, topo + capuz * 0.18),
+                           (-r_barril * 0.55, topo)]),
+               _polilinha([(r_barril, y), (r_barril * 0.55, topo + capuz * 0.18),
+                           (r_barril * 0.55, topo)]),
+               _p(f"M{-r_barril*0.55:.1f} {topo:.1f} H{r_barril*0.55:.1f}")]
+        el += [_p(f"M{-r_barril*0.55:.1f} {topo + capuz*0.30:.1f} "
+                  f"H{r_barril*0.55:.1f}", "malha"),
+               _p(f"M{-r_barril*0.30:.1f} {topo:.1f} V{topo + capuz*0.30:.1f}",
+                  "malha"),
+               _p(f"M{r_barril*0.30:.1f} {topo:.1f} V{topo + capuz*0.30:.1f}",
+                  "malha")]
+        y_fim = topo
+    el.append(_p(f"M0 {altura*0.10:.1f} V{y_fim - altura*0.06:.1f}", "centro"))
+    el.append({"tipo": "nota", "x": largura / 2 + largura * 0.14,
+               "y": -altura * 0.55, "texto": f'{classe.lower()} {dn_pol:g}"'})
     portas = [Porta("entrada", 0, 0, 90, dn_pol)]
     rot = f'ventosa {classe.lower()} {dn_pol:g}"'
     return _montar("VENTOSA", rot, el, portas, fonte,
                    {"dn_pol": dn_pol, "classe": classe, "marca": marca,
+                    "material": "PLASTICO", "ponta": "ROSCA_MACHO_BSP",
                     "altura_total_mm": altura, "largura_mm": largura})
 
 

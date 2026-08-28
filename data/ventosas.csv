@@ -1,0 +1,39 @@
+# Ventosa (valvula de ar) - a medida e a silhueta, por modelo.
+#
+# POR QUE ESTE ARQUIVO EXISTE. A casa tinha a combinada 2" registrada em
+# 483,6 x 518 mm, tirada do bloco do DXF (pecas_CAD3.dxf). Nao e a valvula:
+# na prancha ha CIRCUNFERENCIAS DE CONSTRUCAO grandes desenhadas por cima das
+# ventosas - 142 delas na regiao - e o extent do bloco pegou uma. Uma valvula
+# de ar de 2" com 483,6 mm de largura seria mais larga que um flange de 14".
+#
+# A MEDIDA NOVA sai do DESENHO COTADO do fabricante - a vista lateral com "25"
+# de altura e "20" de largura, esta ultima incluindo o cotovelo azul de 2" BSP
+# femea, que e outra peca. Descontado ele, o corpo da valvula fica em 121 mm.
+#
+#   altura  250 mm     corpo 121 mm     (200 mm com o cotovelo azul,
+#                                      que e outra peca e nao entra aqui)
+#
+# E CONFERE por dois outros caminhos. A primeira foto, em tres quartos, deu
+# 291,2 mm de altura contra 305,8 da segunda - 5% entre duas fotos diferentes.
+# E no mesmo DXF, o anti-vacuo 2" NETAFIM, que e do mesmo corpo, mede 295,4 mm
+# depois de descartadas as circunferencias. Tres leituras entre 291 e 306, e
+# nenhuma perto de 518.
+#
+# O PERFIL do corpo, linha a linha, esta em data/ventosa_perfil.csv - o
+# desenho sai dele e nao de faixas arbitradas.
+#
+# As anti-vacuo continuam como a casa mediu: elas nao tem circunferencia por
+# cima e os numeros delas sempre foram plausiveis.
+#
+# fonte:
+#   casa            extent do bloco do DXF, sem circunferencia por cima
+#   desenho cotado  vista lateral cotada do fabricante
+#   foto+rosca      silhueta da foto, escala pela rosca BSP - ver
+#                   data/ventosa_perfil.csv para a divergencia entre as fontes
+#   casa (rejeitada) fica registrada para nao ser medida de novo
+classe,dn_pol,marca,largura_mm,altura_mm,corpo_mm,rosca_pol,fonte
+COMBINADA,2,NETAFIM,121.0,250.0,121.0,2,desenho cotado
+ANTIVACUO,2,NETAFIM,92.8,295.4,92.8,2,casa
+ANTIVACUO,2,EMEK,73.3,122.0,73.3,2,casa
+ANTIVACUO,1,NETAFIM,76.4,286.0,76.4,1,casa
+ANTIVACUO,1,EMEK,58.6,125.0,58.6,1,casa

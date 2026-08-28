@@ -206,6 +206,40 @@ def main():
     else:
         print("\n  ok toda flange Plasson que a casa compra casa com uma de aço")
 
+    print("\n== a ventosa sai na medida, e a medida que saiu")
+    # A combinada de 2" estava em 483,6 x 518 - o extent de um bloco do DXF que
+    # tinha pego uma CIRCUNFERENCIA DE CONSTRUCAO. Este caso guarda a medida
+    # nova e, junto, a que foi rejeitada: sem isso alguem mede o mesmo bloco de
+    # novo daqui a um ano, acha o mesmo numero e o repoe achando que consertou
+    fora_v = []
+    print(f'  {"peça":>26}  {"desenhado":>15}  {"ficha":>15}  fonte')
+    for classe, marca, dn in (("COMBINADA", "NETAFIM", 2),
+                              ("ANTIVACUO", "NETAFIM", 2),
+                              ("ANTIVACUO", "EMEK", 2),
+                              ("ANTIVACUO", "NETAFIM", 1),
+                              ("ANTIVACUO", "EMEK", 1)):
+        ficha = s.ficha_ventosa(dn, classe, marca)
+        sim = s.ventosa(dn, classe, marca)
+        _x, _y, larg, alt = s.caixa_do_corpo(sim)
+        ok = (abs(larg - ficha["largura"]) < 0.5
+              and abs(alt - ficha["altura"]) < 0.5)
+        print(f'  {"ok" if ok else " !"} {classe.lower()} {dn:g}" {marca:<9}  '
+              f'{larg:>6.1f} x {alt:>6.1f}  '
+              f'{ficha["largura"]:>6.1f} x {ficha["altura"]:>6.1f}  '
+              f'{ficha["fonte"]}')
+        if not ok:
+            fora_v.append(f'{classe.lower()} {dn:g}" {marca}')
+    if fora_v:
+        problemas.append("a ventosa não sai na medida em " + ", ".join(fora_v))
+    with open("data/cotas_rejeitadas.csv", encoding="utf-8") as fh:
+        rejeitadas = [r for r in csv.DictReader(
+            l for l in fh if not l.startswith("#"))]
+    print("\n  · cotas que saíram, e por quê:")
+    for r in rejeitadas:
+        print(f'    {r["familia"]} {r["dn_pol"]}" {r["variante"]} '
+              f'{r["significado"]} = {r["valor"]}\n'
+              f'      {r["motivo"]}')
+
     print("\n== a retenção A.R.I. NR-010 sai na medida da folha")
     # O bujao dela e INCLINADO e a cota B vai ate a ponta dele - entao a altura
     # da peca nao e "corpo mais bujao", e a projecao do bujao caido mais o
