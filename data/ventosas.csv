@@ -10,7 +10,7 @@
 # de altura e "20" de largura, esta ultima incluindo o cotovelo azul de 2" BSP
 # femea, que e outra peca. Descontado ele, o corpo da valvula fica em 121 mm.
 #
-#   altura  257,9 mm   corpo 121,4 mm   (185 mm com o cotovelo, que e outra
+#   altura  257,9 mm   corpo 122,6 mm   (185 mm com o cotovelo, que e outra
 #                                        peca e vai desenhada junto)
 #
 # NADA disso e mais arbitrado: cai do CONTORNO VETORIAL, escalado pela ROSCA -
@@ -36,7 +36,7 @@
 #                   data/ventosa_perfil.csv para a divergencia entre as fontes
 #   casa (rejeitada) fica registrada para nao ser medida de novo
 classe,dn_pol,marca,largura_mm,altura_mm,corpo_mm,rosca_pol,fonte
-COMBINADA,2,NETAFIM,121.4,257.9,121.4,2,dxf vetorial
+COMBINADA,2,NETAFIM,122.6,257.9,122.6,2,dxf vetorial
 ANTIVACUO,2,NETAFIM,92.8,295.4,92.8,2,casa
 ANTIVACUO,2,EMEK,73.3,122.0,73.3,2,casa
 ANTIVACUO,1,NETAFIM,76.4,286.0,76.4,1,casa

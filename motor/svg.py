@@ -389,7 +389,11 @@ text{font-family:ui-monospace,SFMono-Regular,monospace;fill:var(--anota)}
 .modo-metal .geo path.acionamento.fechado,
 .modo-metal .geo rect.haste,
 .modo-metal .geo path.haste.fechado{fill:var(--luz,url(#aco))}
-.modo-metal .geo path.acessorio.fechado{fill:var(--luz-chapa,url(#chapa))}
+/* o ACESSORIO e outra peca colada na primeira - o cotovelo que enrosca na
+   saida da ventosa, por exemplo. Ele sai na COR DELE e nao na do corpo: no
+   patio o corpo e preto e o cotovelo e azul, e e assim que se distingue um do
+   outro de longe. Herdar a cor do corpo faria os dois virarem uma peca so */
+.modo-metal .geo path.acessorio.fechado{fill:url(#azul)}
 .modo-metal .geo .flange,
 .modo-metal .geo .chapa_lisa{fill:var(--luz-chapa,url(#chapa))}
 .modo-metal .geo .parafuso,.modo-metal .geo .porca{fill:url(#ferragem)}
