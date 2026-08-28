@@ -811,6 +811,32 @@ def sela(x_ramo, r_corpo, r_ramo, y=0.0, passos=18):
     return pontos
 
 
+def _recortar_geratriz(elementos, comp, y, pegadas):
+    """Tira da geratriz os trechos em que um ramo abre boca no corpo.
+
+    Onde o ramo sai NAO HA PAREDE - ha o furo. A linha corrida dizia o
+    contrario, e num manifold de seis bocais ela passava por cima de todas
+    elas. O corte e feito no fim, quando todos os ramos ja sao conhecidos:
+    dois bocais vizinhos podem ter pegadas que se encostam.
+    """
+    if not pegadas:
+        return elementos
+    alvo = f"M0.0 {y:.1f} H{comp:.1f}"
+    sobra = [e for e in elementos
+             if not (e.get("tipo") == "path" and e.get("d") == alvo)]
+    if len(sobra) == len(elementos):
+        return elementos
+    cortes = sorted(pegadas)
+    x = 0.0
+    for a, b in cortes:
+        if a > x + 0.2:
+            sobra.append(_p(f"M{x:.1f} {y:.1f} H{a:.1f}"))
+        x = max(x, b)
+    if x < comp - 0.2:
+        sobra.append(_p(f"M{x:.1f} {y:.1f} H{comp:.1f}"))
+    return sobra
+
+
 def te(dn_pol, dn_derivacao=None, entrada="linha"):
     """Te flangeado. `entrada` diz por qual boca a linha CHEGA.
 
@@ -2491,6 +2517,10 @@ def manifold(dn_pol, bocais=(), luvas=((2, 2.0),), comprimento_mm=None,
     fonte = "netafim" if ficha else None
 
     el = eixo(0, comp, dn_pol)
+    # a geratriz de CIMA vai ser recortada onde cada ramo abre a boca: ali nao
+    # ha parede. Guarda-se a pegada de cada um e o corte se faz no fim, quando
+    # todos ja sao conhecidos - ver `_recortar_geratriz`
+    pegadas = []
     if ponta == "FLANGE":
         el += placa(0, dn_pol) + placa(comp, dn_pol, lado="saida")
     else:
@@ -2506,9 +2536,12 @@ def manifold(dn_pol, bocais=(), luvas=((2, 2.0),), comprimento_mm=None,
               Porta("saida", comp, 0, 0, dn_pol)]
     for i, (dn_b, tipo) in enumerate(abertos):
         x = passo * (i + 1)
-        rd = DE_TUBO.get(dn_b, 100) / 2
+        rd = min(DE_TUBO.get(dn_b, 100) / 2, r)
         el += [_p(f"M{x-rd:.1f} {-r:.1f} V{-(r+pescoco):.1f}"),
                _p(f"M{x+rd:.1f} {-r:.1f} V{-(r+pescoco):.1f}")]
+        # a boca que o ramo abre - a mesma interseccao de cilindros do te
+        el.append(_polilinha(sela(x, r, rd)))
+        pegadas.append((x - rd, x + rd))
         if tipo == "K":
             # anel K: ressalto de topo, sem furacao - mesma logica da ponta
             el.append({"tipo": "rect", "x": x - rd - 10, "y": -r - pescoco,
@@ -2526,7 +2559,11 @@ def manifold(dn_pol, bocais=(), luvas=((2, 2.0),), comprimento_mm=None,
         x = comp * (0.16 + 0.68 * i / (len(postas) - 1)) if len(postas) > 1 \
             else comp * 0.5
         el += luva(x, -r, -90, dn_l, comprimento=saliencia)
+        rl = min(polegada_bsp(dn_l) / 2, r)
+        el.append(_polilinha(sela(x, r, rl)))
+        pegadas.append((x - rl, x + rl))
 
+    el = _recortar_geratriz(el, comp, -r, pegadas)
     el.append(_p(f"M-70 0 H{comp+70:.0f}", "centro"))
     partes = []
     for qtd, dn_b, tipo in bocais:
@@ -3067,6 +3104,15 @@ def curva_saida(dn_pol, angulo=90, dn_saida=2, sentido=1, gomos=4):
     # cada parede do bocal encosta na chapa do gomo no seu proprio ponto: os
     # dois pes caem em alturas diferentes, que e o que acontece quando se
     # solda um tubo redondo num flanco inclinado
+    # A BOCA NAO VAI DESENHADA AQUI, e e decisao e nao esquecimento. No te e no
+    # manifold o ramo e PERPENDICULAR ao corpo e a interseccao dos dois
+    # cilindros e funda - um V ate o eixo quando as bitolas sao iguais. Aqui o
+    # bocal de 2" fura um flanco inclinado a quase 45 graus: a interseccao vira
+    # uma elipse longa e RASA, com 2,9 mm de flecha numa corda de 100. Riscada,
+    # ela atravessa a boca do bocal e le como traco solto; o que ela teria a
+    # dizer ja esta dito pelos dois pes, que caem em alturas diferentes na
+    # chapa - que e o que se ve quando se solda um tubo redondo num flanco
+    # torto.
     for sinal in (-1, 1):
         pe = _atravessa(parede_fora, sinal * rs)
         el.append(_p(f"M{pe if pe is not None else base[0]:.1f} "
