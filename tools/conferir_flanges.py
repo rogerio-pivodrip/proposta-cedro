@@ -32,8 +32,19 @@ import sys
 sys.path.insert(0, ".")
 from motor import simbolos as s                      # noqa: E402
 
-BITOLAS = (2, 2.5, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 24)
+BITOLAS = (1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 24)
+# fios por polegada da rosca UNC, para dizer a sobra em FIOS e nao so em mm -
+# dois fios aparentes e o minimo de aperto com garantia, e dois fios de 5/8"
+# nao sao o mesmo tanto de milimetro que dois fios de 1 1/8"
+_TPI = {"3/8": 16, "1/2": 13, "5/8": 11, "3/4": 10, "7/8": 9, "1": 8,
+        "1 1/8": 7, "1 1/4": 7}
 TOLERANCIA = 0.6            # mm: a folha cota em milimetro inteiro
+
+
+def _mdc(a, b):
+    while b:
+        a, b = b, a % b
+    return a
 
 
 def folhas():
@@ -111,25 +122,89 @@ def main():
 
     print("\n== o parafuso da tabela fecha a junta?")
     # o desenho saiu em escala de verdade - o parafuso no comprimento do codigo
-    # que a lista compra - e escala de verdade da para MEDIR
+    # que a lista compra - e escala de verdade da para MEDIR.
+    #
+    # E "a junta" nao e sempre duas chapas: a ponta Plasson e feita de DUAS
+    # pecas (o colar 5510, com ressalto B, e a flange solta 5900, de espessura
+    # H), entao um encontro Plasson-Plasson tem QUATRO camadas. Enquanto a
+    # folha da Plasson nao estava ligada, esses casos nao eram mensuraveis e o
+    # programa se calava; agora eles entram aqui junto com o aco.
     from motor import regras                            # noqa: E402
     curtos = []
-    for dn in BITOLAS:
-        ficha = regras.parafuso_da_junta(dn, "AZ_AZ")
-        esp = s.flange(dn)["espessura"]
-        _el, sobra = s.parafuso_sextavado(-esp, esp, 0.0, ficha["bitola_mm"],
-                                          ficha["comprimento_mm"])
-        marca = "ok" if sobra >= 2 * 25.4 / 10 else " !"
-        print(f'  {marca} {dn:>4g}"  chapa {esp:.0f}+{esp:.0f}  '
-              f'{ficha["bitola_pol"]}" x {ficha["comprimento_pol"]}"  '
-              f'→ sobra {sobra:+.1f} mm depois da porca')
-        if sobra < 2 * 25.4 / 10:
-            curtos.append(f'{dn:g}"')
+    for contexto in ("AZ_AZ", "ACO_PLASSON", "PLASSON_PLASSON"):
+        print(f"  · {contexto}")
+        for dn in BITOLAS:
+            aperto = regras.aperto_da_junta(dn, contexto)
+            if not aperto:
+                continue
+            ficha = regras.parafuso_da_junta(dn, contexto)
+            meio = aperto["mm"] / 2
+            _el, sobra = s.parafuso_sextavado(
+                -meio, meio, 0.0, ficha["bitola_mm"], ficha["comprimento_mm"])
+            fios = sobra / (25.4 / _TPI[ficha["bitola_pol"]])
+            marca = "ok" if fios >= 2 else " !"
+            pilha = " + ".join(f"{v:.0f}" for _n, v in aperto["camadas"])
+            print(f'    {marca} {dn:>4g}"  {pilha:>18} = {aperto["mm"]:>3.0f}  '
+                  f'{ficha["bitola_pol"]}" x {ficha["comprimento_pol"]}"  '
+                  f'→ sobra {sobra:+5.1f} mm ({fios:.1f} fios)')
+            if fios < 2:
+                curtos.append(f'{contexto} {dn:g}"')
     if curtos:
         print("     ↑ estas o programa AVISA, e não conserta: a tabela de "
               "ferragem é regra da casa.\n"
               "       " + ", ".join(curtos)
               + " pedem um parafuso mais longo.")
+
+    print("\n== a furação da flange solta Plasson e a da linha de aço")
+    # As duas tem de casar: numa junta aço-Plasson o parafuso passa pelos dois
+    # furos ao mesmo tempo. Em vez de comparar so contra o DN que a conversao
+    # de bitola aponta, aqui se procura em TODA a tabela NBR qual DN tem aquela
+    # furacao - assim "d50 é furado como DN40" sai como informacao, e o que
+    # sobra sem par e o que merece bandeira.
+    from motor import bitola as _bitola                  # noqa: E402
+    from motor import cotas as _cotas                    # noqa: E402
+    nbr = {dn: reg for (norma, dn), reg in regras.FUROS.items()
+           if norma == "NBR PN16"}
+    # as bitolas que a CASA compra em Plasson (motor/bitola.LINHA_PLASSON, em
+    # DN nominal) - o resto da folha existe mas nao entra em montagem daqui
+    da_casa = {_bitola.METRICO.get(dn) for dn in _bitola.LINHA_PLASSON}
+    orfas = []
+    print(f'  {"d":>5} {"casa":>5}  {"plasson":>16}  qual DN de aço tem essa furação')
+    for d in _cotas.bitolas_flangeadas_plasson():
+        par = _cotas.par_flangeado_plasson(d)
+        igual = [dn for dn, reg in sorted(nbr.items())
+                 if abs(par["circulo"] - reg["circulo_mm"]) <= 2
+                 and par["furo"] == reg["furo_mm"]
+                 and par["furos"] == reg["furos"]]
+        usada = d in da_casa
+        desenho = f'{par["furos"]}x{par["furo"]:.0f} em {par["circulo"]:.0f}'
+        if igual:
+            resposta = ", ".join(f"DN{dn:g}" for dn in igual)
+        else:
+            resposta = "NENHUM"
+            if usada:
+                orfas.append((d, par))
+        print(f'  {"!" if (usada and not igual) else " "} {d:>3g} '
+              f'{"sim" if usada else "-":>5}  {desenho:>16}  {resposta}')
+    if orfas:
+        for d, par in orfas:
+            pol = _bitola.em_polegada(d, "mm")
+            aco = nbr.get(_bitola.nominal(d, "mm"))
+            print(f'\n  ! a flange solta Plasson d{d:g} não casa com nenhuma\n'
+                  f'    flange de aço da tabela. Ela tem {par["furos"]}x'
+                  f'{par["furo"]:.0f} em {par["circulo"]:.0f}; o {pol:g}" de aço\n'
+                  f'    tem {aco["furos"]}x{aco["furo_mm"]:.0f} em '
+                  f'{aco["circulo_mm"]:.0f} - mesmo furo e quase o mesmo\n'
+                  f'    círculo, mas {aco["furos"]} furos contra '
+                  f'{par["furos"]}, e só {_mdc(par["furos"], aco["furos"])}\n'
+                  f'    das posições coincidem.')
+        print("\n    Isto NÃO se conserta aqui, do mesmo jeito que a folha\n"
+              "    Netafim contra a NBR: é uma pergunta para quem compra. A\n"
+              "    lista continua comprando pela furação de aço, que tem MAIS\n"
+              "    furos - comprar parafuso a mais é barato, comprar a menos\n"
+              "    deixa a junta sem parafuso.")
+    else:
+        print("\n  ok toda flange Plasson que a casa compra casa com uma de aço")
 
     print("\n== toda linha da tabela de ferragem tem codigo na lista")
     # A tabela e regra da casa, mas ela COMPRA - e nao adianta a regra pedir

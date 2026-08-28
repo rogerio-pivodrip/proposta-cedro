@@ -13,6 +13,7 @@ import csv
 import os
 
 from . import bitola
+from . import cotas
 from .traducao import POLEGADA_MM
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -309,6 +310,112 @@ def resolver_juncao(porta_a, porta_b):
     return "adaptador", {"dn": porta_a["dn"],
                          "de": (porta_a["tipo"], porta_a["norma"]),
                          "para": (porta_b["tipo"], porta_b["norma"])}
+
+
+_plasson_pol = None
+
+
+def par_plasson(dn_pol):
+    """O par flange solta + colar Plasson dessa bitola, em polegada.
+
+    A Plasson nomeia a bitola pelo externo do tubo em milimetro, e mais de um
+    milimetro cai na mesma polegada: 50 e 63 sao os dois 2", 125 e 140 sao 5",
+    200 e 225 sao 8". Quando ha duas, vale a MAIS GROSSA - o parafuso e um so
+    para a polegada e tem de fechar a pior das duas.
+    """
+    global _plasson_pol
+    if _plasson_pol is None:
+        _plasson_pol = {}
+        for d in cotas.bitolas_flangeadas_plasson():
+            ficha = cotas.par_flangeado_plasson(d)
+            if not ficha or ficha["ressalto"] is None:
+                continue
+            pol = bitola.em_polegada(d, "mm")
+            if pol is None:
+                continue
+            grosso = ficha["espessura"] + ficha["ressalto"]
+            atual = _plasson_pol.get(pol)
+            if atual is None or grosso > atual["espessura"] + atual["ressalto"]:
+                _plasson_pol[pol] = ficha
+    return _plasson_pol.get(float(dn_pol))
+
+
+def chapa_da_ponta(dn_pol, material):
+    """Quanta chapa ESTA ponta poe na junta, e de que ela e feita.
+
+    E a peca que faltava para medir parafuso fora do aco. Uma ponta de aco poe
+    UMA chapa - a flange soldada. Uma ponta Plasson poe DUAS: o colar (desenho
+    5510), soldado no tubo, com ressalto de espessura B; e a flange solta
+    (5900), de espessura H, que corre por tras do ressalto. Nao e detalhe de
+    desenho: e o dobro de chapa, e o parafuso sente.
+
+    As camadas saem na ordem em que se atravessa a ponta A PARTIR DA JUNTA -
+    ressalto primeiro, flange solta depois - para o outro lado poder ser
+    lido de tras para frente e a junta inteira sair na ordem certa.
+
+    Devolve None onde nao ha folha: contra a bomba, o flange e do fabricante
+    dela; no PEAD, o ressalto do colar e estimado. Melhor calar que afirmar.
+    """
+    from . import simbolos
+    if material in PLASSON:
+        par = par_plasson(dn_pol)
+        if not par:
+            return None
+        return {"mm": par["ressalto"] + par["espessura"],
+                "furo": par["furo"], "furos": par["furos"],
+                "camadas": [("colar", par["ressalto"]),
+                            ("flange solta", par["espessura"])],
+                "fonte": f'plasson 5900+5510 d{par["d_mm"]:g}'}
+    if material in (None, "ACO_ZINCADO", "FERRO_FUNDIDO", "ACO"):
+        f = simbolos.flange(dn_pol)
+        return {"mm": f["espessura"], "furo": f["furo"], "furos": f["furos"],
+                "camadas": [("chapa AZ", f["espessura"])], "fonte": f["fonte"]}
+    return None
+
+
+# Os materiais de cada contexto, para a conta do aperto. O contexto ja resolveu
+# quem encontra quem; aqui so se pergunta o que cada ponta poe de chapa.
+PONTAS_DO_CONTEXTO = {
+    "AZ_AZ": ("ACO_ZINCADO", "ACO_ZINCADO"),
+    "ACO_PLASSON": ("ACO_ZINCADO", "PVC"),
+    "PLASSON_PLASSON": ("PVC", "PVC"),
+}
+
+
+def aperto_da_junta(dn_pol, contexto="AZ_AZ"):
+    """Quanta chapa o parafuso atravessa nesta junta, e de que ela e feita.
+
+    E a conta que decide o comprimento do parafuso, e ela nao e "duas chapas"
+    em todo lugar - depende de QUEM se encontra:
+
+        AZ_AZ            chapa + chapa                                  duas
+        ACO_PLASSON      chapa + colar + flange solta                   tres
+        PLASSON_PLASSON  flange solta + colar + colar + flange solta  quatro
+
+    Por isso o parafuso Plasson e mais longo que o de aco na mesma bitola - nao
+    por folga, por geometria.
+
+    Devolve {"mm", "furo", "camadas", "fonte"} ou None quando falta ficha.
+    BOMBA e MISTO devolvem None de proposito: o flange da bomba e do fabricante
+    dela e nao ha folha aqui, e MISTO e o que sobrou sem regra. Medir esses com
+    a chapa de aco dos dois lados daria um veredito sobre um sanduiche que nao
+    existe, e um "fecha" falso vale menos que nao dizer nada.
+    """
+    pontas = PONTAS_DO_CONTEXTO.get(contexto)
+    if not pontas:
+        return None
+    a = chapa_da_ponta(dn_pol, pontas[0])
+    b = chapa_da_ponta(dn_pol, pontas[1])
+    if not a or not b:
+        return None
+    camadas = list(reversed(a["camadas"])) + b["camadas"]
+    fontes = dict.fromkeys((a["fonte"], b["fonte"]))
+    return {"mm": a["mm"] + b["mm"],
+            # o furo que manda e o MENOR dos dois: e ele que limita o parafuso
+            "furo": min(a["furo"], b["furo"]),
+            "camadas": camadas,
+            "lados": (a["mm"], b["mm"]),
+            "fonte": " + ".join(fontes)}
 
 
 def especificacao_parafuso(dn_pol, contexto):

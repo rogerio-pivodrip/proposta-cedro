@@ -24,6 +24,14 @@ from motor import cotas, simbolos as s  # noqa: E402
 
 SEM_CORPO = {"centro"}
 
+# O que a casa NAO desenhou na peca, e por isso nao entra na comparacao. O
+# bloco do adaptador de flange e o COLAR sozinho - o E1 medido (106 no DN75,
+# 272 no DN225) e o do ressalto do 5510, e nao o da flange. O simbolo passou a
+# desenhar a flange solta junto, porque na obra ela ja esta enfiada no colar
+# antes de ele ser soldado; medir o par contra o bloco do colar acusaria +25 a
+# +75% de altura numa peca que nao mudou de tamanho.
+FORA_DA_MEDIDA = {"ADAPTADOR_FLANGE": {"flange_solta"}}
+
 # familia -> (como pedir a peca, cota de largura, cota de altura)
 FEITIO = {
     "LUVA": (lambda dn, menor, var: s.luva_pvc(dn, var or "BOLSA"),
@@ -54,11 +62,17 @@ def _abaixo(dn):
     return menores[-1] if menores else dn
 
 
-def corpo(simbolo):
+def corpo(simbolo, sem=()):
     """A caixa da peca sem o eixo: o eixo sobra dos dois lados e sobra
-    diferente em cada peca, e nao e material."""
+    diferente em cada peca, e nao e material.
+
+    `sem` tira tambem os GRUPOS que a casa nao desenhou nessa peca - ver
+    FORA_DA_MEDIDA.
+    """
+    grupos = set(sem)
     uteis = [e for e in simbolo.elementos
-             if e.get("classe") not in SEM_CORPO and e["tipo"] != "nota"]
+             if e.get("classe") not in SEM_CORPO and e["tipo"] != "nota"
+             and e.get("grupo") not in grupos]
     return s.limites(uteis)
 
 
@@ -142,7 +156,8 @@ def main():
         except Exception as erro:                       # noqa: BLE001
             falhas.append((chave, f"{type(erro).__name__}: {erro}"))
             continue
-        _, _, largura, altura = corpo(peca)   # limites() devolve x, y, w, h
+        # limites() devolve x, y, w, h
+        _, _, largura, altura = corpo(peca, FORA_DA_MEDIDA.get(familia, ()))
         obtido = {sig_l: largura, sig_a: altura}
         if familia == "CURVA":
             # a curva nao tem pose canonica: a de 45 da casa esta de pe, a

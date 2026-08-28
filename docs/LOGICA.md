@@ -223,29 +223,45 @@ ferragem**, o que é justamente o buraco a fechar. Cada junção flangeada gera:
 1 × junta plana DN
 n × parafuso   (n = nº de furos da norma/DN)
 n × porca
-2n × arruela
+n × arruela    (uma só, do lado da porca)
 ```
 
-**Bitola** (`data/regras_ferragem.csv`), regra da casa:
+A arruela é **uma por parafuso**, e não duas: quem precisa dela é o lado que
+gira no aperto — a cabeça assenta direto na chapa. O número sai de
+`regras.ARRUELAS_POR_PARAFUSO`, que o desenho e a lista leem do mesmo lugar.
 
-| contexto | até 5" | acima de 5" |
+**Bitola e comprimento** (`data/regras_ferragem.csv`). Não é mais regra da
+casa: é **calculado**, e a conta está em `motor/regras.aperto_da_junta` e em
+`tools/conferir_flanges.py`.
+
+*A bitola* é o maior parafuso que entra no furo da flange com folga de 1,5 a
+4,5 mm — furo 14 → 3/8", 18 → 5/8", 22 → 3/4", 26 → 7/8", 31 → 1 1/8".
+
+*O comprimento* é `aperto + arruela + porca + 3 fios`, arredondado para cima na
+medida **comercial que a lista tem**: a casa compra por código, e 7/8" × 4½"
+não existe nela.
+
+*O aperto* não é "duas chapas" em todo lugar — depende de quem se encontra:
+
+| contexto | o que o parafuso atravessa | camadas |
 |---|---|---|
-| aço zincado × aço zincado | 5/8" × 2½" | 3/4" × 2½" |
-| qualquer × flange da bomba | 5/8" × 3½" | 3/4" × 3½" |
-| aço × flange Plasson | 5/8" × 3½" | 3/4" × 3½" |
+| `AZ_AZ` | chapa + chapa | duas |
+| `ACO_PLASSON` | chapa + colar + flange solta | três |
+| `PLASSON_PLASSON` | flange solta + colar + colar + flange solta | quatro |
 
-**Só quando flange Plasson encontra flange Plasson** vale a regra própria, com
-bitola e comprimento quebrando no mesmo ponto, 110 mm:
+A ponta Plasson é feita de **duas peças**: o colar (desenho 5510), soldado no
+tubo, com ressalto de espessura `B`; e a flange solta (5900), de espessura `H`,
+que corre por trás do ressalto. É por isso que o parafuso Plasson é mais longo
+que o de aço na mesma bitola — não por folga, por geometria. Em 6", o aço pede
+3/4" × 2½" e o Plasson-Plasson pede 3/4" × 4½" para o mesmo furo.
 
-| tubo | parafuso |
-|---|---|
-| 75, 90 e 110 mm | **5/8" × 4"** |
-| 140, 160 e 225 mm | **3/4" × 5"** |
-
-Aço contra flange Plasson tem regra própria — **3½"**, na tabela acima. Sobra o
-contexto `MISTO`, que é o que não cai em nenhum dos quatro casos (PEAD, por
-exemplo, que entra por colar de tomada e não por flange). Aí o motor não escolhe
-calado: usa uma faixa marcada como chute e avisa a junção.
+Dois contextos **não** são medidos, e isso é deliberado: `BOMBA`, porque o
+flange da bomba é do fabricante dela e não há folha aqui; e `MISTO`, que é o que
+não cai em nenhum caso (PEAD, por exemplo, que entra por colar de tomada e não
+por flange). Medir esses com a chapa de aço dos dois lados daria um veredito
+sobre um sanduíche que não existe. `BOMBA` mantém o acréscimo de 1" que a casa
+usa sobre a junta de aço; `MISTO` usa uma faixa marcada como chute e o motor
+avisa a junção.
 
 **Furação** (`data/regras_furacao.csv`, gerada por `tools/gerar_furacao.py`):
 124 linhas cobrindo NBR 7675, EN 1092-1 em PN10/16/25/40 e ANSI 150/300, de

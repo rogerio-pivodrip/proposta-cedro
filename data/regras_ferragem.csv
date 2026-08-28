@@ -1,39 +1,47 @@
 # Bitola e comprimento de parafuso por contexto de junta.
 #
-# AZ_AZ e BOMBA sao CALCULADOS, e nao arbitrados - a conta esta em
+# Tudo aqui e CALCULADO, e nao arbitrado - a conta esta em
 # tools/conferir_flanges.py e e a mesma que o desenho usa:
 #
+#   aperto:      a espessura que o parafuso atravessa. NAO e "duas chapas" em
+#                todo lugar - ver motor/regras.py:aperto_da_junta.
 #   bitola:      o maior parafuso que entra no furo da flange com folga de
-#                1,5 a 4,5 mm. Furo 18 -> 5/8" ; 22 -> 3/4" ; 26 -> 7/8" ;
-#                31 -> 1 1/8".
-#   comprimento: chapa + chapa + arruela + porca + 3 fios de rosca, arredondado
-#                para cima na medida comercial. A espessura da chapa vem da
-#                folha Netafim (16 mm ate 10", 21 ate 16", 28 acima), e e ela
-#                que faz o comprimento subir com a bitola.
+#                1,5 a 4,5 mm. Furo 14 -> 3/8" ; 18 -> 5/8" ; 22 -> 3/4" ;
+#                26 -> 7/8" ; 31 -> 1 1/8".
+#   comprimento: aperto + arruela + porca + 3 fios de rosca, arredondado para
+#                cima na medida COMERCIAL que a lista tem. A casa compra por
+#                codigo: nao adianta a regra pedir 7/8" x 4 1/2" se a lista so
+#                tem 4" e 5". Toda linha daqui e resolvida em SAP por
+#                tools/conferir_flanges.py - medida que nao se compra nao passa.
 #
-# A tabela ANTERIOR era 5/8"x2 1/2" ate 5" e 3/4"x2 1/2" acima, para tudo. Ela
-# fechava ate 10" e nao fechava daí para cima: em 12" e 14" sobrava menos de um
-# fio, e em 18" faltavam 11 mm. Ver o commit que a substituiu.
+# O APERTO, por contexto:
+#
+#   AZ_AZ            chapa + chapa                                duas camadas
+#   ACO_PLASSON      chapa + colar + flange solta                 tres
+#   PLASSON_PLASSON  flange solta + colar + colar + flange solta  quatro
+#
+# A ponta Plasson e feita de DUAS pecas: o colar (desenho 5510), soldado no
+# tubo, com ressalto de espessura B; e a flange solta (5900), de espessura H,
+# que corre por tras dele. Por isso o parafuso Plasson e mais longo que o de
+# aco na mesma bitola - nao por folga, por geometria. Um encontro
+# Plasson-Plasson tem QUATRO camadas de chapa, nao duas.
+#
+# A tabela ANTERIOR era 5/8"x2 1/2" ate 5" e 3/4"x2 1/2" acima para o aco, e um
+# par de linhas informadas pela casa para o Plasson. Ela nao fechava de 12" para
+# cima no aco (em 18" faltavam 11 mm) e, no Plasson, ninguem tinha conferido:
+# ACO_PLASSON 5/8"x3 1/2" ate 5" ficava CURTO em 2" e 4", onde a conta pede 3"
+# e o que havia era 3 1/2" - passava por acaso, nao por regra.
 #
 # BOMBA mantem o acrescimo de 1" que a casa usa sobre a junta de aco - o flange
-# da bomba e mais grosso que o da linha, e nao ha ficha dele aqui.
-#
-# O comprimento arredonda para o que a LISTA TEM, e nao para a medida da conta:
-# a casa compra por codigo. 7/8" x 4 1/2" fecharia a junta de 20" da bomba e nao
-# existe na lista (ha 4" e 5"), entao a linha pede 5". Toda linha daqui e
-# resolvida em SAP por tools/conferir_flanges.py - uma medida que nao se compra
-# nao passa.
-#
-# PLASSON_PLASSON e ACO_PLASSON continuam como a casa informou: nao ha
-# espessura de flange solta Plasson no programa, entao a conta acima nao roda
-# nesses dois e eles NAO estao verificados.
+# da bomba e do fabricante dela e nao ha folha dele aqui, entao esta faixa NAO
+# e verificavel e continua sendo regra da casa.
 #
 # MISTO e o que sobra (ex.: PEAD, que entra por colar de tomada): sem regra
 # fechada, as linhas abaixo sao chute e o motor avisa toda vez que cai nelas.
 # dn_max_pol e o limite superior da faixa, em polegada (Plasson convertido).
 contexto,dn_max_pol,bitola_pol,comprimento_pol,homologado,observacao
-AZ_AZ,5,5/8,2 1/2,SIM,chapa 16+16 - sobra 8 mm de rosca
-AZ_AZ,10,3/4,2 1/2,SIM,chapa 16+16 - sobra 12 mm de rosca
+AZ_AZ,5,5/8,2 1/2,SIM,chapa 16+16 - sobra 15 mm de rosca
+AZ_AZ,10,3/4,2 1/2,SIM,chapa 16+16 - furo 22 pede 3/4
 AZ_AZ,14,3/4,3,SIM,chapa 21+21 - o 2 1/2 nao fechava
 AZ_AZ,16,7/8,3,SIM,furo 26 - o 3/4 ficava frouxo
 AZ_AZ,20,7/8,3 1/2,SIM,chapa 28+28
@@ -42,11 +50,25 @@ BOMBA,5,5/8,3 1/2,SIM,junta de aco + 1 para o flange da bomba
 BOMBA,10,3/4,3 1/2,SIM,junta de aco + 1 para o flange da bomba
 BOMBA,14,3/4,4,SIM,junta de aco + 1 para o flange da bomba
 BOMBA,16,7/8,4,SIM,junta de aco + 1 para o flange da bomba
-BOMBA,20,7/8,5,SIM,junta de aco + 1 arredondado para 5 - nao ha 7/8 x 4 1/2 na lista
+BOMBA,20,7/8,5,SIM,junta de aco + 1 arredondado - nao ha 7/8 x 4 1/2 na lista
 BOMBA,99,1 1/8,5,SIM,junta de aco + 1 para o flange da bomba
-PLASSON_PLASSON,4,5/8,4,SIM,ate 110 mm - informado pela casa, nao verificado
-PLASSON_PLASSON,99,3/4,5,SIM,acima de 110 mm - informado pela casa, nao verificado
-ACO_PLASSON,5,5/8,3 1/2,SIM,aco contra flange Plasson - nao verificado
-ACO_PLASSON,99,3/4,3 1/2,SIM,aco contra flange Plasson - nao verificado
+ACO_PLASSON,1.25,3/8,2 1/2,SIM,d32 - chapa 16 + colar 7 + flange 14 = 37
+ACO_PLASSON,1.5,5/8,2 1/2,SIM,d40 - furo sobe para 18 e a bitola vai junto
+ACO_PLASSON,2,5/8,3,SIM,d63 - aperto 43 - o 2 1/2 nao fecha
+ACO_PLASSON,2.5,5/8,3,SIM,d75 - aperto 45
+ACO_PLASSON,3,5/8,3,SIM,d90 - aperto 47
+ACO_PLASSON,4,5/8,3,SIM,d110 - aperto 50
+ACO_PLASSON,5,5/8,3 1/2,SIM,d140 - aperto 56 - a flange solta engorda para 28
+ACO_PLASSON,6,3/4,3 1/2,SIM,d160 - aperto 59 - furo 22 pede 3/4
+ACO_PLASSON,99,3/4,4,SIM,d225 - aperto 66 - a linha Plasson termina em 8
+PLASSON_PLASSON,1.25,3/8,2 1/2,SIM,d32 - 14+7+7+14 = 42
+PLASSON_PLASSON,1.5,5/8,3,SIM,d40 - aperto 46
+PLASSON_PLASSON,2,5/8,3 1/2,SIM,d63 - aperto 54
+PLASSON_PLASSON,2.5,5/8,3 1/2,SIM,d75 - aperto 58
+PLASSON_PLASSON,3,5/8,3 1/2,SIM,d90 - aperto 62
+PLASSON_PLASSON,4,5/8,4,SIM,d110 - aperto 68
+PLASSON_PLASSON,5,5/8,5,SIM,d140 - aperto 80 - nao ha 5/8 x 4 1/2 na lista
+PLASSON_PLASSON,6,3/4,4 1/2,SIM,d160 - aperto 86 - furo 22 pede 3/4
+PLASSON_PLASSON,99,3/4,5,SIM,d225 - aperto 100 - o 3/4 mais longo da lista
 MISTO,5,5/8,3 1/2,NAO,SEM REGRA - o que nao cai nos casos acima
 MISTO,99,3/4,3 1/2,NAO,SEM REGRA - o que nao cai nos casos acima

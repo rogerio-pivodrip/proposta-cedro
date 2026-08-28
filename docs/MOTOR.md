@@ -1733,6 +1733,15 @@ Nas bitolas soldáveis (6" e 8") são 7 de 9 peças com cota de fábrica.
 | colar 5510, E1 | 106 / 125 / 150 / 213 / 272 | **os mesmos cinco** |
 | flange solta | 8 furos ⌀18 em 160 (3") | Dp/S/N da NBR 7675 PN16 |
 
+A furação da flange solta casa com a de aço em **todas as bitolas que a casa
+compra menos uma**: o d225 tem 8 furos ⌀22 em 297, e o 8" de aço tem **12** em
+295. Mesmo furo, quase o mesmo círculo, mas 8 posições em 12 só coincidem em 4.
+`tools/conferir_flanges.py` mostra a tabela inteira e marca essa. Não se
+conserta aqui — é o mesmo caso da folha Netafim contra a NBR: pergunta para
+quem compra. A lista continua comprando pela furação de aço, que tem mais
+furos, porque comprar parafuso a mais é barato e comprar a menos deixa a junta
+sem parafuso.
+
 A altura do tê não está na folha: ela sai de `Z + I + E/2`, e o fato de essa
 soma bater **exata** em duas bitolas independentes é o que valida a leitura das
 letras.

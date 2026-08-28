@@ -222,6 +222,52 @@ def cota_plasson(familia, dn_mm, significado, dn_menor=None, variante=""):
     return None
 
 
+def par_flangeado_plasson(dn_mm):
+    """As DUAS pecas que fazem uma ponta flangeada Plasson, numa ficha so.
+
+    A ponta Plasson nao e uma peca, sao duas, e e isso que muda o parafuso: o
+    COLAR (desenho 5510) e soldado no tubo e tem um ressalto de espessura `B`;
+    a FLANGE SOLTA (5900) corre por tras dele e tem espessura `H`. O parafuso
+    nao aperta uma chapa, aperta o par - e num encontro Plasson-Plasson ele
+    atravessa quatro camadas, e nao duas.
+
+    Era esse numero que faltava para medir o parafuso fora do aco. Sem ele o
+    programa media as juntas Plasson com a espessura da chapa de aco dos dois
+    lados e dava um veredito sobre um sanduiche que nao existe.
+
+    Devolve None quando a folha nao tem a bitola. O `d` e o EXTERNO do tubo em
+    milimetro, que e como a Plasson nomeia a bitola.
+    """
+    tabela = _carregar_plasson()
+    flange = tabela.get(("FLANGE", float(dn_mm), None))
+    colar = tabela.get(("ADAPTADOR_FLANGE", float(dn_mm), None))
+    if not flange:
+        return None
+    return {
+        "d_mm": float(dn_mm),
+        "externo": flange["E1_mm"],
+        "espessura": flange["H_mm"],          # H da flange solta
+        "furo_flange": flange["E_mm"],        # por onde o colar passa
+        "circulo": flange["Dp_mm"],
+        "furo": flange["S_mm"],
+        "furos": int(flange["furos"]),
+        # o colar existe de 20 a 225; a flange comeca em 32. Onde faltar o
+        # colar, so a flange responde, e o aperto sai incompleto - por isso
+        # o campo pode vir None e quem chama tem de olhar
+        "ressalto": colar["B_mm"] if colar else None,
+        "ressalto_externo": colar["E1_mm"] if colar else None,
+        "codigo_flange": "5900",
+        "codigo_colar": "5510" if colar else None,
+        "fonte": "plasson",
+    }
+
+
+def bitolas_flangeadas_plasson():
+    """Todo `d` que a folha cota com flange solta, do menor para o maior."""
+    return sorted(d for fam, d, _menor in _carregar_plasson()
+                  if fam == "FLANGE")
+
+
 def leituras_da_casa():
     """Cada cota medida, com quantas leituras e a faixa entre elas.
 

@@ -111,12 +111,12 @@ def parafusos_curtos(linha):
     A conta e a mesma que o simbolo faz para desenhar, e de proposito: quem
     avisa e quem desenha veem o mesmo parafuso.
 
-    **So vale em AZ_AZ.** A conta soma DUAS chapas, e so na junta aco-aco o
-    programa conhece as duas: as duas saem da folha Netafim. Contra a bomba a
-    outra chapa e do fabricante da bomba e nao ha ficha dela aqui; contra
-    Plasson nao ha espessura de flange solta no programa. Medir esses casos com
-    a espessura do aco dos dois lados daria um veredito sobre um sanduiche que
-    nao existe - e um "fecha" falso vale menos que nao dizer nada.
+    **So mede onde o aperto e conhecido** - hoje AZ_AZ, ACO_PLASSON e
+    PLASSON_PLASSON, que sao os tres que `regras.aperto_da_junta` sabe montar.
+    Contra a bomba a outra chapa e do fabricante dela e nao ha folha aqui, e
+    MISTO e o que sobrou sem regra: medir esses com a chapa de aco dos dois
+    lados daria um veredito sobre um sanduiche que nao existe, e um "fecha"
+    falso vale menos que nao dizer nada.
     """
     prontos, _recusadas = simbolos_da_linha(linha)
     fora = []
@@ -127,20 +127,34 @@ def parafusos_curtos(linha):
             continue
         contexto = regras.contexto_da_junta(simbolo.params.get("material"),
                                             adiante.params.get("material"))
-        if contexto != "AZ_AZ":
+        aperto = regras.aperto_da_junta(saida.dn_pol, contexto)
+        if not aperto:
             continue
         ficha = regras.parafuso_da_junta(saida.dn_pol, contexto)
-        esp = s.flange(saida.dn_pol)["espessura"]
-        _el, sobra = s.parafuso_sextavado(-esp, esp, 0.0, ficha["bitola_mm"],
+        meio = aperto["mm"] / 2
+        _el, sobra = s.parafuso_sextavado(-meio, meio, 0.0, ficha["bitola_mm"],
                                           ficha["comprimento_mm"])
         # menos de dois fios de rosca aparentes ja e aperto sem garantia; UNC
         # de 3/4" tem 10 fios por polegada, entao um fio e 2,54 mm
         if sobra < 2 * 25.4 / 10:
             fora.append({"de": peca.id, "para": vizinha.id,
                          "dn_pol": saida.dn_pol, "contexto": contexto,
-                         "sobra_mm": sobra, "bitola_pol": ficha["bitola_pol"],
+                         "sobra_mm": sobra, "aperto_mm": aperto["mm"],
+                         "bitola_pol": ficha["bitola_pol"],
                          "comprimento_pol": ficha["comprimento_pol"]})
     return fora
+
+
+def _chapas_da_junta(dn_pol, materiais):
+    """(antes, depois) em milimetro - a chapa que cada lado poe na junta.
+
+    Cai na chapa de aco quando a ponta nao tem ficha (bomba, PEAD): e o que o
+    desenho ja fazia, e continua sendo um desenho plausivel. O que muda e o
+    Plasson, que agora sai com a chapa que ele tem de verdade.
+    """
+    padrao = s.flange(dn_pol)["espessura"]
+    return tuple((regras.chapa_da_ponta(dn_pol, m) or {}).get("mm", padrao)
+                 for m in materiais)
 
 
 def parafusos_curtos_por_caso(linha):
@@ -386,14 +400,19 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
                 # o parafuso sai no tamanho do CODIGO que a lista vai comprar
                 # - a mesma tabela dos dois lados. Desenhar um comprimento
                 # plausivel mentiria exatamente onde mais se olha
+                material = (p.simbolo.params.get("material"),
+                            vizinho.params.get("material"))
                 ficha = regras.parafuso_da_junta(
-                    saida.dn_pol,
-                    regras.contexto_da_junta(p.simbolo.params.get("material"),
-                                             vizinho.params.get("material")))
+                    saida.dn_pol, regras.contexto_da_junta(*material))
+                # e cada lado poe a chapa DELE: aco poe uma, Plasson poe duas
+                # (ressalto do colar + flange solta). Onde os dois lados sao
+                # diferentes a junta e assimetrica, e o parafuso tem de sair
+                # deslocado - senao a cabeca fica dentro da flange de um lado
                 guardar(s.junta_flangeada(
                     p.saida[0], p.saida[1], direcao, saida.dn_pol,
                     comprimento_mm=ficha["comprimento_mm"],
-                    bitola_mm=ficha["bitola_mm"]))
+                    bitola_mm=ficha["bitola_mm"],
+                    chapas=_chapas_da_junta(saida.dn_pol, material)))
         else:
             ruins.append((p, motivo))
     for i in sorted(wafer):

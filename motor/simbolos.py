@@ -1581,11 +1581,22 @@ def te_pvc(dn_mm, dn_derivacao=None, junta="BOLSA"):
 
 
 def adaptador_flange(dn_mm):
-    """Colar soldavel de Plasson: pescoco e o ressalto que segura a flange.
+    """Colar soldavel de Plasson, com a flange solta ja enfiada.
 
     E o mesmo papel do colar de PEAD termofundido, com outra ponta: aqui o
     pescoco solda por encaixe em vez de topo a topo. O ressalto continua sendo
     o que prende a flange solta.
+
+    A flange e desenhada JUNTO, como no colar de PEAD, porque na obra ela ja
+    esta la: ela entra pelo tubo antes de o colar ser soldado e depois nao sai
+    mais. Desenhar o colar sozinho seria desenhar um estado que so existe na
+    prateleira - e, pior, esconderia metade da chapa que o parafuso atravessa.
+    Uma ponta Plasson poe DUAS chapas na junta (ressalto + flange solta), e nao
+    uma; e por isso que o parafuso dela e mais longo que o de aco na mesma
+    bitola. Ver motor/regras.chapa_da_ponta.
+
+    O ressalto agora sai do B da folha (5510) em vez de 22% do comprimento, e a
+    flange do H, E1, Dp, S e N da folha da flange solta (5900).
     """
     medidas = []
     comp = _ou(medidas,
@@ -1594,8 +1605,13 @@ def adaptador_flange(dn_mm):
     externo = _ou(medidas,
                   _cota_mm("ADAPTADOR_FLANGE", dn_mm, "", "d_externo_mm"),
                   dn_mm * 1.35)
+    par = cotas.par_flangeado_plasson(dn_mm)
     r, rr = dn_mm / 2, externo / 2
-    esp = max(comp * 0.22, 10.0)
+    # o B da folha e a espessura do ressalto. O 22% do comprimento era um chute
+    # e errava para os dois lados: no d110 dava 15 contra 12 da folha, no d225
+    # dava 28 contra 18
+    esp = _ou(medidas, par["ressalto"] if par else None,
+              max(comp * 0.22, 10.0))
     el = [_p(f"M0 {-r:.1f} H{comp - esp:.1f}"),
           _p(f"M0 {r:.1f} H{comp - esp:.1f}"),
           _p(f"M0 {-r:.1f} V{r:.1f}"),
@@ -1603,6 +1619,29 @@ def adaptador_flange(dn_mm):
            "classe": "corpo"},
           _p(f"M0 {-r*0.72:.1f} H{comp:.1f}", "malha"),
           _p(f"M0 {r*0.72:.1f} H{comp:.1f}", "malha")]
+    if par:
+        # a flange solta, encostada POR TRAS do ressalto - do lado do tubo, e
+        # nao do lado da junta. E o ressalto que a empurra contra a outra peca
+        chapa, fora = par["espessura"], par["externo"]
+        x_flange = comp - esp - chapa
+        solta = [{"tipo": "rect", "x": x_flange, "y": -fora / 2,
+                  "w": chapa, "h": fora, "classe": "flange"}]
+        for sinal in (-1, 1):
+            solta.append(_p(f"M{x_flange:.1f} {sinal*par['circulo']/2:.1f} "
+                            f"h{chapa:.1f}", "furo"))
+            # o furo central, por onde o pescoco passa: e maior que o tubo, que
+            # e o que deixa a flange correr antes de o colar existir
+            solta.append(_p(f"M{x_flange:.1f} "
+                            f"{sinal*par['furo_flange']/2:.1f} h{chapa:.1f}",
+                            "malha"))
+        solta.append({"tipo": "texto_furos", "x": comp - esp, "y": 0,
+                      "n": par["furos"], "furo": par["furo"]})
+        # a flange e outra PECA, e nao outra parte desta: o bloco da casa
+        # desenha so o colar, e quem compara medida tem de poder separar as
+        # duas sem adivinhar por classe
+        for e in solta:
+            e["grupo"] = "flange_solta"
+        el += solta
     el.append(_p(f"M{-comp*0.25:.1f} 0 H{comp*1.25:.1f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, _pvc_em_polegada(dn_mm)),
               Porta("saida", comp, 0, 0, _pvc_em_polegada(dn_mm))]
@@ -1610,7 +1649,8 @@ def adaptador_flange(dn_mm):
     # outra. Do lado da flange quem manda e a furacao, nao o DN do tubo
     el += _dn_nas_pontas(portas[:1], (dn_mm,), comp * 0.45, r * 0.45)
     return _montar("ADAPTADOR_FLANGE", f'adaptador p/ flange DN{dn_mm:g}',
-                   el, portas, _fonte_mm(medidas), {"dn_mm": dn_mm})
+                   el, portas, _fonte_mm(medidas),
+                   {"dn_mm": dn_mm, "material": "PVC", "flange_solta": True})
 
 
 def bucha_reducao(dn_maior, dn_menor):
@@ -4072,7 +4112,7 @@ def parafuso_sextavado(x0, x1, y, d, comprimento=None, arruelas=None):
 
 
 def junta_flangeada(x, y=0.0, direcao=0.0, dn_pol=8, norma="NBR PN16",
-                    comprimento_mm=None, bitola_mm=None):
+                    comprimento_mm=None, bitola_mm=None, chapas=None):
     """Os parafusos e a junta que fecham o encontro de duas flanges.
 
     Nao pertencem a nenhuma das duas pecas - pertencem a juncao, do mesmo jeito
@@ -4083,16 +4123,22 @@ def junta_flangeada(x, y=0.0, direcao=0.0, dn_pol=8, norma="NBR PN16",
     e aparece no circulo de furacao real, que e onde ele esta. TODOS aparecem,
     cada um na altura em que a projecao o poe - ver alturas_de_furo. Desenhar
     so os dois extremos fazia a flange de doze furos parecer uma de dois.
+
+    `chapas` e (antes, depois) em milimetro - quanta chapa cada lado poe. Sem
+    ele os dois lados sao a chapa de aco, que e o caso comum. Com ele o
+    encontro com Plasson sai certo: la a ponta e ressalto do colar MAIS flange
+    solta, quase o triplo do aco, e a junta e ASSIMETRICA. Desenhar simetrico
+    poria a cabeca do parafuso dentro da flange de um lado e no ar do outro.
     """
     f = flange(dn_pol, norma)
-    esp = f["espessura"]
+    antes, depois = chapas or (f["espessura"], f["espessura"])
     raio_furo = f["circulo"] / 2
     # a haste, e nao o furo: o parafuso e uma bitola abaixo do furo que o passa
     d = bitola_mm or f["furo"] * 0.85
     el = [_p(f"M{x:.1f} {y - f['externo']/2:.1f} V{y + f['externo']/2:.1f}",
              "junta")]
     for altura in alturas_de_furo(raio_furo, f["furos"]):
-        el += parafuso_sextavado(x - esp, x + esp, y + altura, d,
+        el += parafuso_sextavado(x - antes, x + depois, y + altura, d,
                                  comprimento_mm)[0]
     if direcao:
         for e in el:
