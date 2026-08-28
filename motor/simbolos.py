@@ -3833,10 +3833,13 @@ def sanduiche_wafer(x_entrada, x_saida, y=0.0, direcao=0.0, dn_pol=8,
     for lado, x in (("entrada", x_entrada), ("saida", x_saida)):
         el.append(_p(f"M{x:.1f} {y - f['externo']/2:.1f} "
                      f"V{y + f['externo']/2:.1f}", "junta"))
-    for sinal in (-1, 1):
-        yy = y + sinal * raio_furo
-        el.append({"tipo": "rect", "x": x0, "y": yy - d / 2, "w": comprimento,
-                   "h": d, "classe": "barra"})
+    for altura in alturas_de_furo(raio_furo, barras * 2):
+        yy = y + altura
+        # a barra some nas duas chapas das vizinhas e reaparece sobre o corpo
+        # da valvula, que e por onde ela passa de fato
+        el += haste_aparente(x0, x0 + comprimento,
+                             [(x_entrada - esp, x_entrada),
+                              (x_saida, x_saida + esp)], yy, d, "barra")
         for xn in (x0, x0 + comprimento - porca * 0.75):
             el.append({"tipo": "rect", "x": xn, "y": yy - porca / 2,
                        "w": porca * 0.75, "h": porca, "classe": "porca"})
@@ -3876,6 +3879,52 @@ def solda_de_topo(x, y=0.0, direcao=0.0, dn_mm=225):
     return el
 
 
+def alturas_de_furo(raio, furos):
+    """Onde cada parafuso do circulo APARECE na vista lateral.
+
+    O furo esta num circulo, e a vista lateral e uma projecao: o parafuso que
+    esta no angulo teta aparece a `raio * sen(teta)` do eixo. Entao passos
+    iguais de angulo dao alturas desiguais na folha - os de cima e os de baixo
+    quase encostados na borda, os do meio abertos - e e isso que faz o
+    conjunto parecer um circulo visto de lado em vez de dois parafusos soltos.
+
+    Os furos ESTRADEIAM a linha de centro, que e como toda flange se monta:
+    nenhum furo em cima do eixo vertical, e sim meio passo de cada lado dele.
+    Por isso o angulo comeca em meio passo.
+
+    Cada altura tem DOIS parafusos - um na frente do tubo e outro atras - e na
+    projecao os dois caem no mesmo lugar. Desenha-se um: e o da frente, que e
+    o que se ve.
+    """
+    passo = 360.0 / max(int(furos), 1)
+    vistos = {}
+    for k in range(int(furos)):
+        y = raio * math.sin(math.radians(passo * (k + 0.5)))
+        vistos.setdefault(round(y, 1), y)
+    return sorted(vistos.values())
+
+
+def haste_aparente(x0, x1, dentro, y, espessura, classe="parafuso"):
+    """A haste do parafuso, desenhada SO onde ela aparece.
+
+    Dentro da chapa o parafuso esta no furo, e furo nao se ve de lado. Entao
+    em vez de desenhar a haste inteira e tapar o meio - o que exige por a
+    ferragem debaixo da peca, e ai os parafusos que caem sobre o tubo somem
+    tambem - desenha-se so os pedacos de fora. Nada cruza a chapa, e a
+    ferragem pode ficar por cima de tudo, que e onde ela esta.
+
+    `dentro` sao os trechos escondidos, em pares (de, ate).
+    """
+    cortes = sorted(dentro)
+    el, anda = [], x0
+    for de, ate in cortes + [(x1, x1)]:
+        if de - anda > 0.5:
+            el.append({"tipo": "rect", "x": anda, "y": y - espessura / 2,
+                       "w": de - anda, "h": espessura, "classe": classe})
+        anda = max(anda, ate)
+    return el
+
+
 def junta_flangeada(x, y=0.0, direcao=0.0, dn_pol=8, norma="NBR PN16"):
     """Os parafusos e a junta que fecham o encontro de duas flanges.
 
@@ -3883,8 +3932,10 @@ def junta_flangeada(x, y=0.0, direcao=0.0, dn_pol=8, norma="NBR PN16"):
     que na lista de materiais: quem puxa junta plana, parafuso, porca e arruela
     e a junta flangeada, nao o tubo nem a curva.
 
-    O parafuso atravessa as duas chapas e sobra para as porcas dos dois lados;
-    aparece no circulo de furacao real, que e onde ele esta.
+    O parafuso atravessa as duas chapas e sobra para as porcas dos dois lados,
+    e aparece no circulo de furacao real, que e onde ele esta. TODOS aparecem,
+    cada um na altura em que a projecao o poe - ver alturas_de_furo. Desenhar
+    so os dois extremos fazia a flange de doze furos parecer uma de dois.
     """
     f = flange(dn_pol, norma)
     esp = f["espessura"]
@@ -3895,10 +3946,11 @@ def junta_flangeada(x, y=0.0, direcao=0.0, dn_pol=8, norma="NBR PN16"):
     x0 = x - esp - porca * 0.75
     el = [_p(f"M{x:.1f} {y - f['externo']/2:.1f} V{y + f['externo']/2:.1f}",
              "junta")]
-    for sinal in (-1, 1):
-        yy = y + sinal * raio_furo
-        el.append({"tipo": "rect", "x": x0, "y": yy - d / 2, "w": comprimento,
-                   "h": d, "classe": "parafuso"})
+    for altura in alturas_de_furo(raio_furo, f["furos"]):
+        yy = y + altura
+        # as duas chapas encostadas escondem a haste: so as pontas aparecem
+        el += haste_aparente(x0, x0 + comprimento, [(x - esp, x + esp)],
+                             yy, d)
         for xn in (x0, x0 + comprimento - porca * 0.75):
             el.append({"tipo": "rect", "x": xn, "y": yy - porca / 2,
                        "w": porca * 0.75, "h": porca, "classe": "porca"})

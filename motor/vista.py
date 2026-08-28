@@ -233,16 +233,13 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
               f'role="img" aria-label="linha montada">', DEFS, "@DEGRADES@",
               f'<g class="geo" transform="translate({margem - minx*escala:.2f} '
               f'{margem - miny*escala:.2f}) scale({escala:.5f})">']
-    # A FERRAGEM VAI POR BAIXO DA PECA, e nao por cima.
+    # A FERRAGEM FICA POR CIMA, e pode: nada dela cruza a chapa.
     #
-    # O parafuso atravessa o furo da flange: por dentro da chapa ele nao se ve,
-    # e o que aparece de fora e so a porca e a sobra da haste nas duas pontas.
-    # Desenhado por cima, ele riscava a chapa de lado a lado - e nenhum
-    # parafuso e mais alto que a flange que ele aperta.
-    #
-    # A JUNTA e o contrario: e a linha de aperto entre as duas chapas, uma
-    # marca de convencao, e marca de convencao fica por cima de tudo. Por isso
-    # a ferragem sai em duas camadas, separadas pela classe.
+    # O parafuso atravessa o furo da flange, e por dentro da chapa ele nao se
+    # ve - mas quem resolve isso e a PROPRIA haste, que sai desenhada so nos
+    # pedacos de fora (simbolos.haste_aparente). Poe-la debaixo da peca
+    # resolveria a chapa e criaria outro problema: os parafusos que caem sobre
+    # o tubo, que na projecao sao metade deles, sumiriam junto.
     #
     # A wafer e a excecao da juncao: ela nao tem flange, e abracada pelas duas
     # vizinhas, e entao as duas juncoes viram uma so, com barra roscada de
@@ -252,15 +249,10 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
     sob, sobre = [], []
 
     def guardar(elementos, embrulho=("", "")):
-        baixo = [e for e in elementos
-                 if e.get("classe") in ("parafuso", "porca")]
-        cima = [e for e in elementos
-                if e.get("classe") not in ("parafuso", "porca")]
-        for destino, lista in ((sob, baixo), (sobre, cima)):
-            if lista:
-                destino.append(embrulho[0]
-                               + "".join(desenhar(e) for e in lista)
-                               + embrulho[1])
+        if elementos:
+            sobre.append(embrulho[0]
+                         + "".join(desenhar(e) for e in elementos)
+                         + embrulho[1])
 
     for i, p in enumerate(postos[:-1]):
         if i in wafer or (i + 1) in wafer:
