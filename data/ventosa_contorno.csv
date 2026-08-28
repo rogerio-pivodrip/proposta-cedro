@@ -1,48 +1,45 @@
 # Ventosa combinada 2" BSP - contorno E DETALHE, do DXF vetorial.
 #
-# 178 polilinhas no desenho do fabricante. Ficam a volta EXTERNA e as
-# 119 linhas internas com mais de 60 unidades de comprimento - o que
-# some abaixo disso e o logotipo e a marcacao gravada, que na escala de um
-# simbolo de folha viram sujeira e nao informacao.
+# 178 polilinhas no desenho do fabricante. Ficam a volta EXTERNA, cortada
+# em duas pecas, e as 119 linhas internas com mais de 60 unidades de
+# comprimento - o que some abaixo disso e o logotipo e a marcacao gravada, que
+# na escala de um simbolo de folha viram sujeira e nao informacao.
 #
-# A ESCALA VEM DA ROSCA, e nao de cota escrita: 2" BSP macho tem 59,614 mm por
-# ISO 228, e no desenho ela mede 232.3 unidades. A razao leva tudo a
-# milimetro. Foi assim que se descobriu que o desenho ESTA em escala - medindo
-# a mesma figura em pixel, a rosca dava 86 mm e ele parecia fora de escala por
-# 1,45; era a mascara, que pegava o sextavado junto com a rosca.
+# A ESCALA VEM DA ROSCA: 2" BSP macho tem 59,614 mm por ISO 228 e no desenho
+# mede 232.3 unidades. A razao leva tudo a milimetro sem depender de cota
+# escrita. Foi assim que se viu que o desenho ESTA em escala - medindo a mesma
+# figura em pixel a rosca dava 86 mm e ele parecia fora de escala por 1,45; era
+# a mascara, que pegava o sextavado junto com a rosca.
+#
+# O CORTE ENTRE AS DUAS PECAS e feito por recorte de semiplano
+# (Sutherland-Hodgman) e nao por filtro de x. Filtrando, cada pedaco fica com
+# pontas em x diferentes, cada poligono fecha numa aresta propria, e abre uma
+# CUNHA BRANCA entre a valvula e o bico - bem no pescoco, onde a peca e
+# inteirica. Com o recorte o ponto de interseccao e calculado e entra nos dois:
+# os dois fecham na MESMA linha e o pescoco continua.
 #
 # TRES GRUPOS:
-#   corpo     a volta externa da ventosa - o contorno
-#   bico      a volta externa do cotovelo de 2" BSP femea que enrosca nela.
-#             Outra peca, com codigo proprio, desenhada junto porque na casa
-#             ela sobe montada
-#   detalhe   as linhas internas - anel do colar, faces do sextavado, filete
-#             da rosca, bolsa do cotovelo. Sao o que da relevo a peca
+#   corpo     a volta externa da ventosa
+#   bico      o cotovelo de 2" BSP femea que enrosca nela - outra peca, com
+#             codigo proprio, desenhada junto porque na casa ela sobe montada
+#   detalhe   as linhas internas: anel do colar, faces do sextavado, filete da
+#             rosca, bolsa do cotovelo. Sao o que da relevo a peca
 #
 # x  do EIXO DA ROSCA, e nao do centro da caixa: o bico puxa o centro para a
 #    direita e a linha de eixo sairia de dentro do tubo
 # y  0 na base da rosca, negativo para cima. Em MILIMETRO.
-#
-# Para outra bitola, escalar pela razao dos diametros BSP. A forma nao muda -
-# muda a regua, e a regua e a rosca.
 altura_mm,257.9
 rosca_pol,2
 peca,corpo
-60.72,-250.06
-59.64,-251.46
-56.63,-251.72
-56.38,-255.83
-54.93,-256.84
-23.16,-256.98
-21.41,-255.44
-0.08,-255.44
--0.11,-257.88
+-0.16,-256.66
 -0.21,-255.44
--18.41,-255.22
--22.21,-253.01
+-17.00,-255.37
+-19.52,-254.93
+-21.43,-253.79
+-23.09,-251.37
 -30.24,-227.82
 -33.78,-225.34
--35.45,-220.76
+-34.95,-223.04
 -38.90,-198.78
 -40.83,-179.02
 -41.56,-175.84
@@ -50,11 +47,12 @@ peca,corpo
 -42.49,-131.15
 -48.83,-125.38
 -49.09,-110.17
--54.72,-107.28
--55.37,-103.05
+-53.62,-108.30
+-55.24,-105.81
 -54.90,-99.90
 -49.22,-99.21
--55.09,-98.55
+-54.88,-98.63
+-55.36,-98.08
 -55.34,-92.92
 -53.23,-90.96
 -52.59,-68.29
@@ -92,7 +90,8 @@ peca,corpo
 -0.05,-0.00
 0.05,-2.95
 26.92,-2.95
-29.77,-6.44
+29.63,-6.01
+29.54,-6.83
 27.89,-7.61
 29.79,-9.07
 27.89,-10.44
@@ -140,9 +139,19 @@ peca,corpo
 49.08,-196.17
 55.93,-196.54
 56.63,-200.92
-66.01,-201.56
+67.28,-201.55
+67.28,-250.06
+60.72,-250.06
+59.64,-251.46
+56.63,-251.72
+56.38,-255.83
+54.93,-256.84
+23.16,-256.98
+21.41,-255.44
+0.08,-255.44
+-0.11,-257.88
 peca,bico
-69.65,-201.54
+67.28,-201.55
 72.95,-200.97
 74.99,-198.37
 74.89,-166.72
@@ -157,7 +166,7 @@ peca,bico
 115.91,-244.64
 110.18,-248.08
 103.72,-249.79
-81.13,-250.06
+67.28,-250.06
 peca,detalhe
 55.18,-230.73
 54.92,-196.68
