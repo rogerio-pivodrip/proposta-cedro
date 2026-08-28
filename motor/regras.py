@@ -363,12 +363,18 @@ def chapa_da_ponta(dn_pol, material):
             return None
         return {"mm": par["ressalto"] + par["espessura"],
                 "furo": par["furo"], "furos": par["furos"],
+                # o ressalto e mais estreito que o circulo de furacao (no d160,
+                # 213 contra 241), entao ele NAO cobre o parafuso: quem cobre e
+                # so a flange solta
+                "vao": par["ressalto"], "chapa": par["espessura"],
+                "face": par["ressalto_externo"],
                 "camadas": [("colar", par["ressalto"]),
                             ("flange solta", par["espessura"])],
                 "fonte": f'plasson 5900+5510 d{par["d_mm"]:g}'}
     if material in (None, "ACO_ZINCADO", "FERRO_FUNDIDO", "ACO"):
         f = simbolos.flange(dn_pol)
         return {"mm": f["espessura"], "furo": f["furo"], "furos": f["furos"],
+                "vao": 0.0, "chapa": f["espessura"], "face": f["ressalto"],
                 "camadas": [("chapa AZ", f["espessura"])], "fonte": f["fonte"]}
     return None
 
@@ -415,6 +421,11 @@ def aperto_da_junta(dn_pol, contexto="AZ_AZ"):
             "furo": min(a["furo"], b["furo"]),
             "camadas": camadas,
             "lados": (a["mm"], b["mm"]),
+            # o vao: as duas flanges NAO se encostam, o que se encosta sao os
+            # ressaltos dos colares. Entre elas fica o parafuso a mostra
+            "vaos": (a["vao"], b["vao"]),
+            "vao": a["vao"] + b["vao"],
+            "face": min(a["face"], b["face"]),
             "fonte": " + ".join(fontes)}
 
 

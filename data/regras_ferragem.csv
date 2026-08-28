@@ -14,6 +14,12 @@
 #                tem 4" e 5". Toda linha daqui e resolvida em SAP por
 #                tools/conferir_flanges.py - medida que nao se compra nao passa.
 #
+# E a conta diz o MINIMO, nao o que se compra. Onde um comprimento que a casa
+# ja estoca tambem fecha, e ele que entra: parafuso mais longo sempre fecha, e
+# um codigo a menos no almoxarifado vale mais que 20 mm de rosca poupados. E
+# por isso que o Plasson sai inteiro em 4" e 5", que sao os dois que a casa usa,
+# em vez de subir de meia em meia polegada como a conta permitiria.
+#
 # O APERTO, por contexto:
 #
 #   AZ_AZ            chapa + chapa                                duas camadas
@@ -52,23 +58,15 @@ BOMBA,14,3/4,4,SIM,junta de aco + 1 para o flange da bomba
 BOMBA,16,7/8,4,SIM,junta de aco + 1 para o flange da bomba
 BOMBA,20,7/8,5,SIM,junta de aco + 1 arredondado - nao ha 7/8 x 4 1/2 na lista
 BOMBA,99,1 1/8,5,SIM,junta de aco + 1 para o flange da bomba
-ACO_PLASSON,1.25,3/8,2 1/2,SIM,d32 - chapa 16 + colar 7 + flange 14 = 37
-ACO_PLASSON,1.5,5/8,2 1/2,SIM,d40 - furo sobe para 18 e a bitola vai junto
-ACO_PLASSON,2,5/8,3,SIM,d63 - aperto 43 - o 2 1/2 nao fecha
-ACO_PLASSON,2.5,5/8,3,SIM,d75 - aperto 45
-ACO_PLASSON,3,5/8,3,SIM,d90 - aperto 47
-ACO_PLASSON,4,5/8,3,SIM,d110 - aperto 50
-ACO_PLASSON,5,5/8,3 1/2,SIM,d140 - aperto 56 - a flange solta engorda para 28
-ACO_PLASSON,6,3/4,3 1/2,SIM,d160 - aperto 59 - furo 22 pede 3/4
-ACO_PLASSON,99,3/4,4,SIM,d225 - aperto 66 - a linha Plasson termina em 8
+ACO_PLASSON,1.25,3/8,3 1/2,SIM,d32 - chapa 16 + colar 7 + flange 14 = 37
+ACO_PLASSON,5,5/8,3 1/2,SIM,d40 a d140 - furo 18 pede 5/8 - aperto de 39 a 56
+ACO_PLASSON,6,3/4,3 1/2,SIM,d160 - furo 22 pede 3/4 - aperto 59 - sobram 4 fios
+ACO_PLASSON,99,3/4,4,SIM,d225 - aperto 66 - aqui o 3 1/2 nao fecha
 PLASSON_PLASSON,1.25,3/8,2 1/2,SIM,d32 - 14+7+7+14 = 42
 PLASSON_PLASSON,1.5,5/8,3,SIM,d40 - aperto 46
-PLASSON_PLASSON,2,5/8,3 1/2,SIM,d63 - aperto 54
-PLASSON_PLASSON,2.5,5/8,3 1/2,SIM,d75 - aperto 58
-PLASSON_PLASSON,3,5/8,3 1/2,SIM,d90 - aperto 62
-PLASSON_PLASSON,4,5/8,4,SIM,d110 - aperto 68
-PLASSON_PLASSON,5,5/8,5,SIM,d140 - aperto 80 - nao ha 5/8 x 4 1/2 na lista
-PLASSON_PLASSON,6,3/4,4 1/2,SIM,d160 - aperto 86 - furo 22 pede 3/4
-PLASSON_PLASSON,99,3/4,5,SIM,d225 - aperto 100 - o 3/4 mais longo da lista
+PLASSON_PLASSON,2,5/8,3 1/2,SIM,d50 e d63 - aperto 54 - fora da linha da casa
+PLASSON_PLASSON,4,5/8,4,SIM,d75 d90 d110 - aperto 58 a 68 - o 4 da casa
+PLASSON_PLASSON,5,5/8,5,SIM,d125 e d140 - aperto 80 - furo 18 ainda pede 5/8
+PLASSON_PLASSON,99,3/4,5,SIM,d160 e d225 - aperto 86 e 100 - o 5 da casa
 MISTO,5,5/8,3 1/2,NAO,SEM REGRA - o que nao cai nos casos acima
 MISTO,99,3/4,3 1/2,NAO,SEM REGRA - o que nao cai nos casos acima

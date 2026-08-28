@@ -253,7 +253,18 @@ A ponta Plasson é feita de **duas peças**: o colar (desenho 5510), soldado no
 tubo, com ressalto de espessura `B`; e a flange solta (5900), de espessura `H`,
 que corre por trás do ressalto. É por isso que o parafuso Plasson é mais longo
 que o de aço na mesma bitola — não por folga, por geometria. Em 6", o aço pede
-3/4" × 2½" e o Plasson-Plasson pede 3/4" × 4½" para o mesmo furo.
+3/4" × 2½" e o Plasson-Plasson pede 3/4" × 5" para o mesmo furo.
+
+**As duas flanges soltas não se encostam.** Quem se encosta são os ressaltos
+dos colares, e o ressalto é mais estreito que o círculo de furação (no d160,
+213 contra 241). Entre uma flange e outra fica um vão de `2·B` com o parafuso à
+mostra — 26 mm no d160, 36 no d225. O desenho mostra esse vão, e é ele que
+explica os 4" e 5" da tabela.
+
+A conta diz o **mínimo**; o que entra na tabela é o comprimento que a casa já
+estoca e que também fecha. Parafuso mais longo sempre fecha, e um código a
+menos no almoxarifado vale mais que 20 mm de rosca poupados — por isso o
+Plasson sai inteiro em 4" e 5".
 
 Dois contextos **não** são medidos, e isso é deliberado: `BOMBA`, porque o
 flange da bomba é do fabricante dela e não há folha aqui; e `MISTO`, que é o que

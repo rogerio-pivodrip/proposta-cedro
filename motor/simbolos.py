@@ -4074,12 +4074,19 @@ def _arruela(x, espessura, y, chave):
             "w": espessura, "h": chave * ARRUELA_FORA, "classe": "arruela"}
 
 
-def parafuso_sextavado(x0, x1, y, d, comprimento=None, arruelas=None):
+def parafuso_sextavado(x0, x1, y, d, comprimento=None, arruelas=None,
+                       aberto=None):
     """Parafuso passante: arruela, cabeca, porca, e a rosca que sobra.
 
     `x0` e `x1` sao as faces EXTERNAS do que ele aperta - as duas chapas
     encostadas. Entre elas o parafuso esta no furo e nao se ve; o que aparece
     e o que fica de fora, e e por isso que o desenho pode dizer se ele serve.
+
+    `aberto` e (xa, xb): o trecho DENTRO do aperto em que ele aparece assim
+    mesmo. E o caso da junta Plasson - as duas flanges soltas nao se encostam,
+    quem se encosta sao os ressaltos dos colares, e o ressalto e mais estreito
+    que o circulo de furacao. Entre uma flange e outra o parafuso fica a
+    mostra, e e esse vao que explica o comprimento dele.
 
     `comprimento` e o do CODIGO da lista, medido de baixo da cabeca, como todo
     parafuso se mede. Com ele o desenho fica em escala de verdade: da para
@@ -4105,6 +4112,9 @@ def parafuso_sextavado(x0, x1, y, d, comprimento=None, arruelas=None):
         el.append(_arruela(x0 - sob_cabeca, arruela, y, chave))
     el.append(_arruela(x1, arruela, y, chave))
     el += _sextavado(x1 + arruela, porca, y, chave, "porca")
+    if aberto and aberto[1] - aberto[0] > 0.3:
+        el.append({"tipo": "rect", "x": aberto[0], "y": y - d / 2,
+                   "w": aberto[1] - aberto[0], "h": d, "classe": "parafuso"})
     if sobra > 0.3:
         el.append({"tipo": "rect", "x": x1 + arruela + porca, "y": y - d / 2,
                    "w": sobra, "h": d, "classe": "parafuso"})
@@ -4112,7 +4122,8 @@ def parafuso_sextavado(x0, x1, y, d, comprimento=None, arruelas=None):
 
 
 def junta_flangeada(x, y=0.0, direcao=0.0, dn_pol=8, norma="NBR PN16",
-                    comprimento_mm=None, bitola_mm=None, chapas=None):
+                    comprimento_mm=None, bitola_mm=None, chapas=None,
+                    vaos=(0.0, 0.0), face_mm=None):
     """Os parafusos e a junta que fecham o encontro de duas flanges.
 
     Nao pertencem a nenhuma das duas pecas - pertencem a juncao, do mesmo jeito
@@ -4129,17 +4140,30 @@ def junta_flangeada(x, y=0.0, direcao=0.0, dn_pol=8, norma="NBR PN16",
     encontro com Plasson sai certo: la a ponta e ressalto do colar MAIS flange
     solta, quase o triplo do aco, e a junta e ASSIMETRICA. Desenhar simetrico
     poria a cabeca do parafuso dentro da flange de um lado e no ar do outro.
+
+    `vaos` e quanto desse total, em cada lado, NAO cobre o parafuso. No aco e
+    zero - a chapa vai de ponta a ponta. No Plasson e o ressalto do colar, que
+    e mais estreito que o circulo de furacao: as duas flanges soltas nao se
+    encostam, quem se encosta sao os ressaltos, e entre as flanges o parafuso
+    aparece. E o vao que explica por que o parafuso do Plasson e de 4" e 5"
+    onde o de aco e de 2 1/2".
+
+    `face_mm` e o diametro da face que veda - o ressalto. A junta plana assenta
+    nele, e nao na borda da flange: desenhar a linha da junta na altura cheia
+    da chapa a faria atravessar um vao onde nao ha material.
     """
     f = flange(dn_pol, norma)
     antes, depois = chapas or (f["espessura"], f["espessura"])
+    vao_antes, vao_depois = vaos
     raio_furo = f["circulo"] / 2
     # a haste, e nao o furo: o parafuso e uma bitola abaixo do furo que o passa
     d = bitola_mm or f["furo"] * 0.85
-    el = [_p(f"M{x:.1f} {y - f['externo']/2:.1f} V{y + f['externo']/2:.1f}",
-             "junta")]
+    face = face_mm or f["ressalto"]
+    el = [_p(f"M{x:.1f} {y - face/2:.1f} V{y + face/2:.1f}", "junta")]
     for altura in alturas_de_furo(raio_furo, f["furos"]):
         el += parafuso_sextavado(x - antes, x + depois, y + altura, d,
-                                 comprimento_mm)[0]
+                                 comprimento_mm,
+                                 aberto=(x - vao_antes, x + vao_depois))[0]
     if direcao:
         for e in el:
             e["girar"] = (direcao, x, y)

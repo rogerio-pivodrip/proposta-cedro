@@ -145,16 +145,26 @@ def parafusos_curtos(linha):
     return fora
 
 
-def _chapas_da_junta(dn_pol, materiais):
-    """(antes, depois) em milimetro - a chapa que cada lado poe na junta.
+def _pilha_da_junta(dn_pol, materiais):
+    """Como as duas pontas se empilham. (chapas, vaos, face_mm)
+
+    `chapas` e quanto cada lado poe de espessura; `vaos`, quanto desse total
+    NAO cobre o parafuso. No aco o vao e zero. No Plasson e o ressalto do
+    colar, que e mais estreito que o circulo de furacao: as duas flanges
+    soltas nao se encostam - quem se encosta sao os ressaltos - e entre elas o
+    parafuso fica a mostra.
 
     Cai na chapa de aco quando a ponta nao tem ficha (bomba, PEAD): e o que o
     desenho ja fazia, e continua sendo um desenho plausivel. O que muda e o
     Plasson, que agora sai com a chapa que ele tem de verdade.
     """
-    padrao = s.flange(dn_pol)["espessura"]
-    return tuple((regras.chapa_da_ponta(dn_pol, m) or {}).get("mm", padrao)
-                 for m in materiais)
+    f = s.flange(dn_pol)
+    pontas = [regras.chapa_da_ponta(dn_pol, m)
+              or {"mm": f["espessura"], "vao": 0.0, "face": f["ressalto"]}
+              for m in materiais]
+    return (tuple(p["mm"] for p in pontas),
+            tuple(p["vao"] for p in pontas),
+            min(p["face"] for p in pontas))
 
 
 def parafusos_curtos_por_caso(linha):
@@ -408,11 +418,12 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
                 # (ressalto do colar + flange solta). Onde os dois lados sao
                 # diferentes a junta e assimetrica, e o parafuso tem de sair
                 # deslocado - senao a cabeca fica dentro da flange de um lado
+                chapas, vaos, face = _pilha_da_junta(saida.dn_pol, material)
                 guardar(s.junta_flangeada(
                     p.saida[0], p.saida[1], direcao, saida.dn_pol,
                     comprimento_mm=ficha["comprimento_mm"],
                     bitola_mm=ficha["bitola_mm"],
-                    chapas=_chapas_da_junta(saida.dn_pol, material)))
+                    chapas=chapas, vaos=vaos, face_mm=face))
         else:
             ruins.append((p, motivo))
     for i in sorted(wafer):
