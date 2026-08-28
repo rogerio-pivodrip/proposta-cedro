@@ -252,12 +252,36 @@ def main():
              str(familias))
     te = next(p for p in linha.pecas if p.familia == "TE")
     certo("o tê fica de pé sobre a derivação", te.pose == "derivacao")
+    # DOIS acessorios, e a ordem importa: a flange cega fecha a boca do te e
+    # a ventosa enrosca na luva de 2" DELA. O desenho empilha um sobre o
+    # outro nessa ordem - ver vista.desenhar_linha
     certo("e carrega a flange cega com a luva de 2\"",
-             len(te.acessorios) == 1 and "2" in te.acessorios[0].descricao,
+             len(te.acessorios) == 2 and "2" in te.acessorios[0].descricao,
              str([a.descricao for a in te.acessorios]))
+    certo("e a ventosa sobe na luva dela",
+             te.acessorios[1].familia == "VENTOSA"
+             and "COMBINADA" in te.acessorios[1].descricao.upper(),
+             te.acessorios[1].descricao)
+    # a ventosa ENROSCA: so entra em luva ou rosca femea da mesma bitola. Na
+    # boca do te, que e flange, ela nao entra - e o desenho nao pode mostrar
+    # uma montagem que nao fecha
+    certo("a ventosa na luva da cega passa",
+             not vista.ventosas_mal_montadas(linha),
+             str(vista.ventosas_mal_montadas(linha)))
+    from motor.linha import Linha as _L, Peca as _P
+    solta = _L(catalogo, tipo="RECALQUE")
+    solta.inserir(_P(te.item, pose="derivacao"))
+    solta.acoplar(solta.pecas[0].id, _P(te.acessorios[1].item))
+    fora = vista.ventosas_mal_montadas(solta)
+    certo("e direto na flange do tê, não",
+             len(fora) == 1 and "enrosca" in fora[0]["motivo"],
+             str(fora))
+
     bom, _avisos = linha.lista_materiais()
     certo("o acessório entra na lista de materiais",
              any(r["sap"] == te.acessorios[0].sap for r in bom))
+    certo("e a ventosa também",
+             any(r["sap"] == te.acessorios[1].sap for r in bom))
 
     # o trecho reto do hidrometro e a unica cota calculada no template: a
     # barra tem de COBRIR o exigido, nunca chegar perto

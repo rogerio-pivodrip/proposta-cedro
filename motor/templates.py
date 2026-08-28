@@ -173,9 +173,51 @@ def recalque(catalogo, dn_linha, area="P01", trecho_antes=10, trecho_depois=5):
                 else _melhor(catalogo, "FLANGE_CEGA", dn_linha))
         if cega:
             linha.acoplar(te_montado.id, Peca(cega))
+            # e na luva de 2" da cega sobe a VENTOSA. Ela vai como segundo
+            # acessorio do te, e o desenho a empilha sobre a cega - que e como
+            # ela sobe na obra. Sem a cega com luva nao ha onde enroscar, e ela
+            # nao entra
+            if _tem_luva(cega):
+                # a COMBINADA e nao a anti-vacuo: no alto do recalque a linha
+                # tem de expulsar o ar do enchimento E admitir na drenagem, e
+                # so a combinada faz as duas. E de rosca BSP, porque o que ha
+                # ali e uma luva - flange nao entra
+                ar = _ventosa_combinada(catalogo, 2, pn=16)
+                if ar is not None:
+                    linha.acoplar(te_montado.id, Peca(ar))
+                else:
+                    faltando.append(("VENTOSA", 2, {}))
         else:
             faltando.append(("FLANGE_CEGA", dn_linha, {"saida_pol": 2}))
     return linha, faltando
+
+
+def _ventosa_combinada(catalogo, dn_pol=2, pn=16):
+    """A ventosa combinada de rosca, dessa bitola.
+
+    Combinada, e nao anti-vacuo: no alto do recalque a linha precisa das duas
+    funcoes - expulsar o ar no enchimento e admitir na drenagem - e a
+    anti-vacuo so faz a segunda. A busca e por DESCRICAO porque a lista nao
+    separa as duas em campo nenhum: 'VENTOSA (COMBINADA)' contra
+    'ANTIVACUO (CINETICA)'.
+    """
+    import re as _re
+    alvo = _re.compile(rf'COMBINADA.*{dn_pol:g}"|{dn_pol:g}".*COMBINADA', _re.I)
+    achados = [i for i in catalogo.itens
+               if i["familia"] == "VENTOSA" and alvo.search(i["descricao"] or "")
+               and "BSP" in (i["descricao"] or "").upper()]
+    # o PN pedido primeiro; sem ele, o que houver, com a descricao mais curta
+    achados.sort(key=lambda i: (f"PN{pn}" not in i["descricao"].upper(),
+                                len(i["descricao"])))
+    return achados[0] if achados else None
+
+
+def _tem_luva(item):
+    """A cega escolhida e a que tem a luva de 2"? A lista escreve de duas
+    formas - C/ LG 2" e C/LV 2" - e nao preenche saida_pol em nenhuma."""
+    import re as _re
+    return bool(_re.search(r'C/\s*L[GV]\s*2\s*"', item["descricao"] or "",
+                           _re.I))
 
 
 def _polegada(mm):

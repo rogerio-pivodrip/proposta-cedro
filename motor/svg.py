@@ -159,7 +159,12 @@ DEFS = """<defs>
 # anticorrosiva (azul)", nas palavras da folha dele. Por isso os dois entram
 # aqui em cima, onde a marca manda, e nao na tabela de familia.
 LIVREA_MARCA = {"KSB": "azul_medio", "EBARA": "claro",
-                "ARAD": "verde", "DOROT": "verde", "AKVOMETER": "azul",
+                # ARAD so: a DOROT saiu daqui porque ela faz peca de tudo
+                # quanto e cor - medidor, valvula hidraulica, VENTOSA - e o
+                # verde do medidor dela pintava a ventosa preta de verde. A
+                # marca so manda quando ela manda na peca inteira, como a KSB
+                # e a EBARA nas bombas
+                "ARAD": "verde", "AKVOMETER": "azul",
                 # A.R.I. e polimero preto - ventosa e retencao NR-010. Ela
                 # precisa entrar pela MARCA e nao pelo material: a familia
                 # VALVULA_RETENCAO manda azul, e a marca e quem passa na frente

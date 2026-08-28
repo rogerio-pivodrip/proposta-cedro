@@ -100,6 +100,36 @@ def porta_livre(simbolo):
                  if p.papel not in s.ENTRADA + s.SAIDA), None)
 
 
+def ventosas_mal_montadas(linha):
+    """Ventosa pendurada onde ela nao enrosca.
+
+    Ela nao aparafusa, ela ENROSCA: so entra em luva ou peca com rosca femea
+    da mesma bitola. Uma ventosa de 2" numa flange de 2" nao entra - nao ha
+    rosca ali - e numa luva de 1" tambem nao. O acessorio e desenhado na boca
+    livre de quem o carrega, e sem esta conferencia ele saia desenhado em
+    qualquer boca, o que faria o desenho prometer uma montagem que nao existe.
+    """
+    from . import ventosa as regra_ventosa
+    fora = []
+    for peca, montados in zip(linha.pecas, acessorios_da_linha(linha)):
+        try:
+            anfitriao = desenho.de_item(peca.item, getattr(peca, "pose", None))
+        except Exception:                                   # noqa: BLE001
+            continue
+        montagem = anfitriao
+        for identidade, simbolo in montados:
+            boca = porta_livre(montagem.simbolo if hasattr(montagem, "simbolo")
+                               else montagem)
+            if simbolo.familia == "VENTOSA":
+                dn = simbolo.params.get("dn_pol", 2)
+                ok, motivo = regra_ventosa.encaixa_na_boca(boca, dn)
+                if not ok:
+                    fora.append({"id": identidade, "em": peca.id,
+                                 "rotulo": simbolo.rotulo, "motivo": motivo})
+            montagem = simbolo
+    return fora
+
+
 def parafusos_curtos(linha):
     """Junta em que o parafuso da tabela NAO fecha.
 
@@ -304,24 +334,45 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
     # qualquer outra: a entrada dele cai no ponto da boca, olhando para onde a
     # boca olha. E a mesma transformacao rigida de `montar`, uma peca so
     postos_extra = []
+    juntas_extra = []
     for i, posto in enumerate(postos):
+        # OS ACESSORIOS SE EMPILHAM. O primeiro entra na boca livre da peca da
+        # corrente; o segundo, na boca livre do PRIMEIRO, e assim por diante -
+        # que e como a coisa sobe na obra: o te recebe a flange cega, a flange
+        # cega tem a luva de 2", e e na luva que a ventosa enrosca. Pondo os
+        # dois na mesma boca eles sairiam um dentro do outro
+        montagem = posto
+        desta = []
         for identidade, simbolo in ((acessorios or [None] * len(postos))[i]
                                     or []):
-            boca = porta_livre(posto.simbolo)
+            boca = porta_livre(montagem.simbolo)
             if boca is None:
                 continue
-            rad = math.radians(posto.giro)
+            rad = math.radians(montagem.giro)
             cos, sen = math.cos(rad), math.sin(rad)
-            px = posto.dx + boca.x * cos - boca.y * sen
-            py = posto.dy + boca.x * sen + boca.y * cos
-            direcao = posto.giro + boca.direcao
+            px = montagem.dx + boca.x * cos - boca.y * sen
+            py = montagem.dy + boca.x * sen + boca.y * cos
+            direcao = montagem.giro + boca.direcao
             entrada = s.porta(simbolo, s.ENTRADA) or s.porta(simbolo, s.SAIDA)
             ex, ey = (entrada.x, entrada.y) if entrada else (0.0, 0.0)
             rad2 = math.radians(direcao)
             c2, s2 = math.cos(rad2), math.sin(rad2)
-            postos_extra.append((identidade, s.Posto(
+            montagem = s.Posto(
                 simbolo, px - (ex * c2 - ey * s2), py - (ex * s2 + ey * c2),
-                direcao, (px, py), (px, py))))
+                direcao, (px, py), (px, py))
+            # A ORDEM DE MONTAGEM E O CONTRARIO DA ORDEM DE PINTURA. A ventosa
+            # ENROSCA na luva da flange cega: ela entra por dentro, e quem tem
+            # de ficar por cima e a luva. Empilhando na ordem em que se monta,
+            # o ultimo desenhado tapa o anterior e a ventosa cobria a luva em
+            # que ela esta enfiada. Entao a cadeia se monta para frente e se
+            # pinta para tras
+            desta.insert(0, (identidade, montagem))
+            # a boca em que ele entrou: e ela que diz se ha JUNTA FLANGEADA
+            # ali. A luva e rosca e nao leva parafuso; a derivacao do te e
+            # flange e leva - e sem isto a flange cega saia sem ferragem
+            # nenhuma, encostada no te por nada
+            juntas_extra.append((px, py, direcao, boca, simbolo))
+        postos_extra += desta
     if giro:
         # a sucção nasce no poço e sobe: a linha inteira gira para ficar de pé
         rad = math.radians(giro)
@@ -336,6 +387,8 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
             dx=vira(p.dx, p.dy)[0], dy=vira(p.dx, p.dy)[1],
             giro=p.giro + giro, entrada=vira(*p.entrada), saida=vira(*p.saida)))
             for identidade, p in postos_extra]
+        juntas_extra = [(*vira(x, y), d + giro, boca, sim)
+                        for x, y, d, boca, sim in juntas_extra]
     caixas = []
     for p in list(postos) + [p for _i, p in postos_extra]:
         x0, y0, w, h = p.simbolo.caixa
@@ -426,6 +479,23 @@ def desenhar_linha(pecas, largura=940, giro=0.0, altura_max=620, ids=None,
                     chapas=chapas, vaos=vaos, face_mm=face))
         else:
             ruins.append((p, motivo))
+    # a JUNTA DO ACESSORIO. Ele entra na boca livre de quem o carrega, e se
+    # essa boca for FLANGE ela leva ferragem como qualquer outra - a flange
+    # cega no alto do te nao se segura sozinha. Se for LUVA nao leva: ali e
+    # rosca, e rosca nao tem parafuso
+    for px, py, direcao, boca, simbolo in juntas_extra:
+        if boca.papel not in ("derivacao", "bocal", "saida", "entrada"):
+            continue
+        material = (None, simbolo.params.get("material"))
+        ficha = regras.parafuso_da_junta(
+            boca.dn_pol, regras.contexto_da_junta(*material))
+        chapas, vaos, face = _pilha_da_junta(boca.dn_pol, material)
+        guardar(s.junta_flangeada(
+            px, py, direcao, boca.dn_pol,
+            comprimento_mm=ficha["comprimento_mm"],
+            bitola_mm=ficha["bitola_mm"],
+            chapas=chapas, vaos=vaos, face_mm=face))
+
     for i in sorted(wafer):
         p = postos[i]
         entrada = s.porta(p.simbolo, s.ENTRADA)

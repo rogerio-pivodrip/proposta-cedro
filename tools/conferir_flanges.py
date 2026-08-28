@@ -220,10 +220,11 @@ def main():
                               ("ANTIVACUO", "EMEK", 1)):
         ficha = s.ficha_ventosa(dn, classe, marca)
         sim = s.ventosa(dn, classe, marca)
-        # na combinada a caixa inclui o COTOVELO, que e outra peca; a
-        # largura da ficha e a do corpo, e ela sai nos params
+        # a medida sai dos PARAMS e nao da caixa: a ventosa e desenhada
+        # deitada, para a montagem levanta-la na luva, e a caixa dela vem com
+        # largura e altura trocadas. Os params guardam a peca, nao a pose
         larg = sim.params.get("largura_mm")
-        _x, _y, _w, alt = s.caixa_do_corpo(sim)
+        alt = sim.params.get("altura_total_mm")
         ok = (abs(larg - ficha["largura"]) < 0.5
               and abs(alt - ficha["altura"]) < 0.5)
         print(f'  {"ok" if ok else " !"} {classe.lower()} {dn:g}" {marca:<9}  '

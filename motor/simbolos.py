@@ -146,10 +146,16 @@ def flange_netafim(dn_pol, tipo="SOLDAR"):
     return _netafim.get((tipo, float(dn_pol)))
 
 
-# A luva roscada de ventosa e sempre a mesma peca: 2" BSP femea, 30 mm de
-# comprimento por 40 mm de externo. Aparece com essas medidas nas duas folhas
-# onde o caderno a desenha - a flange cega (pagina 4) e o manifold (pagina 25).
-LUVA_BSP = {"dn_pol": 2, "comprimento_mm": 30.0, "externo_mm": 40.0}
+# A luva roscada de ventosa: 2" BSP femea, 30 mm de profundidade. O
+# comprimento vem das duas folhas onde o caderno Netafim a desenha - a flange
+# cega (pagina 4) e o manifold (pagina 25).
+#
+# O EXTERNO NAO: estava em 40 mm, e 40 e MENOR que a propria rosca que entra
+# nela. A 2" BSP tem 59,614 mm de diametro maior (ISO 228) - a luva desenhada
+# nao receberia o bocal da ventosa, e o desenho mostrava uma montagem que nao
+# fecha. Agora o furo E a rosca e o externo sai dele mais duas paredes.
+LUVA_PAREDE_MM = 8.0
+LUVA_BSP = {"dn_pol": 2, "comprimento_mm": 30.0}
 
 # Diametro MAIOR da rosca BSP (ISO 228 / BS 2779), em milimetro. Nao e o DN
 # nem o externo do tubo: a rosca de 2" mede 59,614 e nao 50 nem 60,3.
@@ -867,6 +873,24 @@ def _esticar_do_pe(elemento, fator, y_pe):
     elemento["h"] *= fator
 
 
+def _dentro_da_luva(elemento, fundo):
+    """O elemento esta inteiro dentro da luva que recebe a rosca?
+
+    O que esta dentro nao se ve. `fundo` e a profundidade da luva, medida da
+    boca dela para baixo - na peca de pe, y entre 0 e -fundo.
+    """
+    ys = []
+    if elemento["tipo"] == "rect":
+        ys = [elemento["y"], elemento["y"] + elemento["h"]]
+    elif elemento["tipo"] == "path":
+        ys = [p[1] for linha in pontos_do_path(elemento["d"]) for p in linha]
+    elif elemento["tipo"] == "circulo":
+        ys = [elemento["cy"] - elemento["r"], elemento["cy"] + elemento["r"]]
+    if not ys:
+        return False
+    return min(ys) >= -fundo - 0.01 and max(ys) <= 0.01
+
+
 def _nervuras(x0, x1, meia_altura, banda, colunas=3, fileiras=None):
     """As nervuras do corpo de polimero, com uma banda livre no meio.
 
@@ -1022,9 +1046,12 @@ def luva(x, y=0.0, direcao=0.0, dn_pol=2, comprimento=None, externo=None):
     o desenho e sempre o mesmo, mude o corpo em que ela esta cravada.
     """
     comprimento = comprimento or LUVA_BSP["comprimento_mm"]
-    externo = externo or LUVA_BSP["externo_mm"]
+    # o FURO e a rosca, e o externo sai dele: uma luva de 2" tem 59,6 de furo,
+    # e nao 33. O que estava aqui nao receberia o bocal da ventosa
+    furo_d = polegada_bsp(dn_pol)
+    externo = externo or (furo_d + 2 * LUVA_PAREDE_MM)
     r = externo / 2
-    furo = r - 3.5                      # a parede da luva, para a rosca aparecer
+    furo = furo_d / 2
     el = [{"tipo": "rect", "x": x, "y": y - r, "w": comprimento, "h": externo,
            "classe": "corpo"},
           _p(f"M{x:.1f} {y-furo:.1f} H{x+comprimento:.1f}", "malha"),
@@ -1183,19 +1210,50 @@ def ventosa(dn_pol=2, classe="COMBINADA", marca=None):
     altura = ficha_c.get("altura_mm", altura) * k
     corpo_pts = [(x * k, y * k) for x, y in pecas["corpo"][0]]
     largura = max(x for x, _y in corpo_pts) - min(x for x, _y in corpo_pts)
-    # o filete da rosca NAO e gerado aqui: ele ja vem no grupo `detalhe`,
+    # O TRECHO ENROSCADO NAO APARECE. A ventosa nao encosta na luva - ela
+    # ENTRA nela - e a luva de 2" tem 30 mm de profundidade. O que esta dentro
+    # some, como todo elemento coberto: a linha ali seria uma rosca desenhada
+    # por cima do metal que a esconde.
+    #
+    # O filete em si nao e gerado aqui: ele ja vem no grupo `detalhe`,
     # desenhado pelo fabricante. Gerar por cima poria dois filetes na peca
+    enroscado = LUVA_BSP["comprimento_mm"] * k
+    if enroscado > 1:
+        el = [e for e in el if not _dentro_da_luva(e, enroscado)]
     y_fim = min(y for _x, y in corpo_pts)
     el.append(_p(f"M0 {altura*0.08:.1f} V{y_fim - altura*0.06:.1f}", "centro"))
     el.append({"tipo": "nota", "x": largura / 2 + largura * 0.14,
                "y": -altura * 0.55, "texto": f'{classe.lower()} {dn_pol:g}"'})
-    portas = [Porta("entrada", 0, 0, 90, dn_pol)]
-    return _montar("VENTOSA", f'ventosa {classe.lower()} {dn_pol:g}"',
-                   el, portas, "dxf vetorial",
-                   {"dn_pol": dn_pol, "classe": classe, "marca": marca,
-                    "material": "PLASTICO", "ponta": "ROSCA_MACHO_BSP",
-                    "com_cotovelo": "bico" in pecas,
-                    "altura_total_mm": altura, "largura_mm": largura})
+    # A PECA E DESENHADA DE PE - e assim que ela e, e assim que o perfil dela
+    # foi lido - mas a montagem espera toda peca OLHANDO PARA +X, entrando pela
+    # esquerda. Entao ela sai daqui DEITADA, e quem a levanta e a boca em que
+    # ela enrosca: na luva de 2" da flange cega, que aponta para cima, ela
+    # sobe sozinha. Antes, com a porta declarada a 90 graus, o giro entrava
+    # duas vezes e ela aparecia caida no alto do te
+    # a porta fica na BOCA DA LUVA e nao no pe da rosca: e ali que a peca
+    # encosta no que a recebe, e e por isso que ela desce para dentro sozinha
+    portas = [Porta("entrada", 0, -enroscado, 90, dn_pol)]
+    de_pe = _montar("VENTOSA", f'ventosa {classe.lower()} {dn_pol:g}"',
+                    el, portas, "dxf vetorial",
+                    {"dn_pol": dn_pol, "classe": classe, "marca": marca,
+                     "material": "PLASTICO", "ponta": "ROSCA_MACHO_BSP",
+                     "com_cotovelo": "bico" in pecas,
+                     "altura_total_mm": altura, "largura_mm": largura})
+    # A PECA E DESENHADA DE PE - e assim que ela e, e assim que o perfil dela
+    # foi lido. Mas a montagem espera toda peca OLHANDO PARA +X, entrando pela
+    # esquerda, e quem a levanta e a boca em que ela enrosca: na luva de 2" da
+    # flange cega, que aponta para cima, ela sobe sozinha. Sem deita-la aqui o
+    # giro entrava duas vezes e ela aparecia caida no alto do te
+    # +90 e nao -90: a peca cresce em -y (para cima) e tem de crescer em +x.
+    # Um ponto em (0,-L) vai para (+L, 0) girando +90 - com -90 ele ia para
+    # (-L, 0) e a valvula subia de cabeca para baixo na luva do te
+    deitada = girado(de_pe, 90)
+    # a porta girou junto - o recuo dela vira x, e e esse recuo que enfia a
+    # peca dentro da luva. So a DIRECAO se reescreve: `girado` somou 90 a ela,
+    # e a montagem espera 180, que e "esta peca entra pela esquerda"
+    boca = deitada.portas[0]
+    return deitada._replace(
+        portas=[Porta("entrada", boca.x, boca.y, 180, dn_pol)])
 
 
 
@@ -1335,8 +1393,13 @@ def flange_cega(dn_pol, saida_pol=None, saida_tipo="LUVA"):
         rotulo += f' c/ flange {saida_pol:g}"'
     el.append(_p(f"M-60 0 H{fim + 40:.0f}", "centro"))
     portas = [Porta("entrada", 0, 0, 180, dn_pol)]
-    if saida_pol and saida_tipo != "LUVA":
-        portas.append(Porta("derivacao", fim, 0, 0, saida_pol))
+    if saida_pol:
+        # a LUVA tambem e boca, e nao so a flange. Ela nao continua a linha -
+        # e rosca, nao flange - mas e por ela que a VENTOSA sobe, e sem porta
+        # nao havia onde pendurar. O papel diz de que tipo e a boca: quem
+        # enrosca sabe que enrosca
+        portas.append(Porta("luva" if saida_tipo == "LUVA" else "derivacao",
+                            fim, 0, 0, saida_pol))
     return _montar("FLANGE_CEGA", rotulo, el, portas, "netafim",
                    {"saida_pol": saida_pol, "saida_tipo": saida_tipo})
 
