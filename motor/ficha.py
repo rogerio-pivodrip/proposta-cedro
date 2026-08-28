@@ -14,7 +14,7 @@ porque quem le nao sabe em que confiar.
 O que ela NAO faz e calcular coisa nova. Tudo aqui ja e sabido em outro lugar
 do motor; esta funcao so vai buscar e nomeia.
 """
-from . import cotas, regras
+from . import cotas, pressao, regras
 
 
 def _linha(rotulo, valor, fonte=None):
@@ -35,11 +35,27 @@ def da_peca(peca, catalogo=None):
              _linha("família", (peca.familia or "—").replace("_", " ").lower())]
     if peca.material:
         saida.append(_linha("material", peca.material.replace("_", " ").lower()))
+    saida += _classe(peca)
     saida += _bocas(peca, unidade)
     saida += _medida(peca)
     saida += _flanges(peca, unidade)
     saida += _por_familia(peca, unidade)
     return [l for l in saida if l["valor"] not in (None, "", "—")]
+
+
+def _classe(peca):
+    """Quanto a peca aguenta - e em que escala isso esta escrito.
+
+    O rotulo do PVC de irrigacao sai com a conversao junto ("PN 80 (7.8 bar)")
+    porque o numero cru engana: PN 80 num tubo de PVC e 80 metros de coluna
+    d'agua, e nao 80 bar. Ver `motor/pressao.py`.
+    """
+    classe = peca.classe_pressao()
+    if not classe:
+        return []
+    da_bomba = peca.familia == "BOMBA" and peca.flange_bomba
+    return [_linha("classe de pressão", classe["rotulo"],
+                   "flange pedida" if da_bomba else "lista")]
 
 
 def _bocas(peca, unidade):

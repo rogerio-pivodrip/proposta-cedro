@@ -15,7 +15,7 @@ import unicodedata
 from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from motor import manifold  # noqa: E402
+from motor import manifold, pressao  # noqa: E402
 
 PADRAO_ENTRADA = "data/catalogo_bruto.json"
 PADRAO_SAIDA = "data/catalogo.json"
@@ -236,6 +236,7 @@ def normalizar_item(item):
     peca["saida_pol"] = None
     peca["acionamento"] = None
     peca["serie"] = None
+    peca["classe_pressao"] = None
     peca["confianca"] = 0.0
 
     fam = detectar(FAMILIAS, desc)
@@ -332,6 +333,15 @@ def normalizar_item(item):
             peca["serie"] = m.group(1)
 
     peca["conexoes"] = extrair_conexoes(desc, dns_pos)
+
+    # A classe de pressao da peca inteira - a menor que a descricao declara,
+    # porque quem manda e a face mais fraca. Ver motor/pressao.py: o mesmo
+    # "PN" vale bar no aco e no PEAD, metro de coluna d'agua no PVC, e "150
+    # LB" nao e bar nenhum. A classe de cada boca continua sendo a da norma
+    # da conexao dela; este campo e o do corpo.
+    classe = pressao.da_peca(desc, peca["material"])
+    if classe:
+        peca["classe_pressao"] = classe
 
     # O manifold e a peca com mais variacao de FORMA e nenhuma cota nova: o
     # que muda e o que ha em cima dele, e isso esta escrito no nome. Ver

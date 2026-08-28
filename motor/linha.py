@@ -19,7 +19,7 @@ import contextlib
 import itertools
 from collections import OrderedDict
 
-from . import corte, cotas, ferragem, regras
+from . import corte, cotas, ferragem, pressao, regras
 
 _contador = itertools.count(1)
 _montagens = itertools.count(1)
@@ -82,6 +82,21 @@ class Peca:
         # quando nao ha
         self.flange_bomba = None
         self.portas = self._portas()
+
+    def classe_pressao(self):
+        """Quanto esta peca aguenta - ou None quando a lista nao diz.
+
+        Vem do cadastro (`tools/normalizar.py` le a descricao pelo
+        `motor/pressao.py`), com uma excecao: na BOMBA quem manda na junta e a
+        furacao com que a maquina foi pedida, e nao o corpo dela. Ver
+        `regras.FURACOES_DE_BOMBA` - a mesma bomba sai em Classe 125, 250 ou
+        EN PN 16 conforme o pedido, e e essa flange que encosta na linha.
+        """
+        if self.familia == "BOMBA" and self.flange_bomba:
+            da_flange = pressao.da_norma(self.flange_bomba)
+            if da_flange:
+                return da_flange
+        return self.item.get("classe_pressao")
 
     def recalcular(self):
         """Refaz o que depende da fonte e da cota, sem trocar a peca.
@@ -440,6 +455,24 @@ def _duas_faces(catalogo, dados):
     return cabeca + " - a lista não tem peça com essas duas faces"
 
 
+def _avisar_classe(junc, avisos, onde):
+    """A classe de pressao das duas pecas que se encontram.
+
+    A furacao ja dizia se elas PARAFUSAM; isto diz se o que sai dali AGUENTA.
+    Sao perguntas diferentes e as duas passam despercebidas do mesmo jeito:
+    uma flange PN 10 casa perfeitamente com uma PN 16 de 6" - mesma furacao,
+    mesmo parafuso, aperta redondo - e a linha inteira fica valendo 10 bar
+    naquele ponto. So se descobre na pressao de teste, ja montado.
+
+    Cala quando uma das duas nao declara classe. Ver `motor/pressao.py`: um
+    numero inventado aqui pareceria resposta.
+    """
+    veredito, frase = pressao.na_juncao(junc["de"].classe_pressao(),
+                                        junc["para"].classe_pressao())
+    if veredito in ("menor", "outra familia"):
+        avisos.append(f"{onde}: classe de pressão - {frase}")
+
+
 def ferragem_de_juncao(catalogo, junc, somar, avisos, rotulo=""):
     """Os itens derivados de UMA juncao flangeada, somados na lista.
 
@@ -460,6 +493,7 @@ def ferragem_de_juncao(catalogo, junc, somar, avisos, rotulo=""):
         avisos.append(f"{onde} ({junc['de'].familia} -> "
                       f"{junc['para'].familia}): {junc['dados']['motivo']}")
         return
+    _avisar_classe(junc, avisos, onde)
     if junc["acao"] != "direta":
         avisos.append(f"{onde}: {_explicar(catalogo, junc)}")
         return

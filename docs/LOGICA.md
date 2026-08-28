@@ -502,6 +502,61 @@ bomba inteira**. A ligação mais crítica da casa — a que sempre pede peça d
 ponte — era a única que o programa não conferia. As bocas agora vêm da folha
 dimensional (que o símbolo lê) e a furação, da regra acima.
 
+### 4.2.3 A classe de pressão (`motor/pressao.py`)
+
+A furação diz se duas faces **parafusam**. Não diz se o que sai dali
+**aguenta** — e são perguntas diferentes que passam despercebidas do mesmo
+jeito. Uma flange PN 10 casa perfeitamente com uma PN 16 de 6": mesma furação,
+mesmo parafuso, aperta redondo. A linha inteira passa a valer 10 bar naquele
+ponto, e quem dimensionou para 16 só descobre na pressão de teste, montado.
+
+**O mesmo "PN" quer dizer três coisas nesta lista**, e é por isso que ele não
+pode ser lido como número solto:
+
+| escrito | material | quer dizer |
+|---|---|---|
+| `PN 16` | aço, PEAD | 16 bar (NBR 7675 / EN 1092) |
+| `PN 125` | PVC de irrigação | 125 mca ≈ 12,3 bar |
+| `PN 16` | PVC-U de ISO | 16 bar (ISO 1452 / 2536) — o **mesmo material** |
+| `150 LB` | qualquer | classe ASME B16.5 — não é bar |
+
+As duas linhas de PVC convivem no catálogo: `TUBO IRRIGA PVC 100 DEFOFO JEI
+PN125` é mca e `FL PVC 110MM ISO 2536 PN16` é bar. **O material sozinho não
+separa — quem separa é a série de números, e ela não se sobrepõe:** em bar o
+plástico vai até PN 25, e a série brasileira começa em PN 40. Acima de 25 só a
+NBR 7675 e a EN 1092 têm classe (40, 63, 100); um PN 60, 80, 125, 145, 160 ou
+180 é mca venha de que material vier — foi o que salvou as luvas `IRR JIR
+PN125` e os tubos `PRFV PN160`, que a lista escreve sem dizer o material. O
+material só decide **na faixa em que as duas séries se cruzam**, o PN 40: 40
+bar no aço, 4 bar no plástico de irrigação.
+
+Duas armadilhas vizinhas, das que não dão erro nenhum:
+
+- **`PE80` é a resina, não a pressão.** Por isso o módulo só aceita o prefixo
+  `PN`, nunca `PE` — um `TUBO PEAD PE80 PN10` é de 10 bar.
+- **Classe ASME só existe na série** (125, 150, 250, 300, 400, 600, 900…).
+  Sem esse filtro o `140LB` de um pressostato de compressor de ar — que é
+  libra por polegada quadrada, e nem peça de linha é — entrava na conta como
+  se fosse classe de flange.
+
+**A peça vale a menor classe que declara**, porque quem manda é a face mais
+fraca: um `TUBO PE100 PN10 110MM … FL PN16` continua sendo um tubo de 10 bar.
+Na **bomba** é diferente — quem encosta na linha é a flange com que a máquina
+foi pedida (`flange_bomba`, ver 4.2.2), e não o corpo.
+
+**Na junta, o motor compara e cala quando não sabe.** PN contra classe ASME
+não se converte por conta própria: a equivalência depende do material e da
+temperatura (uma Classe 125 de ferro fundido dá 13,8 bar à temperatura
+ambiente — *abaixo* de PN 16), e está na folha do fabricante. O programa diz
+qual é o par e manda conferir, em vez de inventar um número que pareceria
+resposta. No recalque padrão de 6" isso já acusa a retenção Uniflap `150LB`
+sentada numa linha `NBR PN16`, nas duas faces dela.
+
+O campo é do cadastro: `tools/normalizar.py` lê a descrição e grava
+`classe_pressao` — **742 das 5157 peças** declaram uma. `tools/conferir_pressao.py`
+guarda os casos que já enganaram, um a um, e varre o catálogo atrás de leitura
+fora das séries conhecidas.
+
 ### 4.2.1 Barra roscada
 
 Válvula wafer é presa por tirante. Porca e arruela saem da furação: **2 de cada
