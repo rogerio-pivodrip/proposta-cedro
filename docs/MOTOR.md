@@ -737,11 +737,30 @@ inventado do desenho: a carcaça sai da folha, não de uma regra de CV.
 
 ### O que ainda não desenha
 
-Onze códigos METN citam **150-500, 200-400 e 200-500**, tamanhos que a folha
-de medidas não traz; treze códigos METB citam tamanhos fora do manual A2744.
+Os dois manuais estão **inteiramente** extraídos, e isso foi medido: o A2744
+nomeia 35 tamanhos e a tabela da casa tem os mesmos 35; o A2742 nomeia 43 e a
+tabela tem os mesmos 43. Não sobrou linha para extrair.
+
+O que falta são tamanhos que **os manuais não cobrem**, e que a lista da casa
+vende assim mesmo:
+
+| linha | tamanhos | onde o manual para |
+|---|---|---|
+| METB (A2744) | 125-080-400, 125-100-400, 150-125-315, 150-125-400, 200-150-315, 200-150-400 | 315 na série 125-080, 250 nas séries 150-125 e 200-150 |
+| METN (A2742) | 150-500, 200-400, 200-500 | 400 na série 150; não há série 200 |
+| GSD (EBARA 406.1) | 100-200, 150-400L, 150-500 | outra folha, de outro fabricante |
+
 Ficam de fora em vez de estimados — houve uma versão deste motor que estimava
 a/b/c por ajuste sobre a tabela da Megabloc, e ela foi apagada no dia em que o
-manual da Meganorm chegou. Estimativa não sobrevive à folha.
+manual da Meganorm chegou. Estimativa não sobrevive à folha. Para desenhá-los
+falta a folha desses tamanhos, e não código.
+
+**Um que não era falta de folha:** a busca era por `(tamanho, polos)`, e as
+bombas pequenas só aparecem no manual em 2 polos. Quem pedia a 040-025-160 em
+4 polos não estava pedindo uma bomba que não existe — estava pedindo a mesma
+fundição com outro motor, e `a`, `h1` e `h2`, as três cotas que a tubulação
+usa, são da **voluta**. O que muda com o motor é a cauda. Com o recuo para
+outra contagem de polos, quatro tamanhos voltaram a desenhar.
 
 ### Onde isso chegou
 

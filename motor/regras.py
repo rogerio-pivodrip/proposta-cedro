@@ -541,19 +541,29 @@ def _carregar_flanges_bomba():
     return _flanges_bomba
 
 
-# Ate o tamanho 65-200 a EBARA entrega a boca ROSQUEADA (BSP) ou flangeada,
+# Ate o tamanho 65-200 a KSB entrega a boca da Megabloc ROSQUEADA (BSP) ou
+# flangeada,
 # conforme o pedido - e rosca nao tem junta flangeada nenhuma, nem parafuso.
 # O criterio pratico e a succao: DN65 e 2 1/2".
 SUCCAO_QUE_PODE_SER_ROSCADA_POL = 2.5
 
 
+# A nota e do manual MEGABLOC, e vale para a Megabloc. Para a EBARA a casa
+# nao tem nota equivalente, e inventar uma seria pior que nao ter: a bomba
+# entra flangeada, que e como a lista a vende.
+LINHAS_QUE_PODEM_VIR_ROSCADAS = ("METB", "MEGABLOC")
+
+
 def pode_vir_roscada(succao_pol, descricao=""):
     """A boca desta bomba pode ter vindo em rosca BSP em vez de flange?
 
-    So as pequenas, e so quando a folha nao disser o contrario: as tres
-    excecoes da nota (050-032-250.1, 050-032-250 e 065-040-250) saem somente
-    flangeadas, em 250#.
+    So a Megabloc, so as pequenas, e so quando a folha nao disser o
+    contrario: as tres excecoes da nota (050-032-250.1, 050-032-250 e
+    065-040-250) saem somente flangeadas, em 250#.
     """
+    texto = (descricao or "").upper()
+    if not any(m in texto for m in LINHAS_QUE_PODEM_VIR_ROSCADAS):
+        return False
     if succao_pol is None or succao_pol > SUCCAO_QUE_PODE_SER_ROSCADA_POL:
         return False
     ficha = flange_da_bomba(descricao)

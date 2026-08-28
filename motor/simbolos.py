@@ -3489,7 +3489,17 @@ def ficha_bomba(tamanho, polos=4, cv=None):
                     _bombas.setdefault((chave, int(r["polos"])), []).append(r)
     linhas = _bombas.get((tamanho, polos))
     if not linhas:
-        return None
+        # A COTA DA TUBULACAO NAO MUDA COM O NUMERO DE POLOS. O manual cota
+        # por potencia de motor, e as bombas pequenas so aparecem em 2 polos;
+        # quem pede a 040-025-160 em 4 polos nao estava pedindo uma bomba que
+        # nao existe - estava pedindo a mesma fundicao com outro motor. `a`,
+        # `h1` e `h2`, que sao as tres cotas que a tubulacao usa, sao da
+        # VOLUTA. O que muda e a carcaca do motor, que e cauda e nao ligacao.
+        outros = [r for (chave, _p), regs in _bombas.items() if chave == tamanho
+                  for r in regs]
+        if not outros:
+            return None
+        linhas = outros
     if cv is None:
         return min(linhas, key=lambda r: float(r["cv"]))
     return min(linhas, key=lambda r: abs(float(r["cv"]) - cv))

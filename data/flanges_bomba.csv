@@ -26,18 +26,21 @@
 # `succao_pol` e `recalque_pol` sao conferencia: o programa ja deduz as duas
 # do NOME (METB<succao>-<recalque>-<rotor>), e estas linhas provam que a
 # deducao bate com a folha.
-# A NOTA DE RODAPE DA EBARA fecha o resto:
+# A NOTA DE RODAPE DO MANUAL MEGABLOC (A2744, pagina da tabela de dimensoes)
+# fecha o resto:
 #
 #   "As conexoes de succao e descarga das bombas ATE O TAMANHO 65-200 podem
 #    ser rosqueadas ou flangeadas conforme rosca BSP ou Flange ANSI B16.1
 #    125#FF, EXCETO os tamanhos 050-032-250.1, 050-032-250 e 065-040-250, que
 #    sao fornecidos somente flangeados conforme ANSI B16.1 250#FF"
 #
-# Ela nomeia a bomba por succao-recalque-rotor em milimetro, e o catalogo da
-# casa nomeia por recalque-rotor: 065-040-250 e a GSD 40-250 (succao DN65,
-# recalque DN40), que o programa ja deduz assim pelo nome. Das tres excecoes,
-# so essa esta na lista da casa - as outras duas ficam registradas aqui para
-# quando entrarem.
+# Os tres tamanhos que ela excetua sao MEGABLOC, escritos como o manual
+# escreve - succao-recalque-rotor em milimetro. Os tres estao na lista da
+# casa, e sao os mesmos nomes que o catalogo usa para a METB.
+#
+# (Esta linha ja esteve escrita como se a nota fosse da EBARA e o
+# 065-040-250 fosse a GSD 40-250. Era engano: a GSD e outra maquina, com
+# outra nomenclatura, e a nota nao fala dela.)
 #
 # Da nota saem duas regras: bomba pequena PODE VIR ROSQUEADA (e ai nao ha
 # junta flangeada nenhuma, nem parafuso), e as tres excecoes sao 250#, e nao
@@ -45,4 +48,6 @@
 linha,tamanho,succao_pol,recalque_pol,classe,norma,furacao,ficha
 METB,150-125-250,6,5,CL 125,ASME B16.1,ANSI 150,KSB METB150-125-250 GG A 02204A v1
 METN,125-100-315,5,4,CL 250,ASME B16.1,ANSI 300,KSB METN125-100-315 GG NP1 03004A v1
-GSD,40-250,2.5,1.5,CL 250,ASME B16.1,ANSI 300,EBARA nota 1 - 065-040-250 so flangeada 250#FF
+METB,065-040-250,2.5,1.5,CL 250,ASME B16.1,ANSI 300,KSB Megabloc A2744 nota 1 - so flangeada 250#FF
+METB,050-032-250,2,1.25,CL 250,ASME B16.1,ANSI 300,KSB Megabloc A2744 nota 1 - so flangeada 250#FF
+METB,050-032-250.1,2,1.25,CL 250,ASME B16.1,ANSI 300,KSB Megabloc A2744 nota 1 - so flangeada 250#FF
