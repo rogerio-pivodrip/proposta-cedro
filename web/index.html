@@ -85,12 +85,14 @@
     </div>
     <p class="dica">qualquer letra cai na barra · roda do mouse amplia ·
       arrastar o fundo move a folha · arrastar uma peça a reposiciona ·
-      arrastar um balão o reposiciona</p>
+      arrastar um balão o reposiciona ·
+      shift ou ctrl clica para escolher várias</p>
   </section>
 
   <aside>
     <div class="painel" id="painel" hidden>
       <h2 id="painel_nome">—</h2>
+      <p class="sap" id="painel_varias" hidden></p>
       <p class="sap" id="painel_sap"></p>
       <!-- no tubo o comprimento é uma ESCOLHA entre as barras que a lista
            tem, e não um número livre: a medida do desenho tem de ser a medida
@@ -107,6 +109,17 @@
       </label>
       <label>cota de
         <select id="fonte"></select>
+      </label>
+      <!-- a MESMA peça noutro tamanho. Sem peça escolhida, `bitola 8` na
+           barra troca a linha inteira - e é uma edição só, que desfaz de
+           uma vez -->
+      <label>bitola
+        <select id="trocar_bitola">
+          <option value="">—</option>
+          <option>3</option><option>4</option><option>6</option>
+          <option>8</option><option>10</option><option>12</option>
+          <option>14</option>
+        </select>
       </label>
       <div class="acoes">
         <button id="subir">◂ mover</button>

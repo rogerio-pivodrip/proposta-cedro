@@ -102,6 +102,33 @@ def main():
     executar(sessao, {"nome": "refazer"})
     conferir("refazer volta ao posterior", _conteudo(sessao) == depois)
 
+    print("\n== trocar a bitola da linha inteira, num comando só")
+    sessao = Sessao()
+    executar(sessao, {"nome": "template", "template": "RECALQUE", "dn": 6})
+    antes = _conteudo(sessao)
+    resposta = executar(sessao, {"nome": "bitola", "dn": 8})
+    conferir("a linha inteira trocou", resposta["ok"]
+             and len(resposta["trocas"]) > 5,
+             str(len(resposta.get("trocas") or [])))
+    pecas = resposta["documento"]["pecas"]
+    conferir("nenhuma peça sobrou na bitola antiga",
+             not [p for p in pecas if 6.0 in (p["dn"] or [])
+                  and p["familia"] in ("CURVA", "TUBO", "TE")],
+             str([p["descricao"] for p in pecas if 6.0 in (p["dn"] or [])]))
+    # a VENTOSA de 2" nao e da linha: ela enrosca na luva da flange cega, e a
+    # bitola dela nunca foi a da linha. Trocar 6 por 8 nao pode leva-la junto
+    ventosa = [a for p in pecas for a in p["acessorios"]
+               if a["familia"] == "VENTOSA"]
+    conferir("a ventosa de 2\" continua de 2\"",
+             bool(ventosa) and '2"' in ventosa[0]["descricao"],
+             str([a["descricao"] for a in ventosa]))
+    conferir("e o que a lista não tem naquela bitola vira aviso escrito",
+             any("não tem" in a for a in (resposta.get("recado") or [])),
+             str(resposta.get("recado")))
+    executar(sessao, {"nome": "desfazer"})
+    conferir("e um desfazer devolve a linha inteira",
+             _conteudo(sessao) == antes)
+
     print("\n== erro é resposta, não exceção")
     # cada caso comeca de uma sessao NOVA: um comando que muda o documento
     # contaminaria o proximo, e foi assim que este teste ja se enganou

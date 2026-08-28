@@ -8,6 +8,13 @@
    Ver docs/LOGICA.md 2. */
 
 let documento = null;
+/* A SELEÇÃO É UM CONJUNTO, e `escolhida` é a última dele.
+
+   Um clique escolhe uma; shift ou ctrl acrescenta. Guardar as duas coisas -
+   a lista e a última - evita reescrever todo comando que age sobre "a peça":
+   o painel continua falando de uma peça (a última), e o comando manda a
+   lista junto. Quem escolheu uma só manda uma lista de um. */
+let escolhidas = [];
 let escolhida = null;
 let modo = "inserir";        // o que um clique no catálogo faz com a escolhida
 
@@ -63,7 +70,7 @@ function pintarVista() {
   }
   alvo.querySelectorAll("g.peca[data-id]").forEach((g) => {
     const id = g.dataset.id;
-    if (id === escolhida) g.classList.add("escolhida");
+    if (escolhidas.includes(id)) g.classList.add("escolhida");
     // o arrasto é estado DA TELA, como a seleção: cada repintura o reaplica.
     // A tela repinta a cada comando - inclusive o `simular` do próprio
     // arrasto - então guardar elemento em vez de id perderia o arrasto no
@@ -72,7 +79,8 @@ function pintarVista() {
     if (arrasto && id === arrasto.sobre && id !== arrasto.id) {
       g.classList.add(arrasto.recusa ? "recusa" : "recebe");
     }
-    g.addEventListener("click", () => escolher(id));
+    g.addEventListener("click", (ev) =>
+      escolher(id, ev.shiftKey || ev.ctrlKey || ev.metaKey));
     g.addEventListener("pointerdown", (ev) => comecarArrasto(ev, id));
   });
   // o balão é da mesma peça que o traço - clicar num e noutro escolhe a
@@ -80,13 +88,13 @@ function pintarVista() {
   // número dela na folha
   alvo.querySelectorAll("g.balao[data-id]").forEach((g) => {
     const id = g.dataset.id;
-    if (id === escolhida) g.classList.add("escolhida");
+    if (escolhidas.includes(id)) g.classList.add("escolhida");
     // soltar o arrasto dispara um `click` logo atrás. Sem isto, terminar de
     // arrastar o balão trocava a seleção de brinde - e quem arrasta o balão
     // não pediu para selecionar nada
-    g.addEventListener("click", () => {
+    g.addEventListener("click", (ev) => {
       if (balaoAndou) return;
-      escolher(id);
+      escolher(id, ev.shiftKey || ev.ctrlKey || ev.metaKey);
     });
     g.addEventListener("pointerdown", (ev) => comecarBalao(ev, id));
   });
@@ -122,7 +130,7 @@ function pintarLista() {
 function linhaDaTabela(registro, derivada) {
   const tr = document.createElement("tr");
   if (derivada) tr.className = "derivada";
-  if (registro.id === escolhida) tr.classList.add("escolhida");
+  if (escolhidas.includes(registro.id)) tr.classList.add("escolhida");
   // o número do item é o do balão: o mesmo número, nos dois lugares
   const semBalao = registro.balao === false ? " class=\"sem\"" : "";
   tr.innerHTML =
@@ -135,7 +143,8 @@ function linhaDaTabela(registro, derivada) {
     // quando a peça que a puxou sai
     `<td class="apagar">${registro.id ? "×" : ""}</td>`;
   if (registro.id) {
-    tr.addEventListener("click", () => escolher(registro.id));
+    tr.addEventListener("click", (ev) =>
+      escolher(registro.id, ev.shiftKey || ev.ctrlKey || ev.metaKey));
     tr.querySelector("td.apagar").addEventListener("click", (ev) => {
       ev.stopPropagation();
       apagar(registro.id);
@@ -260,6 +269,14 @@ function pintarPainel() {
   fonte.value = peca.fonte || "IRRIGAFOUR";
   $("espelhar").classList.toggle("ligado", peca.sentido < 0);
   $("balao").classList.toggle("ligado", peca.balao !== false);
+  // com várias escolhidas o painel continua mostrando UMA - a última - e
+  // avisa que o botão vale para todas. Mostrar campo em branco "porque são
+  // várias" esconderia o que a pessoa acabou de clicar
+  const varias = $("painel_varias");
+  varias.hidden = escolhidas.length < 2;
+  varias.textContent = `${escolhidas.length} peças escolhidas — o que mudar `
+    + `aqui muda todas`;
+  $("trocar_bitola").value = "";
   $("modo").hidden = false;
   pintarModo();
 }
@@ -298,9 +315,38 @@ function pintarModo() {
     modo === "substituir" ? "trocar por" : "acrescentar";
 }
 
-function escolher(id) {
-  escolhida = (escolhida === id) ? null : id;
+function escolher(id, junto) {
+  if (junto) {
+    // shift ou ctrl: acrescenta, e clicar de novo tira - é o gesto de
+    // qualquer lista, e o mesmo do CAD
+    escolhidas = escolhidas.includes(id)
+      ? escolhidas.filter((x) => x !== id) : escolhidas.concat([id]);
+  } else {
+    escolhidas = (escolhidas.length === 1 && escolhidas[0] === id) ? [] : [id];
+  }
+  escolhida = escolhidas.length ? escolhidas[escolhidas.length - 1] : null;
   pintar();
+}
+
+/* Os alvos de um comando: a seleção inteira. O comando é o mesmo para uma e
+   para doze - ver api/nucleo._alvos - e por isso a tela não tem duas
+   versões de cada botão. */
+function alvos() {
+  return escolhidas.slice();
+}
+
+function soltarEscolha() {
+  escolhidas = [];
+  escolhida = null;
+}
+
+/* Esticar e substituir TROCAM a peça - outro comprimento é outro código SAP -
+   e o id vai junto. A seleção segue a peça nova, senão o painel fica
+   apontando para uma que já saiu da linha. */
+function seguir(antigo, novo) {
+  if (!novo) return;
+  escolhidas = escolhidas.map((x) => (x === antigo ? novo : x));
+  escolhida = escolhidas[escolhidas.length - 1] || null;
 }
 
 /* -------------------------------------------------------------- comandos */
@@ -322,8 +368,9 @@ async function acrescentar(familia, dnPedido) {
       // substituir não é remover e inserir: o comando é um só, ele volta num
       // desfazer só, e a peça nova cai exatamente onde a velha estava
       if (modo === "substituir" && escolhida) {
+        const saindo = escolhida;
         mandar({nome: "substituir", alvo: escolhida, sap: item.sap})
-          .then((r) => { if (r.ok && r.peca) { escolhida = r.peca; pintar(); } });
+          .then((r) => { if (r.ok) { seguir(saindo, r.peca); pintar(); } });
         return;
       }
       mandar({nome: "inserir", sap: item.sap,
@@ -335,8 +382,10 @@ async function acrescentar(familia, dnPedido) {
 
 async function apagar(id) {
   if (!id) return;
-  if (escolhida === id) escolhida = null;
-  await mandar({nome: "remover", alvo: id});
+  const juntas = escolhidas.includes(id) ? alvos() : [id];
+  escolhidas = escolhidas.filter((x) => !juntas.includes(x));
+  escolhida = escolhidas[escolhidas.length - 1] || null;
+  await mandar({nome: "remover", alvo: id, alvos: juntas});
 }
 
 function trocar() {
@@ -524,7 +573,12 @@ async function soltarArrasto() {
   esconderPrevisao();
   if (!atual || !atual.andou) return;
   if (!atual.sobre || atual.sobre === atual.id) return;
-  await mandar({nome: "mover", alvo: atual.id, para: posicaoDe(atual.sobre)});
+  // arrastar uma peça que está NA ESCOLHA arrasta a escolha inteira: o
+  // bloco sai junto e chega junto, na ordem em que estava. Arrastar uma de
+  // fora da escolha move só ela - o gesto foi sobre ela
+  const juntas = escolhidas.includes(atual.id) ? alvos() : [atual.id];
+  await mandar({nome: "mover", alvo: atual.id, alvos: juntas,
+                para: posicaoDe(atual.sobre)});
 }
 
 /* -------------------------------------------------------------- exportar */
@@ -587,7 +641,8 @@ async function dizer(texto) {
   dito.push(texto);
   ondeNoDito = dito.length;
   if (texto.trim() === "?") { listarVerbos(); return; }
-  const resposta = await mandar({nome: "dizer", texto, alvo: escolhida});
+  const resposta = await mandar({nome: "dizer", texto, alvo: escolhida,
+                                 alvos: alvos()});
   if (!resposta.ok) { anotar(resposta.erro, "ruim"); return; }
   if (baixar(resposta)) { anotar(`salvo ${resposta.arquivo}`); return; }
   anotar(contar(resposta));
@@ -761,24 +816,46 @@ function ligar() {
   $("refazer").addEventListener("click", () => mandar({nome: "refazer"}));
   $("remover").addEventListener("click", () => apagar(escolhida));
   $("espelhar").addEventListener("click", () => mandar({
-    nome: "espelhar", alvo: escolhida,
+    nome: "espelhar", alvo: escolhida, alvos: alvos(),
   }));
+  // a MESMA peça noutro tamanho, nas escolhidas. O que a lista não tiver
+  // naquele tamanho fica como está e vira aviso - ver api/nucleo._bitola
+  $("trocar_bitola").addEventListener("change", async (ev) => {
+    const dn = Number(ev.target.value);
+    ev.target.value = "";
+    if (!dn) return;
+    const r = await mandar({nome: "bitola", dn, alvos: alvos()});
+    if (r.ok) {
+      escolhidas = r.pecas && r.pecas.length ? r.pecas : escolhidas;
+      escolhida = escolhidas[escolhidas.length - 1] || null;
+      pintar();
+      if ((r.recado || []).length) recado(r.recado.join(" · "));
+    }
+  });
   // sem ângulo nem distância o comando ALTERNA - é o gesto da caixinha
   $("balao").addEventListener("click", () => mandar({
-    nome: "balao", alvo: escolhida,
+    nome: "balao", alvo: escolhida, alvos: alvos(),
   }));
   $("trocar").addEventListener("click", trocar);
   // esticar TROCA a peça - outro comprimento é outro código SAP - então a
   // seleção tem de seguir a peça nova, senão o painel fica apontando para
   // uma peça que saiu da linha
-  const esticou = (r) => { if (r.ok && r.peca) { escolhida = r.peca; pintar(); } };
-  $("esticar").addEventListener("click", () =>
-    mandar({nome: "esticar", alvo: escolhida, passos: 1}).then(esticou));
-  $("encolher").addEventListener("click", () =>
-    mandar({nome: "esticar", alvo: escolhida, passos: -1}).then(esticou));
+  const esticar = (pedido) => {
+    const saindo = alvos();
+    return mandar({nome: "esticar", alvo: escolhida, alvos: saindo, ...pedido})
+      .then((r) => {
+        if (!r.ok) return r;
+        // as peças novas vêm na ordem das antigas: a seleção anda junto
+        (r.pecas || []).forEach((novo, i) => seguir(saindo[i], novo));
+        pintar();
+        if ((r.recado || []).length) recado(r.recado.join(" · "));
+        return r;
+      });
+  };
+  $("esticar").addEventListener("click", () => esticar({passos: 1}));
+  $("encolher").addEventListener("click", () => esticar({passos: -1}));
   $("barras").addEventListener("change", (ev) =>
-    mandar({nome: "esticar", alvo: escolhida,
-            para_mm: Number(ev.target.value)}).then(esticou));
+    esticar({para_mm: Number(ev.target.value)}));
   // a pose da linha na folha. Girar é do conjunto: a peça de uma linha não
   // tem posição própria, ela cai onde a anterior deixou
   $("girar_esq").addEventListener("click", () => mandar({
@@ -791,17 +868,20 @@ function ligar() {
     nome: "espelhar",
   }));
   $("subir").addEventListener("click", () => mandar({
-    nome: "mover", alvo: escolhida, para: Math.max(0, posicaoDe(escolhida) - 1),
+    nome: "mover", alvo: escolhida, alvos: alvos(),
+    para: Math.max(0, posicaoDe(escolhida) - 1),
   }));
   $("descer").addEventListener("click", () => mandar({
-    nome: "mover", alvo: escolhida, para: posicaoDe(escolhida) + 1,
+    nome: "mover", alvo: escolhida, alvos: alvos(),
+    para: posicaoDe(escolhida) + 1,
   }));
   $("comprimento").addEventListener("change", (ev) => mandar({
-    nome: "alterar", alvo: escolhida,
+    nome: "alterar", alvo: escolhida, alvos: alvos(),
     campos: {comprimento_mm: Number(ev.target.value)},
   }));
   $("fonte").addEventListener("change", (ev) => mandar({
-    nome: "alterar", alvo: escolhida, campos: {fonte: ev.target.value},
+    nome: "alterar", alvo: escolhida, alvos: alvos(),
+    campos: {fonte: ev.target.value},
   }));
   $("familia").addEventListener("change", (ev) => acrescentar(ev.target.value));
   $("bitola").addEventListener("change", () => {
@@ -851,10 +931,18 @@ function ligar() {
       if (ev.key === "+" || ev.key === "=") { ev.preventDefault(); ampliar(1.35); }
       if (ev.key === "-") { ev.preventDefault(); ampliar(1 / 1.35); }
       if (ev.key === "0") { ev.preventDefault(); ajustar(); }
-      if (ev.key === "Escape") { escolhida = null; pintar(); }
+      if (ev.key === "Escape") { soltarEscolha(); pintar(); }
       return;
     }
     if (!(ev.ctrlKey || ev.metaKey)) return;
+    if (ev.key === "a" && !digitando) {
+      // escolher a linha inteira: é o gesto de quem vai trocar a bitola de
+      // tudo, e o comando aceita a lista inteira do mesmo jeito
+      ev.preventDefault();
+      escolhidas = (documento.pecas || []).map((p) => p.id);
+      escolhida = escolhidas[escolhidas.length - 1] || null;
+      pintar();
+    }
     if (ev.key === "z" && !ev.shiftKey) { ev.preventDefault(); mandar({nome: "desfazer"}); }
     if (ev.key === "y" || (ev.key === "z" && ev.shiftKey)) {
       ev.preventDefault(); mandar({nome: "refazer"});
@@ -877,7 +965,7 @@ function ligar() {
     const ficheiro = ev.target.files[0];
     ev.target.value = "";     // reabrir o MESMO arquivo tem de disparar de novo
     if (!ficheiro) return;
-    escolhida = null;
+    soltarEscolha();
     const resposta = await mandar({nome: "abrir", texto: await ficheiro.text()});
     // o que mudou desde o dia em que se salvou: peça que saiu da lista, cota
     // que a folha corrigiu. Aparece por escrito, e não calado

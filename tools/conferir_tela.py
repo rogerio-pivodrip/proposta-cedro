@@ -210,6 +210,59 @@ async def rodar(porta):
                 conferir("o DXF tem os blocos e os inserts da linha",
                          "INSERT" in texto and "BLOCK" in texto)
 
+        print("\n== escolher várias, e mudar as três de uma vez")
+        await pagina.click("#succao")
+        await pagina.wait_for_timeout(900)
+        # a tela repinta a cada comando: o elemento guardado some do DOM no
+        # primeiro clique, e o segundo tem de ser procurado de novo
+        pecas = await pagina.query_selector_all("g.peca[data-id]")
+        await pecas[1].click()
+        await pagina.wait_for_timeout(300)
+        pecas = await pagina.query_selector_all("g.peca[data-id]")
+        await pecas[2].click(modifiers=["Shift"])
+        await pagina.wait_for_timeout(400)
+        conferir("shift acrescenta à escolha",
+                 len(await pagina.query_selector_all("g.peca.escolhida")) == 2,
+                 str(len(await pagina.query_selector_all("g.peca.escolhida"))))
+        conferir("a tabela acende as duas",
+                 len(await pagina.query_selector_all("#lista tr.escolhida")) == 2)
+        conferir("e o painel avisa que o que mudar aqui muda todas",
+                 await pagina.is_visible("#painel_varias"))
+        # o balao e o efeito mais direto de ver: desmarcar com duas
+        # escolhidas tem de tirar DOIS baloes do desenho, e voltar os dois
+        # num desfazer so
+        tinha = len(await pagina.query_selector_all("g.balao[data-id]"))
+        await pagina.click("#balao")
+        await pagina.wait_for_timeout(600)
+        conferir("desmarcar o balão valeu para as duas",
+                 len(await pagina.query_selector_all("g.balao[data-id]"))
+                 == tinha - 2,
+                 f'{len(await pagina.query_selector_all("g.balao[data-id]"))} '
+                 f"de {tinha}")
+        await pagina.click("#desfazer")
+        await pagina.wait_for_timeout(500)
+        conferir("e UM desfazer devolveu os dois",
+                 len(await pagina.query_selector_all("g.balao[data-id]"))
+                 == tinha)
+        # trocar a bitola das escolhidas: a peca troca de codigo, e a
+        # selecao tem de seguir a peca nova
+        antes = await retrato(pagina)
+        await pagina.select_option("#trocar_bitola", "6")
+        await pagina.wait_for_timeout(900)
+        conferir("trocar a bitola mudou o desenho e a lista",
+                 await retrato(pagina) != antes)
+        conferir("e a escolha seguiu as peças novas",
+                 len(await pagina.query_selector_all("g.peca.escolhida")) == 2,
+                 str(len(await pagina.query_selector_all("g.peca.escolhida"))))
+        await pagina.click("#desfazer")
+        await pagina.wait_for_timeout(600)
+        conferir("um desfazer devolve as duas",
+                 await retrato(pagina) == antes)
+        await pagina.keyboard.press("Escape")
+        await pagina.wait_for_timeout(300)
+        conferir("Escape solta a escolha",
+                 not await pagina.query_selector_all("g.peca.escolhida"))
+
         print("\n== salvar e abrir devolvem a mesma montagem")
         antes = await retrato(pagina)
         async with pagina.expect_download() as espera:

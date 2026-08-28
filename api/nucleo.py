@@ -167,16 +167,37 @@ def _inserir(sessao, comando):
     return {"peca": peca.id}
 
 
+def _alvos(comando):
+    """As pecas que o comando atinge - uma ou varias, sempre como lista.
+
+    A tela escolhe uma peca ou um punhado delas, e o comando e o mesmo: quem
+    seleciona tres tubos e digita `comprimento 1500` quer os tres em 1500. Por
+    isso `alvo` e `alvos` chegam pelo mesmo caminho e saem daqui iguais - o
+    comando nao tem duas versoes, tem uma que conta ate n.
+    """
+    varios = comando.get("alvos")
+    if varios:
+        return [a for a in varios if a]
+    return [comando["alvo"]] if comando.get("alvo") else []
+
+
 def _remover(sessao, comando):
     """Tira a peca da linha - ou o acessorio da peca que o carrega.
 
     Quem usa nao distingue os dois, e nao deve: os dois estao no desenho e na
     lista, e apagar e apagar. Quem sabe onde a peca esta e o documento.
     """
-    try:
-        return {"peca": sessao.linha.remover(comando["alvo"]).id}
-    except KeyError:
-        return {"peca": sessao.linha.desacoplar(comando["alvo"]).id}
+    alvos = _alvos(comando)
+    if not alvos:
+        raise Erro("remover age sobre uma peca - escolha uma antes")
+    saiu = []
+    with sessao.linha.lote("remover"):
+        for cada in alvos:
+            try:
+                saiu.append(sessao.linha.remover(cada).id)
+            except KeyError:
+                saiu.append(sessao.linha.desacoplar(cada).id)
+    return {"peca": saiu[0], "pecas": saiu}
 
 
 def _substituir(sessao, comando):
@@ -204,9 +225,28 @@ def _esticar(sessao, comando):
     o caminho e outro: `alterar` o comprimento, que mantem o codigo. Sao duas
     coisas de verdade diferentes, e o programa nao as mistura.
     """
-    alvo = comando.get("alvo")
-    if not alvo:
+    alvos = _alvos(comando)
+    if not alvos:
         raise Erro("esticar age sobre uma peca - escolha um tubo antes")
+    if len(alvos) > 1:
+        # varias escolhidas: estica os tubos e diz o que ficou de fora. Com
+        # uma so, recusar e o certo - quem escolheu a valvula e mandou
+        # esticar errou de peca. Com doze, recusar tudo por causa de uma
+        # seria pior: o gesto foi "estica os tubos daqui"
+        feitas, recados = [], []
+        with sessao.linha.lote("esticar"):
+            for cada in alvos:
+                try:
+                    feitas.append(_esticar(sessao, {**comando, "alvo": cada,
+                                                    "alvos": None}))
+                except Erro as erro:
+                    recados.append(str(erro))
+        if not feitas:
+            raise Erro(" · ".join(recados) or "nenhum tubo na escolha")
+        return {"peca": feitas[0]["peca"],
+                "pecas": [f["peca"] for f in feitas],
+                "saiu": [f["saiu"] for f in feitas], "recado": recados}
+    alvo = alvos[0]
     peca = sessao.linha.pecas[sessao.linha.posicao(alvo)]
     if peca.familia != "TUBO":
         raise Erro(f"{peca.descricao} nao e tubo - so o tubo se estica, "
@@ -270,7 +310,29 @@ def _balao(sessao, comando):
     NAO muda e o numero - esse e da lista, e mudar de lugar na folha nao muda
     o item que se compra.
     """
-    peca = sessao.linha.achar(comando["alvo"])
+    alvos = _alvos(comando)
+    if not alvos:
+        raise Erro("balao age sobre uma peca - escolha uma antes")
+    if len(alvos) > 1:
+        # com varias, o botao nao alterna uma a uma: se ALGUMA esta marcada,
+        # apaga todas; se nenhuma esta, acende todas. Alternar cada uma pelo
+        # seu estado deixaria a escolha metade acesa e metade apagada, e o
+        # proximo clique inverteria as duas metades sem nunca chegar a lugar
+        # nenhum
+        pecas = [sessao.linha.achar(a) for a in alvos]
+        mostrar = comando.get("mostrar")
+        if mostrar is None and not any(comando.get(c) is not None
+                                       for c in ("angulo", "distancia")):
+            mostrar = not any(p.balao for p in pecas)
+        feitas = []
+        with sessao.linha.lote("balao"):
+            for peca in pecas:
+                feitas.append(_balao(sessao, {**comando, "alvo": peca.id,
+                                              "alvos": None,
+                                              "mostrar": mostrar}))
+        return {"peca": feitas[0]["peca"],
+                "pecas": [f["peca"] for f in feitas]}
+    peca = sessao.linha.achar(alvos[0])
     campos = {}
     if comando.get("angulo") is not None:
         campos["balao_angulo"] = float(comando["angulo"]) % 360
@@ -324,11 +386,109 @@ def _alterar(sessao, comando):
     campos = comando.get("campos") or {}
     if not campos:
         raise Erro("alterar sem campo nenhum")
-    return {"peca": sessao.linha.alterar(comando["alvo"], **campos).id}
+    alvos = _alvos(comando)
+    if not alvos:
+        raise Erro("alterar age sobre uma peca - escolha uma antes")
+    mexidas = []
+    with sessao.linha.lote("alterar"):
+        for cada in alvos:
+            mexidas.append(sessao.linha.alterar(cada, **campos).id)
+    return {"peca": mexidas[0], "pecas": mexidas}
 
 
 def _mover(sessao, comando):
-    return {"peca": sessao.linha.mover(comando["alvo"], comando["para"]).id}
+    """Poe a peca - ou o bloco escolhido - noutro ponto da sequencia."""
+    alvos = _alvos(comando)
+    if not alvos:
+        raise Erro("mover age sobre uma peca - escolha uma antes")
+    if len(alvos) == 1:
+        return {"peca": sessao.linha.mover(alvos[0], comando["para"]).id,
+                "pecas": [sessao.linha.achar(alvos[0]).id]}
+    sessao.linha.mover_bloco(alvos, comando["para"])
+    return {"peca": sessao.linha.achar(alvos[0]).id,
+            "pecas": [sessao.linha.achar(a).id for a in alvos]}
+
+
+def _fora_a_bitola(descricao):
+    """A descricao sem a bitola, para comparar duas pecas de tamanhos difer.
+
+    So o numero colado na aspa sai - 6", 8", 2,5". O resto dos numeros FICA,
+    e e o que importa: 150LB e 300LB sao duas valvulas, e apagar todo digito
+    faria as duas parecerem a mesma peca noutro tamanho.
+    """
+    import re
+    return " ".join(re.sub(r'\d+(?:[.,]\d+)?\s*"', " ", descricao).split()).upper()
+
+
+def _bitola(sessao, comando):
+    """A MESMA peca noutro tamanho, para uma peca ou para a linha inteira.
+
+    E o comando que faltava para a pergunta que todo projeto faz: "e se esta
+    linha fosse de 8?". Peca por peca isso e `substituir` doze vezes, e cada
+    uma exige achar o codigo novo a mao - que e onde entra o erro que a lista
+    nao pega, porque os dois codigos existem.
+
+    **A troca e uma so no historico**, e desfazer devolve a linha inteira.
+
+    **O que a peca CARREGA vai junto, mas so o que esta na bitola dela.** A
+    flange cega de 6" no alto do te vira a de 8" com o te; a ventosa de 2"
+    enroscada na luva dela continua de 2", porque a bitola dela nunca foi a
+    da linha. Sem essa distincao, mudar a linha de 6 para 8 trocaria a ventosa
+    por uma de 8" que nao existe - e, se existisse, seria a peca errada.
+
+    **O que a lista nao tem, nao se inventa.** Peca sem equivalente fica como
+    esta e vira aviso: a juncao passa a acusar reducao, que e a verdade do
+    desenho, em vez de um codigo parecido escolhido pelo programa.
+    """
+    dn = comando.get("dn")
+    if dn is None:
+        raise Erro("bitola precisa do tamanho novo")
+    dn = float(dn)
+    alvos = _alvos(comando) or [p.id for p in sessao.linha.pecas]
+    trocas, recados = [], []
+
+    def trocar(peca):
+        novo = sessao.catalogo.equivalente(peca.item, dn)
+        if novo is None:
+            recados.append(f'{peca.descricao}: a lista não tem esta peça em '
+                           f'{dn:g}" - ficou como estava')
+            return peca
+        if novo["sap"] == peca.sap:
+            return peca
+        nova = Peca(novo, comprimento_mm=peca._comprimento_pedido,
+                    rotulo=peca.rotulo, fonte=peca.fonte,
+                    sentido=peca.sentido, pose=peca.pose)
+        for campo in ("balao", "balao_angulo", "balao_distancia"):
+            setattr(nova, campo, getattr(peca, campo))
+        # o acessorio vive DENTRO da peca: ele nao pode ficar para tras
+        # quando ela troca, senao a flange cega sumia do alto do te
+        nova.acessorios = list(peca.acessorios)
+        sessao.linha.substituir(peca.id, nova)
+        trocas.append({"de": peca.descricao, "para": nova.descricao,
+                       "sap_de": peca.sap, "sap_para": nova.sap,
+                       "id": nova.id})
+        if _fora_a_bitola(peca.descricao) != _fora_a_bitola(nova.descricao):
+            # a peca que entrou nao e a mesma de antes noutro tamanho: a
+            # lista nao tinha aquela nesta bitola e o que veio e a mais
+            # parecida. Isso NAO pode passar calado - a 735-M virando 405, o
+            # medidor IRT virando Woltman, a retencao 150LB virando 300LB
+            recados.append(f'{peca.descricao} → {nova.descricao}: em '
+                           f'{dn:g}" a lista não tem a mesma peça, entrou a '
+                           f'mais parecida - confira a folha')
+        return nova
+
+    with sessao.linha.lote("bitola"):
+        for cada in alvos:
+            peca = sessao.linha.achar(cada)
+            antiga = peca.item["dn"][0] if peca.item["dn"] else None
+            nova = trocar(peca)
+            # so acompanha o acessorio que estava NA BITOLA da peca: o que
+            # tem bitola propria - a ventosa de 2" na luva - nao e da linha
+            for junto in list(nova.acessorios):
+                if junto.item["dn"] and junto.item["dn"][0] == antiga:
+                    trocar(junto)
+    return {"dn": dn, "trocas": trocas, "recado": recados,
+            "pecas": [t["id"] for t in trocas]}
 
 
 def _girar(sessao, comando):
@@ -358,9 +518,13 @@ def _espelhar(sessao, comando):
     if not alvo:
         sessao.linha.pose(espelho=-sessao.linha.espelho)
         return {"espelho": sessao.linha.espelho}
-    pos = sessao.linha.posicao(alvo)
-    peca = sessao.linha.pecas[pos]
-    return {"peca": sessao.linha.alterar(alvo, sentido=-peca.sentido).id}
+    viradas = []
+    with sessao.linha.lote("espelhar"):
+        for cada in _alvos(comando):
+            peca = sessao.linha.achar(cada)
+            viradas.append(
+                sessao.linha.alterar(cada, sentido=-peca.sentido).id)
+    return {"peca": viradas[0], "pecas": viradas}
 
 
 def _desfazer(sessao, comando):
@@ -606,7 +770,7 @@ COMANDOS = {
     "alterar": _alterar, "mover": _mover, "esticar": _esticar,
     "acoplar": _acoplar,
     "girar": _girar, "espelhar": _espelhar,
-    "balao": _balao, "numerar": _numerar,
+    "balao": _balao, "numerar": _numerar, "bitola": _bitola,
     "desfazer": _desfazer, "refazer": _refazer,
     "template": _template, "catalogo": _catalogo, "janela": _janela,
     "modo": _modo,
@@ -632,6 +796,11 @@ def executar(sessao, comando):
         try:
             interno, entendido = linguagem.interpretar(
                 comando.get("texto"), comando.get("alvo"), sessao)
+            # a SELECAO INTEIRA acompanha o que se digitou. O vocabulario nao
+            # precisa saber contar: quem escolheu tres tubos e digitou
+            # `comprimento 1500` quer os tres, e o verbo continua sendo um so
+            if comando.get("alvos") and "alvo" in interno:
+                interno["alvos"] = comando["alvos"]
         except linguagem.Erro as erro:
             return {"ok": False, "erro": str(erro), "entendido": None,
                     "documento": sessao.documento()}

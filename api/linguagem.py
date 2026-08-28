@@ -142,6 +142,10 @@ VERBOS = [
           [_arg("fabricante", "texto")], "fonte netafim", True,
           lambda v, alvo, s: {"nome": "alterar", "alvo": alvo,
                               "campos": {"fonte": (v.get("fabricante") or "").upper()}}),
+    Verbo("bitola", "a mesma peça noutro tamanho - a escolhida, ou a linha "
+          "inteira", [_arg("polegadas", "numero")], "bitola 8", False,
+          lambda v, alvo, s: {"nome": "bitola", "alvo": alvo,
+                              "dn": v.get("polegadas")}),
     Verbo("girar", "gira a linha inteira na folha",
           [_arg("graus", "numero", 90)], "girar 90", False,
           lambda v, alvo, s: {"nome": "girar",

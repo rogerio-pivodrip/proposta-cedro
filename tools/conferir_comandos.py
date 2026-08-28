@@ -402,6 +402,62 @@ def main():
                                                     svg).group(1)) - b[2])]
     certo("e nenhum cortado na borda da folha", not fora, str(fora[:2]))
 
+    print("\n== várias peças de uma vez, e um desfazer só")
+    linha, _faltando = templates.recalque(catalogo, 6)
+    antes = retrato(linha)
+    marca = len(linha.feitos)
+    with linha.lote("bitola"):
+        for peca in list(linha.pecas):
+            novo = catalogo.equivalente(peca.item, 8)
+            if novo and novo["sap"] != peca.sap:
+                trocada = Peca(novo)
+                trocada.acessorios = list(peca.acessorios)
+                linha.substituir(peca.id, trocada)
+    certo("doze substituições viram um comando no histórico",
+             len(linha.feitos) - marca == 1,
+             f"{len(linha.feitos) - marca} comandos")
+    certo("e a linha inteira mudou de bitola",
+             all('8"' in p.descricao for p in linha.pecas
+                 if p.familia in ("CURVA", "TUBO", "TE")),
+             str([p.descricao for p in linha.pecas]))
+    linha.desfazer()
+    conferir("um desfazer devolve as doze", antes, retrato(linha))
+    linha.refazer()
+    linha.desfazer()
+    conferir("e refazer e desfazer de novo também", antes, retrato(linha))
+
+    # a peca de duas bitolas nao tem equivalente, e isso e recusa e nao falha
+    dupla = next((i for i in catalogo.itens
+                  if (i["familia"] or "").startswith("REDUCAO")
+                  and len(set(i["dn"] or [])) > 1), None)
+    if dupla:
+        certo("redução não tem equivalente: qual das duas bitolas?",
+                 catalogo.equivalente(dupla, 8) is None, dupla["descricao"])
+    # e a saida NAO e bitola da peca: a flange cega de 6" com luva de 2" tem
+    # equivalente em 4", com a mesma luva de 2"
+    cega = catalogo.por_sap.get("01542-103015")
+    if cega:
+        outra = catalogo.equivalente(cega, 4)
+        certo("a luva de 2\" não conta como bitola da flange cega",
+                 outra is not None and 2.0 in (outra["dn"] or []),
+                 outra["descricao"] if outra else "sem equivalente")
+
+    print("\n== mover um bloco é um comando, e ele chega inteiro")
+    linha = monta(catalogo)
+    ordem = [p.id for p in linha.pecas]
+    antes = retrato(linha)
+    marca = len(linha.feitos)
+    linha.mover_bloco([ordem[0], ordem[1]], 3)
+    certo("o bloco é um comando só", len(linha.feitos) - marca == 1)
+    depois = [p.id for p in linha.pecas]
+    certo("as duas chegam juntas e na ordem em que estavam",
+             depois.index(ordem[1]) == depois.index(ordem[0]) + 1,
+             str(depois))
+    certo("e nenhuma peça se perdeu no caminho",
+             sorted(depois) == sorted(ordem))
+    linha.desfazer()
+    conferir("desfazer devolve a sequência", antes, retrato(linha))
+
     print("\n== salvar e abrir: o arquivo guarda a escolha, não o resultado")
     linha, _faltando = templates.recalque(catalogo, 6)
     linha.alterar(linha.pecas[2].id, comprimento_mm=1234)   # corte de campo

@@ -148,6 +148,66 @@ class Catalogo:
         cand = self.buscar(*args, **kwargs)
         return cand[0] if cand else None
 
+    def equivalente(self, item, dn):
+        """A MESMA peca noutra bitola. None quando a lista nao tem.
+
+        Mesma familia, mesmo material, mesmo angulo, mesmo acionamento e a
+        mesma norma de ponta - trocar a bitola nao pode trocar calado a norma
+        de furacao, senao a linha inteira deixa de fechar no parafuso.
+
+        **Peca de duas bitolas nao tem equivalente**, e a recusa e proposital:
+        na reducao 6x4 "trocar a bitola" nao quer dizer nada sozinho - qual
+        das duas? Quem quer outra reducao troca a peca, que e o comando que
+        diz qual entrou no lugar de qual.
+
+        No tubo, o comprimento entra na busca: a barra de 6 m de 8" e a de 6 m
+        de 6" sao a mesma escolha de projeto noutra bitola. Se a lista nao tem
+        aquele comprimento na bitola nova, vale qualquer barra - o corte
+        continua sendo o mesmo, e quem cortou continua com o corte escrito.
+        """
+        bitolas = {float(d) for d in (item["dn"] or [])
+                   if isinstance(d, (int, float))}
+        # A SAIDA NAO E BITOLA DA PECA. A flange cega 6" com luva de 2" tem
+        # dois DN no cadastro, mas so um deles e da linha - o outro e a boca
+        # que ela oferece, e ele nao muda quando a linha muda: a ventosa que
+        # enrosca ali continua sendo de 2". Entao a derivacao sai da conta da
+        # bitola e entra na BUSCA, para que a peca nova traga a mesma boca
+        derivadas = {float(d["dn"]) for d in (item.get("derivacoes") or [])
+                     if d.get("dn")}
+        proprias = bitolas - derivadas
+        if len(proprias) != 1 or len(derivadas) > 1:
+            return None
+        if float(dn) in proprias:
+            return item
+        norma = next((c["norma"] for c in item["conexoes"] if c["norma"]), None)
+        busca = {"norma": norma, "angulo": item["angulo"],
+                 "material": item["material"],
+                 "acionamento": item.get("acionamento"),
+                 "dn_saida": next(iter(derivadas)) if derivadas else None}
+        if item.get("comprimento_mm"):
+            achado = self.melhor(item["familia"], dn,
+                                 comprimento_mm=item["comprimento_mm"],
+                                 **busca)
+            if achado:
+                return achado
+        candidatos = self.buscar(item["familia"], dn, **busca)
+        # a SERIE manda na frente do ranking: a 735-M da Bermad e a 405 sao
+        # duas valvulas, e a cota do corpo sai da serie. Trocar de serie no
+        # meio de uma troca de bitola mudaria a peca sem ninguem pedir - so
+        # se cai nela quando a serie pedida nao existe na bitola nova, e ai
+        # quem trocou fica sabendo (ver api/nucleo._bitola)
+        if item.get("serie"):
+            mesma = [c for c in candidatos if c.get("serie") == item["serie"]]
+            if mesma:
+                return mesma[0]
+        achado = candidatos[0] if candidatos else None
+        # sem a norma nao se cai fora: cai-se para a peca sem norma
+        # declarada, que e o que a lista tem em algumas familias. O que nao se
+        # faz e trocar de norma calado - por isso a norma sai da busca so
+        # depois de ela falhar com a norma pedida
+        return achado or self.melhor(item["familia"], dn,
+                                     **{**busca, "norma": None})
+
     def barras_irmas(self, item):
         """As barras do MESMO tubo em outros comprimentos, por comprimento.
 

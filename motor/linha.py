@@ -15,6 +15,7 @@ insere, remove ou move, e a tela que segurou um indice passa a apontar para
 outra peca. O id nasce com a peca e morre com ela, e e o mesmo no balao do
 desenho e na linha da tabela.
 """
+import contextlib
 import itertools
 from collections import OrderedDict
 
@@ -210,6 +211,31 @@ class Linha:
         self.desfeitos.clear()
         return comando
 
+    @contextlib.contextmanager
+    def lote(self, nome):
+        """As edicoes feitas aqui dentro viram UM comando no historico.
+
+        Trocar a bitola de doze pecas sao doze `substituir`, e quem trocou
+        espera desfazer isso uma vez, e nao doze. O lote nao e um sexto
+        comando: e a costura dos que ja existem - cada um continua sabendo se
+        desfazer, e o lote so os desfaz na ordem contraria, que e a unica
+        ordem em que a pilha volta ao lugar.
+
+        Um comando so, ou nenhum, passa direto: embrulhar um comando sozinho
+        so trocaria o nome dele no historico.
+        """
+        marca = len(self.feitos)
+        yield self
+        juntos = self.feitos[marca:]
+        if len(juntos) < 2:
+            return
+        del self.feitos[marca:]
+        self.feitos.append(Comando(
+            nome,
+            lambda: [c.fazer() for c in juntos],
+            lambda: [c.desfazer() for c in reversed(juntos)],
+            juntos[0].alvo))
+
     def posicao(self, alvo):
         """Aceita indice ou id, e devolve o indice de agora.
 
@@ -268,7 +294,34 @@ class Linha:
             peca.id))
         return peca
 
+    def _dono(self, alvo):
+        """(peca que carrega, indice) do acessorio - ou None se nao for um."""
+        chave = alvo.id if isinstance(alvo, Peca) else alvo
+        for dono in self.pecas:
+            for i, peca in enumerate(dono.acessorios):
+                if peca.id == chave or peca is alvo:
+                    return dono, i
+        return None
+
     def substituir(self, alvo, peca):
+        """Troca a peca por outra - na corrente ou dentro de quem a carrega.
+
+        O acessorio se troca pelo mesmo comando, e nao por um proprio: para
+        quem edita e a mesma coisa - a flange cega de 6" vira a de 8" - e o
+        que muda e so onde ela esta guardada. O que ele NAO herda e o que
+        estava acoplado nele, porque isso e da peca que sai; quem troca em
+        lote leva os acessorios junto de proposito (ver api/nucleo._bitola).
+        """
+        onde = self._dono(alvo)
+        if onde is not None:
+            dono, i = onde
+            antiga = dono.acessorios[i]
+            self._executar(Comando(
+                "substituir",
+                lambda: dono.acessorios.__setitem__(i, peca),
+                lambda: dono.acessorios.__setitem__(i, antiga),
+                peca.id))
+            return antiga
         pos = self.posicao(alvo)
         antiga = self.pecas[pos]
         self._executar(Comando(
@@ -450,6 +503,43 @@ class Linha:
 
         self._executar(Comando("mover", fazer, desfazer, peca.id))
         return peca
+
+    def mover_bloco(self, alvos, para):
+        """Tira varias pecas da sequencia e as reinsere juntas noutro ponto.
+
+        Nao e `mover` repetido: mover uma de cada vez muda o indice das
+        outras no meio do caminho, e o bloco chegaria embaralhado. Aqui a
+        sequencia nova se calcula inteira e entra de uma vez - um comando, um
+        desfazer.
+
+        As pecas entram na ordem em que ESTAVAM, e nao na ordem em que foram
+        clicadas: quem seleciona tubo, curva e tubo e arrasta espera que eles
+        continuem tubo, curva e tubo do outro lado.
+        """
+        escolhidas = {self.posicao(a) for a in alvos}
+        if not escolhidas:
+            return self
+        bloco = [self.pecas[i] for i in sorted(escolhidas)]
+        resto = [p for i, p in enumerate(self.pecas) if i not in escolhidas]
+        # o destino e contado na linha SEM o bloco: e o unico jeito de "poe
+        # antes da valvula" continuar querendo dizer a mesma coisa depois de
+        # tirar as pecas do caminho
+        para = para if isinstance(para, int) else self.posicao(para)
+        para -= sum(1 for i in sorted(escolhidas) if i < para)
+        para = max(0, min(para, len(resto)))
+        antes = list(self.pecas)
+        depois = resto[:para] + bloco + resto[para:]
+        if depois == antes:
+            return self
+
+        def fazer():
+            self.pecas[:] = depois
+
+        def desfazer():
+            self.pecas[:] = antes
+
+        self._executar(Comando("mover", fazer, desfazer, bloco[0].id))
+        return self
 
     # ---------------- desfazer e refazer ------------------------------------
     def desfazer(self):

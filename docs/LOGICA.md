@@ -34,6 +34,24 @@ Comandos (única porta de escrita): `inserir`, `remover`, `substituir`,
 redesenha as duas views. Undo/redo é a pilha de comandos. O balão do desenho e a
 linha da tabela são a mesma peça, com o mesmo id.
 
+**O comando conta até n.** Escolher três tubos e mandar `comprimento 1500` é o
+mesmo verbo, com três alvos — não existe uma segunda versão de cada comando
+para "várias". As edições de uma leva viram **um** comando no histórico
+(`Linha.lote`), e é isso que faz trocar a bitola de doze peças desfazer numa
+vez só. Cada uma continua sabendo se desfazer sozinha; o lote só as desfaz na
+ordem contrária.
+
+**A posição é consequência, e por isso ninguém "atualiza" ninguém.** Mudar o
+comprimento de um tubo move tudo o que vem depois dele, porque a posição de
+cada peça é a soma das cotas de quem veio antes — ver 5. Não há o que
+selecionar para propagar: o que se guarda é a escolha, e o desenho é
+recalculado inteiro a cada comando. O que **não** se propaga sozinho é a
+bitola: trocar uma peça de 6" por uma de 8" deixa a vizinha em 6" e a junção
+passa a acusar redução. É por isso que existe `bitola`, que troca a linha
+inteira (ou só o que estiver escolhido) por *a mesma peça noutro tamanho* — e
+diz por escrito o que a lista não tinha naquele tamanho, em vez de escolher um
+código parecido calado.
+
 ### A tela não guarda o documento
 
 `web/` é o programa: desenho à esquerda, lista de materiais à direita, painel
@@ -88,6 +106,24 @@ id perdia o arrasto no meio dele. Cada repintura reaplica o estado.
 **A anotação não é alvo de nada.** A cota de cada peça cai bem no meio dela, e
 a camada de anotação fica por cima do desenho: sem `pointer-events:none`, a
 própria cota comia o clique da peça que ela cota.
+
+### O que volta: a montagem salva
+
+Das cinco saídas, só uma **volta a ser documento**. `motor/arquivo.py` grava o
+código de cada peça, o que foi pedido a mão nela (o corte de campo), a pose, o
+balão e a ordem dos itens — e não grava cota, nem ferragem, nem lista, que são
+derivados e se recalculam ao abrir.
+
+**O arquivo guarda a escolha, e não o resultado.** A consequência é a que
+interessa: corrigir uma tabela de cotas melhora os desenhos já salvos, em vez
+de deixar cada projeto antigo carregando para sempre o erro do dia em que foi
+feito. A cota que valia na gravação vai junto só como conferência — ao abrir,
+o que a folha de hoje diz diferente vira aviso escrito, e o desenho segue a
+folha. Código que saiu da lista também vira aviso, não um buraco calado.
+
+Abrir passa pelos mesmos `inserir` e `acoplar` de quem monta a mão, e limpa o
+histórico no fim: abrir não é edição, e um `desfazer` logo depois não pode
+começar a desmontar a linha peça por peça.
 
 ### O que sai: DXF em 1:1, planilha nas colunas do Orçamento
 
